@@ -1,0 +1,19 @@
+import React from 'react'
+import "./BgVideo.css"
+import Navpannel from '../unique_component/Navpannel'
+
+export default function BgVideo() {
+  return (
+    <>
+    <div className="home-pg1">
+        <Navpannel></Navpannel>
+    <div className="content">
+        <h1>RANE AND RANE SONS</h1>
+        <h2>INDIAN RAILWAY CONTRACTOR</h2>
+        <button className="learn-more-btn">LEARN MORE</button>
+        <p className="contact-info">+91 94250 29680</p>
+      </div>
+    </div>
+    </>
+  )
+}

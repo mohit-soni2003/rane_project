@@ -1,0 +1,50 @@
+.home-pg1{
+    background-image: url('../../../../public/train1.jpg'); /* Replace with the path to your image */
+    background-size: cover;
+    background-position: center;
+    height: 100vh;
+    position: relative;
+    color: rgb(255, 255, 255); /* Adjust as per your design */
+  }
+  
+  .content {
+    text-align: center;
+    background: rgba(202, 202, 202, 0); /* Slightly transparent white background for text */
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 10rem;
+  }
+  
+  .content h1 {
+    font-size: 3.8rem;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .content h2 {
+    font-size: 2rem;
+    margin-bottom: 2.5rem;
+  }
+  
+  .learn-more-btn {
+    padding: 10px 20px;
+    background-color: rgb(43, 43, 43);
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  .learn-more-btn:hover {
+    background-color: rgba(176, 176, 176, 0.486);
+  }
+  
+  .contact-info {
+    margin-top: 1.5rem;
+    font-size: 1.5rem;
+  }
+  

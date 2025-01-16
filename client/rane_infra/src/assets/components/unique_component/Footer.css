@@ -1,0 +1,33 @@
+.footer {
+    background-color: #121212;
+    color: #ffffff;
+    text-align: center;
+    padding: 5% 0;
+    font-family: Arial, sans-serif;
+  }
+  
+  .social-icons {
+    margin-bottom: 15px;
+  }
+  
+  .social-icons a {
+    margin: 0 10px;
+    color: #ffffff;
+    font-size: 24px;
+    transition: color 0.3s ease;
+  }
+  
+  .social-icons a:hover {
+    color: #00acee; /* Change to your desired hover color */
+  }
+  
+  .footer-content h4 {
+    margin: 10px 0;
+    font-weight: bold;
+  }
+  
+  .footer-content p {
+    margin: 5px 0;
+    font-size: 1.1rem;
+  }
+  

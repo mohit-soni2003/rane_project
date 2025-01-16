@@ -1,0 +1,67 @@
+/* AboutRaneAndSons.css */
+.about-container {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .about-title {
+    color: #8c5b5b;
+  }
+  
+  .about-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+  }
+  
+  .profile-image-container {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  
+  .profile-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .about-details {
+    max-width: 600px;
+  }
+  .about-details h2{
+    font-weight: 500;
+  }
+  
+  .role {
+    font-weight: bold;
+    margin: 5px 0;
+  }
+  
+  .company {
+    margin: 5px 0;
+  }
+  
+  .achievements {
+    text-align: left;
+    line-height: 1.8;
+  }
+  
+  .link {
+    color: #8c5b5b;
+  }
+  
+  .contact-button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: black;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  

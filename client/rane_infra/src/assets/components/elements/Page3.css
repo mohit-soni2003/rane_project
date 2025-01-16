@@ -1,0 +1,55 @@
+.about-work-area {
+    padding: 50px;
+    margin-top: 5%;
+    text-align: center;
+    background-color: #f0f1e799; /* Light background color */
+    color: #444; /* Text color */
+  }
+  
+  .about-work-area h2 {
+    font-size: 3rem;
+    margin-bottom : 2.5%;
+    font-weight: bold;
+    color: #8b6b75; /* Matching the design's color scheme */
+  }
+  
+  .pg3-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    border: 0px solid red;
+    margin: 0px 5%;
+  }
+  
+  .image-container {
+    flex: 1;
+    max-width: 40%; /* Limit the size */
+  }
+  
+  .image-container img {
+    width: 100%;
+    height: auto;
+    border: 1px solid #ddd; /* Optional: border for the image */
+    border-radius: 5px;
+  }
+  
+  .text-container {
+    flex: 1;
+    max-width: 45%; /* Adjust width as needed */
+  }
+  
+  .text-container h3 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+  
+  .text-container p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    text-align: justify;
+  }
+  
