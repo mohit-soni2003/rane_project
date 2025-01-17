@@ -1,6 +1,7 @@
 const express = require("express")
 const User= require("../models/usermodel")
 const generateTokenAndSetCookie =require("../utils/generateTokenAndSetCookie")
+const sendVerificationEmail = require("../mailtrap/email")
 
 const router = express.Router();
 
@@ -26,6 +27,8 @@ router.post("/signup", async (req, res) => {
     generateTokenAndSetCookie(res,user._id);
 
     await user.save()
+
+   await sendVerificationEmail(user.email,VerificationToken)
     res.status(201).json({
         success:true,
         msg:"user created successfully",
