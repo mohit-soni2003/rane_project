@@ -1,17 +1,21 @@
 const Nodemailer = require("nodemailer");
-const { MailtrapTransport } = require("mailtrap");
 
-const TOKEN = "31e1e08bb14a9ce95e2e5d82f61d7616";
+// Create a Nodemailer transporter using Gmail's SMTP
+const mailTrapClient = Nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: "mohitsonip1847@gmail.com", // Replace with your Gmail address
+    pass: "hlyq uoeg rcyr sxtd" // Replace with your Gmail App Password
+  },
+  tls: {
+    rejectUnauthorized: false, // Bypass self-signed certificate error
+  },
+});
 
-const mailTrapClient = Nodemailer.createTransport(
-  MailtrapTransport({
-    token: TOKEN,
-  })
-);
-
+// Define the sender details
 const sender = {
-  email: "mailtrap@demomailtrap.com",
+  email: "your-email@gmail.com", // Replace with your Gmail address
   name: "Mohit Soni",
 };
 
-module.exports = { mailTrapClient, sender }
+module.exports = { mailTrapClient, sender };
