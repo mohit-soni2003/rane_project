@@ -2,9 +2,12 @@
 const express = require('express');
 const app = express();
 const mongoose = require('./db/mongoConnection'); // Import the db.js file
+const cookieParser = require("cookie-parser")
 
 
 // Middleware to parse JSON data
+app.use(cookieParser())
+
 app.use(express.json());
 
 // Define a port for the server

@@ -1,7 +1,10 @@
 const express = require("express")
 const User= require("../models/usermodel")
 const generateTokenAndSetCookie =require("../utils/generateTokenAndSetCookie")
-const {sendVerificationEmail , sendWelcomeEmail} = require("../mailtrap/email")
+const {sendVerificationEmail , sendWelcomeEmail , sendPasswordResetEmail,sendResetSuccessEmail} = require("../mailtrap/email")
+const verifyToken = require("../middleware/verifyToken")
+const crypto = require("crypto")
+
 
 const router = express.Router();
 
@@ -105,6 +108,76 @@ router.post("/signin",async (req, res) => {
 		res.status(400).json({ success: false, message: error.message });
 	}
 });
+router.post("/forgot-password",async(req,res) =>{
+    const { email } = req.body;
+	try {
+		const user = await User.findOne({ email });
+
+		if (!user) {
+			return res.status(400).json({ success: false, message: "User not found" });
+		}
+
+		// Generate reset token
+		const resetToken = crypto.randomBytes(20).toString("hex");
+		const resetTokenExpiresAt = Date.now() + 1 * 60 * 60 * 1000; // 1 hour
+
+		user.resetPasswordToken = resetToken;
+		user.resetPasswordExpiresAt = resetTokenExpiresAt;
+
+		await user.save();
+
+		// send email
+		await sendPasswordResetEmail(user.email, `http://localhost:3000/reset-password/${resetToken}`);
+
+		res.status(200).json({ success: true, message: "Password reset link sent to your email" });
+	} catch (error) {
+		console.log("Error in forgotPassword ", error);
+		res.status(400).json({ success: false, message: error.message });
+	}
+})
+router.post("/reset-password/:token",async(req,res)=>{
+    try {
+		const { token } = req.params;
+		const { password } = req.body;
+
+		const user = await User.findOne({
+			resetPasswordToken: token,
+			resetPasswordExpiresAt: { $gt: Date.now() },
+		});
+
+		if (!user) {
+			return res.status(400).json({ success: false, message: "Invalid or expired reset token" });
+		}
+
+		// update password
+
+		user.password = password;
+		user.resetPasswordToken = undefined;
+		user.resetPasswordExpiresAt = undefined;
+		await user.save();
+
+		await sendResetSuccessEmail(user.email);
+
+		res.status(200).json({ success: true, message: "Password reset successful" });
+	} catch (error) {
+		console.log("Error in resetPassword ", error);
+		res.status(400).json({ success: false, message: error.message });
+	}
+})
+
+router.post("/check-auth",verifyToken,async(req,res)=>{
+    try {
+		const user = await User.findById(req.userId).select("-password");
+		if (!user) {
+			return res.status(400).json({ success: false, message: "User not found" });
+		}
+
+		res.status(200).json({ success: true, user });
+	} catch (error) {
+		console.log("Error in checkAuth ", error);
+		res.status(400).json({ success: false, message: error.message });
+	}
+})
 
 router.get("/logout", (req, res) => {
     res.clearCookie("token");
