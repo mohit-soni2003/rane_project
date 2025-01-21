@@ -9,6 +9,7 @@ const crypto = require("crypto")
 const router = express.Router();
 
 router.post("/signup", async (req, res) => {
+	console.log("signup post request hi..")
     const {email,name,password} = req.body
     if(!email||!name||!password){
        return res.json({msg:"please Enter all Fields"})
@@ -44,6 +45,7 @@ router.post("/signup", async (req, res) => {
 });
 
 router.post("/verify-email",async(req,res)=>{
+	console.log("Verify email route hitted..")
     const { code } = req.body;
 	try {
         console.log(code)
@@ -165,7 +167,9 @@ router.post("/reset-password/:token",async(req,res)=>{
 	}
 })
 
-router.post("/check-auth",verifyToken,async(req,res)=>{
+router.get("/check-auth",verifyToken,async(req,res)=>{
+	console.log("check auth routed hitted...")
+
     try {
 		const user = await User.findById(req.userId).select("-password");
 		if (!user) {
