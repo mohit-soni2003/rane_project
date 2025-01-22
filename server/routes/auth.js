@@ -4,6 +4,7 @@ const generateTokenAndSetCookie =require("../utils/generateTokenAndSetCookie")
 const {sendVerificationEmail , sendWelcomeEmail , sendPasswordResetEmail,sendResetSuccessEmail} = require("../mailtrap/email")
 const verifyToken = require("../middleware/verifyToken")
 const crypto = require("crypto")
+const { error } = require("console")
 
 
 const router = express.Router();
@@ -12,7 +13,7 @@ router.post("/signup", async (req, res) => {
 	console.log("signup post request hi..")
     const {email,name,password} = req.body
     if(!email||!name||!password){
-       return res.json({msg:"please Enter all Fields"})
+       return res.json({error:"please Enter all Fields"})
     }
     const userAlreadyExists = await User.findOne({email}); 
     
@@ -35,7 +36,7 @@ router.post("/signup", async (req, res) => {
    await sendVerificationEmail(user.email,VerificationToken)
     res.status(201).json({
         success:true,
-        msg:"user created successfully",
+        message:"user created successfully",
         user:{
             ...user._doc,
             password:undefined
@@ -57,7 +58,7 @@ router.post("/verify-email",async(req,res)=>{
 // console.log(allUsers);
         console.log(user)
 		if (!user) {
-			return res.status(400).json({ success: false, message: "Invalid or expired verification code" });
+			return res.json({ success: false, error: "Invalid or expired verification code" });
 		}
 
 		user.isverified= true;
@@ -81,15 +82,16 @@ router.post("/verify-email",async(req,res)=>{
 	}
 })
 router.post("/signin",async (req, res) => {
+	console.log("Signin Route Hitted/.")
     const { email, password } = req.body;
 	try {
 		const user = await User.findOne({ email });
 		if (!user) {
-			return res.status(400).json({ success: false, message: "Invalid credentials" });
+			return res.status(400).json({ success: false, error: "Invalid credentials" });
 		}
 		const isPasswordValid = password==user.password;
 		if (!isPasswordValid) {
-			return res.status(400).json({ success: false, message: "Invalid credentials" });
+			return res.status(400).json({ success: false, error : "Invalid credentials" });
 		}
 
 		generateTokenAndSetCookie(res, user._id);
@@ -173,7 +175,7 @@ router.get("/check-auth",verifyToken,async(req,res)=>{
     try {
 		const user = await User.findById(req.userId).select("-password");
 		if (!user) {
-			return res.status(400).json({ success: false, message: "User not found" });
+			return res.status(400).json({ success: false, error:"User not found" });
 		}
 
 		res.status(200).json({ success: true, user });
@@ -185,7 +187,7 @@ router.get("/check-auth",verifyToken,async(req,res)=>{
 
 router.get("/logout", (req, res) => {
     res.clearCookie("token");
-	res.status(200).json({ success: true, message: "Logged out successfully" });
+	res.status(200).json({ success: true, error: "Logged out successfully" });
 });
 
 module.exports=router

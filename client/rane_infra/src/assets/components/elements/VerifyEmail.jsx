@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import "./VerifyEmail.css";
 import { useAuthStore } from '../store/authStore';
-import { Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Loader } from 'lucide-react';
 
 const VerifyEmail = () => {
+  const navigate = useNavigate()
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
       const {verifyEmail ,error , isLoading} = useAuthStore();
   
@@ -33,7 +34,7 @@ const VerifyEmail = () => {
         console.log(otp.join(""))
         // console.log(formData.email,formData.password, formData.name);
         await verifyEmail(otp.join(""));
-        // navigate("/verify-email");
+        navigate("/");
     } catch (error) {
         console.log(error);
     }  };
@@ -57,7 +58,11 @@ const VerifyEmail = () => {
           />
         ))}
       </div>
-      <button onClick={handleSubmit}>Verify Email</button>
+      {error && <p className='signup-error'>{error} </p>}
+
+      <button onClick={handleSubmit}>
+                {isLoading ? <Loader className='' size={24} /> : "Verify Email"}
+      </button>
     </div>
   );
 };

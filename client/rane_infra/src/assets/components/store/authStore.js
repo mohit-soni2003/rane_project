@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from "axios";
+import axios from "axios"
 
 const API_URL = "http://localhost:3000";
 
@@ -19,7 +19,7 @@ export const useAuthStore = create((set) => ({
 
 		try {
 			// Send the POST request using fetch
-			const response = await fetch("http://localhost:3000/signup", {
+			const response = await fetch(`${API_URL}/signup`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -38,13 +38,14 @@ export const useAuthStore = create((set) => ({
 			// Parse the JSON response
 			const data = await response.json();
 			console.log(data);
-
-			// Handle the response data (e.g., setting state)
-			// set({ user: data.user, isAuthenticated: true, isLoading: false });
+			if (data.message) {
+				set({ user: data.user, isLoading: false });
+			}
+			else {
+				set({ error: data.error, isLoading: false });
+			}
 		} catch (error) {
-			// Handle errors
 			console.error("Error signing up:", error.message);
-			// set({ error: error.message, isLoading: false });
 		} finally {
 			// Reset the loading state
 			set({ isLoading: false });
@@ -53,17 +54,36 @@ export const useAuthStore = create((set) => ({
 	login: async (email, password) => {
 		set({ isLoading: true, error: null });
 		try {
-			const response = await axios.post(`${API_URL}/login`, { email, password });
-			set({
-				isAuthenticated: true,
-				user: response.data.user,
-				error: null,
-				isLoading: false,
+			const response = await fetch(`${API_URL}/signin`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ email, password }),
+				credentials: "include", // Ensures cookies are sent with the request
 			});
+
+			const datal = await response.json();
+
+			if (datal.message) {
+				console.log("1")
+				set({
+					isAuthenticated: true,
+					user: datal.user,
+					error: null,
+					isLoading: false,
+				});
+			} else {
+				set({
+					error: datal.error || "Login failed",
+					isLoading: false,
+				});
+			}
 		} catch (error) {
-			set({ error: error.response?.data?.message || "Error logging in", isLoading: false });
+			set({ error: error.message || "Error logging in", isLoading: false });
 			throw error;
 		}
+
 	},
 
 	logout: async () => {
@@ -93,10 +113,18 @@ export const useAuthStore = create((set) => ({
 			}
 
 			const data = await response.json();
-			// set({ user: data.user, isAuthenticated: true, isLoading: false });
+			console.log(data)
+			if (data.message) {
+				set({ user: data.user, isLoading: false });
+			}
+			else {
+				set({ error: data.error, isLoading: false });
+			}
+
+			set({ isAuthenticated: true, isLoading: false });
 			return data;
 		} catch (error) {
-			// set({ error: error.message || "Error verifying email", isLoading: false });
+			set({ isLoading: false });
 			throw error;
 		}
 	},
@@ -105,21 +133,29 @@ export const useAuthStore = create((set) => ({
 		try {
 			const response = await fetch(`${API_URL}/check-auth`, {
 				method: "GET",
-				credentials: "include", // Ensures cookies are sent with the request if required
+				credentials: "include", // Send cookies if needed
 			});
 
 			if (!response.ok) {
 				throw new Error("Authentication check failed");
 			}
 
-			const data = await response.json();
-			console.log(data)
-			// set({ user: data.user, isAuthenticated: true, isCheckingAuth: false });
-		} catch (error) {
-			// set({ error: null, isCheckingAuth: false, isAuthenticated: false });
-		}
+			const data1 = await response.json();
+			// console.log("Response JSON:", data1);
 
+			if (data1.user) {
+				set({ user: data1.user, isAuthenticated: true, isCheckingAuth: false });
+				console.log("User set successfully:", data1.user);
+			} else {
+				set({ isAuthenticated: false, isCheckingAuth: false, error: data1.error });
+				console.log("No user found in response");
+			}
+		} catch (error) {
+			console.error("Error during authentication check:", error);
+			set({ error, isCheckingAuth: false, isAuthenticated: false });
+		}
 	},
+
 	forgotPassword: async (email) => {
 		set({ isLoading: true, error: null });
 		try {

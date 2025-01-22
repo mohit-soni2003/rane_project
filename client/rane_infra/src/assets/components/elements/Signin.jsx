@@ -1,6 +1,12 @@
 import React, { useState } from "react";
+import { useAuthStore } from '../store/authStore';
+import { Navigate, useNavigate, Link } from 'react-router-dom';
+import { Loader } from 'lucide-react';
+
 
 const Signin = () => {
+  const { login, isLoading, error } = useAuthStore();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -14,9 +20,10 @@ const Signin = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
-    console.log("Sign-In Form Data:", formData);
+    await login(FormData.email , FormData.password);
+
     // Add sign-in logic here
   };
 

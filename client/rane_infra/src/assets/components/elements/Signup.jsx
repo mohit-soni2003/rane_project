@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import './Signup.css'; // Create this CSS file for styling
 import { useAuthStore } from '../store/authStore';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate, Link } from 'react-router-dom';
 import { Loader } from 'lucide-react';
 
 
+
 const Signup = () => {
+  const navigate = useNavigate()
     const {signup ,error , isLoading} = useAuthStore();
   const [formData, setFormData] = useState({
     name: '',
@@ -26,7 +28,7 @@ const Signup = () => {
     try {
         console.log(formData.email,formData.password, formData.name);
         await signup(formData.email,formData.password, formData.name);
-        // navigate("/verify-email");
+        navigate("/verify-email");
     } catch (error) {
         console.log(error);
     }
@@ -46,7 +48,7 @@ const Signup = () => {
           value={formData.name}
           onChange={handleChange}
           required
-        />
+        /> 
         
         <input
           type="email"
@@ -54,7 +56,7 @@ const Signup = () => {
           placeholder="Email"
           value={formData.email}
           onChange={handleChange}
-          required
+          required  
           />
         <input
           type="password"
