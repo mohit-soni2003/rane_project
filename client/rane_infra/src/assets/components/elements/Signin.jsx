@@ -22,7 +22,9 @@ const Signin = () => {
 
   const handleSubmit = async(e) => {
     e.preventDefault();
-    await login(FormData.email , FormData.password);
+    // console.log(formData)
+    await login(formData.email , formData.password);
+    if(error)console.log(error)
 
     // Add sign-in logic here
   };

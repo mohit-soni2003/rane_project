@@ -87,11 +87,11 @@ router.post("/signin",async (req, res) => {
 	try {
 		const user = await User.findOne({ email });
 		if (!user) {
-			return res.status(400).json({ success: false, error: "Invalid credentials" });
+			return res.json({ success: false, error: "Invalid credentials" });
 		}
 		const isPasswordValid = password==user.password;
 		if (!isPasswordValid) {
-			return res.status(400).json({ success: false, error : "Invalid credentials" });
+			return res.json({ success: false, error : "Invalid credentials" });
 		}
 
 		generateTokenAndSetCookie(res, user._id);

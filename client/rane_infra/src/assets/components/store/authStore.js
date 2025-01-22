@@ -129,7 +129,7 @@ export const useAuthStore = create((set) => ({
 		}
 	},
 	checkAuth: async () => {
-		set({ isCheckingAuth: true, error: null });
+		set({ isCheckingAuth: true, error: null ,isLoading:true });
 		try {
 			const response = await fetch(`${API_URL}/check-auth`, {
 				method: "GET",
@@ -144,15 +144,15 @@ export const useAuthStore = create((set) => ({
 			// console.log("Response JSON:", data1);
 
 			if (data1.user) {
-				set({ user: data1.user, isAuthenticated: true, isCheckingAuth: false });
+				set({ user: data1.user, isAuthenticated: true, isCheckingAuth: false ,isLoading:false});
 				console.log("User set successfully:", data1.user);
 			} else {
-				set({ isAuthenticated: false, isCheckingAuth: false, error: data1.error });
+				set({ isAuthenticated: false, isCheckingAuth: false, error: data1.error,isLoading:false });
 				console.log("No user found in response");
 			}
 		} catch (error) {
 			console.error("Error during authentication check:", error);
-			set({ error, isCheckingAuth: false, isAuthenticated: false });
+			// set({ error, isCheckingAuth: false, isAuthenticated: false });
 		}
 	},
 
