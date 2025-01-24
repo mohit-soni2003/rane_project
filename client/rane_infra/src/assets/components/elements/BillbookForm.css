@@ -1,111 +1,113 @@
-.billbook-container {
-    width: 100%;
-    padding: 20px;
-    background-color: rgb(84, 77, 77);
-    color: white;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .title {
-    font-size: 2rem;
-    font-weight: bold;
-    margin-bottom: 10px;
-  }
-  
-  .subtitle {
-    font-size: 1.2rem;
-    margin-bottom: 5px;
-  }
-  
-  .description {
-    font-size: 0.9rem;
-    margin-bottom: 20px;
-  }
-  
-  .billbook-form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    width: 100%;
-    max-width: 800px; /* Keeps form width manageable */
-  }
-  
-  .form-row {
-    display: flex; 
-    gap: 15px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  
-  .form-row input,
-  .form-row textarea {
-    width: 345.99px; /* Set to desired width */
-    height: 50px; /* Set to desired height */
-    padding: 10px;
-    border: 1px solid white;
-    border-radius: 4px;
-    font-size: 1rem;
-    background-color: rgb(84, 77, 77);
-    color: rgb(255, 255, 255);
-    outline: none;
-    margin-bottom: 15px;
-  }
-  
-  textarea {
-    height: 150px;
-    resize: none;
-  }
-  
-  .billbook-container ::placeholder {
-    color: white;
-    opacity: 0.8;
-  }
-  
-  .file-upload {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    color: white;
-  }
-  
-  .file-upload input {
-    display: none;
-  }
-  
-  .recaptcha-info {
-    font-size: 0.8rem;
-    color: #ddd;
-  }
-  
-  .submit-button {
-    background-color: white;
-    color: rgb(84, 77, 77);
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    font-size: 1rem;
-    cursor: pointer;
-    font-weight: bold;
-    margin-top: 20px;
-    width: 178.3px;
-    align-items:center;
-    align-self: center;
-    
-
-
+#upload-bill{
+  /* background-color: #fdffef; */
+  background-color: rgb(255, 255, 255);
 }
-  
-  .submit-button:hover {
-    background-color: #ddd;
+
+.upload-bill-container {
+  font-family: Arial, sans-serif;
+  /* background-color: rgb(84, 77, 77); */
+  background-color: rgb(255, 255, 255);
+  color: #fff;
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  border-radius: 10px;
+  /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); */
+}
+
+.title {
+  text-align: center;
+  font-size: 2.3rem;
+  margin-bottom: 15px;
+  color: #000;
+}
+
+.subtitle {
+  text-align: center;
+  font-size: 1.3rem;
+  margin-bottom: 8px;
+  color: #000;
+}
+
+.description {
+  text-align: center;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+  color: #000;
+}
+
+.form-container {
+  background-color: rgb(84, 77, 77);
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.form-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+}
+
+.form-group input,
+.form-group textarea {
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fffeef;
+  color: #000;
+}
+
+.form-group textarea {
+  resize: none;
+}
+
+.file-upload input {
+  padding: 5px;
+}
+
+.recaptcha-text {
+  font-size: 0.8rem;
+  text-align: center;
+  margin: 15px 0;
+  color: #bbb;
+}
+
+.submit-button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #fff;
+  background-color: rgb(159, 124, 83);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.submit-button:hover {
+    background-color: rgb(189, 144, 92);
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
   }
-  
-  @media (max-width: 768px) {
-    .form-row input,
-    .form-row textarea {
-      width: 100%; /* Adjust input width for small screens */
-    }
-  }
-  
+}

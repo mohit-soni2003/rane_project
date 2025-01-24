@@ -70,3 +70,11 @@
     font-size: 18px;
   }
   
+  /* ---------------------------------------mybillss.css------------ */
+  .upload-bill-heading{
+    padding: 15px 0px;
+    border-bottom: 3px solid rgb(232, 232, 232);
+  }
+  .user-dashboard-table{
+    margin-top: 2%;
+  }

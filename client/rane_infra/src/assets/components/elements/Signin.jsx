@@ -5,6 +5,7 @@ import { Loader } from 'lucide-react';
 
 
 const Signin = () => {
+  const naviigate = useNavigate()
   const { login, isLoading, error } = useAuthStore();
 
   const [formData, setFormData] = useState({
@@ -20,13 +21,15 @@ const Signin = () => {
     }));
   };
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // console.log(formData)
-    await login(formData.email , formData.password);
-    if(error)console.log(error)
+   const istrue= await login(formData.email, formData.password);
 
-    // Add sign-in logic here
+    if (istrue) {
+      naviigate("/user-dashboard")
+    }
+    // Add sign-in logic here 
   };
 
   return (
@@ -66,7 +69,8 @@ const Signin = () => {
 
           {/* Submit Button */}
           <button type="submit" style={styles.button}>
-            SIGN IN
+            {isLoading ? <Loader className='' size={24} /> : "Sign In"}
+
           </button>
 
           {/* Reset Password Link */}

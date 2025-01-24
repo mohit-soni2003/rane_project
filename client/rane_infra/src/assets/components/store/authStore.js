@@ -73,11 +73,13 @@ export const useAuthStore = create((set) => ({
 					error: null,
 					isLoading: false,
 				});
+				return true
 			} else {
 				set({
 					error: datal.error || "Login failed",
 					isLoading: false,
 				});
+				return false
 			}
 		} catch (error) {
 			set({ error: error.message || "Error logging in", isLoading: false });
@@ -107,29 +109,29 @@ export const useAuthStore = create((set) => ({
 				body: JSON.stringify({ code }),
 			});
 
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.message || "Error verifying email");
-			}
 
-			const data = await response.json();
-			console.log(data)
-			if (data.message) {
-				set({ user: data.user, isLoading: false });
+			const verifyEmailData = await response.json();
+			console.log(verifyEmailData)
+			if (verifyEmailData.message) {
+				set({ user: verifyEmailData.user, isLoading: false });
+				set({ isAuthenticated: true, isLoading: false });
+				console.log("user set")
+				return true
+				// navigate("/signin")
 			}
 			else {
-				set({ error: data.error, isLoading: false });
+				set({ error: verifyEmailData.error, isLoading: false });
+				console.log("error set")
+				return false
 			}
 
-			set({ isAuthenticated: true, isLoading: false });
-			return data;
 		} catch (error) {
 			set({ isLoading: false });
 			throw error;
 		}
 	},
 	checkAuth: async () => {
-		set({ isCheckingAuth: true, error: null ,isLoading:true });
+		set({ isCheckingAuth: true, error: null });
 		try {
 			const response = await fetch(`${API_URL}/check-auth`, {
 				method: "GET",
@@ -144,15 +146,15 @@ export const useAuthStore = create((set) => ({
 			// console.log("Response JSON:", data1);
 
 			if (data1.user) {
-				set({ user: data1.user, isAuthenticated: true, isCheckingAuth: false ,isLoading:false});
+				set({ user: data1.user, isAuthenticated: true, isCheckingAuth: false, });
 				console.log("User set successfully:", data1.user);
 			} else {
-				set({ isAuthenticated: false, isCheckingAuth: false, error: data1.error,isLoading:false });
+				set({ isAuthenticated: false, isCheckingAuth: false, error: data1.error });
 				console.log("No user found in response");
 			}
 		} catch (error) {
 			console.error("Error during authentication check:", error);
-			// set({ error, isCheckingAuth: false, isAuthenticated: false });
+			set({ isCheckingAuth: false, isAuthenticated: false });
 		}
 	},
 

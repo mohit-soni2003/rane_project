@@ -50,7 +50,7 @@ router.post("/verify-email",async(req,res)=>{
     const { code } = req.body;
 	try {
         console.log(code)
-		const user = await User.findOne({
+		const user = await User.findOne({ 
             VerificationToken: code,
 			// verificationTokenExpiresAt: { $gt: Date.now() },
 		});
@@ -76,9 +76,10 @@ router.post("/verify-email",async(req,res)=>{
 				password: undefined,
 			},
 		});
+
 	} catch (error) {
 		console.log("error in verifyEmail ", error);
-		res.status(500).json({ success: false, message: "Server error" });
+		res.status(500).json({ success: false, error: "Server error" });
 	}
 })
 router.post("/signin",async (req, res) => {
@@ -187,6 +188,42 @@ router.get("/check-auth",verifyToken,async(req,res)=>{
 
 router.get("/logout", (req, res) => {
     res.clearCookie("token");
+	res.status(200).json({ success: true, error: "Logged out successfully" });
+});
+router.get("/logout", (req, res) => {
+    res.clearCookie("token");
+	res.status(200).json({ success: true, error: "Logged out successfully" });
+});
+router.post("/admin-login", async(req, res) => {
+    console.log("Signin Route Hitted/.")
+    const { email, password } = req.body;
+	try {
+		const user = await User.findOne({ email });
+		if (!user) {
+			return res.json({ success: false, error: "Invalid credentials" });
+		}
+		const isPasswordValid = password==user.password;
+		if (!isPasswordValid) {
+			return res.json({ success: false, error : "Invalid credentials" });
+		}
+
+		generateTokenAndSetCookie(res, user._id);
+
+		user.lastlogin = new Date();
+		await user.save();
+
+		res.status(200).json({
+			success: true,
+			message: "Logged in successfully",
+			user: {
+				...user._doc,
+				password: undefined,
+			},
+		});
+	} catch (error) {
+		console.log("Error in login ", error);
+		res.status(400).json({ success: false, message: error.message });
+	}
 	res.status(200).json({ success: true, error: "Logged out successfully" });
 });
 

@@ -7,7 +7,7 @@ import { Loader } from 'lucide-react';
 const VerifyEmail = () => {
   const navigate = useNavigate()
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-      const {verifyEmail ,error , isLoading} = useAuthStore();
+      const {verifyEmail ,error, isLoading,user} = useAuthStore();
   
 
   const handleChange = (value, index) => {
@@ -28,16 +28,22 @@ const VerifyEmail = () => {
     }
   };
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-        console.log(otp.join(""))
-        // console.log(formData.email,formData.password, formData.name);
-        await verifyEmail(otp.join(""));
-        navigate("/");
+        console.log(otp.join(""));
+        const isEmailVerified = await verifyEmail(otp.join(""));
+        console.log(isEmailVerified);
+
+        if (isEmailVerified) {
+            navigate("/signin"); // Navigate if verification is successful
+        } else {
+            console.log("Email Not verified"); // Log the error from the server
+        }
     } catch (error) {
-        console.log(error);
-    }  };
+        console.error("An unexpected error occurred:", error);
+    }
+};
 
   return (
     <div className="verify-email-container">
@@ -55,7 +61,7 @@ const VerifyEmail = () => {
             onKeyDown={(e) => {
               if (e.key === "Backspace") handleBackspace(e.target.value, index);
             }}
-          />
+          /> 
         ))}
       </div>
       {error && <p className='signup-error'>{error} </p>}

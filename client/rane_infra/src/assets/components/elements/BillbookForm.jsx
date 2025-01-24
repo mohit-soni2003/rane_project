@@ -1,74 +1,251 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./BillbookForm.css";
+import { useAuthStore } from "../store/authStore";
+function BillbookForm() {
 
-const BillbookForm = () => {
-  const cloudinaryRef = useRef();
-  const widgetRef = useRef();
 
-  const [fileName, setFileName] = useState("Attach File (0)");
+  const [formData, setFormData] = useState({
+    firmName: "",
+    workArea: "",
+    phone: "",
+    loaNo: "",
+    email: "",
+    invoiceNo: "",
+    workDescription: "",
+    pdfurl: "",
+    user: ""
 
+  });
+  // user Setting up 
+  const { user } = useAuthStore();
   useEffect(() => {
-    cloudinaryRef.current = window.cloudinary;
-    widgetRef.current = cloudinaryRef.current.createUploadWidget(
-      {
-        cloudName: "dxdyudztf",
-        uploadPreset: "raneproject",
-      },
-      function (error, result) {
-        if (!error && result && result.event === "success") {
-          console.log("File uploaded successfully:", result.info);
-          setFileName(result.info.original_filename); 
-        }
-      }
-    );
-  }, []);
+    if (user) {
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        user: user._id,
+      }));
+    }
+  }, [user]);
 
-  const handleFileClick = (e) => {
-    e.preventDefault(); 
-    widgetRef.current.open(); 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // Handle input change
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [id]: value,
+    }));
+  };
+
+  // Handle file change
+  const handleFileChange = async (e) => {
+    setLoading(true);
+    console.log("isloading set true")
+    const selectedFile = e.target.files[0]; // Get the selected file directly
+    if (!selectedFile) {
+      console.error("No file selected");
+      setLoading(false);
+      console.log("isloading set false")
+      return;
+    }
+
+    console.log(selectedFile); // Log the selected file
+
+    const data = new FormData();
+    data.append("file", selectedFile); // Attach the selected file
+    data.append("upload_preset", "rane_infra"); // Your Cloudinary upload preset
+    data.append("cloud_name", "mohitcloud2003"); // Your Cloudinary cloud name
+
+    try {
+      const response = await fetch(
+        "https://api.cloudinary.com/v1_1/mohitcloud2003/raw/upload",
+        {
+          method: "POST",
+          body: data,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Error: " + response.status + " " + response.statusText);
+      }
+
+      const result = await response.json();
+      console.log("Uploaded PDF URL:", result.url);
+
+      // Set PDF URL in formData after successful upload
+      setFormData({
+        ...formData,
+        pdfurl: result.url,
+      });
+
+      setLoading(false);
+    } catch (err) {
+      console.error("Error uploading PDF:", err);
+      setError("Error uploading the file. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Check if the PDF URL is set and if the form is ready
+    if (loading) {
+      alert("Please wait while the file is uploading...");
+      return;
+    }
+
+    if (!formData.firmName || !formData.phone || !formData.email || !formData.loaNo || !formData.invoiceNo) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    if (!formData.pdfurl) {
+      alert("Please select the bill (PDF file).");
+      return;
+    }
+
+    // Proceed to submit the form data (you can replace this with your actual submission logic)
+    try {
+      const response = await fetch("http://localhost:3000/post-bill", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      // Handle server response
+      if (response.ok) {
+        const result = await response.json();
+        alert("Form submitted successfully!");
+        console.log("Server response:", result);
+
+      } else {
+        const error = await response.json();
+        alert(`Failed to submit form: ${error.message || "Server error"}`);
+      }
+    } catch (err) {
+      console.error("Error submitting form:", err);
+      alert("An error occurred. Please try again later.");
+    }
+   
+    // Here, you can add your logic to send formData to your backend or API
   };
 
   return (
-    <div className="billbook-container">
-      <h1 className="title">Bill Books</h1>
-      <p className="subtitle">Labor Contractor & Goods Supplier Bills Section</p>
-      <p className="description">
-        Only for Local and Labor Contractor, Supplier, Labor They Upload His Work and Goods Bills.
-      </p>
+    <div className="upload-bill-container">
+      <div className="form-container">
+        <form>
+          <div className="form-grid">
+            {/* Form Fields */}
+            <div className="form-group">
+              <label htmlFor="firmName">Firm Name *</label>
+              <input
+                type="text"
+                id="firmName"
+                placeholder="Firm Name"
+                required
+                value={formData.firmName}
+                onChange={handleChange}
+              />
+            </div>
 
-      <form className="billbook-form">
-        <div className="form-row">
-          <input type="text" placeholder="Firm Name *" required />
-          <input type="text" placeholder="Work Area *" required />
-        </div>
-        <div className="form-row">
-          <input type="tel" placeholder="Phone *" required />
-          <textarea placeholder="Work Description"></textarea>
-        </div>
-        <div className="form-row">
-          <input type="email" placeholder="Email *" required />
-          <input
-            type="text"
-            placeholder="LOA NO. (Issue By Rane and Rane Sons) *"
-            required
-          />
-        </div>
-        <div className="form-row">
-          <input type="text" placeholder="Invoice No." />
-          <label className="file-upload" onClick={handleFileClick}>
-            {fileName}
-          </label>
-        </div>
-        <p className="recaptcha-info">
-          This site is protected by reCAPTCHA and the Google Privacy Policy and
-          Terms of Service apply.
-        </p>
-        <button type="submit" className="submit-button">
-          Submit Bills
-        </button>
-      </form>
+            <div className="form-group">
+              <label htmlFor="workArea">Work Area *</label>
+              <input
+                type="text"
+                id="workArea"
+                placeholder="Work Area"
+                required
+                value={formData.workArea}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="phone">Phone *</label>
+              <input
+                type="text"
+                id="phone"
+                placeholder="Phone"
+                required
+                value={formData.phone}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="email">Email *</label>
+              <input
+                type="email"
+                id="email"
+                placeholder="Email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="loaNo">LOA NO. (Issued By Rane and Rane Sons) *</label>
+              <input
+                type="text"
+                id="loaNo"
+                placeholder="LOA NO."
+                required
+                value={formData.loaNo}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="invoiceNo">Invoice No.</label>
+              <input
+                type="text"
+                id="invoiceNo"
+                placeholder="Invoice No."
+                value={formData.invoiceNo}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="workDescription">Work Description</label>
+            <textarea
+              id="workDescription"
+              placeholder="Work Description"
+              rows="5"
+              value={formData.workDescription}
+              onChange={handleChange}
+            ></textarea>
+          </div>
+
+          <div className="form-group file-upload">
+            <label htmlFor="fileUpload">Bills Upload</label>
+            <input
+              type="file"
+              accept=".pdf"
+              id="fileUpload"
+              onChange={handleFileChange}
+            />
+          </div>
+
+          <p className="recaptcha-text">
+            This site is protected by reCAPTCHA and the Google Privacy Policy and Terms of Service apply.
+          </p>
+
+          <button onClick={handleSubmit} className="submit-button">
+            Submit
+          </button>
+        </form>
+      </div>
     </div>
   );
-};
+}
 
 export default BillbookForm;

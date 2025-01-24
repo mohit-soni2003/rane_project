@@ -70,3 +70,12 @@
     font-size: 18px;
   }
   
+
+  .admin-dashboard-heading{
+    border-bottom: 3px solid rgb(169, 169, 169);
+    padding: 20px 0px;
+  }
+
+  .admin-dashboard-table-container{
+    margin: 3% 0px;
+  }

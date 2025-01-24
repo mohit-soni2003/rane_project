@@ -1,23 +1,54 @@
 import React, { useState } from "react";
 import "./AdminDashboard.css";
+import AdminTable from "../../../cards/AdminTable";
+import Maintainence from "../../unique_component/Maintainence";
 
 const AdminDashboard = () => {
   const [activeLink, setActiveLink] = useState("Home"); // Default to "Home"
-  const links = ["Home", "Profile", "Settings", "Notifications", "Help"];
+  const links = ["Home", "Profile", , "Bills", "Settings", "Notifications", "Help"];
 
   // Function to render content dynamically
   const renderContent = () => {
     switch (activeLink) {
       case "Home":
-        return <p>Welcome to the Home page! Here is an overview of your dashboard.</p>;
+        return (
+          <>
+            <Maintainence></Maintainence>
+          </>
+        )
       case "Profile":
-        return <p>This is the Profile page. You can update your personal information here.</p>;
+        return (
+          <>
+            <Maintainence></Maintainence>
+          </>
+        )
+      case "Bills":
+        return (
+          <>
+            <h1 className="admin-dashboard-heading">All bills will shown here</h1>
+            <div className="admin-dashboard-table-container">
+              <AdminTable></AdminTable>
+            </div>
+          </>
+        )
       case "Settings":
-        return <p>Manage your preferences and application settings on this page.</p>;
+        return (
+          <>
+            <Maintainence></Maintainence>
+          </>
+        )
       case "Notifications":
-        return <p>View all your notifications and alerts in one place.</p>;
+        return(
+          <>
+          <Maintainence></Maintainence>
+          </>
+        ) 
       case "Help":
-        return <p>Need assistance? This is the Help page where you can find support resources.</p>;
+        return(
+          <>
+          <Maintainence></Maintainence>
+          </>
+        ) 
       default:
         return <p>Select a page from the sidebar to get started.</p>;
     }
@@ -39,9 +70,8 @@ const AdminDashboard = () => {
           {links.map((link) => (
             <button
               key={link}
-              className={`admin-dashboard-nav-link ${
-                activeLink === link ? "admin-dashboard-active" : ""
-              }`}
+              className={`admin-dashboard-nav-link ${activeLink === link ? "admin-dashboard-active" : ""
+                }`}
               onClick={() => setActiveLink(link)}
             >
               {link}
@@ -52,7 +82,6 @@ const AdminDashboard = () => {
 
       {/* Content */}
       <div className="admin-dashboard-content">
-        <h1>{activeLink} Page</h1>
         {renderContent()} {/* Render content dynamically */}
       </div>
     </div>
