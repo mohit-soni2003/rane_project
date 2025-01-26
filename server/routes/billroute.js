@@ -52,4 +52,41 @@ router.post("/post-bill", async (req, res) => {
     }
 });
 
+router.get('/mybill/:id', async(req, res) => {
+    console.log("show my bill route hitted")
+    const { id } = req.params;
+    console.log(id)
+
+  try {
+    // Find bills that match the user's ID
+    const bills = await Bill.find({ user: id });
+    console.log(bills)
+    if (bills.length > 0) {
+      res.status(200).json(bills);
+    } else {
+      res.json({ error: 'No bills found for this user' });
+    }
+  } catch (error) {
+    res.json({ error: 'Server error', details: error.message });
+  }
+  });
+  
+router.get('/allbill', async(req, res) => {
+    console.log("show my bill route hitted")
+
+  try {
+    // Find bills that match the user's ID
+    const bills = await Bill.find({}).populate("user");
+    console.log(bills)
+    if (bills.length > 0) {
+      res.status(200).json(bills);
+    } else {
+      res.json({ error: 'No bills found for this user' });
+    }
+  } catch (error) {
+    res.json({ error: 'Server error', details: error.message });
+  }
+  });
+  
+
 module.exports=router

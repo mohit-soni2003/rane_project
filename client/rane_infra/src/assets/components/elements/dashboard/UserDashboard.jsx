@@ -24,7 +24,7 @@ const UserDashboard = () => {
         return (
           <>
           <h1 className="upload-bill-heading"> Bill Uploaded By You</h1>
-            <div className="user-dashboard-table"><BillShowTable></BillShowTable></div>
+            <div className="user-dashboard-table"><BillShowTable userid={user._id}></BillShowTable></div>
           </>
         );
       case "Upload Bill":
