@@ -1,10 +1,42 @@
-import Container from 'react-bootstrap/Container';
-import Nav from 'react-bootstrap/Nav';
-import Navbar from 'react-bootstrap/Navbar';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import Container from "react-bootstrap/Container";
+import Nav from "react-bootstrap/Nav";
+import Navbar from "react-bootstrap/Navbar";
 import "./Navpannel.css";
 import { Link } from "react-router-dom";
+import { useAuthStore } from "../store/authStore";
 
 function Navpannel() {
+  const navigate = useNavigate();
+
+  // Access the auth store values
+  const { checkAuth, isAuthenticated, user } = useAuthStore();
+
+  // Logout handler
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/logout", {
+        method: "GET",
+        credentials: "include", // Include cookies in the request
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(result.message); // Optional: Display a success message in the console
+        alert("Logged out successfully!"); // Optional: Show an alert
+        navigate("/signin"); // Redirect to the login page
+      } else {
+        const errorData = await response.json();
+        console.error("Logout failed:", errorData.error);
+        alert("Failed to logout. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error during logout:", error.message);
+      alert("An error occurred while logging out. Please try again.");
+    }
+  };
+
   return (
     <Navbar collapseOnSelect expand="lg" bg="transparent" className="navbar-custom">
       <Container>
@@ -28,12 +60,22 @@ function Navpannel() {
             </Nav.Item>
           </Nav>
           <Nav>
-            <Nav.Item>
-              <Link to="/signin" className="nav-link">Login</Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Link to="/signup" className="nav-link">Signup</Link>
-            </Nav.Item>
+            {isAuthenticated && user?.isverified ? (
+              <Nav.Item>
+                <Link onClick={handleLogout} className="nav-link">
+                  Logout
+                </Link>
+              </Nav.Item>
+            ) : (
+              <>
+                <Nav.Item>
+                  <Link to="/signin" className="nav-link">Login</Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Link to="/signup" className="nav-link">Signup</Link>
+                </Nav.Item>
+              </>
+            )}
           </Nav>
         </Navbar.Collapse>
       </Container>

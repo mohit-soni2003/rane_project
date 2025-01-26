@@ -63,8 +63,8 @@ export default function BillShowTable({ userid }) {
                                 <Button
                                     variant="primary"
                                     onClick={() => {
-                                        if (bill.pdfUrl) {
-                                            window.open(bill.pdfUrl, '_blank', 'noopener,noreferrer');
+                                        if (bill.pdfurl) {
+                                            window.open(bill.pdfurl, '_blank', 'noopener,noreferrer');
                                         } else {
                                             alert('PDF URL not available!');
                                         }

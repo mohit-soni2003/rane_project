@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import "./AdminDashboard.css";
 import AdminTable from "../../../cards/AdminTable";
 import Maintainence from "../../unique_component/Maintainence";
+import ClientList from "./ClientList";
 
 const AdminDashboard = () => {
   const [activeLink, setActiveLink] = useState("Home"); // Default to "Home"
-  const links = ["Home", "Profile", , "Bills", "Settings", "Notifications", "Help"];
+  const links = ["Home", "Profile", , "Bills","Clients", "Settings", "Notifications", "Help"];
 
   // Function to render content dynamically
   const renderContent = () => {
@@ -35,6 +36,13 @@ const AdminDashboard = () => {
         return (
           <>
             <Maintainence></Maintainence>
+          </>
+        )
+      case "Clients":
+        return (
+          <>
+           <h1 className="admin-dashboard-heading">All Your Client will shown here.</h1>
+            <ClientList></ClientList>
           </>
         )
       case "Notifications":

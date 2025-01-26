@@ -67,6 +67,9 @@ const Signin = () => {
             />
           </div>
 
+          {error && <p className='signup-error'>{error} </p>}
+
+
           {/* Submit Button */}
           <button type="submit" style={styles.button}>
             {isLoading ? <Loader className='' size={24} /> : "Sign In"}

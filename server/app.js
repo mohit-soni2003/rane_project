@@ -31,6 +31,7 @@ app.get('/', (req, res) => {
 
 app.use(require("./routes/auth"))
 app.use(require("./routes/billroute"))
+app.use(require("./routes/clientroute"))
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
