@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import "./BillShowTable.css";
 import Button from 'react-bootstrap/Button';
+import { backend_url } from '../components/store/keyStore';
+
 
 export default function BillShowTable({ userid }) {
     const [bills, setBills] = useState([]); // State to store the bills
@@ -10,7 +12,7 @@ export default function BillShowTable({ userid }) {
     useEffect(() => {
         const fetchBills = async () => {
             try {
-                const response = await fetch(`http://localhost:3000/mybill/${userid}`);
+                const response = await fetch(`${backend_url}/mybill/${userid}`);
                 const data = await response.json();
                 console.log("Fetched data:", data); // Inspect the structure of the response
     
@@ -58,7 +60,7 @@ export default function BillShowTable({ userid }) {
                             <td>{bill.workArea}</td>
                             <td>{bill.loaNo}</td>
                             <td>{bill.invoiceNo}</td>
-                            <td>{bill.paymentStatus ? 'Paid' : 'Unpaid'}</td>
+                            <td>{bill.paymentStatus}</td>
                             <td>
                                 <Button
                                     variant="primary"

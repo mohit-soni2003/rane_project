@@ -10,9 +10,10 @@ import BillbookForm from "./assets/components/elements/BillbookForm";
 import AdminDashboard from "./assets/components/elements/dashboard/AdminDashboard";
 import UserDashboard from "./assets/components/elements/dashboard/UserDashboard";
 import { useAuthStore } from "./assets/components/store/authStore";
+import AdminLogin from "./assets/components/elements/AdminLogin";
 
 function App() {
-  const { checkAuth, isAuthenticated, user } = useAuthStore();
+  const { checkAuth, isAuthenticated, user,isAdmin} = useAuthStore();
   const [loading, setLoading] = useState(true); // State to track loading
 
   useEffect(() => {
@@ -41,6 +42,24 @@ function App() {
       console.log("Redirecting to Verify Email...");
       return <Navigate to="/verify-email" replace />; // Redirect to verify email if user is not verified
     }
+    if (isAdmin) {
+      console.log("Redirecting to admin dashboard");
+      return <Navigate to="/admin-dashboard" replace />; // Redirect to verify email if user is not verified
+    }
+    
+
+    return children; // Render protected route if user is authenticated and verified
+  };
+  const AdminRoute = ({ children }) => {
+    if (!isAuthenticated) {
+      console.log("Redirecting to Signin...");
+      return <Navigate to="/admin-login" replace />; // Redirect to signin if not authenticated
+    }
+
+    if (user && !isAdmin) {
+      console.log("You are not admin user.");
+      return <Navigate to="/" replace />; // Redirect to verify email if user is not verified
+    }
 
     return children; // Render protected route if user is authenticated and verified
   };
@@ -51,15 +70,24 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signin />} />
+        <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/upload-bill" element={<BillbookForm />} />
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        {/* <Route path="/admin-dashboard" element={<AdminDashboard />} /> */}
         <Route
           path="/user-dashboard"
           element={
             <ProtectedRoute>
               <UserDashboard />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin-dashboard"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
           }
         />
       </Routes>

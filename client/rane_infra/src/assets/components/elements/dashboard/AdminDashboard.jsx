@@ -6,7 +6,7 @@ import ClientList from "./ClientList";
 
 const AdminDashboard = () => {
   const [activeLink, setActiveLink] = useState("Home"); // Default to "Home"
-  const links = ["Home", "Profile", , "Bills","Clients", "Settings", "Notifications", "Help"];
+  const links = ["Home", "Profile", , "Bills","Clients", "Settings", "Notifications","Logout", "Help"];
 
   // Function to render content dynamically
   const renderContent = () => {

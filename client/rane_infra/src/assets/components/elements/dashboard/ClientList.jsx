@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from 'react-bootstrap/Button';
 import Spinner from 'react-bootstrap/Spinner';
+import { backend_url } from '../../store/keyStore';
+
 
 export default function ClientList() {
     const [clients, setClients] = useState([]);
     const [isLoading, setIsLoading] = useState(true); // State to track loading status
-    const [loaValues, setLoaValues] = useState({}); // Map to track LOA values per client
+    const [cidValues, setCidValues] = useState({}); // Map to track LOA values per client
     const [rerender, setRerender] = useState(true);
     const navigate = useNavigate();
 
@@ -15,7 +17,7 @@ export default function ClientList() {
         const fetchClients = async () => {
             setIsLoading(true); // Set loading state to true before fetching
             try {
-                const response = await fetch('http://localhost:3000/allclient');
+                const response = await fetch(`${backend_url}/allclient`);
                 const data = await response.json();
 
                 if (response.ok) {
@@ -44,17 +46,18 @@ export default function ClientList() {
         console.log('Updating LOA for User ID:', id);
 
         try {
-            const response = await fetch(`http://localhost:3000/update-loa/${id}`, {
+            const response = await fetch(`${backend_url}/update-cid/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ loa: loaValues[id] }), // Send the specific loa value
+                body: JSON.stringify({ cid: cidValues[id] }), // Send the specific loa value
             });
 
             if (response.ok) {
                 const data = await response.json();
                 console.log('LOA updated successfully:', data);
+                setCidValues("")
                 setRerender(!rerender);
                 alert(`LOA updated successfully for User ID: ${id}`);
             } else {
@@ -69,10 +72,10 @@ export default function ClientList() {
     };
 
     // Handle LOA input changes
-    const handleLoaChange = (id, newLoa) => {
-        setLoaValues((prevLoaValues) => ({
-            ...prevLoaValues,
-            [id]: newLoa, // Update LOA for the specific client ID
+    const handleCidChange = (id, newCid) => {
+        setCidValues((prevCidValues) => ({
+            ...prevCidValues,
+            [id]: newCid, // Update LOA for the specific client ID
         }));
     };
 
@@ -95,8 +98,8 @@ export default function ClientList() {
                         <th>Name</th>
                         <th>Email</th>
                         <th>Phone</th>
-                        <th>LOA</th>
-                        <th>newLoa</th>
+                        <th>CID</th>
+                        <th>New CID</th>
                         <th>Update Loa</th>
                     </tr>
                 </thead>
@@ -115,12 +118,12 @@ export default function ClientList() {
                             <td>{client.name}</td>
                             <td>{client.email}</td>
                             <td>{client.phone}</td>
-                            <td>{client.loaNo}</td>
+                            <td>{client.cid}</td>
                             <td>
                                 <input
                                     type="text"
-                                    value={loaValues[client._id] || ''}
-                                    onChange={(e) => handleLoaChange(client._id, e.target.value)}
+                                    value={cidValues[client._id] || ''}
+                                    onChange={(e) => handleCidChange(client._id, e.target.value)}
                                     style={{
                                         border: '1px solid #adadad',
                                         background: '#ebe8e8',

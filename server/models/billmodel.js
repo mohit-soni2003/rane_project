@@ -17,8 +17,8 @@ const billSchema = new mongoose.Schema({
         type: String,
     },
     paymentStatus: {
-        type: Boolean,
-        default: false,
+        type: String,
+        default:"Unpaid"
     },
     invoiceNo:{
         type:String,

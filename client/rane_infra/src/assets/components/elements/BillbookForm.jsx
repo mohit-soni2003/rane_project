@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "./BillbookForm.css";
 import { useAuthStore } from "../store/authStore";
+import { backend_url } from '../../components/store/keyStore';
+
+
 function BillbookForm() {
 
 
@@ -110,7 +113,7 @@ function BillbookForm() {
 
     // Proceed to submit the form data (you can replace this with your actual submission logic)
     try {
-      const response = await fetch("http://localhost:3000/post-bill", {
+      const response = await fetch(`${backend_url}/post-bill`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -22,13 +22,14 @@ router.get('/allclient', async (req, res) => {
     }
 });
 
-router.put('/update-loa/:id', async (req, res) => {
-    console.log("Update LOA route hitted...");
+router.put('/update-cid/:id', async (req, res) => {
+    console.log("Update CID route hitted...");
     const { id } = req.params;
-    const { loa } = req.body;
+    const { cid } = req.body;
 
+    console.log("ID:", id, "New CID:", cid);
     try {
-        console.log("ID:", id, "New LOA:", loa);
+        console.log("ID:", id, "New CID:", cid);
 
         // Check if user exists before updating
         const user = await User.findById(id);
@@ -39,7 +40,7 @@ router.put('/update-loa/:id', async (req, res) => {
         // Update the user's LOA
         const updatedUser = await User.findByIdAndUpdate(
             id,
-            { loaNo: loa },
+            { cid: cid },
             { new: true } // Return the updated document
         );
 

@@ -6,6 +6,8 @@ import Navbar from "react-bootstrap/Navbar";
 import "./Navpannel.css";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
+import { backend_url } from '../../components/store/keyStore';
+
 
 function Navpannel() {
   const navigate = useNavigate();
@@ -16,7 +18,7 @@ function Navpannel() {
   // Logout handler
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost:3000/logout", {
+      const response = await fetch(`${backend_url}/logout`, {
         method: "GET",
         credentials: "include", // Include cookies in the request
       });
