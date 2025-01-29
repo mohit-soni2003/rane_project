@@ -4,12 +4,13 @@ const app = express();
 const mongoose = require('./db/mongoConnection'); // Import the db.js file
 const cookieParser = require("cookie-parser")
 const cors  = require("cors")
+const {FRONTEND_ORIGIN_URL} = require("./keys")
 
 
 // Middleware to parse JSON data
 app.use(cookieParser())
 const corsOptions = {
-  origin: "http://localhost:5173",  // Explicitly allow the frontend's origin
+  origin: FRONTEND_ORIGIN_URL,  // Explicitly allow the frontend's origin
   credentials: true,  // Allow cookies to be sent
 };
 

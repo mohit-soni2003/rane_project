@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "./BillbookForm.css";
 import { useAuthStore } from "../store/authStore";
-import { backend_url } from '../../components/store/keyStore';
+import { backend_url , CLOUDINARY_URL,UPLOAD_PRESET,CLOUD_NAME } from '../../components/store/keyStore'
+
 
 
 function BillbookForm() {
@@ -58,12 +59,12 @@ function BillbookForm() {
 
     const data = new FormData();
     data.append("file", selectedFile); // Attach the selected file
-    data.append("upload_preset", "rane_infra"); // Your Cloudinary upload preset
-    data.append("cloud_name", "mohitcloud2003"); // Your Cloudinary cloud name
+    data.append("upload_preset", UPLOAD_PRESET); // Your Cloudinary upload preset
+    data.append("cloud_name", CLOUD_NAME); // Your Cloudinary cloud name
 
     try {
       const response = await fetch(
-        "https://api.cloudinary.com/v1_1/mohitcloud2003/raw/upload",
+        CLOUDINARY_URL,
         {
           method: "POST",
           body: data,

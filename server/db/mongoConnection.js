@@ -1,7 +1,8 @@
 const mongoose = require('mongoose')
+const {MONGO_URL}=require("../keys")
 
 
-mongoose.connect("mongodb+srv://mohit:Mohit123@cluster0.ruqg5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+mongoose.connect(MONGO_URL)
 mongoose.connection.on("connected", () => {
     console.log("Succesfullky Connected To Database......")
 })
