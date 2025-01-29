@@ -35,6 +35,8 @@ app.get("/test-cookie", async(req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000  // Cookie will expire in 7 days
 
   });
+  res.set('Cache-Control', 'no-store');  // Ensure no caching for this response
+
   res.json({ message: "Cookie set!" }); // ✅ Returns JSON instead of plain text
 });
 
