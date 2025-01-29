@@ -31,9 +31,14 @@ app.get('/', (req, res) => {
 });
 
 app.get("/test-cookie", (req, res) => {
-  res.cookie("test", "cookie_value", { secure: true, sameSite: "None" });
-  res.send("Cookie set!");
+  res.cookie("testToken", "12345", {
+      httpOnly: true,  
+      secure: true,  
+      sameSite: "None",  
+  });
+  res.json({ message: "Cookie set!" }); // ✅ Returns JSON instead of plain text
 });
+
 
 app.use(require("./routes/auth"))
 app.use(require("./routes/billroute"))
