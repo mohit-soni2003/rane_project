@@ -10,16 +10,13 @@ const {FRONTEND_ORIGIN_URL} = require("./keys")
 // Middleware to parse JSON data
 app.use(cookieParser())
 const corsOptions = {
-  origin: FRONTEND_ORIGIN_URL,  // Explicitly allow the frontend's origin
+  origin: "https://rane-project.vercel.app",  // Your frontend URL
   credentials: true,  // Allow cookies to be sent
 };
 
 // Apply CORS middleware globally
 app.use(cors(corsOptions));
-
-// Handle preflight requests (OPTIONS)
-app.options('*', cors(corsOptions));  // Respond to OPTIONS requests with CORS headers
-
+app.options('*', cors(corsOptions));  // Handle OPTIONS preflight requests
 app.use(express.json());
 
 // Define a port for the server
@@ -35,6 +32,8 @@ app.get("/test-cookie", (req, res) => {
       httpOnly: true,  
       secure: true,  
       sameSite: "None",  
+      maxAge: 7 * 24 * 60 * 60 * 1000  // Cookie will expire in 7 days
+
   });
   res.json({ message: "Cookie set!" }); // ✅ Returns JSON instead of plain text
 });
