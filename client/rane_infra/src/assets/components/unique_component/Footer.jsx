@@ -1,7 +1,16 @@
 import React from "react";
 import { FaFacebookF, FaInstagram, FaTwitter } from "react-icons/fa";
 import "./Footer.css"; // Create this CSS file for styling
+const setCookieTest=async()=>{
+await  fetch("https://rane-project-server.vercel.app/api/get-cookie", {
+    method: "GET",
+    credentials: "include",  // Ensure cookies are sent and received
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error(error));
 
+}
 const Footer = () => {
   return (
     <footer className="footer">
@@ -25,6 +34,7 @@ const Footer = () => {
         <p>9425029680</p>
         <p>&copy; 2024 - All Rights Reserved. By RANE AND RANE SONS</p>
       </div>
+      <div onClick={setCookieTest}>Setcookit</div>
     </footer>
   );
 };
