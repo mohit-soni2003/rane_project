@@ -2,7 +2,7 @@ import React from "react";
 import { FaFacebookF, FaInstagram, FaTwitter } from "react-icons/fa";
 import "./Footer.css"; // Create this CSS file for styling
 const setCookieTest=async()=>{
-await  fetch("https://rane-project-server.vercel.app/api/get-cookie", {
+await  fetch("https://rane-project-server.vercel.app/get-cookie", {
     method: "GET",
     credentials: "include",  // Ensure cookies are sent and received
 })
