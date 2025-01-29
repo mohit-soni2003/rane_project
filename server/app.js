@@ -30,6 +30,11 @@ app.get('/', (req, res) => {
   res.send('Hello, World! Express server is running.');
 });
 
+app.get("/test-cookie", (req, res) => {
+  res.cookie("test", "cookie_value", { secure: true, sameSite: "None" });
+  res.send("Cookie set!");
+});
+
 app.use(require("./routes/auth"))
 app.use(require("./routes/billroute"))
 app.use(require("./routes/clientroute"))
