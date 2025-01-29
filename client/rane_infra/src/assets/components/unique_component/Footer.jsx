@@ -5,6 +5,8 @@ const setCookieTest=async()=>{
 await  fetch("https://rane-project-server.vercel.app/test-cookie", {
     method: "GET",
     credentials: "include",  // Ensure cookies are sent and received
+    referrerPolicy: "no-referrer-when-downgrade"
+
 })
 .then(response => response.json())
 .then(data => console.log(data))
