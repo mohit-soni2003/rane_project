@@ -198,12 +198,12 @@ router.post("/logout", async(req, res) => {
 	});
 	
 	
-    // res.clearCookie("token", {
-	// 	httpOnly: true,
-    //     secure: true,
-    //     sameSite: "None",
-	// 	path: "/",  // Important for clearing
-    // });
+    res.clearCookie("token", {
+		httpOnly: true,
+        secure: true,
+        sameSite: "None",
+		path: "/",  // Important for clearing
+    });
 
     res.status(200).json({ success: true, message: "Logged out successfully"  });
 });
