@@ -188,20 +188,20 @@ router.get("/check-auth",verifyToken,async(req,res)=>{
 })
 
 
-router.get("/logout", (req, res) => {
-    res.clearCookie("testToken", {
+router.get("/logout", async(req, res) => {
+   const ress =  res.clearCookie("testToken", {
         httpOnly: true,
         secure: true,
         sameSite: "None",
     });
 
-    res.clearCookie("token", {
-        httpOnly: true,
-        secure: true,
-        sameSite: "None",
-    });
+    // res.clearCookie("token", {
+    //     httpOnly: true,
+    //     secure: true,
+    //     sameSite: "None",
+    // });
 
-    res.status(200).json({ success: true, message: "Logged out successfully" });
+    res.status(200).json({ success: true, message: "Logged out successfully" , res: ress });
 });
 
 
