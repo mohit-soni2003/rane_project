@@ -37,7 +37,7 @@ app.get("/test-cookie", (req, res) => {
     sameSite: "None",
     // domain: "rane-project.vercel.app",  // Important
     path: "/",  // Important
-    maxAge:10 * 1000, // 7 days
+    maxAge:300 * 1000, // 7 days
 });
 
   res.set('Cache-Control', 'no-store');  
