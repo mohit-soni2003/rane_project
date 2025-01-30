@@ -189,20 +189,25 @@ router.get("/check-auth",verifyToken,async(req,res)=>{
 
 
 router.get("/logout", (req, res) => {
-    res.clearCookie("token", { 
-        httpOnly: true, 
-        secure: false, 
-        sameSite: "None" 
+    res.cookie("testToken", "", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "None",
+        expires: new Date(0),  // Expire immediately
+        domain: ".rane-project.vercel.app", // Ensure domain matches when setting & clearing
     });
 
-    res.clearCookie("testToken", { 
-        httpOnly: true, 
-        secure: true, 
-        sameSite: "None" 
+    res.cookie("token", "", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "None",
+        expires: new Date(0),
+        domain: ".rane-project.vercel.app",
     });
 
     res.status(200).json({ success: true, message: "Logged out successfully" });
 });
+
 
 router.post("/admin-login",async (req, res) => {
 	console.log("admin login Route hitted/.")
