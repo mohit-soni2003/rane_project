@@ -189,9 +189,19 @@ router.get("/check-auth",verifyToken,async(req,res)=>{
 
 
 router.get("/logout", (req, res) => {
-    res.clearCookie("token");
-    res.clearCookie("testToken");
-	res.status(200).json({ success: true, error: "Logged out successfully" });
+    res.clearCookie("token", { 
+        httpOnly: true, 
+        secure: true, 
+        sameSite: "None" 
+    });
+
+    res.clearCookie("testToken", { 
+        httpOnly: true, 
+        secure: true, 
+        sameSite: "None" 
+    });
+
+    res.status(200).json({ success: true, message: "Logged out successfully" });
 });
 
 router.post("/admin-login",async (req, res) => {
