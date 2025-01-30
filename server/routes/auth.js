@@ -187,12 +187,10 @@ router.get("/check-auth",verifyToken,async(req,res)=>{
 	}
 })
 
+
 router.get("/logout", (req, res) => {
     res.clearCookie("token");
-	res.status(200).json({ success: true, message: "Logged out successfully" });
-});
-router.get("/logout", (req, res) => {
-    res.clearCookie("token");
+    res.clearCookie("testToken");
 	res.status(200).json({ success: true, error: "Logged out successfully" });
 });
 
