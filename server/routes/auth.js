@@ -189,11 +189,14 @@ router.get("/check-auth",verifyToken,async(req,res)=>{
 
 
 router.get("/logout", async(req, res) => {
-   const ress =  res.clearCookie("testToken", {
-        httpOnly: true,
-        secure: true,
-        sameSite: "None",
-    });
+	const ress = res.clearCookie("testToken", {
+		httpOnly: true,
+		secure: true,
+		sameSite: "None",
+		domain: "rane-project.vercel.app",  // Ensure this matches!
+		path: "/",  // Important for clearing
+	});
+	
 
     // res.clearCookie("token", {
     //     httpOnly: true,

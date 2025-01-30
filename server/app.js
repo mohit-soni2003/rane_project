@@ -28,13 +28,15 @@ app.get('/', (req, res) => {
 });
 
 app.get("/test-cookie", (req, res) => {
-   res.cookie("testToken", "12345", {
-      httpOnly: true,  
-      secure: true,  
-      sameSite: "None",  
-      maxAge: 7 * 24 * 60 * 60 * 1000  
+  res.cookie("testToken", "12345", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "None",
+    domain: "rane-project.vercel.app",  // Important
+    path: "/",  // Important
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+});
 
-  });
   res.set('Cache-Control', 'no-store');  
 
   res.json({ message: "Cookie set!" }); 
