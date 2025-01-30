@@ -193,17 +193,17 @@ router.get("/logout", async(req, res) => {
 		httpOnly: true,
 		secure: true,
 		sameSite: "None",
-		domain: "rane-project.vercel.app",  // Ensure this matches!
+		// domain: "rane-project.vercel.app",  // Ensure this matches!
 		path: "/",  // Important for clearing
 	});
 	
 	
-    res.clearCookie("token", {
-		httpOnly: true,
-        secure: true,
-        sameSite: "None",
-		path: "/",  // Important for clearing
-    });
+    // res.clearCookie("token", {
+	// 	httpOnly: true,
+    //     secure: true,
+    //     sameSite: "None",
+	// 	path: "/",  // Important for clearing
+    // });
 
     res.status(200).json({ success: true, message: "Logged out successfully"  });
 });
