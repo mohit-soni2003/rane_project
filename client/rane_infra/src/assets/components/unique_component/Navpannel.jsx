@@ -19,7 +19,7 @@ function Navpannel() {
   const handleLogout = async () => {
     try {
       const response = await fetch(`${backend_url}/logout`, {
-        method: "GET",
+        method: "POST",
         credentials: "include", // Include cookies in the request
       });
 

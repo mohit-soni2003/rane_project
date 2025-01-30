@@ -188,7 +188,7 @@ router.get("/check-auth",verifyToken,async(req,res)=>{
 })
 
 
-router.get("/logout", async(req, res) => {
+router.post("/logout", async(req, res) => {
 	 res.clearCookie("testToken", {
 		httpOnly: true,
 		secure: true,
