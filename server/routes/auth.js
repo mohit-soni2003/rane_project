@@ -189,7 +189,7 @@ router.get("/check-auth",verifyToken,async(req,res)=>{
 
 
 router.get("/logout", async(req, res) => {
-	const ress = res.clearCookie("testToken", {
+	 res.clearCookie("testToken", {
 		httpOnly: true,
 		secure: true,
 		sameSite: "None",
@@ -204,7 +204,7 @@ router.get("/logout", async(req, res) => {
     //     sameSite: "None",
     // });
 
-    res.status(200).json({ success: true, message: "Logged out successfully" , res: ress });
+    res.status(200).json({ success: true, message: "Logged out successfully"  });
 });
 
 
