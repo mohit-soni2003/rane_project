@@ -189,20 +189,16 @@ router.get("/check-auth",verifyToken,async(req,res)=>{
 
 
 router.get("/logout", (req, res) => {
-    res.cookie("testToken", "", {
+    res.clearCookie("testToken", {
         httpOnly: true,
         secure: true,
         sameSite: "None",
-        expires: new Date(0),  // Expire immediately
-        domain: ".rane-project.vercel.app", // Ensure domain matches when setting & clearing
     });
 
-    res.cookie("token", "", {
+    res.clearCookie("token", {
         httpOnly: true,
         secure: true,
         sameSite: "None",
-        expires: new Date(0),
-        domain: ".rane-project.vercel.app",
     });
 
     res.status(200).json({ success: true, message: "Logged out successfully" });

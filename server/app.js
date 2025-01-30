@@ -27,17 +27,17 @@ app.get('/', (req, res) => {
   res.send('Hello, World! Express server is running.');
 });
 
-app.get("/test-cookie", async(req, res) => {
-  await res.cookie("testToken", "12345", {
+app.get("/test-cookie", (req, res) => {
+   res.cookie("testToken", "12345", {
       httpOnly: true,  
       secure: true,  
       sameSite: "None",  
-      maxAge: 7 * 24 * 60 * 60 * 1000  // Cookie will expire in 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000  
 
   });
-  res.set('Cache-Control', 'no-store');  // Ensure no caching for this response
+  res.set('Cache-Control', 'no-store');  
 
-  res.json({ message: "Cookie set!" }); // ✅ Returns JSON instead of plain text
+  res.json({ message: "Cookie set!" }); 
 });
 
 
