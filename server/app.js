@@ -42,7 +42,7 @@ app.get("/test-cookie", (req, res) => {
     httpOnly: true,
     secure: true,
     sameSite: "None",
-    domain: "rane-project.vercel.app",  // Important
+    // domain: "rane-project.vercel.app",  // Important
     path: "/",  // Important
     maxAge:10 * 1000, // 7 days
 });
