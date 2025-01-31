@@ -5,7 +5,6 @@ const setadminCookie = require("../utils/setadminCookie")
 const {sendVerificationEmail , sendWelcomeEmail , sendPasswordResetEmail,sendResetSuccessEmail} = require("../mailtrap/email")
 const verifyToken = require("../middleware/verifyToken")
 const crypto = require("crypto")
-const { error } = require("console")
 
 
 const router = express.Router();

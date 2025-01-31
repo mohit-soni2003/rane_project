@@ -10,7 +10,7 @@ const {FRONTEND_ORIGIN_URL} = require("./keys")
 // Middleware to parse JSON data
 app.use(cookieParser())
 const corsOptions = {
-  origin: "https://rane-project.vercel.app",  // Your frontend URL
+  origin: FRONTEND_ORIGIN_URL,  // Your frontend URL
   credentials: true,  // Allow cookies to be sent
 };
 

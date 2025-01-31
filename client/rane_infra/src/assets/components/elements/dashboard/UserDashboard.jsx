@@ -4,6 +4,7 @@ import BillbookForm from "../BillbookForm";
 import BillShowTable from "../../../cards/BillShowTable";
 import Maintainence from "../../unique_component/Maintainence";
 import { useAuthStore } from "../../store/authStore";
+import UserDashboardProfile from "./UserDashboardProfile";
 
 const UserDashboard = () => {
   const {user} = useAuthStore()
@@ -17,7 +18,7 @@ const UserDashboard = () => {
         return (
           <>
           <h1 className="upload-bill-heading"> Profile</h1>
-            <div className="user-dashboard-table">Your Profile Data will Shown here</div>
+            <div><UserDashboardProfile></UserDashboardProfile></div>
           </>
         );
       case "My Bills":
@@ -58,7 +59,7 @@ const UserDashboard = () => {
       <div className="user-dashboard-sidebar">
         <div className="user-dashboard-profile-section">
           <img
-            src="/rane.webp"
+            src={user.profile}
             alt="User Profile"
             className="user-dashboard-profile-image"
           />

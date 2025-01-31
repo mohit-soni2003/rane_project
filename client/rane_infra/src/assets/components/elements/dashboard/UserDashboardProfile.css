@@ -1,0 +1,70 @@
+/* User Dashboard Profile Container */
+.user-dashboard-profile {
+    display: block;
+    margin: auto;
+}
+
+/* Profile Card */
+.dash-profile-data {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 500px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Profile Image */
+.dash-profile-data img {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    border: 2px solid #888888;
+    object-fit: cover;
+    margin-bottom: 15px;
+}
+
+/* Table Styling */
+.dash-profile-data table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.dash-profile-data td {
+    padding: 10px;
+    font-size: 20px;
+    color: #333;
+}
+
+.dash-profile-data td:first-child {
+    font-weight: bold;
+    text-align: left;
+    width: 50%;
+    color: #007bff;
+}
+
+.dash-profile-data td:last-child {
+    text-align: right;
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .dash-profile-data {
+        width: 90%;
+        padding: 15px;
+    }
+
+    .dash-profile-data td {
+        font-size: 14px;
+    }
+
+    .dash-profile-data img {
+        width: 100px;
+        height: 100px;
+    }
+}

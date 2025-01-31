@@ -3,8 +3,13 @@ import "./AdminDashboard.css";
 import AdminTable from "../../../cards/AdminTable";
 import Maintainence from "../../unique_component/Maintainence";
 import ClientList from "./ClientList";
+import { useAuthStore } from "../../store/authStore";
+
+
 
 const AdminDashboard = () => {
+  const { user } = useAuthStore();
+
   const [activeLink, setActiveLink] = useState("Home"); // Default to "Home"
   const links = ["Home", "Profile", , "Bills","Clients", "Settings", "Notifications","Logout", "Help"];
 
@@ -68,7 +73,7 @@ const AdminDashboard = () => {
       <div className="admin-dashboard-sidebar">
         <div className="admin-dashboard-profile-section">
           <img
-            src="/rane.webp"
+            src={user.profile}
             alt="Profile"
             className="admin-dashboard-profile-image"
           />
