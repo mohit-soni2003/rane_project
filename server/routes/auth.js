@@ -193,8 +193,7 @@ router.post("/logout", async(req, res) => {
 		httpOnly: true,
 		secure: true,
 		sameSite: "None",
-		// domain: "rane-project.vercel.app",  // Ensure this matches!
-		path: "/",  // Important for clearing
+		path: "/",  
 	});
 	
 	
