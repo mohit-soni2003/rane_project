@@ -30,4 +30,11 @@
     margin: 5px 0;
     font-size: 1.1rem;
   }
+  .admin-login-btn a{
+    color: gainsboro;
+    text-decoration: none;
+  }
+  .admin-login-btn a:hover{
+    color: gray;
+  }
   

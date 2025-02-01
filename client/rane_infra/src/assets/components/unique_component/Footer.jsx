@@ -1,16 +1,18 @@
 import React from "react";
 import { FaFacebookF, FaInstagram, FaTwitter } from "react-icons/fa";
+import { backend_url } from "../store/keyStore";
+import { Link } from "react-router-dom";
 import "./Footer.css"; // Create this CSS file for styling
-const setCookieTest=async()=>{
-await  fetch("https://rane-project-server.vercel.app/test-cookie", {
+const setCookieTest = async () => {
+  await fetch(`${backend_url}/test-cookie`, {
     method: "GET",
     credentials: "include",  // Ensure cookies are sent and received
     referrerPolicy: "no-referrer-when-downgrade"
 
-})
-.then(response => response.json())
-.then(data => console.log(data))
-.catch(error => console.error(error));
+  })
+    .then(response => response.json())
+    .then(data => console.log(data))
+    .catch(error => console.error(error));
 
 }
 const Footer = () => {
@@ -36,7 +38,10 @@ const Footer = () => {
         <p>9425029680</p>
         <p>&copy; 2024 - All Rights Reserved. By RANE AND RANE SONS</p>
       </div>
-      <div onClick={setCookieTest}>Setcookit</div>
+      {/* <div onClick={setCookieTest}>Setcookit</div> */}
+      
+        <div className="admin-login-btn" ><Link to="/admin-login">Admin Login</Link></div>
+      
     </footer>
   );
 };

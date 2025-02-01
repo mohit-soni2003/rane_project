@@ -12,6 +12,7 @@ export default function ClientList() {
     const [rerender, setRerender] = useState(true);
     const navigate = useNavigate();
 
+    let it = 1;
     // Fetch clients from the backend
     useEffect(() => {
         const fetchClients = async () => {
@@ -94,6 +95,7 @@ export default function ClientList() {
             <table className="table table-striped">
                 <thead>
                     <tr>
+                        <th>S.no</th>
                         <th>Profile</th>
                         <th>Name</th>
                         <th>Email</th>
@@ -106,6 +108,8 @@ export default function ClientList() {
                 <tbody>
                     {clients.map((client) => (
                         <tr key={client._id}>
+                            <td>{it}</td>
+                            <div style={{display:"none"}}>{it++}</div>
                             <td>
                                 <div className="client-image-table">
                                     <img

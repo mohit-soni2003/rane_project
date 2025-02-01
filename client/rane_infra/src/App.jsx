@@ -11,6 +11,7 @@ import AdminDashboard from "./assets/components/elements/dashboard/AdminDashboar
 import UserDashboard from "./assets/components/elements/dashboard/UserDashboard";
 import { useAuthStore } from "./assets/components/store/authStore";
 import AdminLogin from "./assets/components/elements/AdminLogin";
+import Spinner from "react-bootstrap/esm/Spinner";
 
 function App() {
   const { checkAuth, isAuthenticated, user,isAdmin} = useAuthStore();
@@ -28,7 +29,7 @@ function App() {
 
   // Block rendering of routes until authentication check is complete
   if (loading) {
-    return <div>Loading...</div>; // Display loading message while waiting for auth check
+    return <div style={{display:"flex" , alignItems:"center" , justifyContent:"center" ,height:"100vh"}}><Spinner></Spinner></div>; // Display loading message while waiting for auth check
   }
 
   // ProtectedRoute component to handle user authorization

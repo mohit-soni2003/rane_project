@@ -61,11 +61,7 @@ function Navpannel() {
             <Nav.Item>
               <Link to="/documents" className="nav-link">Documents</Link>
             </Nav.Item>
-            <Nav.Item>
-                <Link onClick={handleLogout} className="nav-link">
-                  Logout
-                </Link>
-              </Nav.Item>
+            
           </Nav>
           <Nav>
             {isAuthenticated && user?.isverified ? (

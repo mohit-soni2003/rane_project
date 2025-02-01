@@ -4,6 +4,7 @@ import AdminTable from "../../../cards/AdminTable";
 import Maintainence from "../../unique_component/Maintainence";
 import ClientList from "./ClientList";
 import { useAuthStore } from "../../store/authStore";
+import AdminProfile from "./AdminProfile";
 
 
 
@@ -25,7 +26,7 @@ const AdminDashboard = () => {
       case "Profile":
         return (
           <>
-            <Maintainence></Maintainence>
+            <AdminProfile></AdminProfile>
           </>
         )
       case "Bills":

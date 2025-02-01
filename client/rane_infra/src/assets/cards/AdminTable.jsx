@@ -76,8 +76,8 @@ let it = 1;
           <th style={{ padding: "12px" }}>Work Area</th>
           <th style={{ padding: "12px" }}>Phone No</th>
           <th style={{ padding: "12px" }}>Email</th>
-          <th style={{ padding: "12px" }}>LOA No.</th>
-          <th style={{ padding: "12px" }}>Invoice No</th>
+          {/* <th style={{ padding: "12px" }}>LOA No.</th> */}
+          {/* <th style={{ padding: "12px" }}>Invoice No</th> */}
           <th style={{ padding: "12px" }}>Payment Status</th>
           <th style={{ padding: "12px" }}>View Bill</th>
           <th style={{ padding: "12px" }}>Upload Date</th>
@@ -101,8 +101,8 @@ let it = 1;
             <td style={{ padding: "12px" }}>{bill.workArea || "N/A"}</td>
             <td style={{ padding: "12px" }}>{bill.user?.phone || "N/A"}</td>
             <td style={{ padding: "12px" }}>{bill.user?.email || "N/A"}</td>
-            <td style={{ padding: "12px" }}>{bill.loaNo || "N/A"}</td>
-            <td style={{ padding: "12px" }}>{bill.invoiceNo || "N/A"}</td>
+            {/* <td style={{ padding: "12px" }}>{bill.loaNo || "N/A"}</td> */}
+            {/* <td style={{ padding: "12px" }}>{bill.invoiceNo || "N/A"}</td> */}
             <td style={{ padding: "12px" }}>
               {bill.paymentStatus}
             </td>

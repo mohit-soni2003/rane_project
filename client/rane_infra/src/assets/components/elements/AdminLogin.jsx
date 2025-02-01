@@ -35,9 +35,9 @@ const  AdminLogin= () => {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.heading}>Account sign in</h1>
+        <h1 style={styles.heading}>Admin Account sign in</h1>
         <p style={styles.subheading}>
-          Sign in to your account to access your profile, history, and any
+         Admin Sign in to your account to access clients details, history, and any
           private pages you've been granted access to.
         </p>
         <form onSubmit={handleSubmit} style={styles.form}>
