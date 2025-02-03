@@ -128,14 +128,29 @@ export const useAuthStore = create((set) => ({
 	},
 
 	logout: async () => {
-		set({ isLoading: true, error: null });
-		try {
-			await axios.post(`${API_URL}/logout`);
-			set({ user: null, isAuthenticated: false, error: null, isLoading: false });
-		} catch (error) {
-			set({ error: "Error logging out", isLoading: false });
-			throw error;
-		}
+		 
+			try {
+			  const response = await fetch(`${backend_url}/logout`, {
+				method: "POST",
+				credentials: "include", // Include cookies in the request
+			  });
+		
+			  if (response.ok) {
+				const result = await response.json();
+				console.log(result.message); // Optional: Display a success message in the console
+				return true
+			  } else {
+				const errorData = await response.json();
+				console.error("Logout failed:", errorData.error);
+				alert("Failed to logout. Please try again.");
+				return false
+			  }
+			} catch (error) {
+			  console.error("Error during logout:", error.message);
+			  alert("An error occurred while logging out. Please try again.");
+		  };
+
+		
 	},
 	verifyEmail: async (code) => {
 		set({ isLoading: true, error: null });

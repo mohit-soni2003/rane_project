@@ -1,8 +1,0 @@
-.bill-table th , .bill-table td{
-    border: 1px solid rgb(139, 139, 139);
-    padding: 10px 15px;
-}
-
-.bill-table tr:hover{
-    background-color: rgb(230, 230, 230);
-}

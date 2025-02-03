@@ -26,8 +26,8 @@ function Navpannel() {
       if (response.ok) {
         const result = await response.json();
         console.log(result.message); // Optional: Display a success message in the console
-        alert("Logged out successfully!"); // Optional: Show an alert
-        navigate("/signin"); // Redirect to the login page
+        alert("Logged out successfully!"); // Optional: Show an aler
+        navigate("/", { replace: true }); 
       } else {
         const errorData = await response.json();
         console.error("Logout failed:", errorData.error);
@@ -65,11 +65,19 @@ function Navpannel() {
           </Nav>
           <Nav>
             {isAuthenticated && user?.isverified ? (
+              <>
               <Nav.Item>
                 <Link onClick={handleLogout} className="nav-link">
                   Logout
                 </Link>
               </Nav.Item>
+              <Nav.Item>
+                <Link to="/admin-dashboard" className="nav-link">
+                  <img src="/rane.webp"  className ="nav-profile-link-img" alt="" />
+                </Link>
+              </Nav.Item>
+              </>
+
             ) : (
               <>
                 <Nav.Item>

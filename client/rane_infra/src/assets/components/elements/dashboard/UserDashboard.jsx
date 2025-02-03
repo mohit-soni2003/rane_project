@@ -5,11 +5,22 @@ import BillShowTable from "../../../cards/BillShowTable";
 import Maintainence from "../../unique_component/Maintainence";
 import { useAuthStore } from "../../store/authStore";
 import UserDashboardProfile from "./UserDashboardProfile";
+import LogoutModel from "../../../cards/models/LogoutModel";
 
 const UserDashboard = () => {
-  const {user} = useAuthStore()
+  const { user } = useAuthStore();
   const [activeLink, setActiveLink] = useState("Overview"); // Default to "Overview"
-  const links = ["Profile","My Bills", "Upload Bill", "Payment Updates", "Settings", "Support"];
+  const [show, setShow] = useState(false); // Control Logout Modal
+
+  const links = [
+    "Profile",
+    "My Bills",
+    "Upload Bill",
+    "Payment Updates",
+    "Settings",
+    "Support",
+    "Logout",
+  ];
 
   // Function to render content dynamically
   const renderContent = () => {
@@ -17,40 +28,33 @@ const UserDashboard = () => {
       case "Profile":
         return (
           <>
-          <h1 className="upload-bill-heading"> Profile</h1>
-            <div><UserDashboardProfile></UserDashboardProfile></div>
+            <h1 className="upload-bill-heading">Profile</h1>
+            <UserDashboardProfile />
           </>
         );
       case "My Bills":
         return (
           <>
-          <h1 className="upload-bill-heading"> Bill Uploaded By You</h1>
-            <div className="user-dashboard-table"><BillShowTable userid={user._id}></BillShowTable></div>
+            <h1 className="upload-bill-heading">Bill Uploaded By You</h1>
+            <div className="user-dashboard-table">
+              <BillShowTable userid={user._id} />
+            </div>
           </>
         );
       case "Upload Bill":
-        return <BillbookForm/>
+        return <BillbookForm />;
       case "Payment Updates":
-        return(
-          <>
-          <Maintainence></Maintainence>
-          </>
-        ) 
       case "Settings":
-        return(
-          <>
-          <Maintainence></Maintainence>
-          </>
-        ) 
       case "Support":
-        return(
-          <>
-          <Maintainence></Maintainence>
-          </>
-        ) 
+        return <Maintainence />;
       default:
         return <p>Select a page from the sidebar to get started.</p>;
     }
+  };
+
+  // Logout Click Handler
+  const handleLogoutClick = () => {
+    setShow(true); // Show logout modal
   };
 
   return (
@@ -66,24 +70,35 @@ const UserDashboard = () => {
           <h3 className="user-dashboard-username">{user.name}</h3>
         </div>
         <nav className="user-dashboard-nav-links">
-          {links.map((link) => (
-            <button
-              key={link}
-              className={`user-dashboard-nav-link ${
-                activeLink === link ? "user-dashboard-active" : ""
-              }`}
-              onClick={() => setActiveLink(link)}
-            >
-              {link}
-            </button>
-          ))}
+          {links.map((link) =>
+            link === "Logout" ? (
+              <button
+                key={link}
+                className="user-dashboard-nav-link"
+                onClick={handleLogoutClick}
+              >
+                {link}
+              </button>
+            ) : (
+              <button
+                key={link}
+                className={`user-dashboard-nav-link ${
+                  activeLink === link ? "user-dashboard-active" : ""
+                }`}
+                onClick={() => setActiveLink(link)}
+              >
+                {link}
+              </button>
+            )
+          )}
         </nav>
       </div>
 
       {/* Content */}
-      <div className="user-dashboard-content">
-        {renderContent()} {/* Render content dynamically */}
-      </div>
+      <div className="user-dashboard-content">{renderContent()}</div>
+
+      {/* Logout Confirmation Modal */}
+      {show && <LogoutModel show={show} onClose={() => setShow(false)} />}
     </div>
   );
 };

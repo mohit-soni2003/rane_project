@@ -1,69 +1,71 @@
 import React, { useEffect, useState } from 'react';
-import "./BillShowTable.css";
 import Button from 'react-bootstrap/Button';
+import Table from 'react-bootstrap/Table';
 import { backend_url } from '../components/store/keyStore';
-
+// import './BillShowTable.css';
 
 export default function BillShowTable({ userid }) {
-    const [bills, setBills] = useState([]); // State to store the bills
-    const [loading, setLoading] = useState(true); // State to handle loading
-    const [error, setError] = useState(null); // State to handle errors
-    console.log(userid)
+    const [bills, setBills] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
     useEffect(() => {
         const fetchBills = async () => {
             try {
                 const response = await fetch(`${backend_url}/mybill/${userid}`);
                 const data = await response.json();
-                console.log("Fetched data:", data); // Inspect the structure of the response
-    
+
                 if (response.ok && Array.isArray(data)) {
-                    setBills(data); // Only set if `data` is an array
+                    setBills(data);
                 } else {
                     setError(data.error || 'Unexpected data format');
                 }
             } catch (err) {
-                console.error("Error:", err);
                 setError('An unexpected error occurred');
             } finally {
                 setLoading(false);
             }
         };
-    
+
         if (userid) fetchBills();
     }, [userid]);
-    
-    if (loading) {
-        return <div>Loading...</div>; // Show loading message
-    }
 
-    if (error) {
-        return <div>Error: {error}</div>; // Show error message
-    }
+    if (loading) return <div className="loading">Loading...</div>;
+    if (error) return <div className="error">Error: {error}</div>;
 
     return (
-        <div className="bill-table">
-            <table border="1">
+        <div className="bill-table-container">
+            <Table striped bordered hover responsive className="bill-table">
                 <thead>
                     <tr>
+                        <th>#</th>
                         <th>Firm Name</th>
                         <th>Work Area</th>
                         <th>LOA No.</th>
                         <th>Invoice No</th>
                         <th>Payment Status</th>
                         <th>View Bill</th>
+                        <th>Delete Bill</th>
+
                     </tr>
                 </thead>
                 <tbody>
-                    {bills.map((bill) => (
+                    {bills.map((bill, index) => (
                         <tr key={bill._id}>
+                            <td>{index + 1}</td>
                             <td>{bill.firmName}</td>
                             <td>{bill.workArea}</td>
                             <td>{bill.loaNo}</td>
                             <td>{bill.invoiceNo}</td>
-                            <td>{bill.paymentStatus}</td>
+                            <td>
+                                <span className={`status ${bill.paymentStatus.toLowerCase()}`}>
+                                    {bill.paymentStatus}
+                                </span>
+                            </td>
                             <td>
                                 <Button
                                     variant="primary"
+                                    className="view-btn"
                                     onClick={() => {
                                         if (bill.pdfurl) {
                                             window.open(bill.pdfurl, '_blank', 'noopener,noreferrer');
@@ -72,14 +74,22 @@ export default function BillShowTable({ userid }) {
                                         }
                                     }}
                                 >
-                                    View Bill
+                                    View
                                 </Button>
-
+                                
+                            </td>
+                            <td>
+                                <Button
+                                    variant="danger"
+                                >
+                                    Delete
+                                </Button>
+                                
                             </td>
                         </tr>
                     ))}
                 </tbody>
-            </table>
+            </Table>
         </div>
     );
 }

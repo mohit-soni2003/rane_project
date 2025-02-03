@@ -7,7 +7,7 @@ const UserDashboardProfile = () => {
 
       const {user } = useAuthStore();
     
- return(
+ return( 
     <>
     <div className="user-dashboard-profile">
         <div className="dash-profile-data">
@@ -18,15 +18,16 @@ const UserDashboardProfile = () => {
                     <td>{user.name} </td>
                 </tr>
                 <tr>
-                    <td>Email </td>
+                    <td>Email : </td>
                     <td>{user.email}</td>
                 </tr>
                 <tr>
-                    <td>Phone no.</td>
-                    <td>{user.phoneno} </td>
+                    <td>Contact No :</td>
+                    <td>{user.phoneno ? user.phoneno : 'N/A'}</td>
+                    
                 </tr>
                 <tr>
-                    <td>Your CID code </td>
+                    <td>Your CID code: </td>
                     <td>{user.cid}</td>
                 </tr>
             </table>

@@ -14,7 +14,7 @@ export default function BillShowModal({ show, onHide, id }) {
 
     const fetchBill = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/bill/${id}`);
+        const response = await fetch(`${backend_url}/bill/${id}`);
         const data = await response.json();
 
         if (response.ok) {
