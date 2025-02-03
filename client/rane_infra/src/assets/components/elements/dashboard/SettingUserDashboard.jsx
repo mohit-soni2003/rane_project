@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import "./SettingUserDashboard.css";
 import Button from 'react-bootstrap/Button';
 import { useAuthStore } from '../../store/authStore';
-import { UPLOAD_PRESET , CLOUD_NAME ,CLOUDINARY_URL_IMAGE } from '../../store/keyStore';
+import { UPLOAD_PRESET , CLOUD_NAME ,CLOUDINARY_URL_IMAGE,backend_url } from '../../store/keyStore';
 
 export default function SettingUserDashboard() {
     const { user } = useAuthStore();
@@ -39,7 +39,7 @@ export default function SettingUserDashboard() {
     
         try {
             // Make the API call to the backend
-            const response = await fetch("http://localhost:3000/update-profile", {
+            const response = await fetch(`${backend_url}/update-profile`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -102,7 +102,7 @@ export default function SettingUserDashboard() {
     
     const handleProfileUpdateOnServer = async (newProfilePic) => {
         try {
-            const response = await fetch("http://localhost:3000/update-profile-pic", {
+            const response = await fetch(`${backend_url}/update-profile-pic`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
