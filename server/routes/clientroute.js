@@ -52,7 +52,48 @@ router.put('/update-cid/:id', async (req, res) => {
     }
 });
 
+router.put("/update-profile-pic", async (req, res) => {
+    try {
+        const { profile,id} = req.body;
 
+        // Validate if the user exists
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
 
+        if (profile) user.profile = profile;
+        // Save the updated user
+        await user.save();
 
-module.exports = router
+        res.json({ message: "Profile Pic successfully", user });
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+router.put("/update-profile", async (req, res) => {
+    try {
+        const { name, email, phoneNo,id} = req.body;
+
+        // Validate if the user exists
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Update only the provided fields
+        if (name) user.name = name;
+        if (email) user.email = email;
+        if (phoneNo) user.phoneNo = phoneNo;
+        // Save the updated user
+        await user.save();
+
+        res.json({ message: "Profile Pic successfully", user });
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+module.exports = router;

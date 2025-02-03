@@ -6,6 +6,7 @@ import Maintainence from "../../unique_component/Maintainence";
 import { useAuthStore } from "../../store/authStore";
 import UserDashboardProfile from "./UserDashboardProfile";
 import LogoutModel from "../../../cards/models/LogoutModel";
+import SettingUserDashboard from "./SettingUserDashboard";
 
 const UserDashboard = () => {
   const { user } = useAuthStore();
@@ -45,6 +46,12 @@ const UserDashboard = () => {
         return <BillbookForm />;
       case "Payment Updates":
       case "Settings":
+        return (
+          <>
+            <h1 className="upload-bill-heading">Update Your Profile : </h1>
+            <SettingUserDashboard />
+          </>
+        );
       case "Support":
         return <Maintainence />;
       default:
