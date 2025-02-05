@@ -1,6 +1,6 @@
 import React from 'react'
 import "./BgVideo.css"
-import Navpannel from '../unique_component/Navpannel'
+import Navpannel from './Navpannel'
 
 export default function BgVideo() {
   return (
@@ -10,8 +10,8 @@ export default function BgVideo() {
     <div className="content">
         <h1>RANE AND RANE SONS</h1>
         <h2>INDIAN RAILWAY CONTRACTOR</h2>
-        <button className="learn-more-btn">LEARN MORE</button>
-        <p className="contact-info">+91 94250 29680</p>
+<a href="#content">        <button className="learn-more-btn" >LEARN MORE</button></a>
+        {/* <p className="contact-info">+91 94250 29680</p> */}
       </div>
     </div>
     </>

@@ -1,0 +1,105 @@
+/* Main container */
+.meeting-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #f3eaea;
+    padding: 20px;
+}
+
+/* Title Styling */
+.meeting-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: black;
+    text-align: center;
+}
+
+.meeting-divider {
+    width: 60px;
+    border-top: 2px solid black;
+    margin: 8px 0;
+}
+
+/* Subtitle */
+.meeting-subtitle {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 15px;
+    letter-spacing: 1px;
+}
+
+/* Card Styling */
+.meeting-card {
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    width: 100%;
+    max-width: 600px;
+    gap: 15px;
+}
+
+/* Image Container */
+.meeting-image {
+    width: 100px;
+    height: 100px;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.meeting-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* Meeting Info */
+.meeting-info h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.meeting-info p {
+    font-size: 1rem;
+    color: #555;
+}
+
+/* Button */
+.meeting-button {
+    background: black;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s ease-in-out;
+}
+
+.meeting-button:hover {
+    background: #333;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .meeting-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+    }
+
+    .meeting-image {
+        width: 80px;
+        height: 80px;
+    }
+}

@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import { backend_url } from '../../components/store/keyStore';
 
-
+  
 function Navpannel() {
   const navigate = useNavigate();
 

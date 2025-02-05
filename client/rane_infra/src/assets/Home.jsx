@@ -6,6 +6,7 @@ import Page3 from './components/elements/Page3'
 import Footer from './components/unique_component/Footer'
 import AboutRane from './components/elements/AboutRane'
 import BillbookForm from './components/elements/BillbookForm';
+import MeetingCard from './components/elements/MeetingCard'
 export default function Home() {
   return (
     <>
@@ -16,6 +17,7 @@ export default function Home() {
         <Page2></Page2>
         <Page3></Page3>
         <AboutRane></AboutRane>
+        <MeetingCard></MeetingCard>
         <BillbookForm></BillbookForm>
         <Footer></Footer>
     </div>
