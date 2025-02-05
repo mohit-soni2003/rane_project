@@ -8,6 +8,8 @@ import Button from 'react-bootstrap/Button';
 const AdminDashboardProfile = () => {
     return (
         <>
+        <div className="admin-profile-main">
+
             <div className="admin-profile-container">
                 <div className="profile-container-left">
 
@@ -61,11 +63,11 @@ const AdminDashboardProfile = () => {
                             </div>
                         </div>
                         <div>
-                            <h5>Firm Name</h5>
-                            <h5>Work Area</h5>
+                            <h6>Firm Name</h6>
+                            <h6>Work Area</h6>
                         </div>
                         <div>
-                        <Button variant="secondary">VIEW</Button>
+                        <Button variant="secondary" style={{fontSize:"0.9rem"}}>VIEW</Button>
 
                         </div>
 
@@ -83,11 +85,11 @@ const AdminDashboardProfile = () => {
                             </div>
                         </div>
                         <div>
-                            <h5>Firm Name</h5>
-                            <h5>Work Area</h5>
+                            <h6>Firm Name</h6>
+                            <h6>Work Area</h6>
                         </div>
                         <div>
-                        <Button variant="secondary">VIEW</Button>
+                        <Button variant="secondary" style={{fontSize:"0.9rem"}}>VIEW</Button>
 
                         </div>
 
@@ -105,27 +107,25 @@ const AdminDashboardProfile = () => {
                             </div>
                         </div>
                         <div>
-                            <h5>Firm Name</h5>
-                            <h5>Work Area</h5>
+                            <h6>Firm Name</h6>
+                            <h6>Work Area</h6>
                         </div>
                         <div>
-                        <Button variant="secondary">VIEW</Button>
+                        <Button variant="secondary" style={{fontSize:"0.9rem"}}>VIEW</Button>
 
                         </div>
 
                     </div>
-                   
+                  
                 </div>
             </div>
             <div className="profile-container-bottom">
-                <h1>Meetings Scheduled  </h1>
+                <h3>Meeting Request</h3>
                 <div className="meeeting-card-container">
-                <div className="meeting-card"> </div>
-                <div className="meeting-card"></div>
-                <div className="meeting-card"></div>
-                <div className="meeting-card"></div>
                 </div>
             </div>
+            </div>
+
         </>
     );
 };

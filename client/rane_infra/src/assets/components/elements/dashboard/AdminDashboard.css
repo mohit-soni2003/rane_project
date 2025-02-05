@@ -59,6 +59,7 @@
     flex-grow: 1;
     padding: 20px;
     background-color: #ecf0f1;
+    overflow: scroll;
   }
   
   .admin-dashboard-content h1 {
@@ -72,7 +73,7 @@
   
 
   .admin-dashboard-heading{
-    border-bottom: 3px solid rgb(169, 169, 169);
+    border-bottom: 2px solid rgb(204, 204, 204);
     padding: 20px 0px;
   }
 

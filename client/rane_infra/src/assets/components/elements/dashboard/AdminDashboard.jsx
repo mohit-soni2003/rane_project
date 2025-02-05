@@ -5,67 +5,63 @@ import Maintainence from "../../unique_component/Maintainence";
 import ClientList from "./ClientList";
 import { useAuthStore } from "../../store/authStore";
 import AdminProfile from "./AdminProfile";
-
-
+import LogoutModel from "../../../cards/models/LogoutModel";
+import SettingUserDashboard from "./SettingUserDashboard";
 
 const AdminDashboard = () => {
   const { user } = useAuthStore();
-
   const [activeLink, setActiveLink] = useState("Home"); // Default to "Home"
-  const links = ["Home", "Profile", , "Bills","Clients", "Settings", "Notifications","Logout", "Help"];
+  const [show, setShow] = useState(false); // Control Logout Modal
+
+  const links = ["Home", "Profile", "Bills", "Clients", "Settings", "Notifications", "Help", "Logout"];
 
   // Function to render content dynamically
   const renderContent = () => {
     switch (activeLink) {
       case "Home":
-        return (
-          <>
-            <Maintainence></Maintainence>
-          </>
-        )
+        return <Maintainence />;
       case "Profile":
         return (
           <>
-            <AdminProfile></AdminProfile>
+            <h1 className="admin-dashboard-heading">Admin Pannel</h1>
+             <AdminProfile />;
+              
           </>
-        )
+        );
       case "Bills":
         return (
           <>
-            <h1 className="admin-dashboard-heading">All bills will shown here</h1>
+            <h1 className="admin-dashboard-heading">All bills will be shown here</h1>
             <div className="admin-dashboard-table-container">
-              <AdminTable></AdminTable>
+              <AdminTable />
             </div>
           </>
-        )
-      case "Settings":
-        return (
-          <>
-            <Maintainence></Maintainence>
-          </>
-        )
+        );
       case "Clients":
         return (
           <>
-           <h1 className="admin-dashboard-heading">All Your Client will shown here.</h1>
-            <ClientList></ClientList>
+            <h1 className="admin-dashboard-heading">All Your Clients will be shown here.</h1>
+            <ClientList />
           </>
-        )
+        );
+      case "Settings":
+        return (
+          <>
+            <h1 className="admin-dashboard-heading">Update your Profile :</h1>
+            <SettingUserDashboard/>
+          </>
+        );
       case "Notifications":
-        return(
-          <>
-          <Maintainence></Maintainence>
-          </>
-        ) 
       case "Help":
-        return(
-          <>
-          <Maintainence></Maintainence>
-          </>
-        ) 
+        return <Maintainence />;
       default:
         return <p>Select a page from the sidebar to get started.</p>;
     }
+  };
+
+  // Logout Click Handler
+  const handleLogoutClick = () => {
+    setShow(true); // Show logout modal
   };
 
   return (
@@ -78,26 +74,32 @@ const AdminDashboard = () => {
             alt="Profile"
             className="admin-dashboard-profile-image"
           />
-          <h3 className="admin-dashboard-username">Harshvardhan Rane</h3>
+          <h3 className="admin-dashboard-username">{user.name}</h3>
         </div>
         <nav className="admin-dashboard-nav-links">
-          {links.map((link) => (
-            <button
-              key={link}
-              className={`admin-dashboard-nav-link ${activeLink === link ? "admin-dashboard-active" : ""
-                }`}
-              onClick={() => setActiveLink(link)}
-            >
-              {link}
-            </button>
-          ))}
+          {links.map((link) =>
+            link === "Logout" ? (
+              <button key={link} className="admin-dashboard-nav-link" onClick={handleLogoutClick}>
+                {link}
+              </button>
+            ) : (
+              <button
+                key={link}
+                className={`admin-dashboard-nav-link ${activeLink === link ? "admin-dashboard-active" : ""}`}
+                onClick={() => setActiveLink(link)}
+              >
+                {link}
+              </button>
+            )
+          )}
         </nav>
       </div>
 
       {/* Content */}
-      <div className="admin-dashboard-content">
-        {renderContent()} {/* Render content dynamically */}
-      </div>
+      <div className="admin-dashboard-content">{renderContent()}</div>
+
+      {/* Logout Confirmation Modal */}
+      {show && <LogoutModel show={show} onClose={() => setShow(false)} />}
     </div>
   );
 };
