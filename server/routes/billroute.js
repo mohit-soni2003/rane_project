@@ -150,6 +150,25 @@ router.put('/bill/update-payment/:id', async (req, res) => {
   }
 });
 
+router.delete("/bill/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if bill exists
+    const bill = await Bill.findById(id);
+    if (!bill) {
+      return res.status(404).json({ message: "Bill not found" });
+    }
+
+    // Delete the bill
+    await Bill.findByIdAndDelete(id);
+    res.json({ message: "Bill deleted successfully" });
+
+  } catch (error) {
+    console.error("Error deleting bill:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
 
 
 module.exports = router

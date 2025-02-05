@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import { backend_url } from '../../components/store/keyStore';
+import DeleteBillModal from './DeleteBillModal';
 
 export default function BillShowModal({ show, onHide, id }) {
   const [bill, setBill] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(""); // To track selected payment status
+  const [showDelete, setShowDelete] = useState(false); // Control Deletebill modal
 
   useEffect(() => {
     if (!id) return;
@@ -74,8 +76,8 @@ export default function BillShowModal({ show, onHide, id }) {
       onHide={onHide}
       size="lg"
       aria-labelledby="contained-modal-title-vcenter"
-      centered
-    >
+
+      >
       <Modal.Header closeButton>
         <Modal.Title id="contained-modal-title-vcenter">
           Bill Details
@@ -183,8 +185,12 @@ export default function BillShowModal({ show, onHide, id }) {
         )}
       </Modal.Body>
       <Modal.Footer>
+        <Button variant='danger' onClick={()=>setShowDelete(true)}>Delete</Button>
         <Button onClick={onHide}>Close</Button>
       </Modal.Footer>
+      {show && <DeleteBillModal billId={bill._id} show={showDelete} onClose={() => setShowDelete(false)} />}
+
     </Modal>
+    
   );
 }
