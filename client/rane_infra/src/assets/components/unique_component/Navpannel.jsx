@@ -40,7 +40,7 @@ function Navpannel() {
   };
 
   return (
-    <Navbar collapseOnSelect expand="lg" bg="transparent" className="navbar-custom">
+    <Navbar collapseOnSelect expand="lg" bg="transparent" className="navbar-custom ">
       <Container>
         <Navbar.Brand href="#home">
           <img src="/logo.webp" alt="Logo" />
@@ -72,8 +72,8 @@ function Navpannel() {
                 </Link>
               </Nav.Item>
               <Nav.Item>
-                <Link to="/admin-dashboard" className="nav-link">
-                  <img src="/rane.webp"  className ="nav-profile-link-img" alt="" />
+                <Link to={user.usertype?"admin-dashboard":"user-dashboard"} className="nav-link">
+                  <img src={user.profile}  className ="nav-profile-link-img" alt="" />
                 </Link>
               </Nav.Item>
               </>

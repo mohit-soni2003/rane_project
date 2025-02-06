@@ -7,6 +7,7 @@ import { useAuthStore } from "../../store/authStore";
 import UserDashboardProfile from "./UserDashboardProfile";
 import LogoutModel from "../../../cards/models/LogoutModel";
 import SettingUserDashboard from "./SettingUserDashboard";
+import PaymentReqUserDash from "./PaymentReqUserDash";
  
 const UserDashboard = () => {
   const { user } = useAuthStore();
@@ -18,7 +19,8 @@ const UserDashboard = () => {
     "Profile",
     "My Bills",
     "Upload Bill",
-    "Payment Updates",
+    "Payment Request",
+    "Payment Status",
     "Settings",
     "Support",
     "Logout",
@@ -45,7 +47,10 @@ const UserDashboard = () => {
         );
       case "Upload Bill":
         return <BillbookForm />;
-      case "Payment Updates":
+      case "Payment Request":
+        return <PaymentReqUserDash/>
+      case "Payment Status":
+        return <PaymentReqUserDash/>
       case "Settings":
         return (
           <>

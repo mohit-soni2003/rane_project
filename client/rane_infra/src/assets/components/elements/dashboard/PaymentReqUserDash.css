@@ -1,0 +1,62 @@
+.payment-req-user-dash {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+  }
+  
+  .payment-req-user-dash h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  
+  .payment-req-form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .payment-req-form label {
+    margin: 10px 0 5px;
+    font-weight: bold;
+    color: #444;
+  }
+  
+  .payment-req-form select,
+  .payment-req-form input,
+  .payment-req-form textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+  }
+  
+  .payment-req-form textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+  
+  .payment-req-form input[type="file"] {
+    border: none;
+  }
+  
+  .submit-btn {
+    margin-top: 20px;
+    padding: 12px;
+    background: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  
+  .submit-btn:hover {
+    background: #0056b3;
+  }
+  
