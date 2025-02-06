@@ -18,7 +18,7 @@ export default function Home() {
         <Page3></Page3>
         <AboutRane></AboutRane>
         <MeetingCard></MeetingCard>
-        <BillbookForm></BillbookForm>
+        {/* <BillbookForm></BillbookForm> */}
         <Footer></Footer>
     </div>
     </>
