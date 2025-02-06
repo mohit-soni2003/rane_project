@@ -23,7 +23,7 @@ const UserDashboardProfile = () => {
                 </tr>
                 <tr>
                     <td>Contact No :</td>
-                    <td>{user.phoneno ? user.phoneno : 'N/A'}</td>
+                    <td>{user.phoneNo ? user.phoneNo : 'N/A'}</td>
                     
                 </tr>
                 <tr>
