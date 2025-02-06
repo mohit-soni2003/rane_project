@@ -59,6 +59,7 @@
     flex-grow: 1;
     padding: 20px;
     background-color: #f4f4f4;
+    overflow: scroll;
   }
   
   .user-dashboard-content h1 {

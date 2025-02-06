@@ -7,13 +7,14 @@ import { backend_url , CLOUDINARY_URL,UPLOAD_PRESET,CLOUD_NAME} from '../../comp
 
 function BillbookForm() {
 
+  const { user } = useAuthStore();
 
   const [formData, setFormData] = useState({
     firmName: "",
     workArea: "",
-    phone: "",
+    phone: user.phoneNo,
     loaNo: "",
-    email: "",
+    email: user.email,
     invoiceNo: "",
     workDescription: "",
     pdfurl: "",
@@ -21,7 +22,6 @@ function BillbookForm() {
 
   });
   // user Setting up 
-  const { user } = useAuthStore();
   useEffect(() => {
     if (user) {
       setFormData((prevFormData) => ({

@@ -25,7 +25,7 @@ const UserDashboardProfile = () => {
             <div className="profile-info">
               <div className="info-item">
                 <span className="info-label">📞 Contact No:</span>
-                <span className="info-value">{user.phoneno ? user.phoneno : "N/A"}</span>
+                <span className="info-value">{user.phoneNo ? user.phoneNo : "N/A"}</span>
               </div>
               <div className="info-item">
                 <span className="info-label">🔑 Your CID Code:</span>
