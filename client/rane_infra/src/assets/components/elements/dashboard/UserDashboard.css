@@ -73,8 +73,41 @@
   /* ---------------------------------------mybillss.css------------ */
   .upload-bill-heading{
     padding: 15px 0px;
-    border-bottom: 3px solid rgb(232, 232, 232);
+    /* border-bottom: 3px solid rgb(232, 232, 232); */
+    text-align: center;
   }
   .user-dashboard-table{
     margin-top: 2%;
   }
+/* Sidebar */
+.user-dashboard-sidebar {
+  position: fixed;
+  top: 0;
+  left: -250px; /* Hidden initially */
+  width: 250px;
+  height: 100%;
+  background: #333;
+  color: white;
+  transition: left 0.3s ease-in-out;
+  padding-top: 60px;
+}
+
+.user-dashboard-sidebar.open {
+  left: 0; /* Slides in when open */
+}
+
+/* Hamburger Menu */
+.hamburger-menu {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  font-size: 24px;
+  background: none;
+  border: none;
+  color: rgb(27, 2, 2);
+  cursor: pointer;
+  z-index: 1000;  
+}
+
+
+  

@@ -10,8 +10,9 @@ import SettingUserDashboard from "./SettingUserDashboard";
  
 const UserDashboard = () => {
   const { user } = useAuthStore();
-  const [activeLink, setActiveLink] = useState("Overview"); // Default to "Overview"
+  const [activeLink, setActiveLink] = useState("Profile"); // Default to "Profile"
   const [show, setShow] = useState(false); // Control Logout Modal
+  const [isOpen, setIsOpen] = useState(false); // Sidebar toggle
 
   const links = [
     "Profile",
@@ -48,14 +49,19 @@ const UserDashboard = () => {
       case "Settings":
         return (
           <>
-            <h1 className="upload-bill-heading">Update Your Profile : </h1>
+            <h1 className="upload-bill-heading">Update Your Profile :</h1>
             <SettingUserDashboard />
           </>
         );
       case "Support":
         return <Maintainence />;
       default:
-        return <p>Select a page from the sidebar to get started.</p>;
+        return (
+          <>
+            <h1 className="upload-bill-heading">Profile</h1>
+            <UserDashboardProfile />
+          </>
+        );
     }
   };
 
@@ -66,8 +72,13 @@ const UserDashboard = () => {
 
   return (
     <div className="user-dashboard-container">
+      {/* Hamburger Menu */}
+      <button className="hamburger-menu" onClick={() => setIsOpen(!isOpen)}>
+        ☰
+      </button>
+
       {/* Sidebar */}
-      <div className="user-dashboard-sidebar">
+      <div className={`user-dashboard-sidebar ${isOpen ? "open" : ""}`}>
         <div className="user-dashboard-profile-section">
           <img
             src={user.profile}

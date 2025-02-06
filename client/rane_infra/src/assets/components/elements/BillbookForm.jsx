@@ -141,7 +141,7 @@ function BillbookForm() {
   };
 
   return (
-    <div className="upload-bill-container">
+    
       <div className="form-container">
         <form>
           <div className="form-grid">
@@ -248,7 +248,7 @@ function BillbookForm() {
           </button>
         </form>
       </div>
-    </div>
+    
   );
 }
 
