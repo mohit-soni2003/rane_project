@@ -7,13 +7,13 @@ import { useAuthStore } from "../../store/authStore";
 import AdminProfile from "./AdminProfile";
 import LogoutModel from "../../../cards/models/LogoutModel";
 import SettingUserDashboard from "./SettingUserDashboard";
-
+import PaymentRequestTable from "../../../cards/tables/PaymentRequestTable";
 const AdminDashboard = () => {
   const { user } = useAuthStore();
   const [activeLink, setActiveLink] = useState("Home"); // Default to "Home"
   const [show, setShow] = useState(false); // Control Logout Modal
 
-  const links = ["Home", "Profile", "Bills", "Clients", "Settings", "Notifications", "Help", "Logout"];
+  const links = ["Home", "Profile", "Bills", "Clients","Payment Requests", "Settings", "Notifications", "Help", "Logout"];
 
   // Function to render content dynamically
   const renderContent = () => {
@@ -44,6 +44,15 @@ const AdminDashboard = () => {
             <ClientList />
           </>
         );
+        
+      case "Payment Requests":
+        return (
+          <>
+            <h1 className="admin-dashboard-heading">All Your Clients will be shown here.</h1>
+            <PaymentRequestTable/>
+            </>
+        );
+        
       case "Settings":
         return (
           <>

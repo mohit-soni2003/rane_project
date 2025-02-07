@@ -45,7 +45,6 @@ export default function BillShowTable({ userid }) {
                         <th>Invoice No</th>
                         <th>Payment Status</th>
                         <th>View Bill</th>
-                        <th>Delete Bill</th>
 
                     </tr>
                 </thead>
@@ -78,14 +77,7 @@ export default function BillShowTable({ userid }) {
                                 </Button>
                                 
                             </td>
-                            <td>
-                                <Button
-                                    variant="danger"
-                                >
-                                    Delete
-                                </Button>
-                                
-                            </td>
+                            
                         </tr>
                     ))}
                 </tbody>

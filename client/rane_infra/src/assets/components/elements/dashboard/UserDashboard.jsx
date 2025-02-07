@@ -8,12 +8,13 @@ import UserDashboardProfile from "./UserDashboardProfile";
 import LogoutModel from "../../../cards/models/LogoutModel";
 import SettingUserDashboard from "./SettingUserDashboard";
 import PaymentReqUserDash from "./PaymentReqUserDash";
- 
+import PaymentStatusTable from "../../../cards/PaymentStatusTable";
+
 const UserDashboard = () => {
   const { user } = useAuthStore();
   const [activeLink, setActiveLink] = useState("Profile"); // Default to "Profile"
   const [show, setShow] = useState(false); // Control Logout Modal
-  const [isOpen, setIsOpen] = useState(false); // Sidebar toggle
+  const [isOpen, setIsOpen] = useState(window.innerWidth > 500); // Sidebar toggle
 
   const links = [
     "Profile",
@@ -39,18 +40,33 @@ const UserDashboard = () => {
       case "My Bills":
         return (
           <>
-            <h1 className="upload-bill-heading">Bill Uploaded By You</h1>
             <div className="user-dashboard-table">
               <BillShowTable userid={user._id} />
             </div>
           </>
         );
       case "Upload Bill":
-        return <BillbookForm />;
-      case "Payment Request":
-        return <PaymentReqUserDash/>
-      case "Payment Status":
-        return <PaymentReqUserDash/>
+        return (
+          <>
+            <h1 className="upload-bill-heading">Upload Bill</h1>
+            <BillbookForm />;
+          </>
+        )
+        case "Payment Request":
+          return(
+            <>
+            <h1 className="upload-bill-heading">Payment Request</h1>
+         <PaymentReqUserDash />;
+          </>
+        )
+        case "Payment Status":
+          return(
+            <>
+            <h1 className="upload-bill-heading">Payment Status</h1>
+            <PaymentStatusTable/>
+          </>
+        ) 
+        
       case "Settings":
         return (
           <>
@@ -76,7 +92,8 @@ const UserDashboard = () => {
   };
 
   return (
-    <div className="user-dashboard-container">
+    <div className={`user-dashboard-container ${isOpen ? "sidebar-open" : ""}`}>
+
       {/* Hamburger Menu */}
       <button className="hamburger-menu" onClick={() => setIsOpen(!isOpen)}>
         ☰
@@ -105,9 +122,8 @@ const UserDashboard = () => {
             ) : (
               <button
                 key={link}
-                className={`user-dashboard-nav-link ${
-                  activeLink === link ? "user-dashboard-active" : ""
-                }`}
+                className={`user-dashboard-nav-link ${activeLink === link ? "user-dashboard-active" : ""
+                  }`}
                 onClick={() => setActiveLink(link)}
               >
                 {link}

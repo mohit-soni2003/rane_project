@@ -169,8 +169,8 @@ function BillbookForm() {
                 onChange={handleChange}
               />
             </div>
-
-            <div className="form-group">
+            {/* phone  */}
+            {/* <div className="form-group">
               <label htmlFor="phone">Phone *</label>
               <input
                 type="text"
@@ -180,9 +180,9 @@ function BillbookForm() {
                 value={formData.phone}
                 onChange={handleChange}
               />
-            </div>
-
-            <div className="form-group">
+            </div> */}
+            {/* email  */}
+            {/* <div className="form-group">
               <label htmlFor="email">Email *</label>
               <input
                 type="email"
@@ -192,7 +192,7 @@ function BillbookForm() {
                 value={formData.email}
                 onChange={handleChange}
               />
-            </div>
+            </div> */}
 
             <div className="form-group">
               <label htmlFor="loaNo">LOA NO. (Issued By Rane and Rane Sons) *</label>

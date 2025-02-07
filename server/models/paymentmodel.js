@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+
 const paymentSchema = new mongoose.Schema({
     tender: {
         type: String,
@@ -22,8 +23,9 @@ const paymentSchema = new mongoose.Schema({
     remark:{
         type  : String,
     },
-    paymentStauts:{
+    status:{
         type: String,
+        default:"Pending"
     },
     image:{
         type:String,
@@ -37,6 +39,12 @@ const paymentSchema = new mongoose.Schema({
         ref: "User", // Name of the user model
         required: true, // Ensure user is always provided
     },
+    paymentDate:{
+        type:Date,
+    },
+    remark:{
+        type:String,
+    }
 });
 
 module.exports = mongoose.model("Payment", paymentSchema);

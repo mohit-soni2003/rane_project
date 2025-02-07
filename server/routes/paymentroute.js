@@ -9,10 +9,14 @@ const router = express.Router();
 router.post("/post-payment", async (req, res) => {
   console.log("Post Payment route hitted....")
   try {
-    const { tender, user, amount, refMode, description, image } = req.body;
-
+    const { tender, user, amount,  description, image_url  } = req.body;
+    console.log("Tender:", tender);
+    console.log("User:", user);
+    console.log("Amount:", amount);
+    console.log("Description:", description);
+    console.log("Image:", image_url)
     // Validate required fields
-    if (!tender || !amount || !refMode || !image || !user || !expenseNo) {
+    if (!tender || !amount || !image_url || !user) {
       return res.status(400).json({ message: "All required fields must be provided" });
     }
 
@@ -27,14 +31,12 @@ router.post("/post-payment", async (req, res) => {
       tender,
       user,
       amount,
-      refMode,
-      expenseNo,
       description,
-      image
+      image:image_url
     });
     // Save the bill to the database
     const savedPayment = await newPayment.save();
-    res.status(201).json({ message: "Payment created successfully", bill: savedBill });
+    res.status(201).json({ message: "Payment created successfully", payment: savedPayment });
   } catch (error) {
     // Handle duplicate LOA number
     if (error.code === 11000) {
@@ -63,22 +65,22 @@ router.post("/post-payment", async (req, res) => {
 //   }
 // });
 
-// router.get('/allbill', async (req, res) => {
-//   console.log("show my bill route hitted")
+router.get('/allpayment', async (req, res) => {
+  console.log("show my all payment route hitted")
 
-//   try {
-//     // Find bills that match the user's ID
-//     const bills = await Bill.find({}).populate("user");
-//     console.log(bills)
-//     if (bills.length > 0) {
-//       res.status(200).json(bills);
-//     } else {
-//       res.json({ error: 'No bills found for this user' });
-//     }
-//   } catch (error) {
-//     res.json({ error: 'Server error', details: error.message });
-//   }
-// });
+  try {
+    // Find bills that match the user's ID
+    const payments = await Payment.find({})
+    console.log(payments)
+    if (payments.length > 0) {
+      res.status(200).json(payments);
+    } else {
+      res.json({ error: 'No bills found for this user' });
+    }
+  } catch (error) {
+    res.json({ error: 'Server error', details: error.message });
+  }
+});
 
 // router.get('/bill/:id', async (req, res) => {
 //   console.log("show particular id bill route hitted")
