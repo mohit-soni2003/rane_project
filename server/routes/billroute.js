@@ -170,5 +170,19 @@ router.delete("/bill/:id", async (req, res) => {
   }
 });
 
+router.get("/recent-bills", async (req, res) => {
+  try {
+      const recentBills = await Bill.find()
+          .sort({ submittedAt: -1 }) // Sort by most recent
+          .limit(3) // Get only 3 documents
+          .populate("user"); // Populate user details (fetching only name & email)
+
+      res.json(recentBills);
+  } catch (error) {
+      console.error("Error fetching recent bills:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 
 module.exports = router

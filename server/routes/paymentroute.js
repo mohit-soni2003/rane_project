@@ -70,7 +70,7 @@ router.get('/allpayment', async (req, res) => {
 
   try {
     // Find bills that match the user's ID
-    const payments = await Payment.find({})
+    const payments = await Payment.find({}).populate("user")
     console.log(payments)
     if (payments.length > 0) {
       res.status(200).json(payments);

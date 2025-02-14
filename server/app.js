@@ -50,6 +50,7 @@ app.use(require("./routes/auth"))
 app.use(require("./routes/billroute"))
 app.use(require("./routes/clientroute"))
 app.use(require("./routes/paymentroute"))
+app.use(require("./routes/commonroute"))
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

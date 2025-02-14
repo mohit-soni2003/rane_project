@@ -13,13 +13,11 @@ const AdminDashboard = () => {
   const [activeLink, setActiveLink] = useState("Home"); // Default to "Home"
   const [show, setShow] = useState(false); // Control Logout Modal
 
-  const links = ["Home", "Profile", "Bills", "Clients","Payment Requests", "Settings", "Notifications", "Help", "Logout"];
+  const links = [ "Profile", "Bills", "Clients","Payment Requests", "Settings", "Notifications", "Help", "Logout"];
 
   // Function to render content dynamically
   const renderContent = () => {
     switch (activeLink) {
-      case "Home":
-        return <Maintainence />;
       case "Profile":
         return (
           <>
@@ -63,8 +61,14 @@ const AdminDashboard = () => {
       case "Notifications":
       case "Help":
         return <Maintainence />;
-      default:
-        return <p>Select a page from the sidebar to get started.</p>;
+        default:
+          return (
+            <>
+              <h1 className="admin-dashboard-heading">Admin Pannel</h1>
+               <AdminProfile />;
+                
+            </>
+          );
     }
   };
 
