@@ -22,6 +22,9 @@ export default function Home() {
         <Downloads></Downloads>
         {/* <BillbookForm></BillbookForm> */}
         <Footer></Footer>
+        <div className="dev-info" style={{color:"white" , background:"rgba(0,0,0,.8)", textAlign:"center" , padding:"10px"}}>
+          Website is developed and Maintained by Mohit Soni ||  <a style={{marginLeft:"10px" , textDecoration:"none"} } href="http://mohitsoni.vercel.app/">Contact Developer</a>
+        </div>
     </div>
     </>
   )

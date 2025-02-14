@@ -6,9 +6,10 @@
 }
 .pg2-heading{
 
-    font-size: 2.2rem;
+    font-size: 2.1rem;
     color: rgb(126, 28, 28);
     margin: 2% 0px;
+    text-align: center;
 }
 .pg2-img{
     width: 75%;
