@@ -11,7 +11,7 @@ const AboutRane = () => {
           <img
             src="/rane.webp"
             alt="Tejprakash Rane"
-            className="profile-image"
+            className="profilee-image"
           />
         </div>
         <div className="about-details">
@@ -20,10 +20,10 @@ const AboutRane = () => {
           <p className="company">RANE AND RANES SONS</p>
           <ul className="achievements">
             <li>
-              Former District Coordinator at <a href="#" className="link">National Commission for Scheduled Castes</a>
+              Former District Coordinator at <a href="https://www.facebook.com/NCSC.GoI" className="link">National Commission for Scheduled Castes</a>
             </li>
             <li>
-              Former Executive Council Member at <a href="#" className="link">Maharishi Panini Sanskrit Evam Vaidik Vishwavidyalaya, Ujjain</a>
+              Former Executive Council Member at <a href="https://www.facebook.com/people/Maharishi-Panini-Sanskrit-Evam-Vaidik-Vishwavidyalaya-Ujjain/100087930481383/" className="link">Maharishi Panini Sanskrit Evam Vaidik Vishwavidyalaya, Ujjain</a>
             </li>
           </ul>
           <button className="contact-button">CONTACT</button>

@@ -13,7 +13,7 @@ const documents = [
 
 const Downloads = () => {
   return (
-    <div className="downloads-container">
+    <div className="downloads-container" id="documents">
       <h2 className="downloads-heading">Downloads</h2>
       <p className="downloads-subheading">Important Documents Of Our Firm</p>
 

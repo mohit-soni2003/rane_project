@@ -91,6 +91,12 @@ const UserDashboard = () => {
     setShow(true); // Show logout modal
   };
 
+  const handleclose = ()=>{
+    if(window.innerWidth < 500){
+      setIsOpen(false)
+    }
+  }
+
   return (
     <div className={`user-dashboard-container ${isOpen ? "sidebar-open" : ""}`}>
 
@@ -124,7 +130,7 @@ const UserDashboard = () => {
                 key={link}
                 className={`user-dashboard-nav-link ${activeLink === link ? "user-dashboard-active" : ""
                   }`}
-                onClick={() => setActiveLink(link)}
+                onClick={() => {setActiveLink(link);handleclose();}}
               >
                 {link}
               </button>

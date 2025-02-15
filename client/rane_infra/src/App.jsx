@@ -12,6 +12,7 @@ import UserDashboard from "./assets/components/elements/dashboard/UserDashboard"
 import { useAuthStore } from "./assets/components/store/authStore";
 import AdminLogin from "./assets/components/elements/AdminLogin";
 import Spinner from "react-bootstrap/esm/Spinner";
+import Maintainence from "./assets/components/unique_component/Maintainence";
 
 function App() {
   const { checkAuth, isAuthenticated, user,isAdmin} = useAuthStore();
@@ -73,13 +74,21 @@ function App() {
         <Route path="/signin" element={<Signin />} />
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/upload-bill" element={<BillbookForm />} />
-        {/* <Route path="/admin-dashboard" element={<AdminDashboard />} /> */}
+        <Route path="/maintain" element={<Maintainence />} />
+    
         <Route
           path="/user-dashboard"
           element={
             <ProtectedRoute>
               <UserDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/upload-bill"
+          element={
+            <ProtectedRoute>
+              <BillbookForm />
             </ProtectedRoute>
           }
         />

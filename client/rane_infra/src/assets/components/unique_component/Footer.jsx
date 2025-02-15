@@ -19,13 +19,13 @@ const Footer = () => {
   return (
     <footer className="footer">
       <div className="social-icons">
-        <a href="#" aria-label="Facebook">
+        <a href="https://www.facebook.com/tejprakash.rane/" target="blank" aria-label="Facebook">
           <FaFacebookF />
         </a>
-        <a href="#" aria-label="Instagram">
+        <a href="https://www.instagram.com/raneandranessons/?igsh=YXg2aGh2dXBpaGRi#" target="blank" aria-label="Instagram">
           <FaInstagram />
         </a>
-        <a href="#" aria-label="Twitter">
+        <a href="https://x.com/tejprakashrane?s=11" aria-label="Twitter " target="blank">
           <FaTwitter />
         </a>
       </div>

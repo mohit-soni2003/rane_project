@@ -1,11 +1,12 @@
 const Nodemailer = require("nodemailer");
+const {MAIL_PASS , SENDER_MAIL} = require("../keys")
 
 // Create a Nodemailer transporter using Gmail's SMTP
 const mailTrapClient = Nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "mohitsonip1847@gmail.com", // Replace with your Gmail address
-    pass: "hlyq uoeg rcyr sxtd" // Replace with your Gmail App Password
+    user: SENDER_MAIL, // Replace with your Gmail address
+    pass: MAIL_PASS // Replace with your Gmail App Password
   },
   tls: {
     rejectUnauthorized: false, // Bypass self-signed certificate error

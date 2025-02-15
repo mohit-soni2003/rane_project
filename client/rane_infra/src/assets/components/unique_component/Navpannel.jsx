@@ -7,6 +7,8 @@ import "./Navpannel.css";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import { backend_url } from '../../components/store/keyStore';
+import { HashLink } from 'react-router-hash-link';
+
 
   
 function Navpannel() {
@@ -42,7 +44,7 @@ function Navpannel() {
   return (
     <Navbar collapseOnSelect expand="lg" bg="transparent" className="navbar-custom ">
       <Container>
-        <Navbar.Brand href="#home">
+        <Navbar.Brand href="/">
           <img src="/logo.webp" alt="Logo" />
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="responsive-navbar-nav" />
@@ -53,13 +55,13 @@ function Navpannel() {
             </Nav.Item>
             
             <Nav.Item>
-              <Link to="/" className="nav-link">Tenders</Link>
+              <Link to="/maintain" className="nav-link">Tenders</Link>
             </Nav.Item>
             <Nav.Item>
               <Link to="/upload-bill" className="nav-link">Bill Uploads</Link>
             </Nav.Item>
             <Nav.Item>
-              <Link to="/documents" className="nav-link">Documents</Link>
+            <a href="#documents"  className="nav-link">Documents</a>
             </Nav.Item>
             
           </Nav>
