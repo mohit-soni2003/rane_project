@@ -5,15 +5,16 @@ export default function Page3() {
     <>
     <div className="page3">
     <section className="about-work-area">
-      <h2>About Work Area</h2>
+      <h2 data-aos="zoom-in">About Work Area</h2>
       <div className="pg3-content">
-        <div className="image-container">
-          <img
+        <div className="image-container"  data-aos="fade-right" >
+          <img 
+         
             src="/map.webp" // Replace with your image path
             alt="Work Area Map"
           />
         </div>
-        <div className="text-container">
+        <div className="text-container" data-aos="fade-left" >
           <h3>Our Expertise</h3>
           <p>
             With over 5 years of experience in the construction in Railway, RANE

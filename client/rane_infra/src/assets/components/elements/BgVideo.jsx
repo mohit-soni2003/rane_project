@@ -8,7 +8,7 @@ export default function BgVideo() {
     <div className="home-pg1">
         <Navpannel></Navpannel>
     <div className="content">
-        <h1>RANE AND RANE SONS</h1>
+        <h1 >RANE AND RANE SONS</h1>
         <h2>INDIAN RAILWAY CONTRACTOR</h2>
 <a href="#content">        <button className="learn-more-btn" >LEARN MORE</button></a>
         {/* <p className="contact-info">+91 94250 29680</p> */}

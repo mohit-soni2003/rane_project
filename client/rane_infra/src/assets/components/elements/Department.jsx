@@ -3,8 +3,8 @@ import React from "react";
 const Department = () => {
   return (
     <div style={styles.container}>
-      <h2 style={styles.heading}>Departments</h2>
-      <div style={styles.imagesContainer}>
+      <h2 style={styles.heading} data-aos="fade" data-aos-delay="400"  data-aos-offset="200">Departments</h2>
+      <div style={styles.imagesContainer} data-aos="fade-up" data-aos-delay="300"  data-aos-offset="200">
         {["home", "infrawebp", "logistics", "malwa", "pharma"].map((logo, index) => (
           <div key={index} style={styles.imageWrapper}>
             <img

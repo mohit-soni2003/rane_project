@@ -5,16 +5,16 @@ import "./AboutRane.css";
 const AboutRane = () => {
   return (
     <div className="about-container">
-      <h1 className="about-title">About RANE AND RANE SONS</h1>
+      <h1 className="about-title" data-aos="fade-left">About RANE AND RANE SONS</h1>
       <div className="about-content">
-        <div className="profile-image-container">
+        <div className="profile-image-container" data-aos="zoom-in">
           <img
             src="/rane.webp"
             alt="Tejprakash Rane"
             className="profilee-image"
           />
         </div>
-        <div className="about-details">
+        <div className="about-details" data-aos="zoom-in">
           <h2>TEJPRAKASH RANE</h2>
           <p className="role">DIRECTOR</p>
           <p className="company">RANE AND RANES SONS</p>

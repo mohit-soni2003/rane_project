@@ -13,13 +13,13 @@ const documents = [
 
 const Downloads = () => {
   return (
-    <div className="downloads-container" id="documents">
-      <h2 className="downloads-heading">Downloads</h2>
+    <div className="downloads-container" id="documents" data-aos="zoom-in">
+      <h2 className="downloads-heading" >Downloads</h2>
       <p className="downloads-subheading">Important Documents Of Our Firm</p>
 
-      <div className="downloads-grid">
+      <div className="downloads-grid" >
         {documents.map((doc, index) => (
-          <div key={index} className="downloads-card">
+          <div key={index} className="downloads-card" data-aos="zoom-in">
             <p>{doc.name} (pdf)</p>
             <a href={doc.file} target="_blank" className="downloads-button">
               DOWNLOAD

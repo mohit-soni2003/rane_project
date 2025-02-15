@@ -14,9 +14,15 @@ import AdminLogin from "./assets/components/elements/AdminLogin";
 import Spinner from "react-bootstrap/esm/Spinner";
 import Maintainence from "./assets/components/unique_component/Maintainence";
 
+
+
+
+
 function App() {
   const { checkAuth, isAuthenticated, user,isAdmin} = useAuthStore();
   const [loading, setLoading] = useState(true); // State to track loading
+
+
 
   useEffect(() => {
     const authenticate = async () => {
