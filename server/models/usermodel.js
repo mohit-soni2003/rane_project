@@ -16,7 +16,9 @@ const userSchema = new mongoose.Schema({
     },
     usertype:{
         type:String,
-
+    },
+    clientType:{
+        type:String,
     },
     cid:{
         type:String,
@@ -34,7 +36,7 @@ const userSchema = new mongoose.Schema({
     gstno:{
         type:String,
     },
-    id:{
+    idproof:{
         type:String,
     },
     password:{

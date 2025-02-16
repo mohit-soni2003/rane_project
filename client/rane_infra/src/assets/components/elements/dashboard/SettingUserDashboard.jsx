@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import "./SettingUserDashboard.css";
-import Button from 'react-bootstrap/Button';
-import { useAuthStore } from '../../store/authStore';
-import { UPLOAD_PRESET , CLOUD_NAME ,CLOUDINARY_URL_IMAGE,backend_url } from '../../store/keyStore';
+import Button from "react-bootstrap/Button";
+import { useAuthStore } from "../../store/authStore";
+import { UPLOAD_PRESET, CLOUD_NAME, CLOUDINARY_URL_IMAGE, backend_url } from "../../store/keyStore";
 
 export default function SettingUserDashboard() {
     const { user } = useAuthStore();
@@ -12,120 +12,111 @@ export default function SettingUserDashboard() {
         name: user.name,
         email: user.email,
         phoneNo: user.phoneNo,
+        address: user.address,
+        clientType: user.clientType, // Default selection
+        gstno: user.gstno,
+        idproof: user.idproof,
     });
 
     // State to manage profile picture preview
     const [profilePic, setProfilePic] = useState(user.profile);
-    const [profilefile, setprofilefile] = useState()
+    const [profilefile, setProfileFile] = useState(null);
 
     // Handle text input changes
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setUserData({ ...userData, [name]: value });
     };
- 
 
-    const handleSaveChanges = async (e) => {
-        e.preventDefault(); // Prevent the default form submission behavior
-    
-        // Prepare the form data
-        const { name, email, phoneNo } = userData; // Get the data from state
-        const updatedUserData = {
-            name,
-            email,
-            phoneNo,
-            id: user._id,
-        };
-    
-        try {
-            // Make the API call to the backend
-            const response = await fetch(`${backend_url}/update-profile`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(updatedUserData),
-            });
-    
-            // Handle response
-            const result = await response.json();
-            if (!response.ok) {
-                throw new Error(result.error || "Failed to update profile");
-            }
-            
-            // Update UI and show success message
-            alert("Profile updated successfully!");
-        } catch (error) {
-            console.error("Error updating profile:", error);
-            alert("Failed to update profile.");
-        }
+    // Handle client type selection
+    const handleUserTypeChange = (e) => {
+        setUserData({ ...userData, clientType: e.target.value, gstno: "", idproof: "" });
     };
-    
+
     // Handle profile picture change
     const handleProfilePicChange = (e) => {
         const file = e.target.files[0];
-        setprofilefile(file)
         if (file) {
+            setProfileFile(file);
             const imageUrl = URL.createObjectURL(file);
             setProfilePic(imageUrl);
         }
     };
 
-    
-    const handleProfileUpdate = async (e) => {
+    // Upload profile picture
+    const handleProfileUpdate = async () => {
+        if (!profilefile) {
+            alert("Please select a file before uploading.");
+            return;
+        }
+
         const data = new FormData();
-        data.append("file", profilefile); // Attach the selected file
-        data.append("upload_preset", UPLOAD_PRESET); // Your Cloudinary upload preset
-        data.append("cloud_name", CLOUD_NAME); // Your Cloudinary cloud name
-    
+        data.append("file", profilefile);
+        data.append("upload_preset", UPLOAD_PRESET);
+        data.append("cloud_name", CLOUD_NAME);
+
         try {
-            const response = await fetch(CLOUDINARY_URL_IMAGE, {
-                method: "POST",
-                body: data,
-            });
-    
-            if (!response.ok) {
-                throw new Error("Error: " + response.status + " " + response.statusText);
-            }
-    
+            const response = await fetch(CLOUDINARY_URL_IMAGE, { method: "POST", body: data });
+
+            if (!response.ok) throw new Error(`Error: ${response.status} ${response.statusText}`);
+
             const result = await response.json();
-            console.log("Uploaded image URL:", result.url);
-            setProfilePic(result.url);  // Set the new profile pic URL
-    
-            // Update profile picture on the server immediately after state update
+            setProfilePic(result.url);
             handleProfileUpdateOnServer(result.url);
-    
         } catch (err) {
             console.error("Error uploading file:", err);
         }
     };
-    
+
     const handleProfileUpdateOnServer = async (newProfilePic) => {
         try {
             const response = await fetch(`${backend_url}/update-profile-pic`, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    id: user._id, // Assuming user._id is available
-                    profile: newProfilePic, // Send Cloudinary URL
-                }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: user._id, profile: newProfilePic }),
             });
-    
+
             const result = await response.json();
-            if (!response.ok) {
-                throw new Error(result.error || "Failed to update profile");
-            }
-            console.log(result);
+            if (!response.ok) throw new Error(result.error || "Failed to update profile");
+
             alert("Profile updated successfully!");
-    
         } catch (error) {
             console.error("Error updating profile:", error);
             alert("Failed to update profile.");
         }
     };
-    
+
+    // Handle form submission
+    const handleSaveChanges = async (e) => {
+        e.preventDefault();
+
+        const updatedUserData = {
+            ...userData,
+            gstno: userData.clientType === "Firm" ? userData.gstno : null,
+            idproof: userData.clientType === "Individual" ? userData.idproof : null,
+            id: user._id,
+        };
+
+        try {
+            const response = await fetch(`${backend_url}/update-profile`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatedUserData),
+            });
+
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || "Failed to update profile");
+
+            alert("Profile updated successfully!");
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            alert("Failed to update profile.");
+        }
+    };
+
+    const isFirm = userData.clientType === "Firm";
+    const isIndividual = userData.clientType === "Individual";
+
     return (
         <div className="user-setting-dashboard">
             {/* Profile Picture Update Section */}
@@ -156,6 +147,36 @@ export default function SettingUserDashboard() {
                             <td><label>Phone No</label></td>
                             <td><input type="text" name="phoneNo" value={userData.phoneNo} onChange={handleInputChange} /></td>
                         </tr>
+                        <tr>
+                            <td><label>Address</label></td>
+                            <td><input type="text" name="address" value={userData.address} onChange={handleInputChange} /></td>
+                        </tr>
+                        <tr>
+                            <td><label>Client Type</label></td>
+                            <td>
+                                <select name="clientType" value={userData.clientType} onChange={handleUserTypeChange}>
+                                    <option value="">Select</option>
+                                    <option value="Individual">Individual</option>
+                                    <option value="Firm">Firm</option>
+                                </select>
+                            </td>
+                        </tr>
+
+                        {/* Conditionally render GST No for Firms */}
+                        {isFirm && (
+                            <tr>
+                                <td><label>GST No</label></td>
+                                <td><input type="text" name="gstno" value={userData.gstno} onChange={handleInputChange} /></td>
+                            </tr>
+                        )}
+
+                        {/* Conditionally render ID Proof for Individuals */}
+                        {isIndividual && (
+                            <tr>
+                                <td><label>ID Proof</label></td>
+                                <td><input type="text" name="idproof" value={userData.idproof} onChange={handleInputChange} /></td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
                 <Button variant="primary" onClick={handleSaveChanges}>Save Changes</Button>

@@ -73,8 +73,11 @@ router.put("/update-profile-pic", async (req, res) => {
     }
 });
 router.put("/update-profile", async (req, res) => {
+    console.log("Update profile details route hitted .......")
     try {
-        const { name, email, phoneNo,id} = req.body;
+        const { name, email, phoneNo,id,address,clientType,idproof,gstno} = req.body;
+        console.log("userType: " + clientType)
+        console.log("IDPROOF: " + idproof)
 
         // Validate if the user exists
         const user = await User.findById(id);
@@ -86,10 +89,14 @@ router.put("/update-profile", async (req, res) => {
         if (name) user.name = name;
         if (email) user.email = email;
         if (phoneNo) user.phoneNo = phoneNo;
+        if (address) user.address = address;
+        if (clientType) user.clientType = clientType;
+        if (idproof) user.idproof = idproof;
+        if (gstno) user.gstno = gstno;
         // Save the updated user
         await user.save();
 
-        res.json({ message: "Profile Pic successfully", user });
+        res.json({ message: "Profile Data updated successfully", user });
     } catch (error) {
         console.error("Error updating profile:", error);
         res.status(500).json({ error: "Internal Server Error" });
