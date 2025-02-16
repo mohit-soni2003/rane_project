@@ -141,11 +141,11 @@ export default function BillShowModal({ show, onHide, id }) {
                 <input
                   type="radio"
                   name="payment"
-                  value="Pending"
+                  value="Sanction Pending"
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  checked={selectedStatus === "Pending"}
+                  checked={selectedStatus === "Sanction Pending"}
                 />{" "}
-                Pending
+                Sanction Pending
               </div>
               <div>
                 <input
@@ -161,11 +161,21 @@ export default function BillShowModal({ show, onHide, id }) {
                 <input
                   type="radio"
                   name="payment"
-                  value="Completed"
+                  value="Paid"
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  checked={selectedStatus === "Completed"}
+                  checked={selectedStatus === "Paid"}
                 />{" "}
-                Completed
+                Paid
+              </div>
+              <div>
+                <input
+                  type="radio"
+                  name="payment"
+                  value="Sanctioned"
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  checked={selectedStatus === "Sanctioned"}
+                />{" "}
+                Sanctioned
               </div>
               <div>
                 <input
