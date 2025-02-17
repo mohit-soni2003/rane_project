@@ -42,10 +42,10 @@ function Navpannel() {
   };
 
   return (
-    <Navbar collapseOnSelect expand="lg" bg="transparent" className="navbar-custom ">
+    <Navbar collapseOnSelect expand="lg" bg="transparent" className="navbar-custom  ">
       <Container>
         <Navbar.Brand href="/">
-          <img src="/logo.webp" alt="Logo" />
+          <img src="/logot.png" style={{width:"100px"}} alt="Logo" />
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="responsive-navbar-nav" />
         <Navbar.Collapse id="responsive-navbar-nav">

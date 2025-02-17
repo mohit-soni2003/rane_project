@@ -12,16 +12,16 @@ import PaymentStatusTable from "../../../cards/PaymentStatusTable";
 
 const UserDashboard = () => {
   const { user } = useAuthStore();
-  const [activeLink, setActiveLink] = useState("Profile"); // Default to "Profile"
-  const [show, setShow] = useState(false); // Control Logout Modal
-  const [isOpen, setIsOpen] = useState(window.innerWidth > 500); // Sidebar toggle
+  const [activeLink, setActiveLink] = useState("Profile");
+  const [show, setShow] = useState(false);
+  const [isOpen, setIsOpen] = useState(window.innerWidth > 500);
+  const [paymentDropdown, setPaymentDropdown] = useState(false); // Controls dropdown
 
   const links = [
     "Profile",
     "My Bills",
     "Upload Bill",
-    "Payment Request",
-    "Payment Status",
+    "Payment",
     "Settings",
     "Support",
     "Logout",
@@ -39,34 +39,37 @@ const UserDashboard = () => {
         );
       case "My Bills":
         return (
-          <>
-            <div className="user-dashboard-table">
-              <BillShowTable userid={user._id} />
-            </div>
-          </>
+          <div className="user-dashboard-table">
+            <BillShowTable userid={user._id} />
+          </div>
         );
       case "Upload Bill":
         return (
           <>
             <h1 className="upload-bill-heading">Upload Bill</h1>
-            <BillbookForm />;
+            <BillbookForm />
           </>
-        )
-        case "Payment Request":
-          return(
-            <>
+        );
+      case "Payment History":
+        return (
+          <>
+            <Maintainence/>
+          </>
+        );
+      case "Payment Request":
+        return (
+          <>
             <h1 className="upload-bill-heading">Payment Request</h1>
-         <PaymentReqUserDash />;
+            <PaymentReqUserDash />
           </>
-        )
-        case "Payment Status":
-          return(
-            <>
+        );
+      case "Payment Status":
+        return (
+          <>
             <h1 className="upload-bill-heading">Payment Status</h1>
-            <PaymentStatusTable/>
+            <PaymentStatusTable />
           </>
-        ) 
-        
+        );
       case "Settings":
         return (
           <>
@@ -88,18 +91,17 @@ const UserDashboard = () => {
 
   // Logout Click Handler
   const handleLogoutClick = () => {
-    setShow(true); // Show logout modal
+    setShow(true);
   };
 
-  const handleclose = ()=>{
-    if(window.innerWidth < 500){
-      setIsOpen(false)
+  const handleclose = () => {
+    if (window.innerWidth < 500) {
+      setIsOpen(false);
     }
-  }
+  };
 
   return (
     <div className={`user-dashboard-container ${isOpen ? "sidebar-open" : ""}`}>
-
       {/* Hamburger Menu */}
       <button className="hamburger-menu" onClick={() => setIsOpen(!isOpen)}>
         ☰
@@ -116,27 +118,62 @@ const UserDashboard = () => {
           <h3 className="user-dashboard-username">{user.name}</h3>
         </div>
         <nav className="user-dashboard-nav-links">
-          {links.map((link) =>
-            link === "Logout" ? (
-              <button
-                key={link}
-                className="user-dashboard-nav-link"
-                onClick={handleLogoutClick}
-              >
-                {link}
-              </button>
-            ) : (
-              <button
-                key={link}
-                className={`user-dashboard-nav-link ${activeLink === link ? "user-dashboard-active" : ""
+  {links.map((link) =>
+    link === "Logout" ? (
+      <button
+        key={link}
+        className="user-dashboard-nav-link"
+        onClick={handleLogoutClick}
+      >
+        {link}
+      </button>
+    ) : link === "Payment" ? (
+      <div key={link} className={`payment-section ${paymentDropdown ? "expanded" : ""}`}>
+        <button
+          className="user-dashboard-nav-link"
+          onClick={() => setPaymentDropdown(!paymentDropdown)}
+        >
+          {link} {paymentDropdown ? "▲" : "▼"}
+        </button>
+        {paymentDropdown && (
+          <div className="dropdown-container">
+            {["Payment Request", "Payment Status", "Payment History"].map(
+              (subLink) => (
+                <button
+                  key={subLink}
+                  className={`dropdown-item ${
+                    activeLink === subLink ? "user-dashboard-active" : ""
                   }`}
-                onClick={() => {setActiveLink(link);handleclose();}}
-              >
-                {link}
-              </button>
-            )
-          )}
-        </nav>
+                  onClick={() => {
+                    setActiveLink(subLink);
+                    setPaymentDropdown(false);
+                    handleclose();
+                  }}
+                >
+                  {subLink}
+                </button>
+              )
+            )}
+          </div>
+        )}
+      </div>
+    ) : (
+      <button
+        key={link}
+        className={`user-dashboard-nav-link ${
+          activeLink === link ? "user-dashboard-active" : ""
+        }`}
+        onClick={() => {
+          setActiveLink(link);
+          handleclose();
+        }}
+      >
+        {link}
+      </button>
+    )
+  )}
+</nav>
+
       </div>
 
       {/* Content */}

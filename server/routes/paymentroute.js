@@ -9,14 +9,14 @@ const router = express.Router();
 router.post("/post-payment", async (req, res) => {
   console.log("Post Payment route hitted....")
   try {
-    const { tender, user, amount,  description, image_url  } = req.body;
+    const { tender, user, amount,  description, image_url,paymentType  } = req.body;
     console.log("Tender:", tender);
     console.log("User:", user);
     console.log("Amount:", amount);
     console.log("Description:", description);
     console.log("Image:", image_url)
     // Validate required fields
-    if (!tender || !amount || !image_url || !user) {
+    if (!tender || !amount || !image_url || !user || !paymentType) {
       return res.status(400).json({ message: "All required fields must be provided" });
     }
 
@@ -25,6 +25,12 @@ router.post("/post-payment", async (req, res) => {
     if (!existingUser) {
       return res.status(404).json({ message: "User not found" });
     }
+    if (paymentType=="IP" && amount>50000) {
+      return res.status(404).json({ message: "Payment Request Failed : You can request only Upto 50,000 Rs. in IP " });
+    }
+    if (paymentType=="IPR" && amount>10000) {
+      return res.status(404).json({ message: "Payment Request Failed : You can request only Upto 10,000 Rs. in IPR " });
+    }
 
     // Create a new Payment
     const newPayment = new Payment({
@@ -32,6 +38,7 @@ router.post("/post-payment", async (req, res) => {
       user,
       amount,
       description,
+      paymentType,
       image:image_url
     });
     // Save the bill to the database

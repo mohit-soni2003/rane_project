@@ -16,13 +16,27 @@ const userSchema = new mongoose.Schema({
     },
     usertype:{
         type:String,
-
+    },
+    clientType:{
+        type:String,
     },
     cid:{
         type:String,
         default:"N/A"
     },
     phoneNo:{
+        type:String,
+    },
+    address:{
+        type:String,
+    },
+    firmName:{
+        type:String,
+    },
+    gstno:{
+        type:String,
+    },
+    idproof:{
         type:String,
     },
     password:{
