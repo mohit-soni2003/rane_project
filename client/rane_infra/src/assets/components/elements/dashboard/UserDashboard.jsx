@@ -53,8 +53,7 @@ const UserDashboard = () => {
       case "Payment History":
         return (
           <>
-            <h1 className="upload-bill-heading">Payment History</h1>
-            {/* Add Payment History Component Here */}
+            <Maintainence/>
           </>
         );
       case "Payment Request":
