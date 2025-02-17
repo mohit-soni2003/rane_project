@@ -10,7 +10,7 @@ router.get("/count-client-bill", async (req, res) => {
     try {
         const userCount = await User.countDocuments();
         const billCount = await Bill.countDocuments();
-        const sanctionedBillCount = await Bill.countDocuments({ paymentStatus: "Completed" });
+        const sanctionedBillCount = await Bill.countDocuments({ paymentStatus: "Sanctioned" });
 
         res.json({ 
             totalUsers: userCount, 

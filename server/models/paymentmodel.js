@@ -42,6 +42,9 @@ const paymentSchema = new mongoose.Schema({
     paymentDate:{
         type:Date,
     },
+    paymentType:{
+        type:String,
+    },
     remark:{
         type:String,
     }

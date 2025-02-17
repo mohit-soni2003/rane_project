@@ -9,10 +9,11 @@ export default function PaymentReqUserDash() {
   const { user } = useAuthStore();
 
   const [formData, setFormData] = useState({
-    tender: "EL",
+    tender: "",
     amount: "",
     description: "",
     image: null,
+    paymentType:"",
     user: user._id,
     image_url: null, // This should persist across form submissions
   });
@@ -83,6 +84,7 @@ export default function PaymentReqUserDash() {
           amount: formData.amount,
           description: formData.description,
           user: formData.user,
+          paymentType:formData.paymentType,
           image_url: uploadedImageUrl, // Ensure image_url is correctly set
         }),
       });
@@ -112,11 +114,17 @@ export default function PaymentReqUserDash() {
   return (
     <div className="payment-req-user-dash">
       <form className="payment-req-form" onSubmit={handleSubmit}>
+
+        <label>Select Payment Type</label>
+        <select name="paymentType" value={formData.paymentType} onChange={handleChange}>
+          <option value="">Select</option>
+          <option value="IP">Immediate Payment(IP)</option>
+          <option value="IPR">Immediate Payment Request(IPR)</option>
+        </select>
         <label>Select Tender</label>
         <select name="tender" value={formData.tender} onChange={handleChange}>
-          <option value="EL">EL</option>
-          <option value="RTM">RTM</option>
-          <option value="MEC">MEC</option>
+          <option value="">Select</option>
+          <option value="RTM-2024-25-69">RTM-2024-25-69</option>
         </select>
 
         <label>Amount</label>
