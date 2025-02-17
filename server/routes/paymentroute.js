@@ -53,24 +53,24 @@ router.post("/post-payment", async (req, res) => {
   }
 });
 
-// router.get('/mybill/:id', async (req, res) => {
-//   console.log("show my bill route hitted")
-//   const { id } = req.params;
-//   console.log(id)
+router.get('/my-payment-request/:id', async (req, res) => {
+  console.log("show all my payment route hitted ..")
+  const { id } = req.params;
+  console.log(id)
 
-//   try {
-//     // Find bills that match the user's ID
-//     const bills = await Bill.find({ user: id });
-//     console.log(bills)
-//     if (bills.length > 0) {
-//       res.status(200).json(bills);
-//     } else {
-//       res.json({ error: 'No bills found for this user' });
-//     }
-//   } catch (error) {
-//     res.json({ error: 'Server error', details: error.message });
-//   }
-// });
+  try {
+    // Find bills that match the user's ID
+    const payments = await Payment.find({user:id})
+    console.log(payments)
+    if (payments.length > 0) {
+      res.status(200).json(payments);
+    } else {
+      res.json({ error: 'No bills found for this user' });
+    }
+  } catch (error) {
+    res.json({ error: 'Server error', details: error.message });
+  }
+});
 
 router.get('/allpayment', async (req, res) => {
   console.log("show my all payment route hitted")

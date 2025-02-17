@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./SettingUserDashboard.css";
 import Button from "react-bootstrap/Button";
 import { useAuthStore } from "../../store/authStore";
 import { UPLOAD_PRESET, CLOUD_NAME, CLOUDINARY_URL_IMAGE, backend_url } from "../../store/keyStore";
 
 export default function SettingUserDashboard() {
-    const { user } = useAuthStore();
+    const { user, setUser } = useAuthStore();
 
     // State to manage user input fields
     const [userData, setUserData] = useState({
@@ -16,11 +16,16 @@ export default function SettingUserDashboard() {
         clientType: user.clientType, // Default selection
         gstno: user.gstno,
         idproof: user.idproof,
+        idProofType: user.idProofType,
+        upi: user.upi,
     });
 
     // State to manage profile picture preview
     const [profilePic, setProfilePic] = useState(user.profile);
     const [profilefile, setProfileFile] = useState(null);
+
+    // State to handle loading indicator
+    const [loading, setLoading] = useState(false);
 
     // Handle text input changes
     const handleInputChange = (e) => {
@@ -79,6 +84,7 @@ export default function SettingUserDashboard() {
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || "Failed to update profile");
 
+            setUser((prev) => ({ ...prev, profile: newProfilePic })); // Update global state
             alert("Profile updated successfully!");
         } catch (error) {
             console.error("Error updating profile:", error);
@@ -89,6 +95,7 @@ export default function SettingUserDashboard() {
     // Handle form submission
     const handleSaveChanges = async (e) => {
         e.preventDefault();
+        setLoading(true);
 
         const updatedUserData = {
             ...userData,
@@ -111,11 +118,20 @@ export default function SettingUserDashboard() {
         } catch (error) {
             console.error("Error updating profile:", error);
             alert("Failed to update profile.");
+        } finally {
+            setLoading(false);
         }
     };
 
     const isFirm = userData.clientType === "Firm";
     const isIndividual = userData.clientType === "Individual";
+
+    // Revoke object URL on component unmount to prevent memory leaks
+    useEffect(() => {
+        return () => {
+            if (profilePic) URL.revokeObjectURL(profilePic);
+        };
+    }, [profilePic]);
 
     return (
         <div className="user-setting-dashboard">
@@ -147,9 +163,13 @@ export default function SettingUserDashboard() {
                             <td><label>Phone No</label></td>
                             <td><input type="text" name="phoneNo" value={userData.phoneNo} onChange={handleInputChange} /></td>
                         </tr>
-                        <tr>
+                      <tr>  
                             <td><label>Address</label></td>
                             <td><input type="text" name="address" value={userData.address} onChange={handleInputChange} /></td>
+                        </tr>
+                      <tr>  
+                            <td><label>UPI Id : </label></td>
+                            <td><input type="text" name="upi" value={userData.upi} onChange={handleInputChange} /></td>
                         </tr>
                         <tr>
                             <td><label>Client Type</label></td>
@@ -172,14 +192,29 @@ export default function SettingUserDashboard() {
 
                         {/* Conditionally render ID Proof for Individuals */}
                         {isIndividual && (
-                            <tr>
-                                <td><label>ID Proof</label></td>
-                                <td><input type="text" name="idproof" value={userData.idproof} onChange={handleInputChange} /></td>
-                            </tr>
+                            <>
+                                <tr>
+                                    <td><label>ID Type</label></td>
+                                    <td>
+                                        <select name="idProofType" value={userData.idProofType} onChange={handleInputChange}>
+                                            <option value="">Select</option>
+                                            <option value="Aadhar">Aadhar</option>
+                                            <option value="PAN">PAN</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><label>ID Proof</label></td>
+                                    <td><input type="text" name="idproof" value={userData.idproof} onChange={handleInputChange} /></td>
+                                </tr>
+                            </>
                         )}
+
                     </tbody>
                 </table>
-                <Button variant="primary" onClick={handleSaveChanges}>Save Changes</Button>
+                <Button variant="primary" onClick={handleSaveChanges} disabled={loading}>
+                    {loading ? "Saving..." : "Save Changes"}
+                </Button>
             </div>
         </div>
     );
