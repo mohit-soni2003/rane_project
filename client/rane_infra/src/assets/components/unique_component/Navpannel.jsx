@@ -45,7 +45,7 @@ function Navpannel() {
     <Navbar collapseOnSelect expand="lg" bg="transparent" className="navbar-custom  ">
       <Container>
         <Navbar.Brand href="/">
-          <img src="/logot.png" style={{width:"100px"}} alt="Logo" />
+          <img src="/logo.webp" style={{width:"80px"}} alt="Logo" />
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="responsive-navbar-nav" />
         <Navbar.Collapse id="responsive-navbar-nav">
