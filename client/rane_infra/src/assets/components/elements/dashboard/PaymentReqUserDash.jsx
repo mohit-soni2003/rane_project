@@ -92,6 +92,7 @@ export default function PaymentReqUserDash() {
       const result = await response.json();
 
       if (response.ok) {
+        alert("Payment Successful")
         setMessage("Payment submitted successfully!");
         setFormData({
           ...formData,
@@ -99,6 +100,10 @@ export default function PaymentReqUserDash() {
           description: "",
           image: null, // Reset image field
           image_url: uploadedImageUrl, // Retain last uploaded image URL
+
+          tender: "",
+          image: null,
+          paymentType:"", 
         });
       } else {
         setMessage(result.message || "Something went wrong.");
@@ -148,12 +153,12 @@ export default function PaymentReqUserDash() {
 
         <label>Upload File</label>
         <input type="file" accept="image/*" onChange={handleFileChange} />
-
+        <div style={{color:"green"}}>Your payment will be recieved in upi id <b>{user.upi}</b> </div>
         <button className="submit-btn" type="submit" disabled={isLoading}>
           {isLoading ? "Submitting..." : "Submit Request"}
         </button>
 
-        {message && <p className="message">{message}</p>}
+        {message && <p className="message" style={{color:"red"}}>{message}</p>}
       </form>
     </div>
   );

@@ -103,7 +103,7 @@ const UserDashboard = () => {
   return (
     <div className={`user-dashboard-container ${isOpen ? "sidebar-open" : ""}`}>
       {/* Hamburger Menu */}
-      <button className="hamburger-menu" onClick={() => setIsOpen(!isOpen)}>
+      <button className="hamburger-menu"   onClick={() => setIsOpen(!isOpen)}>
         ☰
       </button>
 

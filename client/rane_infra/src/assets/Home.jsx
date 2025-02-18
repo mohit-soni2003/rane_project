@@ -9,6 +9,7 @@ import BillbookForm from './components/elements/BillbookForm';
 import MeetingCard from './components/elements/MeetingCard'
 import Downloads from './components/elements/Downloads'
 import Department from './components/elements/Department'
+import ContactUs from './components/elements/ContactUs'
 export default function Home() {
   return (
     <>
@@ -20,6 +21,7 @@ export default function Home() {
         <Page3></Page3>
         <AboutRane></AboutRane>
         <Department></Department>
+        <ContactUs></ContactUs>
         {/* <MeetingCard></MeetingCard> */}
         <Downloads></Downloads>
         {/* <BillbookForm></BillbookForm> */}

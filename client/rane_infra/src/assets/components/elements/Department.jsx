@@ -25,7 +25,7 @@ const styles = {
   container: {
     backgroundColor: "#F3F4F6", // Equivalent to Tailwind's bg-gray-100
     padding: "5% 0",
-    margin:"2% 0px",
+    margin:"2% 0px 0px 0px",
     textAlign: "center",
 
   },

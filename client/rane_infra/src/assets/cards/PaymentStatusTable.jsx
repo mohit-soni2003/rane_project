@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { Table, Container, Spinner, Alert, Button } from "react-bootstrap";
 import { backend_url } from "../components/store/keyStore";
+import { useAuthStore } from "../components/store/authStore";
 
 export default function PaymentStatusTable() {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const {user} = useAuthStore()
 
   useEffect(() => {
     const fetchPayments = async () => {
       try {
-        const response = await fetch(`${backend_url}/allpayment`); // Adjust backend URL if needed
+        const response = await fetch(`${backend_url}/my-payment-request/${user._id}`); // Adjust backend URL if needed
         const data = await response.json();
 
         if (response.ok) {

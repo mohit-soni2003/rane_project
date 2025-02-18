@@ -1,0 +1,105 @@
+/* Unique styles for ContactUs component */
+.contact-us-container {
+    width: 100vw;
+    /* border: 2px solid red; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    background-color: #f0f1e799;
+  }
+
+  .contact-us-container-left , .contact-us-container-right{
+    width: clamp(400px , 40% , 700px);
+    /* border: 2px solid blue; */
+    margin: 2%;
+    padding: 20px;
+  }
+  .contact-us-container-right{
+    height: 600px;
+  }
+  .contact-us-container-right iframe{
+    height: 100%;
+    width: 100%;
+  }
+  .contact-us-heading {
+    color: rgb(153, 122, 122);
+    font-weight: bold;
+    font-size: 3.5rem;
+  }
+  
+  .contact-us-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .contact-us-btn:hover {
+    background-color: #218838;
+  }
+  
+  .contact-us-text {
+    font-weight: 600;
+  }
+  
+  .contact-us-link {
+    color: #007bff;
+    text-decoration: none;
+  }
+  
+  .contact-us-link:hover {
+    text-decoration: underline;
+  }
+  
+  .contact-us-map {
+    width: 100%;
+    height: clamp(400px, 100%, 800px);
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+
+  @media (max-width: 500px) {
+    .contact-us-container {
+      padding: 15px;
+    }
+    .contact-us-container-right{
+        height: 320px;
+        padding: 0px;
+      }
+    .contact-us-heading {
+      font-size: 1.5rem;
+      text-align: center;
+    }
+  
+    .contact-us-text {
+      text-align: center;
+      font-size: 1rem;
+    }
+  
+    .contact-us-btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+    }
+  
+    .contact-us-map {
+      height: 250px;
+    }
+  
+    .contact-us-info {
+      text-align: center;
+    }
+  
+    .contact-us-info p,
+    .contact-us-info h2 {
+      font-size: 0.9rem;
+    }
+  
+    .contact-us-hours {
+      text-align: center;
+    }
+  }

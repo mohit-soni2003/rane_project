@@ -39,6 +39,12 @@ const userSchema = new mongoose.Schema({
     idproof:{
         type:String,
     },
+    idProofType:{
+        type:String,
+    },
+    upi:{
+        type:String,
+    },
     password:{
         type:String,
         required:true,
