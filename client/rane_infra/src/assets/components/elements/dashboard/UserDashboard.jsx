@@ -34,7 +34,6 @@ const UserDashboard = () => {
       case "Profile":
         return (
           <>
-            <h1 className="upload-bill-heading">Profile</h1>
             <UserDashboardProfile />
           </>
         );

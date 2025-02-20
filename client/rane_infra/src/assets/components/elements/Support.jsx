@@ -18,7 +18,7 @@ const Support = () => {
             <div className="row g-4">
                 {teamMembers.map((member, index) => (
                     <div key={index} className="col-12 col-md-6 col-lg-4 my-5">
-                        <div className="card text-center border-0 shadow-lg rounded-4 p-3 h-100 support-card ">
+                        <div className="card text-center border-0 shado w-lg rounded-4 p-3 h-100 support-card ">
                             <div className="card-body">
                                 <h2 className="h4 fw-bold mb-2">{member.name}</h2>
                                 <p className="text-muted mb-1">{member.position}</p>

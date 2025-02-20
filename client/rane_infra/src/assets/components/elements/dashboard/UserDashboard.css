@@ -57,7 +57,7 @@
   /* Content */
   .user-dashboard-content {
     flex-grow: 1;
-    padding: 20px;
+    /* padding: 20px; */
     background-color: #f4f4f4;
     overflow: scroll;
   }
@@ -100,8 +100,8 @@
 /* Hamburger Menu */
 .hamburger-menu {
   position: absolute;
-  top: 15px;
-  left: 15px;
+  top: 5px;
+  left: 5px;
   font-size: 24px;
   background: none;
   border: none;
@@ -139,7 +139,7 @@
 /* Main Content */
 .user-dashboard-content {
   flex-grow: 1;
-  padding: 20px;
+  /* padding: 20px; */
   background-color: #f4f4f4;
   transition: margin-left 0.3s ease-in-out;
 }
