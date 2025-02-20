@@ -9,6 +9,7 @@ import LogoutModel from "../../../cards/models/LogoutModel";
 import SettingUserDashboard from "./SettingUserDashboard";
 import PaymentReqUserDash from "./PaymentReqUserDash";
 import PaymentStatusTable from "../../../cards/PaymentStatusTable";
+import Support from "../Support";
 
 const UserDashboard = () => {
   const { user } = useAuthStore();
@@ -78,7 +79,7 @@ const UserDashboard = () => {
           </>
         );
       case "Support":
-        return <Maintainence />;
+        return <Support />;
       default:
         return (
           <>

@@ -13,7 +13,7 @@ import ContactUs from './components/elements/ContactUs'
 export default function Home() {
   return (
     <>
-    <div className="nav-bar">
+    <div className="main-page-container" style={{width:"100vw" , overflow:"hidden"}}>
         {/* <Navpannel></Navpannel> */}
 
         <BgVideo></BgVideo>

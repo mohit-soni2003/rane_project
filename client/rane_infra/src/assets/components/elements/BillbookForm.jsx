@@ -4,11 +4,14 @@ import { useAuthStore } from "../store/authStore";
 import { backend_url, CLOUDINARY_URL, UPLOAD_PRESET, CLOUD_NAME } from '../../components/store/keyStore';
 import ProgressBar from 'react-bootstrap/ProgressBar';
 import Spinner from 'react-bootstrap/Spinner';
+import WarningModal from "../../cards/models/WarningModal";
 
 
 
 function BillbookForm() {
   const { user } = useAuthStore();
+  const [warningModalShow, warningsetModalShow] = useState(false);
+
 
   const [formData, setFormData] = useState({
     firmName: "",
@@ -123,7 +126,6 @@ function BillbookForm() {
       });
 
       if (response.ok) {
-        alert("Form submitted successfully!");
         setFormData({
           firmName: "",
           workArea: "",
@@ -138,6 +140,7 @@ function BillbookForm() {
         setisSubmitting(false)
 
         setFileName(""); // Clear file name after submission
+        warningsetModalShow(true)
       } else {
         const error = await response.json();
         setisSubmitting(false)
@@ -211,6 +214,8 @@ function BillbookForm() {
 </button>
 
       </form>
+      {warningModalShow && <WarningModal show={warningModalShow} onClose={() => warningsetModalShow(false)} />}
+
     </div>
   );
 }
