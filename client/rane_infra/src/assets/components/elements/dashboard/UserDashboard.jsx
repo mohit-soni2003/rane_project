@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./UserDashboard.css";
+import "../../../utility/syle.css"
 import BillbookForm from "../BillbookForm";
 import BillShowTable from "../../../cards/BillShowTable";
 import Maintainence from "../../unique_component/Maintainence";
@@ -34,46 +35,52 @@ const UserDashboard = () => {
       case "Profile":
         return (
           <>
+           <div className="hamburger-container"> </div>
+            <div className="user-dashboard-sidebar-heading">Profile</div>
             <UserDashboardProfile />
           </>
         );
       case "My Bills":
         return (
-          <div className="user-dashboard-table">
-            <BillShowTable userid={user._id} />
-          </div>
+          <>
+            <div className="user-dashboard-sidebar-heading">My Bills</div>
+
+            <div className="user-dashboard-table">
+              <BillShowTable userid={user._id} />
+            </div>
+          </>
         );
       case "Upload Bill":
         return (
           <>
-            <h1 className="upload-bill-heading">Upload Bill</h1>
+            <div className="user-dashboard-sidebar-heading">Upload Bill</div>
             <BillbookForm />
           </>
         );
       case "Payment History":
         return (
           <>
-            <Maintainence/>
+            <Maintainence />
           </>
         );
       case "Payment Request":
         return (
           <>
-            <h1 className="upload-bill-heading">Payment Request</h1>
+            <div className="user-dashboard-sidebar-heading">Request Payment</div>
             <PaymentReqUserDash />
           </>
         );
       case "Payment Status":
         return (
           <>
-            <h1 className="upload-bill-heading">Payment Status</h1>
+            <div className="user-dashboard-sidebar-heading">Payment Status</div>
             <PaymentStatusTable />
           </>
         );
       case "Settings":
         return (
           <>
-            <h1 className="upload-bill-heading">Update Your Profile :</h1>
+            <div className="user-dashboard-sidebar-heading">Update Your Profile</div>
             <SettingUserDashboard />
           </>
         );
@@ -103,7 +110,9 @@ const UserDashboard = () => {
   return (
     <div className={`user-dashboard-container ${isOpen ? "sidebar-open" : ""}`}>
       {/* Hamburger Menu */}
-      <button className="hamburger-menu"   onClick={() => setIsOpen(!isOpen)}>
+     
+
+      <button className="hamburger-menu" onClick={() => setIsOpen(!isOpen)}>
         ☰
       </button>
 
@@ -118,61 +127,59 @@ const UserDashboard = () => {
           <h3 className="user-dashboard-username">{user.name}</h3>
         </div>
         <nav className="user-dashboard-nav-links">
-  {links.map((link) =>
-    link === "Logout" ? (
-      <button
-        key={link}
-        className="user-dashboard-nav-link"
-        onClick={handleLogoutClick}
-      >
-        {link}
-      </button>
-    ) : link === "Payment" ? (
-      <div key={link} className={`payment-section ${paymentDropdown ? "expanded" : ""}`}>
-        <button
-          className="user-dashboard-nav-link"
-          onClick={() => setPaymentDropdown(!paymentDropdown)}
-        >
-          {link} {paymentDropdown ? "▲" : "▼"}
-        </button>
-        {paymentDropdown && (
-          <div className="dropdown-container">
-            {["Payment Request", "Payment Status", "Payment History"].map(
-              (subLink) => (
+          {links.map((link) =>
+            link === "Logout" ? (
+              <button
+                key={link}
+                className="user-dashboard-nav-link"
+                onClick={handleLogoutClick}
+              >
+                {link}
+              </button>
+            ) : link === "Payment" ? (
+              <div key={link} className={`payment-section ${paymentDropdown ? "expanded" : ""}`}>
                 <button
-                  key={subLink}
-                  className={`dropdown-item ${
-                    activeLink === subLink ? "user-dashboard-active" : ""
-                  }`}
-                  onClick={() => {
-                    setActiveLink(subLink);
-                    setPaymentDropdown(false);
-                    handleclose();
-                  }}
+                  className="user-dashboard-nav-link"
+                  onClick={() => setPaymentDropdown(!paymentDropdown)}
                 >
-                  {subLink}
+                  {link} {paymentDropdown ? "▲" : "▼"}
                 </button>
-              )
-            )}
-          </div>
-        )}
-      </div>
-    ) : (
-      <button
-        key={link}
-        className={`user-dashboard-nav-link ${
-          activeLink === link ? "user-dashboard-active" : ""
-        }`}
-        onClick={() => {
-          setActiveLink(link);
-          handleclose();
-        }}
-      >
-        {link}
-      </button>
-    )
-  )}
-</nav>
+                {paymentDropdown && (
+                  <div className="dropdown-container">
+                    {["Payment Request", "Payment Status", "Payment History"].map(
+                      (subLink) => (
+                        <button
+                          key={subLink}
+                          className={`dropdown-item ${activeLink === subLink ? "user-dashboard-active" : ""
+                            }`}
+                          onClick={() => {
+                            setActiveLink(subLink);
+                            setPaymentDropdown(false);
+                            handleclose();
+                          }}
+                        >
+                          {subLink}
+                        </button>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                key={link}
+                className={`user-dashboard-nav-link ${activeLink === link ? "user-dashboard-active" : ""
+                  }`}
+                onClick={() => {
+                  setActiveLink(link);
+                  handleclose();
+                }}
+              >
+                {link}
+              </button>
+            )
+          )}
+        </nav>
 
       </div>
 

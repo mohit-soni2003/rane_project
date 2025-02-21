@@ -1,7 +1,9 @@
 .support-container {
     background: linear-gradient(to right, #ffffee, #ffeade);
 }
-
+.support-heading{
+    color: var(--first-color);
+}
 .support-card {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     background: #fff;
