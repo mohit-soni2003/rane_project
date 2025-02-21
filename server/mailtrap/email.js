@@ -1,12 +1,12 @@
 const { mailTrapClient, sender } = require("./mailtrapConfig");
-const { VERIFICATION_EMAIL_TEMPLATE , PASSWORD_RESET_REQUEST_TEMPLATE,PASSWORD_RESET_SUCCESS_TEMPLATE} = require("./emailTemplates");
+const { VERIFICATION_EMAIL_TEMPLATE, PASSWORD_RESET_REQUEST_TEMPLATE, PASSWORD_RESET_SUCCESS_TEMPLATE, ACCOUNT_CREATION_TEMPLATE } = require("./emailTemplates");
 
-const sendVerificationEmail = async(email,verificationToken)=>{
-    console.log(email)
-    const recipient = [{email}]
-    try {
+const sendVerificationEmail = async (email, verificationToken) => {
+	console.log(email)
+	const recipient = [{ email }]
+	try {
 		const response = await mailTrapClient.sendMail({
-            from: `"${sender.name}" <${sender.email}>`, // Correct 'from' format
+			from: `"${sender.name}" <${sender.email}>`, // Correct 'from' format
 			to: email,
 			subject: "Verify your email",
 			html: VERIFICATION_EMAIL_TEMPLATE.replace("{verificationCode}", verificationToken),
@@ -20,15 +20,18 @@ const sendVerificationEmail = async(email,verificationToken)=>{
 		throw new Error(`Error sending verification email: ${error}`);
 	}
 }
-const sendWelcomeEmail = async(email,name)=>{
-    console.log(email)
-    const recipient = [{email}]
-    try {
+const sendWelcomeEmail = async (userName,email,password) => {
+	console.log(email)
+	const recipient = [{ email }]
+	try {
 		const response = await mailTrapClient.sendMail({
-            from: `"${sender.name}" <${sender.email}>`, // Correct 'from' format
+			from: `"${sender.name}" <${sender.email}>`, // Correct 'from' format
 			to: email,
-			subject: "Verify your email",
-            text: "Your Account created successful",
+			subject: " Your Account Has Been Successfully Created!",
+			html: ACCOUNT_CREATION_TEMPLATE
+				.replace("{userName}", userName)
+				.replace("{userEmail}", email)
+				.replace("{userPassword}", password),
 			category: "Welcome email",
 		});
 
@@ -78,4 +81,4 @@ const sendResetSuccessEmail = async (email) => {
 		throw new Error(`Error sending password reset success email: ${error}`);
 	}
 }
-module.exports = {sendVerificationEmail , sendWelcomeEmail , sendPasswordResetEmail , sendResetSuccessEmail}
+module.exports = { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail, sendResetSuccessEmail }

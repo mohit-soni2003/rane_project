@@ -13,7 +13,7 @@
 /* Profile Card */
 .profile-card {
     background: #ffffff;
-    width: 400px;
+    width: clamp(350px, 50% , 700px);
     border-radius: 20px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     padding: 20px;

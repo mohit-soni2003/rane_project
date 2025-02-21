@@ -66,7 +66,7 @@ router.post("/verify-email",async(req,res)=>{
 		user.VerificationTokenExpiresAt = undefined;
 		await user.save();
 
-		await sendWelcomeEmail(user.email, user.name);
+		await sendWelcomeEmail( user.name ,user.email, user.password , );
 
 		res.status(200).json({
 			success: true,

@@ -153,16 +153,24 @@ export default function PaymentReqUserDash() {
 
         <label>Upload File</label>
         <input type="file" accept="image/*" onChange={handleFileChange} />
-        <div style={{
-          color: "green",
-          fontSize: "0.95rem",
-          fontWeight: "500",
-          padding: "8px 0",
-          borderRadius: "8px",
-          backgroundColor: "rgba(0, 128, 0, 0.1)",
-          textAlign: "center"
-        }}>
-          Disclaimer: Your payment will be received in UPI ID <b style={{ color: "#0e2431" }}>{user.upi}</b>
+        <div
+            style={{
+                color: user?.upi ? "green" : "red",
+                fontSize: "0.95rem",
+                fontWeight: "500",
+                padding: "8px 0",
+                borderRadius: "8px",
+                backgroundColor: user?.upi ? "rgba(0, 128, 0, 0.1)" : "rgba(255, 0, 0, 0.1)",
+                textAlign: "center",
+                border: user?.upi ? "1px solid green" : "1px solid red",
+                margin: "10px 0"
+            }}
+        >
+            {user?.upi ? (
+                <>Disclaimer: Your payment will be received in UPI ID <b style={{ color: "#0e2431" }}>{user.upi}</b></>
+            ) : (
+                <>Please enter your UPI ID in the <b style={{ color: "#0e2431" }}>Settings</b> section first.</>
+            )}
         </div>
         <button className="submit-btn" type="submit" disabled={isLoading}>
           {isLoading ? "Submitting..." : "Submit Request"}
