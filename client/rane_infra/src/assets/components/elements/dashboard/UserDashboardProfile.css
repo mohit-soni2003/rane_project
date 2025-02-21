@@ -16,7 +16,7 @@
     width: 400px;
     border-radius: 20px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    padding: 25px;
+    padding: 20px;
     text-align: center;
     position: relative;
     overflow: hidden;
@@ -148,9 +148,7 @@
 }
 
 @media (max-width: 480px) {
-    .profile-container {
-        padding: 10px;
-    }
+
 
     .profile-image {
         width: 80px;

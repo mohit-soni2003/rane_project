@@ -43,8 +43,9 @@ const UserDashboard = () => {
       case "My Bills":
         return (
           <>
-            <div className="user-dashboard-sidebar-heading">My Bills</div>
+                      <div className="hamburger-container"> </div>
 
+            <div className="user-dashboard-sidebar-heading">My Bills</div>
             <div className="user-dashboard-table">
               <BillShowTable userid={user._id} />
             </div>
@@ -53,6 +54,8 @@ const UserDashboard = () => {
       case "Upload Bill":
         return (
           <>
+                      <div className="hamburger-container"> </div>
+
             <div className="user-dashboard-sidebar-heading">Upload Bill</div>
             <BillbookForm />
           </>
@@ -66,6 +69,8 @@ const UserDashboard = () => {
       case "Payment Request":
         return (
           <>
+                      <div className="hamburger-container"> </div>
+
             <div className="user-dashboard-sidebar-heading">Request Payment</div>
             <PaymentReqUserDash />
           </>
@@ -73,6 +78,8 @@ const UserDashboard = () => {
       case "Payment Status":
         return (
           <>
+                      <div className="hamburger-container"> </div>
+
             <div className="user-dashboard-sidebar-heading">Payment Status</div>
             <PaymentStatusTable />
           </>
@@ -80,6 +87,8 @@ const UserDashboard = () => {
       case "Settings":
         return (
           <>
+                      <div className="hamburger-container"> </div>
+
             <div className="user-dashboard-sidebar-heading">Update Your Profile</div>
             <SettingUserDashboard />
           </>
@@ -87,6 +96,8 @@ const UserDashboard = () => {
       case "Support":
         return (
           <>
+                      <div className="hamburger-container"> </div>
+
                       <div className="user-dashboard-sidebar-heading">Contact Rane And Rane's Sons</div>
 
             <div className="hamburger-container"> </div>
