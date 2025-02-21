@@ -273,7 +273,7 @@
     position: fixed; /* Fixed position to stay at the top */
     top: 0;
     left: 0;
-    background-color: rgba(199, 199, 199, 0.953);
+    background-color: rgba(242, 228, 205, 0.875);
     z-index: 3; /* High z-index to stay above other elements */
   }
   .user-dashboard-content{

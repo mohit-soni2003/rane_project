@@ -35,7 +35,7 @@ const UserDashboard = () => {
       case "Profile":
         return (
           <>
-           <div className="hamburger-container"> </div>
+            <div className="hamburger-container"> </div>
             <div className="user-dashboard-sidebar-heading">Profile</div>
             <UserDashboardProfile />
           </>
@@ -85,10 +85,19 @@ const UserDashboard = () => {
           </>
         );
       case "Support":
-        return <Support />;
+        return (
+          <>
+                      <div className="user-dashboard-sidebar-heading">Contact Rane And Rane's Sons</div>
+
+            <div className="hamburger-container"> </div>
+            <Support />;
+          </>
+        )
       default:
         return (
           <>
+                      <div className="user-dashboard-sidebar-heading">Profile</div>
+
             <h1 className="upload-bill-heading">Profile</h1>
             <UserDashboardProfile />
           </>
@@ -110,7 +119,7 @@ const UserDashboard = () => {
   return (
     <div className={`user-dashboard-container ${isOpen ? "sidebar-open" : ""}`}>
       {/* Hamburger Menu */}
-     
+
 
       <button className="hamburger-menu" onClick={() => setIsOpen(!isOpen)}>
         ☰
