@@ -13,7 +13,7 @@ export default function PaymentReqUserDash() {
     amount: "",
     description: "",
     image: null,
-    paymentType:"",
+    paymentType: "",
     user: user._id,
     image_url: null, // This should persist across form submissions
   });
@@ -84,7 +84,7 @@ export default function PaymentReqUserDash() {
           amount: formData.amount,
           description: formData.description,
           user: formData.user,
-          paymentType:formData.paymentType,
+          paymentType: formData.paymentType,
           image_url: uploadedImageUrl, // Ensure image_url is correctly set
         }),
       });
@@ -103,7 +103,7 @@ export default function PaymentReqUserDash() {
 
           tender: "",
           image: null,
-          paymentType:"", 
+          paymentType: "",
         });
       } else {
         setMessage(result.message || "Something went wrong.");
@@ -153,12 +153,39 @@ export default function PaymentReqUserDash() {
 
         <label>Upload File</label>
         <input type="file" accept="image/*" onChange={handleFileChange} />
-        <div style={{color:"green"}}>Your payment will be recieved in upi id <b>{user.upi}</b> </div>
+        <div style={{
+          color: "green",
+          fontSize: "0.95rem",
+          fontWeight: "500",
+          padding: "8px 0",
+          borderRadius: "8px",
+          backgroundColor: "rgba(0, 128, 0, 0.1)",
+          textAlign: "center"
+        }}>
+          Disclaimer: Your payment will be received in UPI ID <b style={{ color: "#0e2431" }}>{user.upi}</b>
+        </div>
         <button className="submit-btn" type="submit" disabled={isLoading}>
           {isLoading ? "Submitting..." : "Submit Request"}
         </button>
 
-        {message && <p className="message" style={{color:"red"}}>{message}</p>}
+        {message && (
+          <p
+            className="message"
+            style={{
+              color: "red",
+              fontSize: "0.95rem",
+              fontWeight: "500",
+              padding: "8px 12px",
+              borderRadius: "6px",
+              backgroundColor: "rgba(255, 0, 0, 0.1)",
+              border: "1px solid red",
+              textAlign: "center",
+              margin: "10px 0"
+            }}
+          >
+            {message}
+          </p>
+        )}
       </form>
     </div>
   );

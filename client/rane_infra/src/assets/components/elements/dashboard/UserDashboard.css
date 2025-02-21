@@ -56,17 +56,46 @@
   
   /* Content */
   .user-dashboard-content {
+    /* height: 100vw; */
     flex-grow: 1;
-    padding: 20px;
-    background-color: #f4f4f4;
+    /* padding: 0px 1.5% 1.5% 1.5%; */
     overflow: scroll;
+    background: linear-gradient(to right, var(--user-dashboard-gradient1),var(--user-dashboard-gradient2));
   }
-  
-  .user-dashboard-content h1 {
-    font-size: 28px;
-    margin-bottom: 10px;
-  }
-  
+  .user-dashboard-sidebar-heading {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--first-color); /* Uses your variable */
+    padding-bottom: 8px;
+    border-bottom: 3px solid var(--line-color);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 15px;
+    position: relative;
+    text-shadow: 2px 2px 4px rgba(97, 73, 233, 0.3); /* Soft shadow effect */
+}
+
+/* Underline effect with animation */
+.user-dashboard-sidebar-heading::after {
+    content: '';
+    display: block;
+    width: 50%;
+    height: 3px;
+    background-color: var(--first-color); /* Underline uses second color */
+    margin: 5px auto 0;
+    transition: width 0.3s ease;
+}
+
+.user-dashboard-sidebar-heading:hover::after {
+    width: 80%; /* Expands underline on hover */
+}
+
+.user-dashboard-sidebar-heading:hover::after {
+    width: 80%;
+}
+
+
   .user-dashboard-content p {
     font-size: 18px;
   }
@@ -100,14 +129,15 @@
 /* Hamburger Menu */
 .hamburger-menu {
   position: absolute;
-  top: 15px;
-  left: 15px;
-  font-size: 24px;
+  top: 5px !important;
+  left: 5px !important;
+  font-size: 25px;
   background: none;
   border: none;
   color: rgb(27, 2, 2);
   cursor: pointer;
-  z-index: 1000;  
+  z-index: 1000; 
+  padding: 5px 8px !important; 
 }
 
 
@@ -231,6 +261,27 @@
 .dropdown-item:hover {
   background: #415a77;
 }
+
+
+/* //This css is for hamburge container to to show on top */
+
+@media (max-width: 700px) {
+  .hamburger-container {
+    border: 0px solid red;
+    height: 55px;
+    width: 100%;
+    position: fixed; /* Fixed position to stay at the top */
+    top: 0;
+    left: 0;
+    background-color: rgba(199, 199, 199, 0.953);
+    z-index: 3; /* High z-index to stay above other elements */
+  }
+  .user-dashboard-content{
+    padding-top: 60px;
+
+  }
+}
+
 
 
 
