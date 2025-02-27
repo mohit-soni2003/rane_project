@@ -23,13 +23,18 @@ router.get('/allclient', async (req, res) => {
 });
 
 router.put('/update-cid/:id', async (req, res) => {
-    console.log("Update CID route hitted...");
+    console.log("Update CID route hit...");
     const { id } = req.params;
     const { cid } = req.body;
 
     console.log("ID:", id, "New CID:", cid);
+
     try {
-        console.log("ID:", id, "New CID:", cid);
+        // Check if the new CID is already in use by another user
+        const existingUser = await User.findOne({ cid: cid, _id: { $ne: id } });
+        if (existingUser) {
+            return res.status(400).json({ error: 'CID must be unique' });
+        }
 
         // Check if user exists before updating
         const user = await User.findById(id);
@@ -37,20 +42,21 @@ router.put('/update-cid/:id', async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        // Update the user's LOA
+        // Update the user's CID
         const updatedUser = await User.findByIdAndUpdate(
             id,
             { cid: cid },
             { new: true } // Return the updated document
         );
 
-        console.log("User LOA updated:", updatedUser);
-        res.status(200).json({ message: 'LOA updated successfully', user: updatedUser });
+        console.log("User CID updated:", updatedUser);
+        res.status(200).json({ message: 'CID updated successfully', user: updatedUser });
     } catch (error) {
-        console.error("Error updating LOA:", error.message);
+        console.error("Error updating CID:", error.message);
         res.status(500).json({ error: 'Server error', details: error.message });
     }
 });
+
 
 router.put("/update-profile-pic", async (req, res) => {
     try {
