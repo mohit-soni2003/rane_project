@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { Table, Container, Spinner, Alert, Button, Image } from "react-bootstrap";
 import { backend_url } from "../../components/store/keyStore";
+import PaymentRequestAdmin from "../models/PaymentRequestAdmin";
 
 export default function PaymentRequestTable() {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [modalShow, setModalShow] = useState(false);
+
+  const [prid, setprid] = useState("")//payment request id
+
+
+  const handleViewMore = (id) => {
+    setprid(id)
+    setModalShow(true)
+  }
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -54,6 +64,7 @@ export default function PaymentRequestTable() {
                 <th>Payment Mode</th>
                 <th>Remark</th>
                 <th>View Bill</th>
+                <th>More</th>
               </tr>
             </thead>
             <tbody>
@@ -94,7 +105,12 @@ export default function PaymentRequestTable() {
                         "N/A"
                       )}
                     </td>
+                    <Button variant="secondary" onClick={() => handleViewMore(payment._id)}  >More</Button>
                   </tr>
+                  
+
+
+
                 ))
               ) : (
                 <tr>
@@ -103,6 +119,11 @@ export default function PaymentRequestTable() {
                   </td>
                 </tr>
               )}
+              <PaymentRequestAdmin
+                show={modalShow}
+                onHide={() => setModalShow(false)}
+                id={prid}
+              />
             </tbody>
           </Table>
         </div>

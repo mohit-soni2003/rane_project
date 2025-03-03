@@ -89,42 +89,46 @@ router.get('/allpayment', async (req, res) => {
   }
 });
 
-// router.get('/bill/:id', async (req, res) => {
-//   console.log("show particular id bill route hitted")
-//   const {id} = req.params
+router.get('/payment/:id', async (req, res) => {
+  console.log("show particular id payment route hitted")
+  const {id} = req.params
 
-//   try {
-//     // Find bills that match the user's ID
-//     const bill = await Bill.findById(id).populate("user");
-//     console.log(bill)
-//     if (bill) {
-//       res.status(200).json(bill);
-//     } else {
-//       res.json({ error: 'No bills found for this user' });
-//     }
-//   } catch (error) {
-//     res.json({ error: 'Server error', details: error.message });
-//   }
-// });
+  try {
+    // Find bills that match the user's ID
+    const paymenyReq = await Payment.findById(id).populate("user");
+    console.log(paymenyReq)
+    if (paymenyReq) {
+      res.status(200).json(paymenyReq);
+    } else {
+      res.json({ error: 'No bills found for this user' });
+    }
+  } catch (error) {
+    res.json({ error: 'Server error', details: error.message });
+  }
+});
 
-// router.get('/bill/update-payment/:id', async (req, res) => {
-//   console.log("Update bill payment stasus route hitted")
-//   const {status} = req.body
-//   const {id} = req.params
 
-//   try {
-//     // Find bills that match the user's ID
-//     const bill = await Bill.findById(id).populate("user");
-//     console.log(bill)
-//     if (bill) {
-//       res.status(200).json(bill);
-//     } else {
-//       res.json({ error: 'No bills found for this user' });
-//     }
-//   } catch (error) {
-//     res.json({ error: 'Server error', details: error.message });
-//   }
-// });
+router.put("/payment/update/:id", async (req, res) => {
+  const { status, refMode, expenseNo } = req.body;
+
+  try {
+      const updatedPayment = await Payment.findByIdAndUpdate(
+          req.params.id,
+          { status, refMode, expenseNo },
+          { new: true }
+      );
+
+      if (!updatedPayment) {
+          return res.status(404).json({ error: "Payment record not found" });
+      }
+
+      res.json(updatedPayment);
+  } catch (error) {
+      res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+
 
 // router.put('/bill/update-payment/:id', async (req, res) => {
 //   console.log("Update bill payment status route hit");
@@ -151,25 +155,30 @@ router.get('/allpayment', async (req, res) => {
 //   }
 // });
 
-// router.delete("/bill/:id", async (req, res) => {
-//   try {
-//     const { id } = req.params;
+router.delete("/payment/:id", async (req, res) => {
 
-//     // Check if bill exists
-//     const bill = await Bill.findById(id);
-//     if (!bill) {
-//       return res.status(404).json({ message: "Bill not found" });
-//     }
+  console.log("DELETE PAYMENT ROUTE HITTED...")
+  console.log(req.params)
 
-//     // Delete the bill
-//     await Bill.findByIdAndDelete(id);
-//     res.json({ message: "Bill deleted successfully" });
+  try {
+    const { id } = req.params;
 
-//   } catch (error) {
-//     console.error("Error deleting bill:", error);
-//     res.status(500).json({ message: "Internal Server Error" });
-//   }
-// });
+    // Check if payment exists
+    const payment = await Payment.findById(id);
+    if (!payment) {
+      return res.status(404).json({ message: "Payment not found" });
+    }
+
+    // Delete the payment
+    await Payment.findByIdAndDelete(id);
+    res.json({ message: "Payment deleted successfully" });
+
+  } catch (error) {
+    console.error("Error deleting payment:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 
 
 module.exports = router

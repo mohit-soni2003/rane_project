@@ -11,6 +11,7 @@ import SettingUserDashboard from "./SettingUserDashboard";
 import PaymentReqUserDash from "./PaymentReqUserDash";
 import PaymentStatusTable from "../../../cards/PaymentStatusTable";
 import Support from "../Support";
+import ChangePass from "../ChangePass";
 
 const UserDashboard = () => {
   const { user } = useAuthStore();
@@ -26,6 +27,7 @@ const UserDashboard = () => {
     "Payment",
     "Settings",
     "Support",
+    "Change Password",
     "Logout",
   ];
 
@@ -91,6 +93,15 @@ const UserDashboard = () => {
 
             <div className="user-dashboard-sidebar-heading">Update Your Profile</div>
             <SettingUserDashboard />
+          </>
+        );
+      case "Change Password":
+        return (
+          <>
+                      <div className="hamburger-container"> </div>
+
+            <div className="user-dashboard-sidebar-heading">Change Your Password</div>
+            <ChangePass/>
           </>
         );
       case "Support":

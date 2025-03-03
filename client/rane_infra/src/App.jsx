@@ -13,7 +13,8 @@ import { useAuthStore } from "./assets/components/store/authStore";
 import AdminLogin from "./assets/components/elements/AdminLogin";
 import Spinner from "react-bootstrap/esm/Spinner";
 import Maintainence from "./assets/components/unique_component/Maintainence";
-
+import ForgotPass from "./assets/components/elements/ForgotPass";
+import ResetPass from "./assets/components/elements/ResetPass";
 
 
 
@@ -81,6 +82,8 @@ function App() {
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/maintain" element={<Maintainence />} />
+        <Route path="/reset-password" element={<ForgotPass/>} />
+        <Route path="/reset-password-page/:id" element={<ResetPass/>} />
     
         <Route
           path="/user-dashboard"

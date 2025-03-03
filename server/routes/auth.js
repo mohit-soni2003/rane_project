@@ -5,6 +5,7 @@ const setadminCookie = require("../utils/setadminCookie")
 const {sendVerificationEmail , sendWelcomeEmail , sendPasswordResetEmail,sendResetSuccessEmail} = require("../mailtrap/email")
 const verifyToken = require("../middleware/verifyToken")
 const crypto = require("crypto")
+const {FRONTEND_ORIGIN_URL} = require("../keys")
 
 
 const router = express.Router();
@@ -132,7 +133,7 @@ router.post("/forgot-password",async(req,res) =>{
 		await user.save();
 
 		// send email
-		await sendPasswordResetEmail(user.email, `http://localhost:3000/reset-password/${resetToken}`);
+		await sendPasswordResetEmail(user.email, `${FRONTEND_ORIGIN_URL}/reset-password-page/${resetToken}`);
 
 		res.status(200).json({ success: true, message: "Password reset link sent to your email" });
 	} catch (error) {
@@ -271,5 +272,38 @@ router.post("/admin-signup", async (req, res) => {
     })
     // res.send("Signup route");
 });
+router.post("/change-password", verifyToken, async (req, res) => {
+    console.log("Change password route hit...");
+
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ success: false, message: "Please provide both current and new password" });
+        }
+
+        const user = await User.findById(req.userId);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        // Validate current password
+        if (user.password !== currentPassword) {
+            return res.status(400).json({ success: false, message: "Current password is incorrect" });
+        }
+
+        // Update the password
+        user.password = newPassword;
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Password changed successfully" });
+
+    } catch (error) {
+        console.log("Error in change-password", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
 
 module.exports=router
