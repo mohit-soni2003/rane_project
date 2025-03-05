@@ -39,6 +39,9 @@ export default function AllUser() {
               <th>ID Proof</th>
               <th>ID Proof Type</th>
               <th>UPI</th>
+              <th>Bank Name</th>
+              <th>IFSC</th>
+              <th>Account No.</th>
               <th>Last Login</th>
               <th>Verified</th>
               <th>Reset Password Token</th>
@@ -75,6 +78,9 @@ export default function AllUser() {
                   <td>{user.idproof || "N/A"}</td>
                   <td>{user.idProofType || "N/A"}</td>
                   <td>{user.upi || "N/A"}</td>
+                  <td>{user.bankName || "N/A"}</td>
+                  <td>{user.ifscCode || "N/A"}</td>
+                  <td>{user.accountNo || "N/A"}</td>
                   <td>{new Date(user.lastlogin).toLocaleString()}</td>
                   <td>
                     {user.isverified ? (

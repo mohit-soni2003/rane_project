@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./AdminProfile.css";
 import Button from 'react-bootstrap/Button';
-import { backend_url } from "../../store/keyStore"; // Ensure this is the correct import
+import { backend_url } from "../../store/keyStore"; 
 import BillShowModal from "../../../cards/models/BillShowModal";
 
 const AdminDashboardProfile = () => {
@@ -15,13 +15,12 @@ const AdminDashboardProfile = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [modalShow, setModalShow] = useState(false);
-    const [billid, setbillid] = useState("")
+    const [billid, setBillId] = useState("");
 
-    const handleViewMore=(id)=>{
-        setbillid(id)
-        setModalShow(true)
-      }
-
+    const handleViewMore = (id) => {
+        setBillId(id);
+        setModalShow(true);
+    };
 
     useEffect(() => {
         const fetchCounts = async () => {
@@ -59,86 +58,72 @@ const AdminDashboardProfile = () => {
         fetchRecentBills();
     }, []);
 
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p>Error: {error}</p>;
+    if (loading) return <p className="text-center mt-3">Loading...</p>;
+    if (error) return <p className="text-center text-danger mt-3">Error: {error}</p>;
 
     return (
         <div className="admin-profile-main">
             <div className="admin-profile-container">
                 <div className="profile-container-left">
+                    {/* Client Count */}
                     <div className="admin-profile-left-card">
                         <div>
                             <h3>Total Clients</h3>
                             <h1>{counts.totalUsers}</h1>
                         </div>
-                        <div>
-                            <img src="/client.png" alt="Clients" />
-                        </div>
+                        <img src="/client.png" alt="Clients" />
                     </div>
+
+                    {/* Total Bills */}
                     <div className="admin-profile-left-card">
                         <div>
                             <h3>Total Bills</h3>
                             <h1>{counts.totalBills}</h1>
                         </div>
-                        <div>
-                            <img src="/billIcon.png" alt="Bills" />
-                        </div>
+                        <img src="/billIcon.png" alt="Bills" />
                     </div>
+
+                    {/* Sanctioned Bills */}
                     <div className="admin-profile-left-card">
                         <div>
                             <h3>Bills Sanctioned</h3>
                             <h1>{counts.sanctionedBills}</h1>
                         </div>
-                        <div>
-                            <img src="/billSanctioned.png" alt="Sanctioned Bills" />
-                        </div>
+                        <img src="/billSanctioned.png" alt="Sanctioned Bills" />
                     </div>
                 </div>
 
                 <div className="profile-container-right">
-                    <div className='profile-right-head-container'>
+                    <div className="profile-right-head-container">
                         <h1 className="admin-dash-recent-bills">Recent Bills</h1>
-                        <div className='bill-view-all-btn'>View All</div>
+                        <div className="bill-view-all-btn">View All</div>
                     </div>
 
                     {/* Dynamic Recent Bills */}
                     {recentBills.length > 0 ? (
                         recentBills.map((bill, index) => (
                             <div className="recent-bill-card" key={index}>
-                                <div>
+                                <div className="d-flex align-items-center">
                                     <img src={bill.user?.profile} alt="Profile" />
-                                    <div style={{ fontWeight: "500" }}>CID: {bill.user?.cid}</div>
-                                </div>
-
-                                <div className='recent-bill-card-name'>
-                                    {bill.user?.name || "Unknown User"}
-                                    <div style={{ fontSize: "1rem", fontWeight: "400" }}>
-                                        {new Date(bill.submittedAt).toLocaleString()}
+                                    <div className="ms-3">
+                                        <div style={{ fontWeight: "500" }}>CID: {bill.user?.cid}</div>
+                                        <div className="text-muted">{bill.user?.name || "Unknown User"}</div>
                                     </div>
                                 </div>
                                 <div>
-                                    <h6>{bill.firmName}</h6>
-                                    <h6>{bill.workArea}</h6>
+                                    <h6 className="text-primary">{bill.firmName}</h6>
+                                    <h6 className="text-secondary">{bill.workArea}</h6>
                                 </div>
-                                <div>
-                                    <Button variant="secondary" style={{ fontSize: "0.9rem" }} onClick={() => handleViewMore(bill._id)} >VIEW</Button>
-                                </div>
-                            </div> 
+                                <Button variant="outline-primary" onClick={() => handleViewMore(bill._id)}>VIEW</Button>
+                            </div>
                         ))
                     ) : (
-                        <p>No recent bills available</p>
+                        <p className="text-center text-muted">No recent bills available</p>
                     )}
                 </div>
             </div>
-            <BillShowModal
-                show={modalShow}
-                onHide={() => setModalShow(false)}
-                id={billid}
-            />
-            <div className="profile-container-bottom">
-                <h3>Meeting Request</h3>
-                <div className="meeeting-card-container"></div>
-            </div>
+
+            <BillShowModal show={modalShow} onHide={() => setModalShow(false)} id={billid} />
         </div>
     );
 };

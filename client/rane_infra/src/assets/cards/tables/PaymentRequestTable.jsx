@@ -2,19 +2,24 @@ import React, { useEffect, useState } from "react";
 import { Table, Container, Spinner, Alert, Button, Image } from "react-bootstrap";
 import { backend_url } from "../../components/store/keyStore";
 import PaymentRequestAdmin from "../models/PaymentRequestAdmin";
+import PayReqTransactionModel from "../models/PayReqTransactionModel";
 
 export default function PaymentRequestTable() {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [modalShow, setModalShow] = useState(false);
-
+  const [tramodalShow, settraModalShow] = useState(false); //transaction model show
   const [prid, setprid] = useState("")//payment request id
 
 
   const handleViewMore = (id) => {
     setprid(id)
     setModalShow(true)
+  }
+  const handlePay = (id) => {
+    setprid(id)
+    settraModalShow(true)
   }
 
   useEffect(() => {
@@ -65,6 +70,7 @@ export default function PaymentRequestTable() {
                 <th>Remark</th>
                 <th>View Bill</th>
                 <th>More</th>
+                <th>Pay</th>
               </tr>
             </thead>
             <tbody>
@@ -105,7 +111,12 @@ export default function PaymentRequestTable() {
                         "N/A"
                       )}
                     </td>
-                    <Button variant="secondary" onClick={() => handleViewMore(payment._id)}  >More</Button>
+                    <td>
+                    <Button variant="info" size="sm" onClick={() => handleViewMore(payment._id)}  >More</Button>
+                    </td>
+                    <td>
+                    <Button variant="warning" size="sm" onClick={() => handlePay(payment._id)}  >Pay</Button>
+                    </td>
                   </tr>
                   
 
@@ -122,6 +133,11 @@ export default function PaymentRequestTable() {
               <PaymentRequestAdmin
                 show={modalShow}
                 onHide={() => setModalShow(false)}
+                id={prid}
+              />
+              <PayReqTransactionModel
+                show={tramodalShow}
+                onHide={() => settraModalShow(false)}
                 id={prid}
               />
             </tbody>

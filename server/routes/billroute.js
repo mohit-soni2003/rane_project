@@ -8,7 +8,7 @@ const router = express.Router();
 router.post("/post-bill", async (req, res) => {
   console.log("Post bill route hitted....")
   try {
-    const { firmName, workArea, loaNo, pdfurl, user, invoiceNo, workDescription } = req.body;
+    const { firmName, workArea, loaNo, pdfurl, user, invoiceNo, workDescription,amount } = req.body;
     // Log the fields
     console.log("Received Data:");
     console.log("Firm Name:", firmName);
@@ -20,7 +20,7 @@ router.post("/post-bill", async (req, res) => {
     console.log("Work Description:", workDescription);
 
     // Validate required fields
-    if (!firmName || !workArea || !loaNo || !pdfurl || !user) {
+    if (!firmName || !workArea || !loaNo || !pdfurl || !user ||!amount) {
       return res.status(400).json({ message: "All required fields must be provided" });
     }
 
@@ -39,6 +39,7 @@ router.post("/post-bill", async (req, res) => {
       invoiceNo,
       workDescription,
       user,
+      amount
     });
     // Save the bill to the database
     const savedBill = await newBill.save();

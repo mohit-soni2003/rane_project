@@ -12,6 +12,7 @@ import PaymentReqUserDash from "./PaymentReqUserDash";
 import PaymentStatusTable from "../../../cards/PaymentStatusTable";
 import Support from "../Support";
 import ChangePass from "../ChangePass";
+import TransactionHistoryUser from "./TransactionHistoryUser";
 
 const UserDashboard = () => {
   const { user } = useAuthStore();
@@ -25,6 +26,7 @@ const UserDashboard = () => {
     "My Bills",
     "Upload Bill",
     "Payment",
+    "Transactions History",
     "Settings",
     "Support",
     "Change Password",
@@ -84,6 +86,15 @@ const UserDashboard = () => {
 
             <div className="user-dashboard-sidebar-heading">Payment Status</div>
             <PaymentStatusTable />
+          </>
+        );
+      case "Transactions History":
+        return (
+          <>
+                      <div className="hamburger-container"> </div>
+
+            <div className="user-dashboard-sidebar-heading">Transactions History</div>
+            <TransactionHistoryUser />
           </>
         );
       case "Settings":

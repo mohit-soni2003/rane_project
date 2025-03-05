@@ -45,6 +45,16 @@ const userSchema = new mongoose.Schema({
     upi:{
         type:String,
     },
+    bankName:{
+        type:String,
+    },
+    ifscCode:{
+        type:String,
+    },
+    accountNo:{
+        type:String,
+    },
+
     password:{
         type:String,
         required:true,

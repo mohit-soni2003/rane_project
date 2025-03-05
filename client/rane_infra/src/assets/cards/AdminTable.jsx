@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import BillShowModal from './models/BillShowModal';
+import BillTransactionModal from './models/BillTransactionModal';
 import { backend_url } from '../components/store/keyStore';
 
 export default function AdminTable() {
@@ -8,11 +9,16 @@ export default function AdminTable() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modalShow, setModalShow] = useState(false);
+  const [TmodalShow, setTModalShow] = useState(false); //Transaction Model
   const [billid, setbillid] = useState("")
 
   const handleViewMore=(id)=>{
     setbillid(id)
     setModalShow(true)
+  }
+  const handleTransaction=(id)=>{
+    setbillid(id)
+    setTModalShow(true)
   }
 
 let it = 1;
@@ -81,7 +87,8 @@ let it = 1;
           <th style={{ padding: "12px" }}>Payment Status</th>
           <th style={{ padding: "12px" }}>View Bill</th>
           <th style={{ padding: "12px" }}>Upload Date</th>
-          <th style={{ padding: "12px" }}>More Details</th>
+          <th style={{ padding: "12px" }}>More</th>
+          <th style={{ padding: "12px" }}>Tramsaction</th>
         </tr>
       </thead>
       <tbody>
@@ -129,6 +136,9 @@ let it = 1;
             <td style={{ padding: "12px" }}>      
               <Button variant="secondary" onClick={() => handleViewMore(bill._id)}  >More</Button>
             </td>
+            <td style={{ padding: "12px" }}>      
+              <Button variant="warning" onClick={() => handleTransaction(bill._id,bill.user?._id)}  >Pay</Button>
+            </td>
                 <div style={{display:"none"}}>{it++}</div>
           </tr>
         ))}
@@ -137,6 +147,12 @@ let it = 1;
         show={modalShow}
         onHide={() => setModalShow(false)}
         id={billid}
+      />
+        <BillTransactionModal
+        show={TmodalShow}
+        onHide={() => setTModalShow(false)}
+        billId={billid}
+
       />
         
       </tbody>

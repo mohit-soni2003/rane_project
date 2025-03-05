@@ -22,7 +22,8 @@ function BillbookForm() {
     invoiceNo: "",
     workDescription: "",
     pdfurl: "",
-    user: ""
+    user: "",
+    amount:""
   });
 
   const [fileName, setFileName] = useState(""); // New state for file name
@@ -99,22 +100,22 @@ function BillbookForm() {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (loading) {
       alert("Please wait while the file is uploading...");
       return;
     }
-    
-    if (!formData.firmName || !formData.phone || !formData.email || !formData.loaNo || !formData.invoiceNo) {
+
+    if (!formData.firmName || !formData.phone || !formData.email || !formData.loaNo || !formData.invoiceNo || !formData.amount) {
       alert("Please fill in all required fields.");
       return;
     }
-    
+
     if (!formData.pdfurl) {
       alert("Please select the bill (PDF file).");
       return;
     }
-    
+
     try {
       setisSubmitting(true)
       const response = await fetch(`${backend_url}/post-bill`, {
@@ -135,6 +136,7 @@ function BillbookForm() {
           invoiceNo: "",
           workDescription: "",
           pdfurl: "",
+          amount:"",
           user: user._id
         });
         setisSubmitting(false)
@@ -178,6 +180,10 @@ function BillbookForm() {
             <label htmlFor="invoiceNo">Invoice No.</label>
             <input type="text" id="invoiceNo" placeholder="Invoice No." value={formData.invoiceNo} onChange={handleChange} />
           </div>
+          <div className="form-group">
+            <label htmlFor="amount">Amount *</label>
+            <input type="text" id="amount" placeholder="Amount Should be Same as in Bill , Otherwise bill will rejected." value={formData.amount} onChange={handleChange} />
+          </div>
         </div>
 
         <div className="form-group">
@@ -190,28 +196,28 @@ function BillbookForm() {
           <input type="file" accept=".pdf" id="fileUpload" onChange={handleFileChange} />
           {fileName && <p className="file-name">Selected File: {fileName}</p>} {/* Display selected file name */}
         </div>
-        {loading ? <ProgressBar animated  now={100} /> : ""}
+        {loading ? <ProgressBar animated now={100} /> : ""}
 
         <p className="recaptcha-text">
           Please Dont Submit bill multiple times.
         </p>
 
         <button onClick={handleSubmit} className="submit-button" disabled={isSubmitting}>
-  {isSubmitting ? (
-    <>
-      <Spinner
-        as="span"
-        animation="grow"
-        size="sm"
-        role="status"
-        aria-hidden="true"
-      />{" "}
-      Wait...
-    </>
-  ) : (
-    "Submit"
-  )}
-</button>
+          {isSubmitting ? (
+            <>
+              <Spinner
+                as="span"
+                animation="grow"
+                size="sm"
+                role="status"
+                aria-hidden="true"
+              />{" "}
+              Wait...
+            </>
+          ) : (
+            "Submit"
+          )}
+        </button>
 
       </form>
       {warningModalShow && <WarningModal show={warningModalShow} onClose={() => warningsetModalShow(false)} />}

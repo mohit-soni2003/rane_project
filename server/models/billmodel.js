@@ -23,6 +23,9 @@ const billSchema = new mongoose.Schema({
     invoiceNo:{
         type:String,
     },
+    amount:{
+        type:String,
+    },
     workDescription:{
         type  : String,
     },

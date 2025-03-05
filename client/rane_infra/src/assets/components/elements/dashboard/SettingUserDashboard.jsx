@@ -18,6 +18,9 @@ export default function SettingUserDashboard() {
         idproof: user.idproof,
         idProofType: user.idProofType,
         upi: user.upi,
+        ifscCode: user.ifscCode,
+        bankName: user.bankName,
+        accountNo: user.accountNo
     });
 
     // State to manage profile picture preview
@@ -163,11 +166,11 @@ export default function SettingUserDashboard() {
                             <td><label>Phone No</label></td>
                             <td><input type="text" name="phoneNo" value={userData.phoneNo} onChange={handleInputChange} /></td>
                         </tr>
-                      <tr>  
+                        <tr>
                             <td><label>Address</label></td>
                             <td><input type="text" name="address" value={userData.address} onChange={handleInputChange} /></td>
                         </tr>
-                      <tr>  
+                        <tr>
                             <td><label>UPI Id : </label></td>
                             <td><input type="text" name="upi" value={userData.upi} onChange={handleInputChange} /></td>
                         </tr>
@@ -184,10 +187,25 @@ export default function SettingUserDashboard() {
 
                         {/* Conditionally render GST No for Firms */}
                         {isFirm && (
-                            <tr>
-                                <td><label>GST No</label></td>
-                                <td><input type="text" name="gstno" value={userData.gstno} onChange={handleInputChange} /></td>
-                            </tr>
+                            <>
+                                <tr>
+                                    <td><label>GST No</label></td>
+                                    <td><input type="text" name="gstno" value={userData.gstno} onChange={handleInputChange} /></td>
+                                </tr>
+                                <tr>
+                                    <td><label>Bank Name</label></td>
+                                    <td><input type="text" name="bankName" value={userData.bankName} onChange={handleInputChange} /></td>
+                                </tr>
+                                <tr>
+                                    <td><label>IFSC Code</label></td>
+                                    <td><input type="text" name="ifscCode" value={userData.ifscCode} onChange={handleInputChange} /></td>
+                                </tr>
+                                <tr>
+                                    <td><label>Account Number</label></td>
+                                    <td><input type="text" name="accountNo" value={userData.accountNo} onChange={handleInputChange} /></td>
+
+                                </tr>
+                            </>
                         )}
 
                         {/* Conditionally render ID Proof for Individuals */}

@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import "./UserDashboardProfile.css";
 import { useAuthStore } from "../../store/authStore";
+import { 
+  FaPhoneAlt, FaKey, FaHome, FaUniversity, FaFileInvoice, FaIdCard, FaCreditCard, FaBuilding, FaMoneyCheckAlt 
+} from "react-icons/fa";
+import { MdAccountBalance } from "react-icons/md";
 
 const UserDashboardProfile = () => {
   const [isImageOpen, setIsImageOpen] = useState(false);
@@ -24,32 +28,46 @@ const UserDashboardProfile = () => {
 
         <div className="profile-info">
           <div className="info-item">
-            <span className="info-label">📞 Contact No:</span>
+            <span className="info-label"><FaPhoneAlt color="green" /> Contact No:</span>
             <span className="info-value">{user.phoneNo || "N/A"}</span>
           </div>
           <div className="info-item">
-            <span className="info-label">🔑 Your CID Code:</span>
+            <span className="info-label"><FaKey color="goldenrod" /> Your CID Code:</span>
             <span className="info-value">{user.cid}</span>
           </div>
           <div className="info-item">
-            <span className="info-label">🏡 Address:</span>
+            <span className="info-label"><FaHome color="blue" /> Address:</span>
             <span className="info-value">{user.address}</span>
           </div>
           <div className="info-item">
-            <span className="info-label">💸 UPI ID:</span>
+            <span className="info-label"><FaCreditCard color="purple" /> UPI ID:</span>
             <span className="info-value">{user.upi}</span>
           </div>
 
-          {/* Conditional Rendering for GST No or ID Proof */}
+          {/* Conditional Rendering for Firm or Individual */}
           {user.clientType === "Firm" && (
-            <div className="info-item">
-              <span className="info-label">🪪 GST No:</span>
-              <span className="info-value">{user.gstno}</span>
-            </div>
+            <>
+              <div className="info-item">
+                <span className="info-label"><FaFileInvoice color="orange" /> GST No:</span>
+                <span className="info-value">{user.gstno}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label"><MdAccountBalance color="teal" /> Bank Name:</span>
+                <span className="info-value">{user.bankName}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label"><FaBuilding color="brown" /> Account Number:</span>
+                <span className="info-value">{user.accountNo}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label"><FaMoneyCheckAlt color="darkgreen" /> IFSC Code:</span>
+                <span className="info-value">{user.ifscCode}</span>
+              </div>
+            </>
           )}
           {user.clientType === "Individual" && (
             <div className="info-item">
-              <span className="info-label">📄 ID Proof:</span>
+              <span className="info-label"><FaIdCard color="red" /> ID Proof:</span>
               <span className="info-value">
                 {user.idProofType}: {user.idproof}
               </span>

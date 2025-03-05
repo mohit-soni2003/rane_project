@@ -13,7 +13,7 @@ export default function BillShowTable({ userid }) {
             try {
                 const response = await fetch(`${backend_url}/mybill/${userid}`);
                 const data = await response.json();
-    
+
                 if (response.ok) {
                     if (Array.isArray(data) && data.length > 0) {
                         setBills(data);
@@ -29,10 +29,10 @@ export default function BillShowTable({ userid }) {
                 setLoading(false);
             }
         };
-    
+
         if (userid) fetchBills();
     }, [userid]);
-     
+
     if (loading) return <div className="loading">Loading...</div>;
     if (error) return <div className="error">Error: {error}</div>;
 
@@ -70,7 +70,13 @@ export default function BillShowTable({ userid }) {
                                         className="view-btn"
                                         onClick={() => {
                                             if (bill.pdfurl) {
-                                                window.open(bill.pdfurl, '_blank', 'noopener,noreferrer');
+                                                const link = document.createElement('a');
+                                                link.href = bill.pdfurl;
+                                                link.target = '_blank';
+                                                link.rel = 'noopener noreferrer';
+                                                document.body.appendChild(link);
+                                                link.click();
+                                                document.body.removeChild(link);
                                             } else {
                                                 alert('PDF URL not available!');
                                             }
@@ -78,6 +84,7 @@ export default function BillShowTable({ userid }) {
                                     >
                                         View
                                     </Button>
+
                                 </td>
                             </tr>
                         ))

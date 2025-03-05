@@ -81,10 +81,13 @@ router.put("/update-profile-pic", async (req, res) => {
 router.put("/update-profile", async (req, res) => {
     console.log("Update profile details route hitted .......")
     try {
-        const { name, email, phoneNo,id,address,clientType,idproof,gstno,idProofType,upi} = req.body;
+        const { name, email, phoneNo,id,address,clientType,idproof,gstno,idProofType,upi,bankName,ifscCode,accountNo} = req.body;
         console.log("userType: " + clientType)
         console.log("IDPROOF: " + idproof)
         console.log("idProofType: " + idProofType)
+        console.log("Bank Name:" +bankName);
+        console.log("IFSC Code:"+ ifscCode);
+        console.log("Account No:"+ accountNo);
 
         // Validate if the user exists
         const user = await User.findById(id);
@@ -102,6 +105,9 @@ router.put("/update-profile", async (req, res) => {
         if (gstno) user.gstno = gstno;
         if (idProofType) user.idProofType = idProofType;
         if (upi) user.upi = upi;
+        if (accountNo) user.accountNo = accountNo;
+        if (ifscCode) user.ifscCode = ifscCode;
+        if (bankName) user.bankName = bankName;
         // Save the updated user
         await user.save();
 
