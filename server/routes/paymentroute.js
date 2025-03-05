@@ -109,24 +109,31 @@ router.get('/payment/:id', async (req, res) => {
 
 
 router.put("/payment/update/:id", async (req, res) => {
-  const { status, refMode, expenseNo } = req.body;
+  const { status, refMode, expenseNo ,remark } = req.body;
+  let updateFields = { status, refMode, expenseNo , remark};
+
+  // If status is "Paid", add paymentDate field with the current date
+  if (status === "Paid") {
+    updateFields.paymentDate = new Date();
+  }
 
   try {
-      const updatedPayment = await Payment.findByIdAndUpdate(
-          req.params.id,
-          { status, refMode, expenseNo },
-          { new: true }
-      );
+    const updatedPayment = await Payment.findByIdAndUpdate(
+      req.params.id,
+      updateFields,
+      { new: true }
+    );
 
-      if (!updatedPayment) {
-          return res.status(404).json({ error: "Payment record not found" });
-      }
+    if (!updatedPayment) {
+      return res.status(404).json({ error: "Payment record not found" });
+    }
 
-      res.json(updatedPayment);
+    res.json(updatedPayment);
   } catch (error) {
-      res.status(500).json({ error: "Internal Server Error", details: error.message });
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
   }
 });
+
 
 
 

@@ -12,6 +12,7 @@ export default function PaymentRequestAdmin({ show, onHide, id }) {
   const [showDelete, setShowDelete] = useState(false);
   const [refMode, setRefMode] = useState("");
   const [expenseNo, setExpenseNo] = useState("");
+  const [remark, setRemark] = useState("");
 
   useEffect(() => {
     if (!id) return;
@@ -25,6 +26,7 @@ export default function PaymentRequestAdmin({ show, onHide, id }) {
           setPayment(data);
           setRefMode(data.refMode || "");
           setExpenseNo(data.expenseNo || "Unpaid");
+          setRemark(data.remark || "N/A");
         } else {
           setError(data.error || 'Failed to fetch payment details');
         }
@@ -50,7 +52,7 @@ export default function PaymentRequestAdmin({ show, onHide, id }) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ status: selectedStatus, refMode, expenseNo }),
+        body: JSON.stringify({ status: selectedStatus, refMode, expenseNo , remark }),
       });
 
       const data = await response.json();
@@ -100,8 +102,15 @@ export default function PaymentRequestAdmin({ show, onHide, id }) {
                 onChange={(e) => setExpenseNo(e.target.value)}
               />
             </div>
+            <div>
+              <strong>Remark:</strong>
+              <input
+                type="text"
+                value={remark}
+                onChange={(e) => setRemark(e.target.value)}
+              />
+            </div>
             <div><strong>Description:</strong> {payment.description || 'N/A'}</div>
-            <div><strong>Remark:</strong> {payment.remark || 'N/A'}</div>
             <div><strong>Status:</strong> {payment.status || 'Pending'}</div>
             <div><strong>Submitted At:</strong> {payment.submittedAt ? new Date(payment.submittedAt).toLocaleDateString() : 'N/A'}</div>
             <div><strong>Payment Date:</strong> {payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString() : 'N/A'}</div>
