@@ -16,7 +16,7 @@ const mailTrapClient = Nodemailer.createTransport({
 // Define the sender details
 const sender = {
   email: "your-email@gmail.com", // Replace with your Gmail address
-  name: "RanendSons Infrastructure",
+  name: "RANE & SONS, WORKS & MANAGEMENT SYSTEM.(RS-WMS)",
 };
 
 module.exports = { mailTrapClient, sender };

@@ -96,7 +96,7 @@ const ResetPass = () => {
           </Form>
 
           <div className="text-center mt-3">
-            <Button variant="link" className="text-decoration-none text-dark" onClick={() => navigate("/login")}>
+            <Button variant="link" className="text-decoration-none text-dark" onClick={() => navigate("/signin")}>
               Back to Sign In
             </Button>
           </div>

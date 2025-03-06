@@ -10,7 +10,6 @@ import SettingUserDashboard from "./SettingUserDashboard";
 import PaymentRequestTable from "../../../cards/tables/PaymentRequestTable";
 import AllUser from "./Admin/AllUser";
 import CreateUser from "./Admin/CreateUser";
-import UserDetails from "./Admin/UserDetails";
 import ChangePass from "../ChangePass"
 
 
@@ -22,19 +21,13 @@ const AdminDashboard = () => {
   const [selectedRoute, setSelectedRoute] = useState(""); // Track selected route
 
   const links = ["Profile", "Bills", "Clients", "Payment Requests", "Important Routes", "Settings", "Notifications", "Help", "Logout" , "Change Password"];
-  const routeLinks = ["User Details", "Create New User", "All user"]; // Dropdown Links
+  const routeLinks = [ "Create New User", "All user"]; // Dropdown Links
 
   // Function to render content dynamically
   const renderContent = () => {
     if (activeLink === "Important Routes" && selectedRoute) {
       switch (selectedRoute) {
-        case "User Details":
-          return (
-            <>
-              <h1 className="admin-dashboard-heading">User All Details</h1>
-              <UserDetails />;
-            </>
-          )
+        
         case "All user":
           return (
             <>
