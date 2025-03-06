@@ -1,9 +1,8 @@
 import React from 'react';
-import "./Support.css"
-import "../../utility/syle.css"
-import { MdAddIcCall } from "react-icons/md";
-import { MdEmail } from "react-icons/md";
-import { FaWhatsapp } from "react-icons/fa";
+import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import { MdAddIcCall, MdEmail } from 'react-icons/md';
+import { FaWhatsapp } from 'react-icons/fa';
+import './Support.css'; // Import CSS for hover effects
 
 const Support = () => {
     const teamMembers = [
@@ -17,52 +16,45 @@ const Support = () => {
     ];
 
     return (
-        <div className="support-container py-5 px-5 text-black">
-            {/* <h1 className="support-heading text-center mb-4 display-4 fw-bold">Contact <span>RANE AND RANE'S SONS</span></h1> */}
-            <p className="text-center address-support">101, Ranipura Main Road, opp. Bhaiyya Ji Pyao, Jagjivan Ram Mohalla, Nayi Bagad, Ranipura, Indore, Madhya Pradesh, India</p>
-            <p className="text-center">Contact No: +91 94250 29680 | Email: sales@ranendranesons.site</p>
+        <Container className="py-5 text-black">
+            <h1 className="text-center fw-bold mb-4">Contact <span style={{ color: "#0d6efd" }}>RANE AND RANE'S SONS</span></h1>
+            <p className="text-center text-muted">
+                101, Ranipura Main Road, opp. Bhaiyya Ji Pyao, Jagjivan Ram Mohalla, Nayi Bagad, Ranipura, Indore, Madhya Pradesh, India
+            </p>
+            <p className="text-center text-muted">📞 +91 94250 29680 | ✉️ sales@ranendranesons.site</p>
 
             <h2 className="text-center mt-5 mb-4">Meet Our Team</h2>
 
-            <div className="row g-4 justify-content-evenly">
+            <Row className="g-4">
                 {teamMembers.map((member, index) => (
-                    <div key={index} className=" col-lg-4  m- d-flex justify-content-center">
-                        <div className="card text-center border-0 shado rounded-4 p-3 h-100 support-card" style={{ minWidth: '320px' }}>
-                            <div className="card-body">
-                                <h2 className="h4 fw-bold mb-2">{member.name}</h2>
-                                <p className="text-muted mb-1">{member.position}</p>
+                    <Col key={index} md={6} lg={4} className="d-flex justify-content-center">
+                        <Card className="support-card text-center p-3 rounded-4">
+                            <Card.Body>
+                                <Card.Title className="fw-bold">{member.name}</Card.Title>
+                                <Card.Subtitle className="text-muted mb-3">{member.position}</Card.Subtitle>
 
-                                <div className="d-flex justify-content-start align-items-center gap-2 mb-2">
-                                    <a href={`tel:${member.phone}`} className="btn btn-outline-primary rounded-circle p-2" title="Call">
-                                        <MdAddIcCall style={{ fontSize: "1.5rem" }} />
-                                    </a>
-                                    <span>{member.phone}</span>
+                                <div className="d-flex flex-column gap-2">
+                                    <Button variant="outline-primary" href={`tel:${member.phone}`} className="d-flex align-items-center gap-2">
+                                        <MdAddIcCall /> {member.phone}
+                                    </Button>
+                                    <Button variant="outline-dark" href={`mailto:${member.email}`} className="d-flex align-items-center gap-2">
+                                        <MdEmail /> {member.email}
+                                    </Button>
+                                    <Button variant="outline-success" href={`https://wa.me/${member.whatsapp}`} className="d-flex align-items-center gap-2">
+                                        <FaWhatsapp /> WhatsApp
+                                    </Button>
                                 </div>
-
-                                <div className="d-flex justify-content-start align-items-center gap-2 mb-2">
-                                    <a href={`mailto:${member.email}`} className="btn btn-outline-primary rounded-circle p-2" title="Email">
-                                        <MdEmail style={{ fontSize: "1.5rem" }} />
-                                    </a>
-                                    <span>{member.email}</span>
-                                </div>
-
-                                <div className="d-flex justify-content-start align-items-center gap-2">
-                                    <a href={`https://wa.me/${member.whatsapp}`} className="btn btn-outline-success rounded-circle p-2" title="WhatsApp">
-                                        <FaWhatsapp style={{ fontSize: "1.5rem" }} />
-                                    </a>
-                                    <span>{member.whatsapp}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                            </Card.Body>
+                        </Card>
+                    </Col>
                 ))}
-            </div>
+            </Row>
 
             <div className="text-center mt-5">
-                <h3 style={{color:"rgb(4, 33, 105)"}}>Better yet, see us in person!</h3>
-                <p style={{color:"rgb(4, 33, 105)"}}>We stay in constant communication with our customers until the job is done. If you have questions or special requests, just drop us a line.</p>
+                <h3 style={{ color: "rgb(4, 33, 105)" }}>Better yet, see us in person!</h3>
+                <p className="text-muted">We stay in constant communication with our customers until the job is done. If you have questions or special requests, just drop us a line.</p>
             </div>
-        </div>
+        </Container>
     );
 };
 
