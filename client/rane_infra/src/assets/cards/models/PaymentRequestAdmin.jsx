@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Button from 'react-bootstrap/Button';
-import Modal from 'react-bootstrap/Modal';
+import { Button, Modal, Form, Row, Col, Card } from 'react-bootstrap';
 import { backend_url } from '../../components/store/keyStore';
 import DeletePaymentReqModal from './DeletePaymentReqModal';
 
@@ -49,10 +48,8 @@ export default function PaymentRequestAdmin({ show, onHide, id }) {
     try {
       const response = await fetch(`${backend_url}/payment/update/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status: selectedStatus, refMode, expenseNo , remark }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: selectedStatus, refMode, expenseNo, remark }),
       });
 
       const data = await response.json();
@@ -68,13 +65,8 @@ export default function PaymentRequestAdmin({ show, onHide, id }) {
     }
   };
 
-  if (loading) {
-    return <div></div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
+  if (loading) return <div className="text-center p-3">Loading...</div>;
+  if (error) return <div className="text-danger text-center">{error}</div>;
 
   return (
     <Modal show={show} onHide={onHide} size="lg" aria-labelledby="contained-modal-title-vcenter">
@@ -83,68 +75,68 @@ export default function PaymentRequestAdmin({ show, onHide, id }) {
       </Modal.Header>
       <Modal.Body>
         {payment ? (
-          <>
-            <div><strong>Tender:</strong> {payment.tender || 'N/A'}</div>
-            <div><strong>Amount:</strong> {payment.amount || 'N/A'}</div>
-            <div>
-              <strong>Reference Mode:</strong>
-              <input
-                type="text"
-                value={refMode}
-                onChange={(e) => setRefMode(e.target.value)}
-              />
-            </div>
-            <div>
-              <strong>Expense No:</strong>
-              <input
-                type="text"
-                value={expenseNo}
-                onChange={(e) => setExpenseNo(e.target.value)}
-              />
-            </div>
-            <div>
-              <strong>Remark:</strong>
-              <input
-                type="text"
-                value={remark}
-                onChange={(e) => setRemark(e.target.value)}
-              />
-            </div>
-            <div><strong>Description:</strong> {payment.description || 'N/A'}</div>
-            <div><strong>Status:</strong> {payment.status || 'Pending'}</div>
-            <div><strong>Submitted At:</strong> {payment.submittedAt ? new Date(payment.submittedAt).toLocaleDateString() : 'N/A'}</div>
-            <div><strong>Payment Date:</strong> {payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString() : 'N/A'}</div>
-            <div><strong>Payment Type:</strong> {payment.paymentType || 'N/A'}</div>
+          <Card className="p-3 shadow-sm">
+            <Row className="mb-3">
+              <Col><strong>Tender:</strong> {payment.tender || 'N/A'}</Col>
+              <Col><strong>Amount:</strong> ₹{payment.amount || 'N/A'}</Col>
+            </Row>
+            <Form.Group className="mb-3">
+              <Form.Label><strong>Reference Mode:</strong></Form.Label>
+              <Form.Control type="text" value={refMode} onChange={(e) => setRefMode(e.target.value)} />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label><strong>Expense No:</strong></Form.Label>
+              <Form.Control type="text" value={expenseNo} onChange={(e) => setExpenseNo(e.target.value)} />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label><strong>Remark:</strong></Form.Label>
+              <Form.Control type="text" value={remark} onChange={(e) => setRemark(e.target.value)} />
+            </Form.Group>
+            <Row>
+              <Col><strong>Description:</strong> {payment.description || 'N/A'}</Col>
+              <Col><strong>Status:</strong> <span className="badge bg-info">{payment.status || 'Pending'}</span></Col>
+            </Row>
+            <Row className="mt-2">
+              <Col><strong>Submitted At:</strong> {payment.submittedAt ? new Date(payment.submittedAt).toLocaleDateString() : 'N/A'}</Col>
+              <Col><strong>Payment Date:</strong> {payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString() : 'N/A'}</Col>
+            </Row>
+            <div className="mt-2"><strong>Payment Type:</strong> {payment.paymentType || 'N/A'}</div>
             {payment.image && (
-              <div>
+              <div className="mt-2">
                 <strong>Receipt Image:</strong>{' '}
-                <a href={payment.image} target="_blank" rel="noopener noreferrer">View Image</a>
+                <a href={payment.image} target="_blank" rel="noopener noreferrer" className="text-decoration-none">View Image</a>
               </div>
             )}
-            <div className="payment-detail">
-              <h4>Update Payment Status</h4>
-              {['Pending', 'Overdue', 'Paid', 'Sanctioned', 'Rejected'].map((status) => (
-                <div key={status}>
-                  <input
-                    type="radio"
-                    name="payment"
-                    value={status}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                    checked={selectedStatus === status}
-                  />{' '}
-                  {status}
-                </div>
-              ))}
-              <Button onClick={updatePaymentStatus}>Update</Button>
-            </div>
-          </>
+          </Card>
         ) : (
-          <p>No payment details available</p>
+          <p className="text-center text-muted">No payment details available</p>
         )}
+
+        {/* Update Payment Status Section */}
+        <Card className="p-3 mt-4 shadow-sm">
+          <h5>Update Payment Status</h5>
+          <Form>
+            {['Pending', 'Overdue', 'Paid', 'Sanctioned', 'Rejected'].map((status) => (
+              <Form.Check
+                key={status}
+                type="radio"
+                label={status}
+                name="paymentStatus"
+                value={status}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                checked={selectedStatus === status}
+                className="mb-2"
+              />
+            ))}
+            <Button variant="success" className="mt-2 w-100" onClick={updatePaymentStatus}>
+              Update Status
+            </Button>
+          </Form>
+        </Card>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant='danger' onClick={() => setShowDelete(true)}>Delete</Button>
-        <Button onClick={onHide}>Close</Button>
+        <Button variant="danger" onClick={() => setShowDelete(true)}>Delete</Button>
+        <Button variant="secondary" onClick={onHide}>Close</Button>
       </Modal.Footer>
       {show && <DeletePaymentReqModal paymentId={payment._id} show={showDelete} onClose={() => setShowDelete(false)} />}
     </Modal>

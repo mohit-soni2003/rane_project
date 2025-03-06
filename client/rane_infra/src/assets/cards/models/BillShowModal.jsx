@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import Button from 'react-bootstrap/Button';
-import Modal from 'react-bootstrap/Modal';
-import { backend_url } from '../../components/store/keyStore';
-import DeleteBillModal from './DeleteBillModal';
+import React, { useState, useEffect } from "react";
+import { Modal, Button, Card, Row, Col, Form } from "react-bootstrap";
+import { backend_url } from "../../components/store/keyStore";
+import DeleteBillModal from "./DeleteBillModal";
 
 export default function BillShowModal({ show, onHide, id }) {
   const [bill, setBill] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedStatus, setSelectedStatus] = useState(""); // To track selected payment status
-  const [showDelete, setShowDelete] = useState(false); // Control Deletebill modal
+  const [selectedStatus, setSelectedStatus] = useState(""); // Payment Status
+  const [showDelete, setShowDelete] = useState(false); // Delete Modal
 
   useEffect(() => {
     if (!id) return;
@@ -20,12 +19,12 @@ export default function BillShowModal({ show, onHide, id }) {
         const data = await response.json();
 
         if (response.ok) {
-          setBill(data); // Assuming `data` is the bill object
+          setBill(data);
         } else {
-          setError(data.error || 'Failed to fetch bill details');
+          setError(data.error || "Failed to fetch bill details");
         }
       } catch (err) {
-        setError('Server error: ' + err.message);
+        setError("Server error: " + err.message);
       } finally {
         setLoading(false);
       }
@@ -53,7 +52,7 @@ export default function BillShowModal({ show, onHide, id }) {
 
       if (response.ok) {
         alert("Payment status updated successfully!");
-        setBill(data); // Update the bill state with the updated data
+        setBill(data);
       } else {
         alert(data.error || "Failed to update payment status");
       }
@@ -62,145 +61,120 @@ export default function BillShowModal({ show, onHide, id }) {
     }
   };
 
-  if (loading) {
-    return <div></div>;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div className="text-danger">Error: {error}</div>;
 
   return (
-    <Modal
-      show={show}
-      onHide={onHide}
-      size="lg"
-      aria-labelledby="contained-modal-title-vcenter"
-
-      >
+    <Modal show={show} onHide={onHide} size="lg" centered>
       <Modal.Header closeButton>
-        <Modal.Title id="contained-modal-title-vcenter">
-          Bill Details
-        </Modal.Title>
+        <Modal.Title>Bill Details</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {bill ? (
-          <>
-            <h5>Firm Name: {bill.firmName || 'N/A'}</h5>
-            <div>
-              <strong>Uploaded By:</strong> {bill.user?.name || 'N/A'}
-            </div>
-            <div>
-              <strong>Client Id:</strong> {bill.user?.cid || 'N/A'}
-            </div>
-            <div>
-              <strong>Email:</strong> {bill.user?.email || 'N/A'}
-            </div>
-            <div>
-              <strong>Phone:</strong> {bill.user?.phone || 'N/A'}
-            </div>
-            <div>
-              <strong>Work Area:</strong> {bill.workArea || 'N/A'}
-            </div>
-            <div>
-              <strong>Invoice No:</strong> {bill.invoiceNo || 'N/A'}
-            </div>
-            <div>
-              <strong>Payment Status:</strong>{' '}
-              {bill.paymentStatus || 'Pending'}
-            </div>
-            <div>
-              <strong>LOA No:</strong> {bill.loaNo || 'N/A'}
-            </div>
-            <div>
-              <strong>Work Description:</strong> {bill.workDescription || 'N/A'}
-            </div>
-            <div>
-              <strong>Uploaded Date:</strong>{' '}
-              {bill.submittedAt
-                ? new Date(bill.submittedAt).toLocaleDateString()
-                : 'N/A'}
-            </div>
-            {bill.pdfurl && (
-              <div>
-                <strong>Bill PDF:</strong>{' '}
-                <a
-                  href={bill.pdfurl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View PDF
-                </a>
-              </div>
-            )}
+          <Card className="p-3 shadow-sm">
+            <Card.Body>
+              <Row className="mb-3">
+                <Col>
+                  <h5 className="fw-bold">Firm Name: {bill.firmName || "N/A"}</h5>
+                  <p><strong>Uploaded By:</strong> {bill.user?.name || "N/A"}</p>
+                  <p><strong>Client ID:</strong> {bill.user?.cid || "N/A"}</p>
+                  <p><strong>Email:</strong> {bill.user?.email || "N/A"}</p>
+                  <p><strong>Phone:</strong> {bill.user?.phone || "N/A"}</p>
+                </Col>
+                <Col>
+                  <p><strong>Work Area:</strong> {bill.workArea || "N/A"}</p>
+                  <p><strong>Invoice No:</strong> {bill.invoiceNo || "N/A"}</p>
+                  <p><strong>Payment Status:</strong> <span className="text-primary">{bill.paymentStatus || "Pending"}</span></p>
+                  <p><strong>LOA No:</strong> {bill.loaNo || "N/A"}</p>
+                  <p><strong>Uploaded Date:</strong> {bill.submittedAt ? new Date(bill.submittedAt).toLocaleDateString() : "N/A"}</p>
+                </Col>
+              </Row>
 
-            {/* Update Payment Section */}
-            <div className="payment-detail">
-              <h4>Update Payment Status</h4>
-              <div>
-                <input
-                  type="radio"
-                  name="payment"
-                  value="Pending For Sanction"
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  checked={selectedStatus === "Pending For Sanction"}
-                />{" "}
-                Pending For Sanction 
+              <Row className="mb-3">
+                <Col>
+                  <p><strong>Work Description:</strong> {bill.workDescription || "N/A"}</p>
+                  {bill.pdfurl && (
+                    <p>
+                      <strong>Bill PDF:</strong> 
+                      <a href={bill.pdfurl} target="_blank" rel="noopener noreferrer" className="ms-2 text-decoration-none">
+                        View PDF
+                      </a>
+                    </p>
+                  )}
+                </Col>
+              </Row>
+
+              {/* Update Payment Status */}
+              <div className="border p-3 rounded">
+                <h5 className="fw-bold">Update Payment Status</h5>
+                <Form>
+                  <Form.Check 
+                    type="radio"
+                    label="Pending For Sanction"
+                    name="payment"
+                    value="Pending For Sanction"
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    checked={selectedStatus === "Pending For Sanction"}
+                    className="mb-2"
+                  />
+                  <Form.Check 
+                    type="radio"
+                    label="Overdue"
+                    name="payment"
+                    value="Overdue"
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    checked={selectedStatus === "Overdue"}
+                    className="mb-2"
+                  />
+                  <Form.Check 
+                    type="radio"
+                    label="Paid"
+                    name="payment"
+                    value="Paid"
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    checked={selectedStatus === "Paid"}
+                    className="mb-2"
+                  />
+                  <Form.Check 
+                    type="radio"
+                    label="Sanctioned"
+                    name="payment"
+                    value="Sanctioned"
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    checked={selectedStatus === "Sanctioned"}
+                    className="mb-2"
+                  />
+                  <Form.Check 
+                    type="radio"
+                    label="Reject"
+                    name="payment"
+                    value="Reject"
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    checked={selectedStatus === "Reject"}
+                    className="mb-3"
+                  />
+                  <Button variant="primary" onClick={updatePaymentStatus} className="w-100">
+                    Update Payment Status
+                  </Button>
+                </Form>
               </div>
-              <div>
-                <input
-                  type="radio"
-                  name="payment"
-                  value="Overdue"
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  checked={selectedStatus === "Overdue"}
-                />{" "}
-                Overdue
-              </div>
-              <div>
-                <input
-                  type="radio"
-                  name="payment"
-                  value="Paid"
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  checked={selectedStatus === "Paid"}
-                />{" "}
-                Paid
-              </div>
-              <div>
-                <input
-                  type="radio"
-                  name="payment"
-                  value="Sanctioned"
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  checked={selectedStatus === "Sanctioned"}
-                />{" "}
-                Sanctioned
-              </div>
-              <div>
-                <input
-                  type="radio"
-                  name="payment"
-                  value="Reject"
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  checked={selectedStatus === "Reject"}
-                />{" "}
-                Reject
-              </div>
-              <Button onClick={updatePaymentStatus}>Update</Button>
-            </div>
-          </>
+            </Card.Body>
+          </Card>
         ) : (
-          <p>No bill details available</p>
+          <p className="text-center text-muted">No bill details available</p>
         )}
       </Modal.Body>
       <Modal.Footer>
-        <Button variant='danger' onClick={()=>setShowDelete(true)}>Delete</Button>
-        <Button onClick={onHide}>Close</Button>
+        <Button variant="danger" onClick={() => setShowDelete(true)}>
+          Delete
+        </Button>
+        <Button variant="secondary" onClick={onHide}>
+          Close
+        </Button>
       </Modal.Footer>
-      {show && <DeleteBillModal billId={bill._id} show={showDelete} onClose={() => setShowDelete(false)} />}
 
+      {/* Delete Confirmation Modal */}
+      {show && <DeleteBillModal billId={bill._id} show={showDelete} onClose={() => setShowDelete(false)} />}
     </Modal>
-    
   );
 }

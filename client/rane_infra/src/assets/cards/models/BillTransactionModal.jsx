@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
+import Table from 'react-bootstrap/Table';
 import axios from 'axios';
 import { backend_url } from '../../components/store/keyStore';
 
@@ -98,16 +99,26 @@ export default function BillTransactionModal({ show, onHide, billId }) {
         {transactions.length === 0 ? (
           <p>No previous transactions found.</p>
         ) : (
-          <ul>
-            {transactions.map((transaction) => (
-              <li key={transaction._id}>
-                <strong>Transaction ID:</strong> {transaction._id} <br />
-                <strong>Amount Paid:</strong> ₹{transaction.amount} <br />
-                <strong>Date:</strong> {new Date(transaction.transactionDate).toLocaleString()} <br />
-                <hr />
-              </li>
-            ))}
-          </ul>
+          <Table striped bordered hover>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Transaction ID</th>
+                <th>Amount Paid (₹)</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.map((transaction, index) => (
+                <tr key={transaction._id}>
+                  <td>{index + 1}</td>
+                  <td>{transaction._id}</td>
+                  <td>{transaction.amount}</td>
+                  <td>{new Date(transaction.transactionDate).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
         )}
         <h5>New Payment</h5>
         <Form>
