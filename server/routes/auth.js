@@ -11,40 +11,76 @@ const {FRONTEND_ORIGIN_URL} = require("../keys")
 const router = express.Router();
 
 router.post("/signup", async (req, res) => {
-	console.log("signup post request hi..")
-    const {email,name,password} = req.body
-    if(!email||!name||!password){
-       return res.json({error:"please Enter all Fields"})
-    }
-    const userAlreadyExists = await User.findOne({email}); 
+    console.log("Signup post request received...");
     
-    if(userAlreadyExists){
-        return res.json({error:"User Already Exists with same email"})
+    const { email, name, password, usertype, clientType, cid, phoneNo, address, firmName, gstno, idproof, idProofType, upi, bankName, ifscCode, accountNo } = req.body;
+    if (!email || !name || !password) {
+        return res.status(400).json({ error: "Please enter all required fields" });
     }
-    const VerificationToken = Math.floor(100000+Math.random()*900000).toString();
-    const user = new User ({
-        email,
-        password,
-        name,
-        VerificationToken,
-        VerificationTokenExpiresAt:Date.now()+24*60*60*1000,//24 hrs
-    })
-    //jwt
-    generateTokenAndSetCookie(res,user._id);
 
-    await user.save()
+    try {
+        let user = await User.findOne({ email });
 
-   await sendVerificationEmail(user.email,VerificationToken)
-    res.status(201).json({
-        success:true,
-        message:"user created successfully",
-        user:{
-            ...user._doc,
-            password:undefined
+        if (user) {
+            if (user.isverified) {
+                return res.status(400).json({ error: "User already exists with the same email" });
+            } else {
+                // User exists but is not verified, update token and resend email
+                user.VerificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+				user.name = name;
+				user.password= password;
+
+                user.VerificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hrs
+                await user.save();
+                await sendVerificationEmail(user.email, user.VerificationToken);
+                return res.status(200).json({ success: true, message: "Verification email resent." });
+            }
         }
-    })
-    // res.send("Signup route");
+
+        // Create a new user
+        const VerificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+        user = new User({
+            email,
+            password,
+            name,
+            usertype,
+            clientType,
+            cid: cid || "N/A",
+            phoneNo,
+            address,
+            firmName,
+            gstno,
+            idproof,
+            idProofType,
+            upi,
+            bankName,
+            ifscCode,
+            accountNo,
+            isverified: false,
+            VerificationToken,
+            VerificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hrs
+        });
+
+        await user.save();
+        await sendVerificationEmail(user.email, VerificationToken);
+
+        // Generate JWT token
+        generateTokenAndSetCookie(res, user._id);
+
+        res.status(201).json({
+            success: true,
+            message: "User created successfully. Please verify your email.",
+            user: {
+                ...user._doc,
+                password: undefined, // Do not send the password back
+            },
+        });
+    } catch (error) {
+        console.error("Signup Error:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
 });
+
 
 router.post("/verify-email",async(req,res)=>{
 	console.log("Verify email route hitted..")

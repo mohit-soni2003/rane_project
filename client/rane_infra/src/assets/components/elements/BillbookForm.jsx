@@ -106,11 +106,17 @@ function BillbookForm() {
       return;
     }
 
-    if (!formData.firmName || !formData.phone || !formData.email || !formData.loaNo || !formData.invoiceNo || !formData.amount) {
+    if (!formData.firmName || !formData.loaNo || !formData.invoiceNo || !formData.amount) {
+      console.log("Missing fields:", {
+          firmName: formData.firmName,
+          loaNo: formData.loaNo,
+          invoiceNo: formData.invoiceNo,
+          amount: formData.amount
+      });
+      
       alert("Please fill in all required fields.");
       return;
-    }
-
+  }
     if (!formData.pdfurl) {
       alert("Please select the bill (PDF file).");
       return;
