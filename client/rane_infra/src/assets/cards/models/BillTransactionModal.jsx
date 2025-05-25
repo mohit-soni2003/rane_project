@@ -103,7 +103,7 @@ export default function BillTransactionModal({ show, onHide, billId }) {
             <thead>
               <tr>
                 <th>#</th>
-                <th>Transaction ID</th>
+                <th>RS-FoS UTR</th>
                 <th>Amount Paid (₹)</th>
                 <th>Date</th>
               </tr>

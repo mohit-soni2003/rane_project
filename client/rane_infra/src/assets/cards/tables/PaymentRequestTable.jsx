@@ -67,7 +67,7 @@ export default function PaymentRequestTable() {
                 <th>Request Date</th>
                 <th>Payment Date</th>
                 <th>Payment Mode</th>
-                <th>Remark</th>
+                <th>Transaction Id</th>
                 <th>View Bill</th>
                 <th>More</th>
                 <th>Pay</th>

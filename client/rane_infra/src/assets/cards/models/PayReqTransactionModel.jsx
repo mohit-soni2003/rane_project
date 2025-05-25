@@ -132,7 +132,7 @@ export default function PayReqTransactionModel({ show, onHide, id }) {
           <Table striped bordered hover className="mt-2">
             <thead>
               <tr>
-                <th>Transaction ID</th>
+                <th>RS-FoS UTR</th>
                 <th>UPI ID</th>
                 <th>Amount</th>
               </tr>
