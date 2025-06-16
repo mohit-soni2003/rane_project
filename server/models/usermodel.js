@@ -67,6 +67,10 @@ const userSchema = new mongoose.Schema({
         type:Boolean,
         default:false
     },
+    role:{
+        type:String,
+        default:"client"             //user , admin , staff
+    },
     resetPasswordToken : String,
     resetPasswordExpiresAt: Date,
     VerificationToken:String,
