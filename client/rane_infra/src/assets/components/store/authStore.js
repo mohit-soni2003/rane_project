@@ -13,7 +13,7 @@ export const useAuthStore = create((set) => ({
 	isLoading: false,
 	isCheckingAuth: true,
 	message: null,
-	isAdmin: false,
+	role: null,
 
 	signup: async (email, password, name) => {
 		// Set loading state and clear errors
@@ -74,6 +74,7 @@ export const useAuthStore = create((set) => ({
 					user: datal.user,
 					error: null,
 					isLoading: false,
+					role:datal.user.role
 				});
 				return true
 			} else {
@@ -89,43 +90,43 @@ export const useAuthStore = create((set) => ({
 		}
 
 	},
-	adminlogin: async (email, password) => {
-		set({ isLoading: true, error: null });
-		try {
-			const response = await fetch(`${API_URL}/admin-login`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ email, password }),
-				credentials: "include", // Ensures cookies are sent with the request
-			});
+	// adminlogin: async (email, password) => {
+	// 	set({ isLoading: true, error: null });
+	// 	try {
+	// 		const response = await fetch(`${API_URL}/admin-login`, {
+	// 			method: "POST",
+	// 			headers: {
+	// 				"Content-Type": "application/json",
+	// 			},
+	// 			body: JSON.stringify({ email, password }),
+	// 			credentials: "include", // Ensures cookies are sent with the request
+	// 		});
 
-			const datal = await response.json();
+	// 		const datal = await response.json();
 
-			if (datal.message) {
-				console.log("admin logged in")
-				set({
-					isAuthenticated: true,
-					user: datal.user,
-					error: null,
-					isLoading: false,
-					isAdmin: true,
-				});
-				return true
-			} else {
-				set({
-					error: datal.error || "Login failed",
-					isLoading: false,
-				});
-				return false
-			}
-		} catch (error) {
-			set({ error: error.message || "Error logging in", isLoading: false });
-			throw error;
-		}
+	// 		if (datal.message) {
+	// 			console.log("admin logged in")
+	// 			set({
+	// 				isAuthenticated: true,
+	// 				user: datal.user,
+	// 				error: null,
+	// 				isLoading: false,
+	// 				isAdmin: true,
+	// 			});
+	// 			return true
+	// 		} else {
+	// 			set({
+	// 				error: datal.error || "Login failed",
+	// 				isLoading: false,
+	// 			});
+	// 			return false
+	// 		}
+	// 	} catch (error) {
+	// 		set({ error: error.message || "Error logging in", isLoading: false });
+	// 		throw error;
+	// 	}
 
-	},
+	// },
 
 	logout: async () => {
 		 
@@ -197,17 +198,13 @@ export const useAuthStore = create((set) => ({
 			}
 
 			const data1 = await response.json();
-			// console.log("Response JSON:", data1);
+			console.log("Response JSON:", data1);
 
-			if (data1.user?.usertype) {
-				set({ isAdmin: true, user: data1.user, isAuthenticated: true, isCheckingAuth: false,  });
-				console.log("admin user")
-			}
-			else if (data1.user) {
-				set({ user: data1.user, isAuthenticated: true, isCheckingAuth: false, });
-				console.log("User set successfully:", data1.user);
-			}
+			if (data1.user?.role) {
 
+				set({ role: data1.user.role, user: data1.user, isAuthenticated: true, isCheckingAuth: false,  });
+				console.log(data1.user.role)
+			}
 			else {
 				set({ isAuthenticated: false, isCheckingAuth: false, error: data1.error });
 				console.log("No user found in response");

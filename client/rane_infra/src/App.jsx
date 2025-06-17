@@ -15,62 +15,65 @@ import Spinner from "react-bootstrap/esm/Spinner";
 import Maintainence from "./assets/components/unique_component/Maintainence";
 import ForgotPass from "./assets/components/elements/ForgotPass";
 import ResetPass from "./assets/components/elements/ResetPass";
-
+import StaffDashboard from "./assets/components/elements/staff/StaffDashboard";
 
 
 
 function App() {
-  const { checkAuth, isAuthenticated, user,isAdmin} = useAuthStore();
+  const { checkAuth, isAuthenticated, user, role } = useAuthStore();
   const [loading, setLoading] = useState(true); // State to track loading
 
 
 
   useEffect(() => {
     const authenticate = async () => {
-      await checkAuth(); // Call checkAuth asynchronously
-      setLoading(false); // Set loading to false once checkAuth is done
+      await checkAuth();
+      setLoading(false);
       console.log("Authentication check completed");
     };
 
-    authenticate(); // Invoke the async function
+    authenticate();
   }, [checkAuth]);
 
-  // Block rendering of routes until authentication check is complete
+
   if (loading) {
-    return <div style={{display:"flex" , alignItems:"center" , justifyContent:"center" ,height:"100vh"}}><Spinner></Spinner></div>; // Display loading message while waiting for auth check
+    return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh" }}><Spinner></Spinner></div>; // Display loading message while waiting for auth check
   }
 
-  // ProtectedRoute component to handle user authorization
+
   const ProtectedRoute = ({ children }) => {
     if (!isAuthenticated) {
       console.log("Redirecting to Signin...");
-      return <Navigate to="/signin" replace />; // Redirect to signin if not authenticated
+      return <Navigate to="/signin" replace />;
     }
 
     if (user && !user.isverified) {
       console.log("Redirecting to Verify Email...");
-      return <Navigate to="/verify-email" replace />; // Redirect to verify email if user is not verified
+      return <Navigate to="/verify-email" replace />;
     }
-    if (isAdmin) {
-      console.log("Redirecting to admin dashboard");
-      return <Navigate to="/admin-dashboard" replace />; // Redirect to verify email if user is not verified
-    }
-    
 
-    return children; // Render protected route if user is authenticated and verified
+    return children;
   };
   const AdminRoute = ({ children }) => {
-    if (!isAuthenticated) {
-      console.log("Redirecting to Signin...");
-      return <Navigate to="/admin-login" replace />; // Redirect to signin if not authenticated
+    if (user && role =="admin") {
+      console.log("You are admin user.");
+      return children;
     }
-
-    if (user && !isAdmin) {
-      console.log("You are not admin user.");
-      return <Navigate to="/" replace />; // Redirect to verify email if user is not verified
+    return <Navigate to="/" replace />;
+  };
+  const ClientRoute = ({ children }) => {
+    if (user && role === "client") {
+      console.log("You are client user.");
+      return children;
     }
-
-    return children; // Render protected route if user is authenticated and verified
+    return <Navigate to="/" replace />;
+  };
+  const StaffRoute = ({ children }) => {
+    if (user && role === "staff") {
+      console.log("You are staff user.");
+      return children;
+    }
+    return <Navigate to="/" replace />;
   };
 
   return (
@@ -82,14 +85,16 @@ function App() {
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/maintain" element={<Maintainence />} />
-        <Route path="/reset-password" element={<ForgotPass/>} />
-        <Route path="/reset-password-page/:id" element={<ResetPass/>} />
-    
+        <Route path="/reset-password" element={<ForgotPass />} />
+        <Route path="/reset-password-page/:id" element={<ResetPass />} />
+
         <Route
           path="/user-dashboard"
           element={
             <ProtectedRoute>
-              <UserDashboard />
+              <ClientRoute>
+                <UserDashboard />
+              </ClientRoute>
             </ProtectedRoute>
           }
         />
@@ -104,9 +109,23 @@ function App() {
         <Route
           path="/admin-dashboard"
           element={
-            <AdminRoute>
-              <AdminDashboard />
-            </AdminRoute>
+            <ProtectedRoute>
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            </ProtectedRoute>
+
+          }
+        />
+        <Route
+          path="/staff-dashboard"
+          element={
+            <ProtectedRoute>
+              <StaffRoute>
+                <StaffDashboard/>
+              </StaffRoute>
+            </ProtectedRoute>
+
           }
         />
       </Routes>

@@ -10,12 +10,12 @@ import { backend_url } from '../../components/store/keyStore';
 import { HashLink } from 'react-router-hash-link';
 
 
-  
+
 function Navpannel() {
   const navigate = useNavigate();
 
   // Access the auth store values
-  const { checkAuth, isAuthenticated, user } = useAuthStore();
+  const { checkAuth, isAuthenticated, user, role } = useAuthStore();
 
   // Logout handler
   const handleLogout = async () => {
@@ -29,7 +29,12 @@ function Navpannel() {
         const result = await response.json();
         console.log(result.message); // Optional: Display a success message in the console
         alert("Logged out successfully!"); // Optional: Show an aler
-        navigate("/", { replace: true }); 
+        useAuthStore.setState({
+          user: null,
+          isAuthenticated: false,
+          role: null,
+        });
+        navigate("/", { replace: true });
       } else {
         const errorData = await response.json();
         console.error("Logout failed:", errorData.error);
@@ -40,12 +45,25 @@ function Navpannel() {
       alert("An error occurred while logging out. Please try again.");
     }
   };
+const getDashboardPath = (role) => {
+  if (role === 'admin') {
+    return "/admin-dashboard";
+  } else if (role === 'client') {
+    return "/user-dashboard";
+  } else if (role === 'staff') {
+    return "/staff-dashboard";
+  } else {
+    return "/";
+  }
+};
+
+
 
   return (
     <Navbar collapseOnSelect expand="lg" bg="transparent" className="navbar-custom  ">
       <Container>
         <Navbar.Brand href="/">
-          <img src="/logo.webp" style={{width:"80px"}} alt="Logo" />
+          <img src="/logo.webp" style={{ width: "80px" }} alt="Logo" />
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="responsive-navbar-nav" />
         <Navbar.Collapse id="responsive-navbar-nav">
@@ -53,7 +71,7 @@ function Navpannel() {
             <Nav.Item>
               <Link to="/" className="nav-link">Home</Link>
             </Nav.Item>
-            
+
             <Nav.Item>
               <Link to="/maintain" className="nav-link">Tenders</Link>
             </Nav.Item>
@@ -61,23 +79,24 @@ function Navpannel() {
               <Link to="/upload-bill" className="nav-link">Bill Uploads</Link>
             </Nav.Item>
             <Nav.Item>
-            <a href="#documents"  className="nav-link">Documents</a>
+              <a href="#documents" className="nav-link">Documents</a>
             </Nav.Item>
-            
+
           </Nav>
           <Nav>
             {isAuthenticated && user?.isverified ? (
               <>
-              <Nav.Item>
-                <Link onClick={handleLogout} className="nav-link">
-                  Logout
-                </Link>
-              </Nav.Item>
-              <Nav.Item>
-                <Link to={user.usertype?"admin-dashboard":"user-dashboard"} className="nav-link">
-                  <img src={user.profile}  className ="nav-profile-link-img" alt="" />
-                </Link>
-              </Nav.Item>
+                <Nav.Item>
+                  <Link onClick={handleLogout} className="nav-link">
+                    Logout
+                  </Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Link to={getDashboardPath(user.role)} className="nav-link">
+                    <img src={user.profile} className="nav-profile-link-img" alt="Profile" />
+                  </Link>
+
+                </Nav.Item>
               </>
 
             ) : (
