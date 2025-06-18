@@ -52,6 +52,7 @@ const getDashboardPath = (role) => {
     return "/user-dashboard";
   } else if (role === 'staff') {
     return "/staff-dashboard";
+    // return "/admin-dashboard";
   } else {
     return "/";
   }

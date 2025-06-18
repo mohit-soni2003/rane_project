@@ -11,21 +11,26 @@ import PaymentRequestTable from "../../../cards/tables/PaymentRequestTable";
 import AllUser from "./Admin/AllUser";
 import CreateUser from "./Admin/CreateUser";
 import ChangePass from "../ChangePass"
+import DfsRequests from "./Admin/DfsRequests";
+import AllDFSRequests from "./Admin/AllDFSRequests";
 
 
 const AdminDashboard = () => {
-  const { user } = useAuthStore();
+  const { user , role} = useAuthStore();
   const [activeLink, setActiveLink] = useState("Home"); // Default to "Home"
   const [show, setShow] = useState(false); // Control Logout Modal
   const [dropdownOpen, setDropdownOpen] = useState(false); // Dropdown for "Important Routes"
   const [selectedRoute, setSelectedRoute] = useState(""); // Track selected route
 
-  const links = ["Profile", "Bills", "Clients", "Payment Requests", "Important Routes", "Settings", "Notifications", "Help", "Logout" , "Change Password"];
-  const routeLinks = [ "Create New User", "All user"]; // Dropdown Links
+  const links = ["Profile", "Bills", "Clients", "Payment Requests","DFS Requests" ,  "Important Routes", "Settings", "Notifications", "Help", "Logout" , "Change Password"];
+  const routeLinks = [ "Create New User", "All user","All DFS Track"]; // Dropdown Links
 
   // Function to render content dynamically
   const renderContent = () => {
     if (activeLink === "Important Routes" && selectedRoute) {
+      if (role !== "admin") {
+        return <h3 style={{ padding: "20px" }}>You don't have the right to access this route.</h3>;
+      }
       switch (selectedRoute) {
         
         case "All user":
@@ -40,6 +45,13 @@ const AdminDashboard = () => {
             <>
               <h1 className="admin-dashboard-heading">Create New User</h1>
               <CreateUser />;
+            </>
+          )
+        case "All DFS Track":
+          return (
+            <>
+              <h1 className="admin-dashboard-heading">Create New User</h1>
+              <AllDFSRequests />;
             </>
           )
       }
@@ -74,6 +86,13 @@ const AdminDashboard = () => {
           <>
             <h1 className="admin-dashboard-heading">All Payment Requests</h1>
             <PaymentRequestTable />
+          </>
+        );
+      case "DFS Requests":
+        return (
+          <>
+            <h1 className="admin-dashboard-heading">All Files Assigned to you</h1>
+            <DfsRequests />
           </>
         );
       case "Settings":
@@ -173,7 +192,7 @@ const AdminDashboard = () => {
       {/* Logout Confirmation Modal */}
       {show && <LogoutModel show={show} onClose={() => setShow(false)} />}
     </div>
-  );
-};
+  )
+}
 
 export default AdminDashboard;

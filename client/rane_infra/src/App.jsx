@@ -122,7 +122,7 @@ function App() {
           element={
             <ProtectedRoute>
               <StaffRoute>
-                <StaffDashboard/>
+                <AdminDashboard />
               </StaffRoute>
             </ProtectedRoute>
 
