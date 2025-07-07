@@ -1,5 +1,5 @@
-// const backend_url = "https://rane-project-server.vercel.app"
-const backend_url = "rane-project-server-fzbd1lfq8-mohit-sonis-projects-6fb4d728.vercel.app" //version2.0
+const backend_url = "https://rane-project-server.vercel.app"
+// const backend_url = "https://rane-project-server-fzbd1lfq8-mohit-sonis-projects-6fb4d728.vercel.app/" //version2.0
 
 const UPLOAD_PRESET= "rane_infra1"
 const CLOUD_NAME= "drl3qqrq3"//rane
