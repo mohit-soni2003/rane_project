@@ -2,7 +2,8 @@ const express = require("express");
 const User = require("../models/usermodel");
 const Payment = require("../models/paymentmodel")
 const Bill = require("../models/billmodel")
-
+const Transaction = require("../models/transaction");
+const FileForward = require("../models/fileForwardingModel");
 
 const router = express.Router();
 
@@ -68,5 +69,64 @@ router.get("/admin-get-users-details/:id", async (req, res) => {
     }
 });
 
+// Route to delete a user by ID
+router.delete("/admin-delete-user/:id", async (req, res) => {
+    try {
+        const userId = req.params.id;
 
+        // Check if user exists
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Delete the user
+        await User.findByIdAndDelete(userId);
+
+        res.status(200).json({ message: "User deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting user:", error);
+        res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+});
+
+router.delete("/admin-delete-user/:id", async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        // Check if user exists
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Delete related Bills
+        await Bill.deleteMany({ user: userId });
+
+        // Delete related Payments
+        await Payment.deleteMany({ user: userId });
+
+        // Delete related Transactions
+        await Transaction.deleteMany({ userId });
+
+        // Delete FileForwards where user is uploader or current owner or in forwarding trail
+        await FileForward.deleteMany({
+            $or: [
+                { uploadedBy: userId },
+                { currentOwner: userId },
+                { "forwardingTrail.forwardedBy": userId },
+                { "forwardingTrail.forwardedTo": userId },
+                { "comments.user": userId }
+            ]
+        });
+
+        // Finally, delete the user
+        await User.findByIdAndDelete(userId);
+
+        res.status(200).json({ message: "User and all related data deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting user and data:", error);
+        res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+});
 module.exports = router;

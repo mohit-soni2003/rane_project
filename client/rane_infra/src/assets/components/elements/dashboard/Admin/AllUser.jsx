@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { backend_url } from "../../../store/keyStore";
+import DeleteUserModal from "../../../../cards/models/DeleteUserModal";
 
 export default function AllUser() {
   const [users, setUsers] = useState([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
-  useEffect(() => {
+  const fetchUsers = () => {
     fetch(`${backend_url}/admin-get-users`)
       .then((response) => response.json())
       .then((data) => {
@@ -14,11 +17,39 @@ export default function AllUser() {
       .catch((error) => {
         console.error("Error fetching users:", error);
       });
+  };
+
+  useEffect(() => {
+    fetchUsers();
   }, []);
+
+  const handleDelete = async () => {
+    if (!selectedUser) return;
+    try {
+      const res = await fetch(`${backend_url}/admin-delete-user/${selectedUser._id}`, {
+        method: "DELETE",
+      });
+      const result = await res.json();
+      if (res.ok) {
+        setShowDeleteModal(false);
+        fetchUsers(); // Refresh the list
+      } else {
+        alert(result.message || "Failed to delete user");
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      alert("Something went wrong");
+    }
+  };
 
   return (
     <div className="container mt-4">
-      <h2 className="text-center mb-4">All Users</h2>
+      <DeleteUserModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        user={selectedUser}
+      />
       <div className="table-responsive">
         <table className="table table-bordered table-hover">
           <thead className="table-dark">
@@ -44,10 +75,11 @@ export default function AllUser() {
               <th>Account No.</th>
               <th>Last Login</th>
               <th>Verified</th>
-              <th>Reset Password Token</th>
-              <th>Reset Password Expires At</th>
-              <th>Verification Token</th>
-              <th>Verification Token Expires At</th>
+              <th>Reset Token</th>
+              <th>Reset Expiry</th>
+              <th>Verify Token</th>
+              <th>Verify Expiry</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -101,11 +133,22 @@ export default function AllUser() {
                       ? new Date(user.VerificationTokenExpiresAt).toLocaleString()
                       : "N/A"}
                   </td>
+                  <td>
+                    <button
+                      className="btn btn-sm btn-danger"
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setShowDeleteModal(true);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="22" className="text-center">
+                <td colSpan="26" className="text-center">
                   No users found.
                 </td>
               </tr>

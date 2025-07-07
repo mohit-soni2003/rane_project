@@ -1,4 +1,4 @@
-import React from "react";
+import React ,{useEffect}from "react";
 import { useNavigate } from "react-router-dom";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
@@ -8,14 +8,48 @@ import { Link } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import { backend_url } from '../../components/store/keyStore';
 import { HashLink } from 'react-router-hash-link';
+// import { useEffect } from "react";
 
 
 
 function Navpannel() {
   const navigate = useNavigate();
 
+
+
   // Access the auth store values
   const { checkAuth, isAuthenticated, user, role } = useAuthStore();
+
+  useEffect(() => {
+  checkuserLoggedin(); // This should hit your /check-auth backend API
+}, []);
+
+const checkuserLoggedin = async () => {
+  try {
+    const res = await fetch(`${backend_url}/check-auth`, {
+      credentials: "include",
+    });
+
+    if (!res.ok) throw new Error("Authentication check failed");
+
+    const data = await res.json();
+
+    useAuthStore.setState({
+      user: data.user,
+      isAuthenticated: true,
+      role: data.user.role,
+    });
+
+  } catch (err) {
+    // Not logged in
+    useAuthStore.setState({
+      user: null,
+      isAuthenticated: false,
+      role: null,
+    });
+  }
+};
+
 
   // Logout handler
   const handleLogout = async () => {
