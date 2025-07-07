@@ -5,14 +5,14 @@ import DeleteBillModal from "./DeleteBillModal";
 
 export default function BillShowModal({ show, onHide, id }) {
   const [bill, setBill] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(""); // Payment Status
   const [showDelete, setShowDelete] = useState(false); // Delete Modal
 
   useEffect(() => {
     if (!id) return;
-
+    setLoading(true);
     const fetchBill = async () => {
       try {
         const response = await fetch(`${backend_url}/bill/${id}`);
