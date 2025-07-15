@@ -5,7 +5,7 @@ import {
   CLOUD_NAME,
   UPLOAD_PRESET,
   backend_url,
-} from "../../store/keyStore";
+} from "../../../../store/keyStore";
 
 const UploadDocument = () => {
   const [fileTitle, setFileTitle] = useState("");

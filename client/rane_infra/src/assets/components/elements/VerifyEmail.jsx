@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./VerifyEmail.css";
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '../../../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { Loader } from 'lucide-react';
 

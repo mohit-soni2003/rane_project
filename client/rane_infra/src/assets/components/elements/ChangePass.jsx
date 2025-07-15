@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react"; // Icons for password visibility
 import { Form, Button, Card, Container, Alert, InputGroup } from "react-bootstrap";
-import { backend_url } from "../store/keyStore";
+import { backend_url } from "../../../store/keyStore";
 
 const ChangePass = () => {
     const [currentPassword, setCurrentPassword] = useState("");

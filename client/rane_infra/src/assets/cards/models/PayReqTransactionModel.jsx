@@ -3,7 +3,7 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
 import Table from 'react-bootstrap/Table';
-import { backend_url } from '../../components/store/keyStore';
+import { backend_url } from '../../../store/keyStore';
 
 export default function PayReqTransactionModel({ show, onHide, id }) {
   const [amountRequested, setAmountRequested] = useState(0);

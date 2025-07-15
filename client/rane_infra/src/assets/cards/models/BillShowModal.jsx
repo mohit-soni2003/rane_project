@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Card, Row, Col, Form } from "react-bootstrap";
-import { backend_url } from "../../components/store/keyStore";
+import { backend_url } from "../../../store/keyStore";
 import DeleteBillModal from "./DeleteBillModal";
 
 export default function BillShowModal({ show, onHide, id }) {

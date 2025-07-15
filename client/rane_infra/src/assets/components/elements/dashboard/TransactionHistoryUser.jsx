@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useAuthStore } from "../../store/authStore";
-import { backend_url } from "../../store/keyStore";
+import { useAuthStore } from "../../../../store/authStore";
+import { backend_url } from "../../../../store/keyStore";
 import { Card, Col, Row, Container } from "react-bootstrap";
 import { FaMoneyBillWave, FaExchangeAlt } from "react-icons/fa";
 

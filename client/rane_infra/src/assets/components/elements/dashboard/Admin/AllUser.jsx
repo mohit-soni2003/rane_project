@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { backend_url } from "../../../store/keyStore";
+import { backend_url } from "../../../../../store/keyStore";
 import DeleteUserModal from "../../../../cards/models/DeleteUserModal";
 
 export default function AllUser() {

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./UserDashboardProfile.css";
-import { useAuthStore } from "../../store/authStore";
+import { useAuthStore } from "../../../../store/authStore";
 import { 
   FaPhoneAlt, FaKey, FaHome, FaUniversity, FaFileInvoice, FaIdCard, FaCreditCard, FaBuilding, FaMoneyCheckAlt 
 } from "react-icons/fa";

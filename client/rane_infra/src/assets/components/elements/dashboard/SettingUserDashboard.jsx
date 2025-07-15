@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "./SettingUserDashboard.css";
 import Button from "react-bootstrap/Button";
-import { useAuthStore } from "../../store/authStore";
-import { UPLOAD_PRESET, CLOUD_NAME, CLOUDINARY_URL_IMAGE, backend_url } from "../../store/keyStore";
+import { useAuthStore } from "../../../../store/authStore";
+import { UPLOAD_PRESET, CLOUD_NAME, CLOUDINARY_URL_IMAGE, backend_url } from "../../../../store/keyStore";
 
 export default function SettingUserDashboard() {
     const { user, setUser } = useAuthStore();

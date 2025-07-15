@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Form, Button, Container, Row, Col, Alert } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { backend_url } from "../store/keyStore";
+import { backend_url } from "../../../store/keyStore";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");

@@ -3,7 +3,7 @@ import "./AdminDashboard.css";
 import AdminTable from "../../../cards/AdminTable";
 import Maintainence from "../../unique_component/Maintainence";
 import ClientList from "./ClientList";
-import { useAuthStore } from "../../store/authStore";
+import { useAuthStore } from "../../../../store/authStore";
 import AdminProfile from "./AdminProfile";
 import LogoutModel from "../../../cards/models/LogoutModel";
 import SettingUserDashboard from "./SettingUserDashboard";

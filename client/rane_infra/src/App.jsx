@@ -9,7 +9,7 @@ import VerifyEmail from "./assets/components/elements/VerifyEmail";
 import BillbookForm from "./assets/components/elements/BillbookForm";
 import AdminDashboard from "./assets/components/elements/dashboard/AdminDashboard";
 import UserDashboard from "./assets/components/elements/dashboard/UserDashboard";
-import { useAuthStore } from "./assets/components/store/authStore";
+import { useAuthStore } from "./store/authStore";
 import AdminLogin from "./assets/components/elements/AdminLogin";
 import Spinner from "react-bootstrap/esm/Spinner";
 import Maintainence from "./assets/components/unique_component/Maintainence";

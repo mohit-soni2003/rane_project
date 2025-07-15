@@ -3,7 +3,7 @@ import Button from 'react-bootstrap/Button';
 import Spinner from 'react-bootstrap/Spinner';
 import BillShowModal from './models/BillShowModal';
 import BillTransactionModal from './models/BillTransactionModal';
-import { backend_url } from '../components/store/keyStore';
+import { backend_url } from '../../store/keyStore';
 
 export default function AdminTable() {
   const [bills, setBills] = useState([]);

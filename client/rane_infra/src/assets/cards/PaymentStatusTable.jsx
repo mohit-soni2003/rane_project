@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Table, Container, Spinner, Alert, Button } from "react-bootstrap";
-import { backend_url } from "../components/store/keyStore";
-import { useAuthStore } from "../components/store/authStore";
+import { backend_url } from "../../store/keyStore";
+import { useAuthStore } from "../../store/authStore";
 
 export default function PaymentStatusTable() {
   const [payments, setPayments] = useState([]);

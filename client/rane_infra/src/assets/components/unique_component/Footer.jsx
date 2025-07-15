@@ -1,6 +1,6 @@
 import React from "react";
 import { FaFacebookF, FaInstagram, FaTwitter } from "react-icons/fa";
-import { backend_url } from "../store/keyStore";
+import { backend_url } from "../../../store/keyStore";
 import { Link } from "react-router-dom";
 import "./Footer.css"; // Create this CSS file for styling
 const setCookieTest = async () => {

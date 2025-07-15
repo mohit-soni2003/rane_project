@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./AdminProfile.css";
 import Button from 'react-bootstrap/Button';
 import Spinner from 'react-bootstrap/Spinner';
-import { backend_url } from "../../store/keyStore"; 
+import { backend_url } from "../../../../store/keyStore"; 
 import BillShowModal from "../../../cards/models/BillShowModal";
 
 const AdminDashboardProfile = () => {

@@ -5,8 +5,8 @@ import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import "./Navpannel.css";
 import { Link } from "react-router-dom";
-import { useAuthStore } from "../store/authStore";
-import { backend_url } from '../../components/store/keyStore';
+import { useAuthStore } from "../../../store/authStore";
+import { backend_url } from '../../../store/keyStore';
 import { HashLink } from 'react-router-hash-link';
 // import { useEffect } from "react";
 

@@ -4,7 +4,7 @@ import "../../../utility/syle.css"
 import BillbookForm from "../BillbookForm";
 import BillShowTable from "../../../cards/BillShowTable";
 import Maintainence from "../../unique_component/Maintainence";
-import { useAuthStore } from "../../store/authStore";
+import { useAuthStore } from "../../../../store/authStore";
 import UserDashboardProfile from "./UserDashboardProfile";
 import LogoutModel from "../../../cards/models/LogoutModel";
 import SettingUserDashboard from "./SettingUserDashboard";

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
-import { useAuthStore } from '../../components/store/authStore';
+import { useAuthStore } from '../../../store/authStore';
 import { useNavigate } from 'react-router-dom';
 
 function LogoutModel({ show, onClose }) {

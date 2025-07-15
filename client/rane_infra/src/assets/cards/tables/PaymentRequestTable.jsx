@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Table, Container, Spinner, Alert, Button, Image } from "react-bootstrap";
-import { backend_url } from "../../components/store/keyStore";
+import { backend_url } from "../../../store/keyStore";
 import PaymentRequestAdmin from "../models/PaymentRequestAdmin";
 import PayReqTransactionModel from "../models/PayReqTransactionModel";
 

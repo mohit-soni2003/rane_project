@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Table from 'react-bootstrap/Table';
-import { backend_url } from '../components/store/keyStore';
+import { backend_url } from '../../store/keyStore';
 
 export default function BillShowTable({ userid }) {
     const [bills, setBills] = useState([]);

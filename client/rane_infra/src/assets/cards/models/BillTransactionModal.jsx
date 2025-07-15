@@ -4,7 +4,7 @@ import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
 import Table from 'react-bootstrap/Table';
 import axios from 'axios';
-import { backend_url } from '../../components/store/keyStore';
+import { backend_url } from '../../../store/keyStore';
 
 export default function BillTransactionModal({ show, onHide, billId }) {
   const [bankName, setBankName] = useState('');

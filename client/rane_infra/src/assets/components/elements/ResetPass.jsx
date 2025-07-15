@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Form, Button, Container, Row, Col, Alert } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
-import { backend_url } from "../store/keyStore";
+import { backend_url } from "../../../store/keyStore";
 
 const ResetPass = () => {
   const { id } = useParams(); // Get the id from the URL

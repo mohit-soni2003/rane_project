@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Modal, Form, Row, Col, Card, Spinner } from 'react-bootstrap';
-import { backend_url } from '../../components/store/keyStore';
+import { backend_url } from '../../../store/keyStore';
 import DeletePaymentReqModal from './DeletePaymentReqModal';
 
 export default function PaymentRequestAdmin({ show, onHide, id }) {

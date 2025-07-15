@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { useAuthStore } from "../../store/authStore";
+import { useAuthStore } from "../../../../store/authStore";
 import "./PaymentReqUserDash.css";
-import { backend_url, UPLOAD_PRESET, CLOUDINARY_URL_IMAGE, CLOUD_NAME } from "../../store/keyStore";
+import { backend_url, UPLOAD_PRESET, CLOUDINARY_URL_IMAGE, CLOUD_NAME } from "../../../../store/keyStore";
 
 export default function PaymentReqUserDash() {
   const [message, setMessage] = useState("");

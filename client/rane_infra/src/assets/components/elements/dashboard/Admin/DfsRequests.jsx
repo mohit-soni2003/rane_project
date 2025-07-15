@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { backend_url } from "../../../store/keyStore";
-import { useAuthStore } from "../../../store/authStore"; 
+import { backend_url } from "../../../../../store/keyStore";
+import { useAuthStore } from "../../../../../store/authStore"; 
 
 const DfsRequests = () => {
   const [documents, setDocuments] = useState([]);
