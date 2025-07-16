@@ -22,9 +22,10 @@ import AdminSidebar from "./component/sidebar/AdminSidebar";
 import StaffSidebar from "./component/sidebar/StaffSidebar";
 import HomePageClient from "./pages/client/HomePageClient";
 import ClientLayout from "./Layout/ClientLayout";
-
-
-
+import UploadBillPage from "./pages/client/UploadBillPage";
+import MyBillPage from "./pages/client/MyBillPage";
+import PaymentRequestPage from "./pages/client/PaymentRequestPage";
+import SupportPage from "./pages/client/SupportPage";
 
 function App() {
   const { checkAuth, isAuthenticated, user, role } = useAuthStore();
@@ -62,7 +63,7 @@ function App() {
     return children;
   };
   const AdminRoute = ({ children }) => {
-    if (user && role =="admin") {
+    if (user && role == "admin") {
       console.log("You are admin user.");
       return children;
     }
@@ -95,6 +96,17 @@ function App() {
         <Route path="/maintain" element={<Maintainence />} />
         <Route path="/reset-password" element={<ForgotPass />} />
         <Route path="/reset-password-page/:id" element={<ResetPass />} />
+
+        <Route path="/client" element={<ClientLayout />}>
+          <Route index element={<HomePageClient />} />
+          <Route path="home" element={<HomePageClient />} />
+          <Route path="upload-bill" element={<UploadBillPage />} />
+          <Route path="my-bill" element={<MyBillPage />} />
+          <Route path="payment-request" element={<PaymentRequestPage />} />
+          <Route path="support" element={<SupportPage/>} />
+
+
+        </Route>
 
         <Route
           path="/user-dashboard"

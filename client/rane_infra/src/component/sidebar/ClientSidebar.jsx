@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   FaHome, FaFileInvoiceDollar, FaHistory, FaFileAlt,
-  FaUserCog, FaHeadset, FaSignOutAlt, FaChevronDown, FaChevronUp, FaMoneyBillWave
+  FaUserCog, FaHeadset, FaSignOutAlt, FaChevronDown, FaChevronUp,FaArrowAltCircleRight, FaMoneyBillWave
 } from 'react-icons/fa';
 import { BsCardChecklist } from 'react-icons/bs';
 import { MdPayment } from 'react-icons/md';
@@ -17,23 +17,33 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
   const submenuStyle = (isOpen) => ({
     maxHeight: isOpen ? '500px' : '0',
     overflow: 'hidden',
-    transition: 'all 0.3s ease',
+    transition: 'all 0.4s ease',
     marginLeft: '20px',
     fontSize: '0.9rem',
     color: '#d1d1d1',
+    backgroundColor: "rgba(255, 255, 255, 0.1)"
   });
+
+  const sidebarItemStyle = {
+    padding: '8px 10px',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    transition: 'background-color 0.3s ease',
+  };
+  
 
   return (
     <div
-      className="bg-dark text-white vh-100 p-3 position-fixed top-0 start-0 d-flex flex-column"
+      className="text-white vh-100 p-3 position-fixed top-0 start-0 d-flex flex-column"
       style={{
         width: '260px',
         zIndex: 1045,
+        backgroundColor: "var(--user-sidebar-color)",
         display: isOpen ? 'flex' : 'none',
       }}
     >
       {/* Close Button for Mobile */}
-      <div className="d-md-none text-end mb-2">
+      <div className="d-md-none text-end mb-3">
         <button
           className="btn btn-sm"
           style={{ backgroundColor: 'gray', fontWeight: 'bold' }}
@@ -47,7 +57,7 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
       <div className="text-center mb-3">
         <img
           src={dummyUser}
-          className="rounded-circle mb-2"
+          className="rounded-circle mb-3"
           alt="Profile"
           style={{ width: "80px", height: "80px", objectFit: "cover" }}
         />
@@ -56,92 +66,112 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
       </div>
 
       {/* Home */}
-      <div className="mb-2 d-flex align-items-center">
+      <div className="mb-2 d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
         <FaHome className="me-2" />
         Home
       </div>
 
-      {/* Bill */}
+      {/* Dropdown: Bill */}
       <div className="mb-2">
-        <div onClick={() => toggleDropdown("bill")} className="d-flex justify-content-between align-items-center cursor-pointer">
+        <div
+          onClick={() => toggleDropdown("bill")}
+          className="d-flex justify-content-between align-items-center sidebar-item"
+          style={sidebarItemStyle}
+        >
           <span><FaFileInvoiceDollar className="me-2" /> Bill</span>
           {openDropdown === "bill" ? <FaChevronUp /> : <FaChevronDown />}
         </div>
         <div style={submenuStyle(openDropdown === "bill")}>
-          <div className="py-1">My Bill</div>
-          <div className="py-1">Upload Bill</div>
+          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}> <FaArrowAltCircleRight className="me-2" />My Bill</div>
+          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Upload Bill</div>
         </div>
       </div>
 
       {/* Payment */}
       <div className="mb-2">
-        <div onClick={() => toggleDropdown("payment")} className="d-flex justify-content-between align-items-center cursor-pointer">
+        <div
+          onClick={() => toggleDropdown("payment")}
+          className="d-flex justify-content-between align-items-center sidebar-item"
+          style={sidebarItemStyle}
+        >
           <span><MdPayment className="me-2" /> Payment</span>
           {openDropdown === "payment" ? <FaChevronUp /> : <FaChevronDown />}
         </div>
         <div style={submenuStyle(openDropdown === "payment")}>
-          <div className="py-1">Payment Request</div>
-          <div className="py-1">Payment Status</div>
+          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Payment Request</div>
+          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Payment Status</div>
         </div>
       </div>
 
       {/* Transactions */}
       <div className="mb-2">
-        <div onClick={() => toggleDropdown("transaction")} className="d-flex justify-content-between align-items-center cursor-pointer">
+        <div
+          onClick={() => toggleDropdown("transaction")}
+          className="d-flex justify-content-between align-items-center sidebar-item"
+          style={sidebarItemStyle}
+        >
           <span><FaHistory className="me-2" /> Transactions</span>
           {openDropdown === "transaction" ? <FaChevronUp /> : <FaChevronDown />}
         </div>
         <div style={submenuStyle(openDropdown === "transaction")}>
-          <div className="py-1">Bill/IPR/Overall</div>
-          <div className="py-1">Overview</div>
+          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Bill/IPR/Overall</div>
+          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Overview</div>
         </div>
       </div>
 
       {/* DFS */}
       <div className="mb-2">
-        <div onClick={() => toggleDropdown("dfs")} className="d-flex justify-content-between align-items-center cursor-pointer">
+        <div
+          onClick={() => toggleDropdown("dfs")}
+          className="d-flex justify-content-between align-items-center sidebar-item"
+          style={sidebarItemStyle}
+        >
           <span><BsCardChecklist className="me-2" /> DFS</span>
           {openDropdown === "dfs" ? <FaChevronUp /> : <FaChevronDown />}
         </div>
         <div style={submenuStyle(openDropdown === "dfs")}>
-          <div className="py-1">Upload Doc</div>
-          <div className="py-1">Track Doc</div>
-          <div className="py-1">Closed File</div>
+          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Upload Doc</div>
+          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Track Doc</div>
+          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Closed File</div>
         </div>
       </div>
 
       {/* Document */}
-      <div className="mb-2 d-flex align-items-center">
+      <div className="mb-2 d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
         <FaFileAlt className="me-2" />
         Document
       </div>
 
       {/* Salary */}
       <div className="mb-2">
-        <div onClick={() => toggleDropdown("salary")} className="d-flex justify-content-between align-items-center cursor-pointer">
+        <div
+          onClick={() => toggleDropdown("salary")}
+          className="d-flex justify-content-between align-items-center sidebar-item"
+          style={sidebarItemStyle}
+        >
           <span><FaMoneyBillWave className="me-2" /> Salary</span>
           {openDropdown === "salary" ? <FaChevronUp /> : <FaChevronDown />}
         </div>
         <div style={submenuStyle(openDropdown === "salary")}>
-          <div className="py-1">Overview</div>
-          <div className="py-1">Receipt</div>
+          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Overview</div>
+          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Receipt</div>
         </div>
       </div>
 
       {/* Settings */}
-      <div className="mb-2 d-flex align-items-center">
+      <div className="mb-2 d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
         <FaUserCog className="me-2" />
         Settings
       </div>
 
       {/* Support */}
-      <div className="mb-2 d-flex align-items-center">
+      <div className="mb-2 d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
         <FaHeadset className="me-2" />
         Support
       </div>
 
       {/* Logout */}
-      <div className="mt-auto d-flex align-items-center">
+      <div className="mt-auto d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
         <FaSignOutAlt className="me-2" />
         Logout
       </div>

@@ -1,0 +1,11 @@
+.sidebar-item:hover {
+  background-color: #343a40;
+  color: #3b88d5 !important;
+}
+
+:root {
+  --client-dashboard-bg-color: #ffffff;
+  --client-component-bg-color: #fff6f3;
+  --user-sidebar-color:#263544
+
+}
