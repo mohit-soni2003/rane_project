@@ -7,7 +7,7 @@ import { BsCardChecklist } from 'react-icons/bs';
 import { MdPayment } from 'react-icons/md';
 import dummyUser from "../../assets/images/dummyUser.jpeg";
 
-const ClientSidebar = () => {
+const ClientSidebar = ({ isOpen, toggleSidebar }) => {
   const [openDropdown, setOpenDropdown] = useState(null);
 
   const toggleDropdown = (menu) => {
@@ -24,7 +24,25 @@ const ClientSidebar = () => {
   });
 
   return (
-    <div className="d-flex flex-column bg-dark text-white vh-100 p-3" style={{ width: '260px' }}>
+    <div
+      className="bg-dark text-white vh-100 p-3 position-fixed top-0 start-0 d-flex flex-column"
+      style={{
+        width: '260px',
+        zIndex: 1045,
+        display: isOpen ? 'flex' : 'none',
+      }}
+    >
+      {/* Close Button for Mobile */}
+      <div className="d-md-none text-end mb-2">
+        <button
+          className="btn btn-sm"
+          style={{ backgroundColor: 'gray', fontWeight: 'bold' }}
+          onClick={toggleSidebar}
+        >
+          ×
+        </button>
+      </div>
+
       {/* Profile Section */}
       <div className="text-center mb-3">
         <img
@@ -67,7 +85,7 @@ const ClientSidebar = () => {
         </div>
       </div>
 
-      {/* Transaction History */}
+      {/* Transactions */}
       <div className="mb-2">
         <div onClick={() => toggleDropdown("transaction")} className="d-flex justify-content-between align-items-center cursor-pointer">
           <span><FaHistory className="me-2" /> Transactions</span>

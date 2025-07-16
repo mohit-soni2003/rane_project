@@ -20,6 +20,8 @@ import StaffDashboard from "./assets/components/elements/staff/StaffDashboard";
 import ClientSidebar from "./component/sidebar/ClientSidebar";
 import AdminSidebar from "./component/sidebar/AdminSidebar";
 import StaffSidebar from "./component/sidebar/StaffSidebar";
+import HomePageClient from "./pages/client/HomePageClient";
+import ClientLayout from "./Layout/ClientLayout";
 
 
 
@@ -85,7 +87,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/test" element={<StaffSidebar />} />
+        <Route path="/test" element={<ClientLayout />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/admin-login" element={<AdminLogin />} />
