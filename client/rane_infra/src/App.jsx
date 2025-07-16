@@ -17,6 +17,11 @@ import ForgotPass from "./assets/components/elements/ForgotPass";
 import ResetPass from "./assets/components/elements/ResetPass";
 import StaffDashboard from "./assets/components/elements/staff/StaffDashboard";
 
+import ClientSidebar from "./component/sidebar/ClientSidebar";
+import AdminSidebar from "./component/sidebar/AdminSidebar";
+import StaffSidebar from "./component/sidebar/StaffSidebar";
+
+
 
 
 function App() {
@@ -80,6 +85,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/test" element={<StaffSidebar />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/admin-login" element={<AdminLogin />} />

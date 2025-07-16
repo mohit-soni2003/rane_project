@@ -1,0 +1,134 @@
+import React, { useState } from 'react';
+import {
+  FaHome, FaFileInvoiceDollar, FaHistory, FaFileAlt,
+  FaUserCog, FaHeadset, FaSignOutAlt, FaChevronDown, FaChevronUp, FaMoneyBillWave
+} from 'react-icons/fa';
+import { BsCardChecklist } from 'react-icons/bs';
+import { MdPayment } from 'react-icons/md';
+import dummyUser from "../../assets/images/dummyUser.jpeg";
+
+const ClientSidebar = () => {
+  const [openDropdown, setOpenDropdown] = useState(null);
+
+  const toggleDropdown = (menu) => {
+    setOpenDropdown(openDropdown === menu ? null : menu);
+  };
+
+  const submenuStyle = (isOpen) => ({
+    maxHeight: isOpen ? '500px' : '0',
+    overflow: 'hidden',
+    transition: 'all 0.3s ease',
+    marginLeft: '20px',
+    fontSize: '0.9rem',
+    color: '#d1d1d1',
+  });
+
+  return (
+    <div className="d-flex flex-column bg-dark text-white vh-100 p-3" style={{ width: '260px' }}>
+      {/* Profile Section */}
+      <div className="text-center mb-3">
+        <img
+          src={dummyUser}
+          className="rounded-circle mb-2"
+          alt="Profile"
+          style={{ width: "80px", height: "80px", objectFit: "cover" }}
+        />
+        <h6>Mohit Soni</h6>
+        <hr className="text-light" />
+      </div>
+
+      {/* Home */}
+      <div className="mb-2 d-flex align-items-center">
+        <FaHome className="me-2" />
+        Home
+      </div>
+
+      {/* Bill */}
+      <div className="mb-2">
+        <div onClick={() => toggleDropdown("bill")} className="d-flex justify-content-between align-items-center cursor-pointer">
+          <span><FaFileInvoiceDollar className="me-2" /> Bill</span>
+          {openDropdown === "bill" ? <FaChevronUp /> : <FaChevronDown />}
+        </div>
+        <div style={submenuStyle(openDropdown === "bill")}>
+          <div className="py-1">My Bill</div>
+          <div className="py-1">Upload Bill</div>
+        </div>
+      </div>
+
+      {/* Payment */}
+      <div className="mb-2">
+        <div onClick={() => toggleDropdown("payment")} className="d-flex justify-content-between align-items-center cursor-pointer">
+          <span><MdPayment className="me-2" /> Payment</span>
+          {openDropdown === "payment" ? <FaChevronUp /> : <FaChevronDown />}
+        </div>
+        <div style={submenuStyle(openDropdown === "payment")}>
+          <div className="py-1">Payment Request</div>
+          <div className="py-1">Payment Status</div>
+        </div>
+      </div>
+
+      {/* Transaction History */}
+      <div className="mb-2">
+        <div onClick={() => toggleDropdown("transaction")} className="d-flex justify-content-between align-items-center cursor-pointer">
+          <span><FaHistory className="me-2" /> Transactions</span>
+          {openDropdown === "transaction" ? <FaChevronUp /> : <FaChevronDown />}
+        </div>
+        <div style={submenuStyle(openDropdown === "transaction")}>
+          <div className="py-1">Bill/IPR/Overall</div>
+          <div className="py-1">Overview</div>
+        </div>
+      </div>
+
+      {/* DFS */}
+      <div className="mb-2">
+        <div onClick={() => toggleDropdown("dfs")} className="d-flex justify-content-between align-items-center cursor-pointer">
+          <span><BsCardChecklist className="me-2" /> DFS</span>
+          {openDropdown === "dfs" ? <FaChevronUp /> : <FaChevronDown />}
+        </div>
+        <div style={submenuStyle(openDropdown === "dfs")}>
+          <div className="py-1">Upload Doc</div>
+          <div className="py-1">Track Doc</div>
+          <div className="py-1">Closed File</div>
+        </div>
+      </div>
+
+      {/* Document */}
+      <div className="mb-2 d-flex align-items-center">
+        <FaFileAlt className="me-2" />
+        Document
+      </div>
+
+      {/* Salary */}
+      <div className="mb-2">
+        <div onClick={() => toggleDropdown("salary")} className="d-flex justify-content-between align-items-center cursor-pointer">
+          <span><FaMoneyBillWave className="me-2" /> Salary</span>
+          {openDropdown === "salary" ? <FaChevronUp /> : <FaChevronDown />}
+        </div>
+        <div style={submenuStyle(openDropdown === "salary")}>
+          <div className="py-1">Overview</div>
+          <div className="py-1">Receipt</div>
+        </div>
+      </div>
+
+      {/* Settings */}
+      <div className="mb-2 d-flex align-items-center">
+        <FaUserCog className="me-2" />
+        Settings
+      </div>
+
+      {/* Support */}
+      <div className="mb-2 d-flex align-items-center">
+        <FaHeadset className="me-2" />
+        Support
+      </div>
+
+      {/* Logout */}
+      <div className="mt-auto d-flex align-items-center">
+        <FaSignOutAlt className="me-2" />
+        Logout
+      </div>
+    </div>
+  );
+};
+
+export default ClientSidebar;
