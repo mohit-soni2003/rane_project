@@ -52,7 +52,7 @@ router.post("/post-bill", async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
-
+// all bills on particual id 
 router.get('/mybill/:id', async (req, res) => {
   console.log("Show my bill route hit");
 
@@ -75,10 +75,10 @@ router.get('/mybill/:id', async (req, res) => {
     return res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
-
+ 
 
 router.get('/allbill', async (req, res) => {
-  console.log("show my bill route hitted")
+  console.log("show all bill route hitted")
 
   try {
     // Find bills that match the user's ID
@@ -93,7 +93,7 @@ router.get('/allbill', async (req, res) => {
     res.json({ error: 'Server error', details: error.message });
   }
 });
-
+//particular signle bill details
 router.get('/bill/:id', async (req, res) => {
   console.log("show particular id bill route hitted")
   const {id} = req.params
@@ -111,7 +111,7 @@ router.get('/bill/:id', async (req, res) => {
     res.json({ error: 'Server error', details: error.message });
   }
 });
-
+//this is of no use same as above
 router.get('/bill/update-payment/:id', async (req, res) => {
   console.log("Update bill payment stasus route hitted")
   const {status} = req.body

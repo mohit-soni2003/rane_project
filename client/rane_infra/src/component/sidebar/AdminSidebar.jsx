@@ -4,9 +4,11 @@ import {
     FaTools, FaQuestionCircle, FaBell, FaSignOutAlt, FaLayerGroup, FaFileAlt
 } from 'react-icons/fa';
 import dummyUser from '../../assets/images/dummyUser.jpeg';
-
+import { Link } from 'react-router-dom';
+import { useAuthStore } from "../../store/authStore"
 const AdminSidebar = () => {
     const [openMenu, setOpenMenu] = useState(null);
+    const { user } = useAuthStore();
 
     const toggleMenu = (menu) => {
         setOpenMenu(openMenu === menu ? null : menu);
@@ -25,44 +27,58 @@ const AdminSidebar = () => {
         <div className="d-flex flex-column vh-100 p-3" style={{ width: '260px', backgroundColor: '#1e1e2f', color: '#f1f1f1' }}>
 
             {/* Profile Section */}
-            <div className="text-center mb-3">
+            <div className="text-center mb-3 mt-2">
                 <img
-                    src={dummyUser}
+                    src={user.profile || dummyUser}
                     alt="Admin"
                     className="rounded-circle mb-2"
                     style={{ width: '80px', height: '80px', objectFit: 'cover' }}
                 />
-                <h6>Admin Panel</h6>
+                <div className='fs-6 fw-bolder mb-1' >{user.name}</div>
+                <div className="fs-6 text-secondary fw-semibold">{user?.cid || "Not Assigned"}</div>
                 <hr className="text-light" />
             </div>
 
             {/* Home  */}
-            <div className="mb-2 d-flex align-items-center cursor-pointer">
+            <div className="mb-3 d-flex align-items-center cursor-pointer">
                 <FaTachometerAlt className="me-2" />
-                Home
+                <Link to="/admin" style={{ textDecoration: 'none', color: 'inherit' }}>
+                    Home
+                </Link>
             </div>
 
             {/* Bills */}
-            <div className="mb-2 d-flex align-items-center cursor-pointer">
+            <div className="mb-3 d-flex align-items-center cursor-pointer">
                 <FaFileInvoice className="me-2" />
-                Bills
+                <Link to="/admin/bill" style={{ textDecoration: 'none', color: 'inherit' }}>
+                    Bills
+                </Link>
+            </div>
+            {/* payment Request  */}
+            <div className="mb-3 d-flex align-items-center cursor-pointer">
+                <FaFileInvoice className="me-2" />
+                <Link to="/admin/payment-request" style={{ textDecoration: 'none', color: 'inherit' }}>
+                    Payment Request
+                </Link>
             </div>
 
             {/* Client */}
-            <div className="mb-2" onClick={() => toggleMenu('client')}>
+            <div className="mb-3" onClick={() => toggleMenu('client')}>
                 <div className="d-flex justify-content-between align-items-center cursor-pointer">
                     <span><FaUserTie className="me-2" /> Client</span>
                     {openMenu === 'client' ? <FaChevronUp /> : <FaChevronDown />}
                 </div>
                 <div style={submenuStyle(openMenu === 'client')}>
-                    <div className="py-1">All Clients</div>
+                    <div className="py-1"><Link to="/admin/all-client" style={{ textDecoration: 'none', color: 'inherit' }}>
+                        All Client
+                    </Link></div>
                     <div className="py-1">Client Details</div>
                     <div className="py-1">Add Client</div>
                 </div>
             </div>
 
             {/* DFS Request */}
-            <div className="mb-2" onClick={() => toggleMenu('dfs')}>
+            <div className="mb-3" onClick={() => toggleMenu('dfs')}>
                 <div className="d-flex justify-content-between align-items-center cursor-pointer">
                     <span><FaFileAlt className="me-2" /> Forward Document</span>
                     {openMenu === 'dfs' ? <FaChevronUp /> : <FaChevronDown />}
@@ -74,23 +90,24 @@ const AdminSidebar = () => {
             </div>
 
             {/* Push Document */}
-            <div className="mb-2" onClick={() => toggleMenu('push')}>
+            <div className="mb-3" onClick={() => toggleMenu('push')}>
                 <div className="d-flex justify-content-between align-items-center cursor-pointer">
                     <span><FaFileAlt className="me-2" /> Push Document</span>
                     {openMenu === 'push' ? <FaChevronUp /> : <FaChevronDown />}
                 </div>
                 <div style={submenuStyle(openMenu === 'push')}>
-                    <div className="py-1">LOA</div>
-                    <div className="py-1">Purchase order</div>
+                    <div className="py-1"><Link to="/admin/push-document" style={{ textDecoration: 'none', color: 'inherit' }}>
+                        Push new Document
+                    </Link></div>
                 </div>
             </div>
             {/* Notification */}
-            <div className="mb-2 d-flex align-items-center cursor-pointer">
+            <div className="mb-3 d-flex align-items-center cursor-pointer">
                 <FaBell className="me-2" />
                 Notification
             </div>
             {/* Important Routes */}
-            <div className="mb-2" onClick={() => toggleMenu('important')}>
+            <div className="mb-3" onClick={() => toggleMenu('important')}>
                 <div className="d-flex justify-content-between align-items-center cursor-pointer">
                     <span><FaLayerGroup className="me-2" /> Important Routes</span>
                     {openMenu === 'important' ? <FaChevronUp /> : <FaChevronDown />}
@@ -101,13 +118,15 @@ const AdminSidebar = () => {
                 </div>
             </div>
             {/* Settings */}
-            <div className="mb-2 d-flex align-items-center cursor-pointer">
+            <div className="mb-3 d-flex align-items-center cursor-pointer">
                 <FaTools className="me-2" />
-                Setting
+                <Link to="/admin/setting" style={{ textDecoration: 'none', color: 'inherit' }}>
+                          Setting 
+                        </Link>
             </div>
 
             {/* Help */}
-            <div className="mb-2 d-flex align-items-center cursor-pointer">
+            <div className="mb-3 d-flex align-items-center cursor-pointer">
                 <FaQuestionCircle className="me-2" />
                 Help
             </div>

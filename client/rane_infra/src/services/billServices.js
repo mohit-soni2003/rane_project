@@ -24,3 +24,54 @@ export const postBill = async (billData) => {
     throw error;
   }
 };
+
+
+
+// this route give all the bill to show to admin 
+export const getAllBills = async () => {
+  try {
+    const res = await fetch(`${backend_url}/allbill`, {
+      method: 'GET',
+      credentials: 'include', // if using cookies for auth
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to fetch bills');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching bills:', error);
+    throw error;
+  }
+};
+
+
+// get the bill details by the id route 
+export const getBillById = async (id) => {
+  try {
+    const res = await fetch(`${backend_url}/bill/${id}`, {
+      method: 'GET',
+      credentials: 'include', // include cookies if auth is used
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to fetch bill');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching bill by ID:', error);
+    throw error;
+  }
+};

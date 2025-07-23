@@ -1,16 +1,43 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Container, Row, Col, Table, Form, Button, Dropdown,
-  InputGroup, Pagination
+  InputGroup, Pagination, Spinner
 } from 'react-bootstrap';
 import {
   FaFileInvoice, FaSearch, FaEye, FaCheckCircle,
   FaTimesCircle, FaExclamationTriangle, FaEllipsisV,
   FaRupeeSign, FaFilter
 } from 'react-icons/fa';
+
 import AdminHeader from '../../component/header/AdminHeader';
+import { getAllBills } from '../../services/billServices';
+import { useNavigate } from 'react-router-dom';
+import PayBillModal from '../../component/models/PayBillModel';
 
 export default function AllBillPage() {
+  const [bills, setBills] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [selectedBillId, setSelectedBillId] = useState(null);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchBills = async () => {
+      try {
+        const data = await getAllBills();
+        setBills(data);
+      } catch (err) {
+        console.error('Failed to load bills:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBills();
+  }, []);
+
   return (
     <>
       <AdminHeader />
@@ -71,130 +98,142 @@ export default function AllBillPage() {
         </Row>
 
         {/* Table */}
-        <Table
-          responsive
-          hover
-          className="shadow-sm"
-          style={{
-            backgroundColor: 'var(--admin-component-bg-color)',
-            border: '1px solid var(--admin-border-color)'
-          }}
-        >
-          <thead style={{ backgroundColor: '#e7edf3' }}>
-            <tr className="text-muted small text-uppercase">
-              <th>S.No</th>
-              <th>CID</th>
-              <th>Uploaded By</th>
-              <th>Firm Name</th>
-              <th>Work Area</th>
-              <th>Phone Number</th>
-              <th>Payment Status</th>
-              <th>Upload Date</th>
-              <th>Bill File</th>
-              <th>Action</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {[...Array(6)].map((_, i) => {
-              const status = ['Paid', 'Rejected', 'Partial', 'Paid', 'Partial', 'Paid'][i];
-              const statusIcon =
-                status === 'Paid' ? <FaCheckCircle className="me-1" /> :
-                status === 'Rejected' ? <FaTimesCircle className="me-1" /> :
-                <FaExclamationTriangle className="me-1" />;
-              const statusColor =
-                status === 'Paid' ? 'var(--admin-success-color)' :
-                status === 'Rejected' ? 'var(--admin-danger-color)' :
-                'var(--admin-warning-color)';
-              const isPayDisabled = status === 'Rejected';
+        {loading ? (
+          <div className="text-center py-5">
+            <Spinner animation="border" variant="primary" />
+          </div>
+        ) : (
+          <Table
+            responsive
+            hover
+            className="shadow-sm"
+            style={{
+              backgroundColor: 'var(--admin-component-bg-color)',
+              border: '1px solid var(--admin-border-color)'
+            }}
+          >
+            <thead style={{ backgroundColor: '#e7edf3' }}>
+              <tr className="text-muted small text-uppercase">
+                <th>S.No</th>
+                <th>CID</th>
+                <th>Uploaded By</th>
+                <th>Firm Name</th>
+                <th>Work Area</th>
+                <th>Phone Number</th>
+                <th>Payment Status</th>
+                <th>Upload Date</th>
+                <th>Bill File</th>
+                <th>Action</th>
+                <th>More</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bills.map((bill, i) => {
+                const status = bill.paymentStatus || 'Pending'; // default to "Pending" if undefined
+                const statusIcon =
+                  status === 'Paid' ? <FaCheckCircle className="me-1" /> :
+                    status === 'Reject' ? <FaTimesCircle className="me-1" /> :
+                      status === 'Sanctioned' || status === 'Overdue' || status === 'Pending' ? <FaExclamationTriangle className="me-1" /> :
+                        null;
 
-              return (
-                <tr
-                  key={i}
-                  style={{
-                    backgroundColor: i % 2 === 0 ? 'var(--admin-dashboard-bg-color)' : 'var(--admin-component-bg-color)'
-                  }}
-                >
-                  <td>
-                    <div
-                      className="rounded-circle d-inline-flex align-items-center justify-content-center"
-                      style={{
-                        backgroundColor: '#fcebea',
-                        width: '30px',
-                        height: '30px',
-                        fontSize: '0.9rem'
-                      }}
-                    >
-                      {i + 1}
-                    </div>
-                  </td>
-                  <td>{`CID00${i + 1}`}</td>
-                  <td>John Smith</td>
-                  <td>Acme Solutions</td>
-                  <td>Web Development</td>
-                  <td>(555) 123-45{67 + i}</td>
-                  <td>
-                    <span className="badge text-white" style={{ backgroundColor: statusColor }}>
-                      {statusIcon} {status}
-                    </span>
-                  </td>
-                  <td>{`${12 + i}-03-2023`}</td>
-                  <td>
-                    <Button variant="outline-secondary" size="sm">
-                      <FaFileInvoice />
-                    </Button>
-                  </td>
-                  <td>
-                    <Button
-                      size="sm"
-                      disabled={isPayDisabled}
-                      style={{
-                        backgroundColor: isPayDisabled ? 'var(--admin-btn-secondary-bg)' : 'var(--admin-btn-success-bg)',
-                        color: 'var(--admin-btn-success-text)',
-                        border: 'none'
-                      }}
-                    >
-                      <FaRupeeSign className="me-1" /> Pay
-                    </Button>
-                  </td>
-                  <td>
-                    <Dropdown align="end">
-                      <Dropdown.Toggle
-                        variant="light"
-                        size="sm"
-                        style={{ border: '1px solid var(--admin-border-color)' }}
+                const statusColor =
+                  status === 'Paid' ? 'var(--admin-success-color)' :
+                    status === 'Reject' ? 'var(--admin-danger-color)' :
+                      'var(--admin-warning-color)';
+
+                const isPayDisabled = status === 'Rejected';
+
+                return (
+                  <tr key={bill._id}>
+                    <td>
+                      <div
+                        className="rounded-circle d-inline-flex align-items-center justify-content-center"
+                        style={{
+                          backgroundColor: '#fcebea',
+                          width: '30px',
+                          height: '30px',
+                          fontSize: '0.9rem'
+                        }}
                       >
-                        <FaEllipsisV />
-                      </Dropdown.Toggle>
-                      <Dropdown.Menu>
-                        <Dropdown.Item><FaEye className="me-2" /> View Details</Dropdown.Item>
-                        <Dropdown.Item><FaFileInvoice className="me-2" /> View Bill</Dropdown.Item>
-                      </Dropdown.Menu>
-                    </Dropdown>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </Table>
+                        {i + 1}
+                      </div>
+                    </td>
+                    <td>{bill.user?.cid || 'N/A'}</td>
+                    <td>{bill.user?.name || 'N/A'}</td>
+                    <td>{bill.firmName}</td>
+                    <td>{bill.workArea}</td>
+                    <td>{bill.user?.phone || 'N/A'}</td>
+                    <td>
+                      <span className="badge text-white" style={{ backgroundColor: statusColor }}>
+                        {statusIcon} {status}
+                      </span>
+                    </td>
+                    <td>{new Date(bill.submittedAt).toLocaleDateString()}</td>
+                    <td>
+                      <Button
+                        variant="outline-secondary"
+                        size="sm"
+                        href={bill.pdfurl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <FaFileInvoice />
+                      </Button>
+                    </td>
+                    <td>
+                      <Button
+                        size="sm"
+                        disabled={isPayDisabled}
+                        style={{
+                          backgroundColor: isPayDisabled
+                            ? 'var(--admin-btn-secondary-bg)'
+                            : 'var(--admin-btn-success-bg)',
+                          color: 'var(--admin-btn-success-text)',
+                          border: 'none'
+                        }}
+                        onClick={() => {
+                          setSelectedBillId(bill._id);
+                          setShowPayModal(true);
+                        }}
+                      >
+                        <FaRupeeSign className="me-1" /> Pay
+                      </Button>
 
-        {/* Pagination Footer */}
+                    </td>
+                    <td>
+                      <FaEllipsisV onClick={() => { navigate(`/admin/bill/${bill._id}`) }} />
+
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </Table>
+        )}
+
+        {/* Pagination Footer (static for now) */}
         <Row className="mt-3">
-          <Col className="text-start text-muted small">Showing 1 to 6 of 24 entries</Col>
+          <Col className="text-start text-muted small">
+            Showing 1 to {bills.length} of {bills.length} entries
+          </Col>
           <Col className="text-end">
             <Pagination className="mb-0">
               <Pagination.First />
               <Pagination.Prev />
               <Pagination.Item active>1</Pagination.Item>
-              <Pagination.Item>2</Pagination.Item>
-              <Pagination.Item>3</Pagination.Item>
-              <Pagination.Item>4</Pagination.Item>
               <Pagination.Next />
               <Pagination.Last />
             </Pagination>
           </Col>
         </Row>
       </Container>
+
+      <PayBillModal
+        show={showPayModal}
+        onHide={() => setShowPayModal(false)}
+        billId={selectedBillId}
+      />
+
     </>
   );
 }

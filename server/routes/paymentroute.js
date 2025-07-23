@@ -104,7 +104,7 @@ router.get('/my-payment-request/:id', async (req, res) => {
     res.json({ error: 'Server error', details: error.message });
   }
 });
-
+// route to get all payment by admin site ----
 router.get('/allpayment', async (req, res) => {
   console.log("show my all payment route hitted")
 

@@ -40,6 +40,8 @@ import PaymentRequestListAdmin from "./pages/admin/PaymentRequestListAdmin.jsx";
 import PushDocumentAdminPage from "./pages/admin/PushDocumentAdminPage.jsx";
 import ClientsListAdminPage from "./pages/admin/ClientsListAdminPage.jsx";
 import ClientDetailAdminPage from "./pages/admin/ClientDetailAdminPage.jsx";
+import SingleBillDetailAdminPage from "./pages/admin/SingleBillDetailAdminPage.jsx";
+import SinglePRdetailAdminPAge from "./pages/admin/SinglePRdetailAdminPAge.jsx";
 
 function App() {
   const { checkAuth, isAuthenticated, user, role } = useAuthStore();
@@ -122,11 +124,14 @@ function App() {
           <Route path="setting" element={<Setting/>} />
           <Route path="upload-document" element={<UploadDocumentPage/>} />
         </Route>
-        <Route path="/admin" element={<AdminLayout />}>
+
+        <Route path="/admin" element={<AdminLayout />}> 
           <Route index element={<HomePageAdmin />} />
           <Route path="home" element={<HomePageAdmin />} />
           <Route path="bill" element={<AllBillPage />} />
+          <Route path="bill/:id" element={<SingleBillDetailAdminPage />} />
           <Route path="payment-request" element={<PaymentRequestListAdmin/>} />
+          <Route path="payment-request/:id" element={<SinglePRdetailAdminPAge/>} />
           <Route path="push-document/:cid" element={<PushDocumentAdminPage/>} />
           <Route path="push-document" element={<PushDocumentAdminPage/>} />
           <Route path="all-client" element={<ClientsListAdminPage/>} />

@@ -95,7 +95,7 @@ router.post("/pay-payment", async (req, res) => {
     }
 });
 
-
+//Route five transaction corresponding to the bill for admin use only
 router.get("/transactions/:billId", async (req, res) => {
     try {
         const { billId } = req.params;

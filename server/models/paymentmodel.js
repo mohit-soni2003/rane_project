@@ -15,10 +15,10 @@ const paymentSchema = new mongoose.Schema({
     },
     expenseNo: {
         type: String,
-        default:"Unpaid"
+        default:"N/A"
     },
     description:{
-        type:String,
+        type:String,//by user
     },
     remark:{
         type  : String,
@@ -28,7 +28,7 @@ const paymentSchema = new mongoose.Schema({
         default:"Pending"
     },
     image:{
-        type:String,
+        type:String, 
     },
     submittedAt: {
         type: Date,
@@ -40,7 +40,7 @@ const paymentSchema = new mongoose.Schema({
         required: true, // Ensure user is always provided
     },
     paymentDate:{
-        type:Date,
+        type:Date, // no use
     },
     paymentType:{
         type:String, //IP/IPR
