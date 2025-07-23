@@ -72,7 +72,6 @@ const AdminSidebar = () => {
                     <div className="py-1"><Link to="/admin/all-client" style={{ textDecoration: 'none', color: 'inherit' }}>
                         All Client
                     </Link></div>
-                    <div className="py-1">Client Details</div>
                     <div className="py-1">Add Client</div>
                 </div>
             </div>
@@ -80,11 +79,13 @@ const AdminSidebar = () => {
             {/* DFS Request */}
             <div className="mb-3" onClick={() => toggleMenu('dfs')}>
                 <div className="d-flex justify-content-between align-items-center cursor-pointer">
-                    <span><FaFileAlt className="me-2" /> Forward Document</span>
+                    <span><FaFileAlt className="me-2" /> DFS</span>
                     {openMenu === 'dfs' ? <FaChevronUp /> : <FaChevronDown />}
                 </div>
                 <div style={submenuStyle(openMenu === 'dfs')}>
-                    <div className="py-1">Past Document</div>
+                    <div className="py-1"><Link to="/admin/dfsrequest" style={{ textDecoration: 'none', color: 'inherit' }}>
+                        Document assigned to me 
+                    </Link></div>
                     <div className="py-1">Current Document</div>
                 </div>
             </div>
@@ -121,8 +122,8 @@ const AdminSidebar = () => {
             <div className="mb-3 d-flex align-items-center cursor-pointer">
                 <FaTools className="me-2" />
                 <Link to="/admin/setting" style={{ textDecoration: 'none', color: 'inherit' }}>
-                          Setting 
-                        </Link>
+                    Setting
+                </Link>
             </div>
 
             {/* Help */}

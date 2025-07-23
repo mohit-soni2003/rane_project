@@ -140,10 +140,10 @@ router.get("/my-requests", verifyToken, async (req, res) => {
     console.log("🔐 Authenticated userId:", myUserId);
 
     const files = await FileForward.find({ currentOwner: myUserId })
-      .populate("uploadedBy", "name email cid")
-      .populate("currentOwner", "name email cid")
-      .populate("forwardingTrail.forwardedBy", "name")
-      .populate("forwardingTrail.forwardedTo", "name")
+      .populate("uploadedBy", "name email cid profile")
+      .populate("currentOwner", "name email cid profile")
+      .populate("forwardingTrail.forwardedBy", "name profile")
+      .populate("forwardingTrail.forwardedTo", "name profile")
       .sort({ createdAt: -1 });
 
     res.status(200).json({ files });
@@ -154,7 +154,7 @@ router.get("/my-requests", verifyToken, async (req, res) => {
 });
 
 // @route    GET /api/all-users
-// @desc     Get all users with role 'admin' or 'staff'
+// @desc     Get all users with role 'admin' or 'staff' to show for forwarding selection 
 // @access   Protected
 router.get('/all-users',verifyToken, async (req, res) => {
   try {
@@ -185,6 +185,30 @@ router.get('/files',verifyToken, async (req, res) => {
   } catch (error) {
     console.error("Error fetching all files:", error);
     res.status(500).json({ error: "Server error while fetching all file records." });
+  }
+});
+// @route   GET /dfs/file/:id
+// @desc    Get full details of a file by its ID
+// @access  Protected
+router.get('/file/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const file = await FileForward.findById(id)
+      .populate('uploadedBy')
+      .populate('currentOwner')
+      .populate('forwardingTrail.forwardedBy')
+      .populate('forwardingTrail.forwardedTo')
+      .populate('comments.user')
+
+    if (!file) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    res.status(200).json({ file });
+  } catch (error) {
+    console.error('Error fetching file by ID:', error);
+    res.status(500).json({ error: 'Server error while fetching file details' });
   }
 });
 

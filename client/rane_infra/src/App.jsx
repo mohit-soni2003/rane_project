@@ -42,6 +42,8 @@ import ClientsListAdminPage from "./pages/admin/ClientsListAdminPage.jsx";
 import ClientDetailAdminPage from "./pages/admin/ClientDetailAdminPage.jsx";
 import SingleBillDetailAdminPage from "./pages/admin/SingleBillDetailAdminPage.jsx";
 import SinglePRdetailAdminPAge from "./pages/admin/SinglePRdetailAdminPAge.jsx";
+import DfsRequest from "./pages/admin/DfsRequest.jsx";
+import SingleDfsRequestDetail from "./pages/admin/SingleDfsRequestDetail.jsx";
 
 function App() {
   const { checkAuth, isAuthenticated, user, role } = useAuthStore();
@@ -136,6 +138,8 @@ function App() {
           <Route path="push-document" element={<PushDocumentAdminPage/>} />
           <Route path="all-client" element={<ClientsListAdminPage/>} />
           <Route path="client-detail/:id" element={<ClientDetailAdminPage/>} />
+          <Route path="dfsrequest" element={<DfsRequest/>} />
+          <Route path="dfsrequest/:id" element={<SingleDfsRequestDetail/>} />
           <Route path="setting" element={<Setting />} />
         </Route>
 

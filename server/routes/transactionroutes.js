@@ -115,7 +115,7 @@ router.get("/transactions/:billId", async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 });
-router.get("/transactions/payreq/:paymentId", async (req, res) => {
+router.get("/transactions/payreq/:paymentId", async (req, res) => { // id is of payreq id 
     try {
         const { paymentId } = req.params;
 
