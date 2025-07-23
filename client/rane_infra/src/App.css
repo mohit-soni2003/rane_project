@@ -3,9 +3,74 @@
   color: #3b88d5 !important;
 }
 
-:root {
+:root { 
   --client-dashboard-bg-color: #ffffff;
   --client-component-bg-color: #fff6f3;
-  --user-sidebar-color:#263544
+  --user-sidebar-color: #263544;
+  --client-text-color: #5e3b2c;
+  --client-heading-color: #3d2316;
+  --client-muted-color: #b48b7a;
+  --client-border-color: #e8d9d3;
+  --client-btn-bg: #8b5e3c;
+  --client-btn-hover: #74492f;
+  --client-btn-text: #ffffff;
+}
 
+
+:root {
+  /* General Layout */
+  --admin-dashboard-bg-color: #f4f6f9;
+  --admin-component-bg-color: #ffffff;
+  --admin-border-color: #e0e0e0;
+
+  /* Text Colors */
+  --admin-text-color: #2c3e50;
+  --admin-heading-color: #1f3a93;
+  --admin-muted-color: #7f8c8d;
+
+  /* Sidebar */
+  --admin-sidebar-bg: #1f3a93;
+  --admin-sidebar-hover-bg: #162c6a;
+  --admin-sidebar-text: #ffffff;
+  --admin-sidebar-icon: #d6e4f0;
+  --admin-sidebar-active-bg: #1abc9c;
+  --admin-sidebar-active-text: #ffffff;
+
+  /* Buttons */
+  --admin-btn-primary-bg: #1abc9c;
+  --admin-btn-primary-hover: #16a085;
+  --admin-btn-primary-text: #ffffff;
+
+  --admin-btn-secondary-bg: #5d6d7e;
+  --admin-btn-secondary-hover: #4a5a6a;
+  --admin-btn-secondary-text: #ffffff;
+
+  --admin-btn-danger-bg: #e74c3c;
+  --admin-btn-danger-hover: #c0392b;
+  --admin-btn-danger-text: #ffffff;
+
+  --admin-btn-success-bg: #27ae60;
+  --admin-btn-success-hover: #1e8449;
+  --admin-btn-success-text: #ffffff;
+
+  /* Status Colors */
+  --admin-success-color: #27ae60;
+  --admin-warning-color: #f39c12;
+  --admin-danger-color: #e74c3c;
+  --admin-info-color: #3498db;
+
+  /* Cards / Widgets */
+  --admin-card-bg: #ffffff;
+  --admin-card-shadow: rgba(0, 0, 0, 0.05);
+  --admin-card-border: #e0e0e0;
+
+  /* Inputs / Forms */
+  --admin-input-bg: #ffffff;
+  --admin-input-border: #dcdcdc;
+  --admin-input-text: #2c3e50;
+  --admin-input-placeholder: #95a5a6;
+
+  /* Scrollbar */
+  --admin-scrollbar-thumb: #a6b1c0;
+  --admin-scrollbar-track: #f0f3f7;
 }

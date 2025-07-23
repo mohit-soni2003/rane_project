@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js'; // Includes Popper
+
 import "./App.css";
 import Home from "./assets/Home";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -10,7 +13,7 @@ import BillbookForm from "./assets/components/elements/BillbookForm";
 import AdminDashboard from "./assets/components/elements/dashboard/AdminDashboard";
 import UserDashboard from "./assets/components/elements/dashboard/UserDashboard";
 import { useAuthStore } from "./store/authStore";
-import AdminLogin from "./assets/components/elements/AdminLogin";
+import AdminLogin from "./assets/components/elements/AdminLogin"; 
 import Spinner from "react-bootstrap/esm/Spinner";
 import Maintainence from "./assets/components/unique_component/Maintainence";
 import ForgotPass from "./assets/components/elements/ForgotPass";
@@ -26,6 +29,17 @@ import UploadBillPage from "./pages/client/UploadBillPage";
 import MyBillPage from "./pages/client/MyBillPage";
 import PaymentRequestPage from "./pages/client/PaymentRequestPage";
 import SupportPage from "./pages/client/SupportPage";
+import DocumentCategory from "./pages/client/DocumentCategory";
+import Setting from "./pages/client/Setting";
+import UploadDocumentPage from "./pages/client/UploadDocumentPage";
+
+import AdminLayout from "./Layout/AdminLayout";
+import HomePageAdmin from "./pages/admin/HomePageAdmin.jsx";
+import AllBillPage from "./pages/admin/AllBillPage.jsx";
+import PaymentRequestListAdmin from "./pages/admin/PaymentRequestListAdmin.jsx";
+import PushDocumentAdminPage from "./pages/admin/PushDocumentAdminPage.jsx";
+import ClientsListAdminPage from "./pages/admin/ClientsListAdminPage.jsx";
+import ClientDetailAdminPage from "./pages/admin/ClientDetailAdminPage.jsx";
 
 function App() {
   const { checkAuth, isAuthenticated, user, role } = useAuthStore();
@@ -104,8 +118,20 @@ function App() {
           <Route path="my-bill" element={<MyBillPage />} />
           <Route path="payment-request" element={<PaymentRequestPage />} />
           <Route path="support" element={<SupportPage/>} />
-
-
+          <Route path="document/category" element={<DocumentCategory/>} />
+          <Route path="setting" element={<Setting/>} />
+          <Route path="upload-document" element={<UploadDocumentPage/>} />
+        </Route>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<HomePageAdmin />} />
+          <Route path="home" element={<HomePageAdmin />} />
+          <Route path="bill" element={<AllBillPage />} />
+          <Route path="payment-request" element={<PaymentRequestListAdmin/>} />
+          <Route path="push-document/:cid" element={<PushDocumentAdminPage/>} />
+          <Route path="push-document" element={<PushDocumentAdminPage/>} />
+          <Route path="all-client" element={<ClientsListAdminPage/>} />
+          <Route path="client-detail/:id" element={<ClientDetailAdminPage/>} />
+          <Route path="setting" element={<Setting />} />
         </Route>
 
         <Route

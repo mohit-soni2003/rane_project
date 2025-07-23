@@ -37,9 +37,18 @@ const userSchema = new mongoose.Schema({
         type:String,
     },
     idproof:{
-        type:String,
+        aadhar:{ 
+            number:String,
+            lastUpdate:Date,
+            link:String
+        },
+        pan:{
+            number:String,
+            lastUpdate:Date,
+            link:String
+        }
     },
-    idProofType:{
+    idProofType:{                   //No use in version 3.O
         type:String,
     },
     upi:{
@@ -78,4 +87,23 @@ const userSchema = new mongoose.Schema({
 
     
 })
+userSchema.pre('save', function (next) {
+  // only update if aadhar.number or aadhar.link is modified
+  if (
+    this.isModified('idproof.aadhar.number') ||
+    this.isModified('idproof.aadhar.link')
+  ) {
+    this.idproof.aadhar.lastUpdate = new Date();
+  }
+
+  // same for PAN
+  if (
+    this.isModified('idproof.pan.number') ||
+    this.isModified('idproof.pan.link')
+  ) {
+    this.idproof.pan.lastUpdate = new Date();
+  }
+
+  next();
+});
 module.exports = mongoose.model("User",userSchema);

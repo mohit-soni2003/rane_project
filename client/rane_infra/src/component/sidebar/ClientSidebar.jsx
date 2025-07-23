@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
 import {
   FaHome, FaFileInvoiceDollar, FaHistory, FaFileAlt,
-  FaUserCog, FaHeadset, FaSignOutAlt, FaChevronDown, FaChevronUp,FaArrowAltCircleRight, FaMoneyBillWave
+  FaUserCog, FaHeadset, FaSignOutAlt, FaChevronDown, FaChevronUp, FaArrowAltCircleRight, FaMoneyBillWave
 } from 'react-icons/fa';
 import { BsCardChecklist } from 'react-icons/bs';
 import { MdPayment } from 'react-icons/md';
 import dummyUser from "../../assets/images/dummyUser.jpeg";
+import { useAuthStore } from '../../store/authStore';
+import { useNavigate, Link } from 'react-router-dom';
+
+
 
 const ClientSidebar = ({ isOpen, toggleSidebar }) => {
+  const { user } = useAuthStore();
   const [openDropdown, setOpenDropdown] = useState(null);
-
+  const navigate = useNavigate();
   const toggleDropdown = (menu) => {
     setOpenDropdown(openDropdown === menu ? null : menu);
   };
@@ -30,7 +35,7 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
     cursor: 'pointer',
     transition: 'background-color 0.3s ease',
   };
-  
+
 
   return (
     <div
@@ -49,26 +54,30 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
           style={{ backgroundColor: 'gray', fontWeight: 'bold' }}
           onClick={toggleSidebar}
         >
-          ×
+
         </button>
       </div>
 
       {/* Profile Section */}
       <div className="text-center mb-3">
         <img
-          src={dummyUser}
+          src={user?.profile || dummyUser}
           className="rounded-circle mb-3"
           alt="Profile"
           style={{ width: "80px", height: "80px", objectFit: "cover" }}
         />
-        <h6>Mohit Soni</h6>
+        <div className='fs-6 fw-bolder mb-1' >{user.name}</div>
+        <div className="fs-6 text-secondary fw-semibold">{user?.cid || "Not Assigned"}</div>
         <hr className="text-light" />
       </div>
 
       {/* Home */}
       <div className="mb-2 d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
         <FaHome className="me-2" />
-        Home
+        <Link to="/client" style={{ textDecoration: 'none', color: 'inherit' }}>
+          Home
+        </Link>
+
       </div>
 
       {/* Dropdown: Bill */}
@@ -82,8 +91,16 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
           {openDropdown === "bill" ? <FaChevronUp /> : <FaChevronDown />}
         </div>
         <div style={submenuStyle(openDropdown === "bill")}>
-          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}> <FaArrowAltCircleRight className="me-2" />My Bill</div>
-          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Upload Bill</div>
+          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}> <FaArrowAltCircleRight className="me-2" />
+            <Link to="/client/my-bill" style={{ textDecoration: 'none', color: 'inherit' }}>
+              My Bills
+            </Link>
+          </div>
+          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />
+            <Link to="/client/upload-bill" style={{ textDecoration: 'none', color: 'inherit' }}>
+              Upload Bill
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -98,7 +115,11 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
           {openDropdown === "payment" ? <FaChevronUp /> : <FaChevronDown />}
         </div>
         <div style={submenuStyle(openDropdown === "payment")}>
-          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Payment Request</div>
+          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />
+          <Link to="/client/payment-request" style={{ textDecoration: 'none', color: 'inherit' }}>
+          Payment Request
+        </Link>
+          </div>
           <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Payment Status</div>
         </div>
       </div>
@@ -126,11 +147,15 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
           className="d-flex justify-content-between align-items-center sidebar-item"
           style={sidebarItemStyle}
         >
-          <span><BsCardChecklist className="me-2" /> DFS</span>
+          <span><BsCardChecklist className="me-2" /> Forward Files - DFS</span>
           {openDropdown === "dfs" ? <FaChevronUp /> : <FaChevronDown />}
         </div>
         <div style={submenuStyle(openDropdown === "dfs")}>
-          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Upload Doc</div>
+          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />
+          <Link to="/client/upload-document" style={{ textDecoration: 'none', color: 'inherit' }}>
+          Upload Document
+        </Link>
+          </div>
           <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Track Doc</div>
           <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Closed File</div>
         </div>
@@ -139,7 +164,9 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
       {/* Document */}
       <div className="mb-2 d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
         <FaFileAlt className="me-2" />
-        Document
+        <Link to="/client/document/category" style={{ textDecoration: 'none', color: 'inherit' }}>
+          Document
+        </Link>
       </div>
 
       {/* Salary */}
@@ -161,13 +188,17 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
       {/* Settings */}
       <div className="mb-2 d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
         <FaUserCog className="me-2" />
-        Settings
+        <Link to="/client/setting" style={{ textDecoration: 'none', color: 'inherit' }}>
+          Setting
+        </Link>
       </div>
 
       {/* Support */}
       <div className="mb-2 d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
         <FaHeadset className="me-2" />
-        Support
+        <Link to="/client/support" style={{ textDecoration: 'none', color: 'inherit' }}>
+          Support
+        </Link>
       </div>
 
       {/* Logout */}

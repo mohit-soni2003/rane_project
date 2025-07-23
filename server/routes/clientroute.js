@@ -4,7 +4,7 @@ const Bill = require("../models/billmodel")
 
 
 const router = express.Router();
-
+ 
 router.get('/allclient', async (req, res) => {
     console.log("show all Client route hitted")
 
@@ -118,4 +118,43 @@ router.put("/update-profile", async (req, res) => {
     }
 });
 
+
+// UNIVERSAL PROFILE/BANK/DETAILS UPDATE --------Added in Version 3.O
+router.put("/update-user", async (req, res) => {
+    console.log("Universal user update route hit");
+
+    try {
+        const { id, ...updates } = req.body;
+
+        if (!id) {
+            return res.status(400).json({ error: "User ID is required" });
+        }
+
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // List of fields allowed to be updated
+        const allowedFields = [
+            "name", "email", "phoneNo", "address", "clientType", "firmName",
+            "idproof", "idProofType", "gstno", "upi", "bankName", "ifscCode",
+            "accountNo", "usertype", "profile"
+        ];
+
+        // Loop through allowed fields and update if present
+        for (const field of allowedFields) {
+            if (updates.hasOwnProperty(field)) {
+                user[field] = updates[field];
+            }
+        }
+
+        await user.save();
+
+        res.json({ message: "User details updated successfully", user });
+    } catch (error) {
+        console.error("Error in universal user update:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
 module.exports = router;

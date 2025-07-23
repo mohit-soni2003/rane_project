@@ -7,50 +7,65 @@ const User = require("../models/usermodel")
 
 // client will upload document
 router.post('/upload-document', verifyToken, async (req, res) => {
-    try {
-        const { fileTitle, fileUrl } = req.body;
+  console.log("DOCUMENT UPLOAD ROUTE HITTED...")
+  try {
+    const {
+      fileTitle,
+      fileUrl,
+      docType,
+      Department,
+      description
+    } = req.body;
 
-        if (!fileTitle || !fileUrl) {
-            return res.status(400).json({ error: "All fields are required" });
-        }
-
-        // Find current admin user
-        const currentOwner = await User.findOne({ cid: "ADMIN" });
-        if (!currentOwner) {
-            return res.status(404).json({ error: "Admin not found" });
-        }
-
-        // Create new file entry
-        const newFile = new FileForward({
-            fileTitle,
-            fileUrl,
-            uploadedBy: req.userId,
-            currentOwner: currentOwner._id,
-            forwardingTrail: [
-                {
-                    forwardedBy: req.userId,
-                    forwardedTo: currentOwner._id,
-                    note: "Initial submission by client",
-                    action: "forwarded",
-                }
-            ]
-        });
-
-        // Save and populate fields
-        await newFile.save();
-
-        const populatedFile = await FileForward.findById(newFile._id)
-            .populate('uploadedBy', 'name') // only populate name
-            .populate('currentOwner', 'name')
-            .populate('forwardingTrail.forwardedBy', 'name')
-            .populate('forwardingTrail.forwardedTo', 'name');
-
-        return res.status(201).json({ message: "File uploaded successfully", file: populatedFile });
-
-    } catch (error) {
-        console.error("File upload error:", error);
-        return res.status(500).json({ error: "Server error" });
+    // Basic validation
+    if (!fileTitle || !fileUrl || !docType || !description) {
+      return res.status(400).json({ error: "fileTitle, fileUrl, docType, and description are required." });
     }
+
+    // Find admin user (who will initially review/own the file)
+    const currentOwner = await User.findOne({ cid: "ADMIN" });
+    if (!currentOwner) {
+      return res.status(404).json({ error: "Admin not found" });
+    }
+
+    // Create document
+    const newFile = new FileForward({
+      fileTitle,
+      fileUrl,
+      docType,
+      Department,
+      description,
+      uploadedBy: req.userId,
+      currentOwner: currentOwner._id,
+      status: "pending",
+      forwardingTrail: [
+        {
+          forwardedBy: req.userId,
+          forwardedTo: currentOwner._id,
+          note: "Initial submission by client",
+          action: "forwarded",
+        }
+      ]
+    });
+
+    await newFile.save();
+
+    // Populate references for response
+    const populatedFile = await FileForward.findById(newFile._id)
+      .populate('uploadedBy', 'name email')
+      .populate('currentOwner', 'name email')
+      .populate('forwardingTrail.forwardedBy', 'name email')
+      .populate('forwardingTrail.forwardedTo', 'name email');
+
+    return res.status(201).json({
+      message: "Document uploaded successfully.",
+      file: populatedFile
+    });
+
+  } catch (error) {
+    console.error("File upload error:", error);
+    return res.status(500).json({ error: "Server error" });
+  }
 });
 
 // Get all files uploaded by the current user
@@ -63,7 +78,7 @@ router.get('/my-files', verifyToken, async (req, res) => {
             .populate('forwardingTrail.forwardedTo', 'name')
             .populate('comments.user', 'name')
             .sort({ createdAt: -1 }); // optional: latest first
-
+ 
         res.status(200).json({ files: myFiles });
     } catch (error) {
         console.error("Error fetching user files:", error);

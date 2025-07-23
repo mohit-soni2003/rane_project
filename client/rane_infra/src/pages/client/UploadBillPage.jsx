@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef , useEffect } from 'react';
 import {
   Form, Button, Container, Row, Col, Card, Spinner, Alert,
 } from 'react-bootstrap';
@@ -8,25 +8,36 @@ import {
 } from 'react-icons/fa';
 import axios from 'axios';
 import ClientHeader from '../../component/header/ClientHeader';
+import { postBill } from '../../services/billServices';
+import { CLOUDINARY_URL_IMAGE } from '../../store/keyStore';
+import { CLOUD_NAME } from '../../store/keyStore';
+
+import { UPLOAD_PRESET } from '../../store/keyStore'; // ← Replace with actual value from Cloudinary
+import { useAuthStore } from '../../store/authStore';
 
 export default function UploadBillPage() {
+  const {user} = useAuthStore();
   const [formData, setFormData] = useState({
     firmName: '',
-    workArea: '',
+    workArea: '', 
     loaNo: 'loa1',
     invoiceNo: '',
     amount: '',
     workDescription: '',
-    pdfurl: '',
+    pdfurl: '', 
+    user:''
   });
   const [file, setFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
-  const fileInputRef = useRef();
-
-  // Placeholder for real user ID (e.g. from context or props)
-  const userId = 'USER_ID_FROM_CONTEXT';
+  const fileInputRef = useRef(); 
+//for setting the userId 
+  useEffect(() => {
+  if (user?._id) {
+    setFormData(prev => ({ ...prev, user: user._id }));
+  }
+}, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -37,33 +48,48 @@ export default function UploadBillPage() {
     setFile(e.target.files[0]);
   };
 
-  const handleUpload = async () => {
-    if (!file) return '';
-    const fileSizeMB = file.size / 1024 / 1024;
-    if (fileSizeMB > 10) throw new Error('File size exceeds 10MB limit');
-    const form = new FormData();
-    form.append('file', file);
-    const { data } = await axios.post('/upload-pdf', form);
-    return data.url;
-  };
+const handleUpload = async () => {
+  if (!file) return '';
+  const fileSizeMB = file.size / 1024 / 1024;
+  if (fileSizeMB > 10) throw new Error('File size exceeds 10MB limit');
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setMessage({ type: '', text: '' });
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', UPLOAD_PRESET); // Set in Cloudinary
 
-    try {
-      const pdfurl = await handleUpload();
-      const payload = { ...formData, user: userId, pdfurl };
-      await axios.post('/post-bill', payload);
-      setMessage({ type: 'success', text: 'Bill submitted successfully!' });
-      handleClear();
-    } catch (err) {
-      setMessage({ type: 'danger', text: 'Submission failed: ' + err.message });
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
+
+  const response = await axios.post(cloudinaryUrl, formData, {
+    withCredentials: false, // ✅ IMPORTANT: Disable credentials
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  return response.data.secure_url;
+};
+
+
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setSubmitting(true);
+  setMessage({ type: '', text: '' });
+
+  try {
+    const pdfurl = await handleUpload();
+    const payload = { ...formData, pdfurl };
+
+    await postBill(payload); // Call the service here
+
+    setMessage({ type: 'success', text: 'Bill submitted successfully!' });
+    handleClear();
+  } catch (err) {
+    setMessage({ type: 'danger', text: 'Submission failed: ' + err.message });
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
   const handleClear = () => {
     setFormData({

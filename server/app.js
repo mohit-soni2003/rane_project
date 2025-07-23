@@ -53,6 +53,7 @@ app.use(require("./routes/paymentroute"))
 app.use(require("./routes/commonroute"))
 app.use(require("./routes/adminroutes"))
 app.use(require("./routes/transactionroutes"))
+app.use(require("./routes/documentroutes"))
 app.use("/dfs",require("./routes/fsforwardingroutes"))
 // Start the server
 app.listen(PORT, () => {

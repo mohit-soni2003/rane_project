@@ -1,57 +1,90 @@
 const express = require("express")
 const User = require("../models/usermodel")
-const Bill = require("../models/billmodel")
+const Bill = require("../models/billmodel") 
 const Payment = require("../models/paymentmodel")
 
 
 const router = express.Router();
 
 router.post("/post-payment", async (req, res) => {
-  console.log("Post Payment route hitted....")
+  console.log("Post Payment route hit...");
+
   try {
-    const { tender, user, amount,  description, image_url,paymentType  } = req.body;
+    const {
+      tender,
+      user,
+      amount,
+      description,
+      image_url,       // Optional now
+      paymentType,
+      paymentMode
+    } = req.body;
+
     console.log("Tender:", tender);
     console.log("User:", user);
     console.log("Amount:", amount);
     console.log("Description:", description);
-    console.log("Image:", image_url)
-    // Validate required fields
-    if (!tender || !amount || !image_url || !user || !paymentType) {
+    console.log("Image:", image_url);
+    console.log("Payment Type:", paymentType);
+    console.log("Payment Mode:", paymentMode);
+
+    // Required field validation (image_url is not required)
+    if (!tender || !amount || !user || !paymentType || !paymentMode) {
       return res.status(400).json({ message: "All required fields must be provided" });
     }
 
-    // Check if the referenced user exists
+    // Validate user
     const existingUser = await User.findById(user);
     if (!existingUser) {
       return res.status(404).json({ message: "User not found" });
     }
-    if (paymentType=="IP" && amount>50000) {
-      return res.status(404).json({ message: "Payment Request Failed : You can request only Upto 50,000 Rs. in IP " });
-    }
-    if (paymentType=="IPR" && amount>10000) {
-      return res.status(404).json({ message: "Payment Request Failed : You can request only Upto 10,000 Rs. in IPR " });
+
+    // Business logic
+    if (paymentType === "IP" && amount > 50000) {
+      return res.status(400).json({
+        message: "Payment Request Failed: You can request only up to ₹50,000 in IP"
+      });
     }
 
-    // Create a new Payment
-    const newPayment = new Payment({
+    if (paymentType === "IPR" && amount > 10000) {
+      return res.status(400).json({
+        message: "Payment Request Failed: You can request only up to ₹10,000 in IPR"
+      });
+    }
+
+    // Create new payment, image is conditionally added
+    const paymentData = {
       tender,
       user,
       amount,
       description,
       paymentType,
-      image:image_url
-    });
-    // Save the bill to the database
-    const savedPayment = await newPayment.save();
-    res.status(201).json({ message: "Payment created successfully", payment: savedPayment });
-  } catch (error) {
-    // Handle duplicate LOA number
-    if (error.code === 11000) {
-      return res.status(409).json({ message: "Duplicate  detected" });
+      paymentMode
+    };
+
+    if (image_url) {
+      paymentData.image = image_url; // Only add if image_url is provided
     }
+
+    const newPayment = new Payment(paymentData);
+    const savedPayment = await newPayment.save();
+
+    res.status(201).json({
+      message: "Payment created successfully",
+      payment: savedPayment
+    });
+  } catch (error) {
+    console.error("Error creating payment:", error);
+
+    if (error.code === 11000) {
+      return res.status(409).json({ message: "Duplicate entry detected" });
+    }
+
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
+
+
 
 router.get('/my-payment-request/:id', async (req, res) => {
   console.log("show all my payment route hitted ..")

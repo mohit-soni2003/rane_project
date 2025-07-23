@@ -32,7 +32,7 @@ const paymentSchema = new mongoose.Schema({
     },
     submittedAt: {
         type: Date,
-        default: Date.now(),
+        default: Date.now,
     },
     user: {
         type: mongoose.Schema.Types.ObjectId, // Reference to ObjectId
@@ -43,10 +43,10 @@ const paymentSchema = new mongoose.Schema({
         type:Date,
     },
     paymentType:{
-        type:String,
+        type:String, //IP/IPR
     },
-    remark:{
-        type:String,
+    paymentMode:{ //user send request in which he want
+        type:String,  //upi / bank_transfer // check
     }
 });
 

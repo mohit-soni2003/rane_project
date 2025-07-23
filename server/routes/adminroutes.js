@@ -45,6 +45,7 @@ router.get("/admin-get-users", async (req, res) => {
     }
 });
 router.get("/admin-get-users-details/:id", async (req, res) => {
+    console.log("Admin route to view client details hitted...")
     try {
         const userId = req.params.id;
         

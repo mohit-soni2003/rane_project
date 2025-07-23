@@ -8,7 +8,13 @@ const fileForwardSchema = new mongoose.Schema({
   },
   fileUrl: {
     type: String,
-    required: true, // Can be a PDF, doc, or image
+    required: true, // Original document
+  },
+  docType:{
+    type:String
+  }, 
+  Department:{
+    type:String 
   },
   uploadedBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -19,6 +25,10 @@ const fileForwardSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
+  },
+  description : {
+    type:String,
+    required:true
   },
   status: {
     type: String,
@@ -43,26 +53,49 @@ const fileForwardSchema = new mongoose.Schema({
       timestamp: {
         type: Date,
         default: Date.now,
-      }
-    }
+      },
+    },
   ],
   comments: [
     {
       user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+        ref: "User",
       },
       comment: String,
       timestamp: {
         type: Date,
-        default: Date.now
-      }
-    }
+        default: Date.now,
+      },
+    },
   ],
+
+  // ✅ New Feature: Attachments by the current owner
+  attachments: [
+    {
+      fileUrl: {
+        type: String,
+        required: true, // URL of the new file (uploaded to cloud)
+      },
+      addedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true, // Usually currentOwner at the time
+      },
+      remark: {
+        type: String,
+      },
+      timestamp: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
+
   createdAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
 module.exports = mongoose.model("FileForward", fileForwardSchema);

@@ -1,22 +1,102 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Form, Button, Card } from 'react-bootstrap';
+import { Container, Row, Col, Form, Button, Card, Spinner } from 'react-bootstrap';
 import { FaRupeeSign, FaUpload, FaUniversity, FaQrcode, FaFileInvoiceDollar, FaCheck, FaTimes } from 'react-icons/fa';
 import ClientHeader from '../../component/header/ClientHeader';
+import { postPaymentRequest } from '../../services/paymentService'; // adjust the path as needed
+import { CLOUDINARY_URL_IMAGE } from '../../store/keyStore';
+import { CLOUD_NAME } from '../../store/keyStore';
+import { CLOUDINARY_URL } from '../../store/keyStore';
+
+import { UPLOAD_PRESET } from '../../store/keyStore'; // ← Replace with actual value from Cloudinary
+import { useAuthStore } from '../../store/authStore';
+
 
 export default function PaymentRequestPage() {
     const [paymentType, setPaymentType] = useState('IP');
     const [paymentMode, setPaymentMode] = useState('Bank');
     const [file, setFile] = useState(null);
+    const [tender, setTender] = useState('tender1');
+    const [amount, setAmount] = useState('');
+    const [description, setDescription] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+
+
+    const { user } = useAuthStore();
+
+
 
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Submit logic here
-        alert('Payment request submitted');
+        setSubmitting(true);
+
+
+        try {
+            let imageUrl = null;
+
+            // Only upload if a file is selected
+            if (file) {
+                imageUrl = await uploadImageToCloudinary(file);
+            }
+
+            const paymentData = {
+                tender,
+                user: user._id,
+                amount: Number(amount),
+                description,
+                paymentType,
+                paymentMode,
+            };
+
+            // Add image_url only if it exists
+            if (imageUrl) {
+                paymentData.image_url = imageUrl;
+            }
+
+            const response = await postPaymentRequest(paymentData);
+
+            alert("Payment request submitted successfully!");
+            console.log("Response:", response);
+
+            // Reset form if needed
+            setFile(null);
+            setAmount('');
+            setDescription('');
+            setTender('tender1');
+            setPaymentType('IP');
+            setPaymentMode('Bank');
+
+        } catch (error) {
+            console.error("Error submitting payment request:", error);
+            alert(error.message || "Something went wrong.");
+        }
+        finally {
+            setSubmitting(false);
+        }
     };
+
+
+    const uploadImageToCloudinary = async (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", UPLOAD_PRESET); // 'rane_infra'
+
+        const response = await fetch(CLOUDINARY_URL, {
+            method: "POST",
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error("Cloudinary upload failed");
+        }
+
+        const data = await response.json();
+        return data.secure_url;
+    };
+
 
     return (
         <>
@@ -61,10 +141,11 @@ export default function PaymentRequestPage() {
                             </Col>
                             <Col md={6}>
                                 <Form.Label className="fw-semibold text-brown">Select Tender</Form.Label>
-                                <Form.Select required>
+                                <Form.Select required value={tender} onChange={(e) => setTender(e.target.value)}>
                                     <option value="tender1">tender1</option>
                                     <option value="tender2">tender2</option>
                                 </Form.Select>
+
                             </Col>
                         </Row>
 
@@ -79,7 +160,10 @@ export default function PaymentRequestPage() {
                                 placeholder="₹ 0.00"
                                 min="0"
                                 required
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
                             />
+
                         </Form.Group>
 
                         {/* Description */}
@@ -90,7 +174,10 @@ export default function PaymentRequestPage() {
                                 rows={3}
                                 placeholder="Enter description for this payment request..."
                                 required
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
                             />
+
                         </Form.Group>
 
                         {/* File Upload */}
@@ -166,9 +253,8 @@ export default function PaymentRequestPage() {
                         {/* Submit/Cancel */}
                         <div className="d-flex justify-content-end gap-2">
                             <Button variant="outline-secondary">Cancel</Button>
-                            <Button type="submit" variant="primary">
-                                <FaFileInvoiceDollar className="me-2" />
-                                Submit Payment Request
+                            <Button type="submit" disabled={submitting} className="btn-brown px-4">
+                                {submitting ? <Spinner size="sm" animation="border" /> : 'Submit Bill'}
                             </Button>
                         </div>
                     </Form>
@@ -181,6 +267,33 @@ export default function PaymentRequestPage() {
         }
         .fw-semibold {
           font-weight: 600;
+        }
+        .text-brown {
+          color: #8c4b32;
+        }
+        .custom-input {
+          border-radius: 8px;
+          border-color: #f0d5cb;
+        }
+        .custom-input:focus {
+          border-color: #c2704f;
+          box-shadow: 0 0 0 0.15rem rgba(194, 112, 79, 0.25);
+        }
+        .btn-brown {
+          background-color: #8c4b32;
+          color: white;
+          border: none;
+        }
+        .btn-brown:hover {
+          background-color: #6f3e28;
+        }
+        .btn-outline-brown {
+          border: 1px solid #8c4b32;
+          color: #8c4b32;
+        }
+        .btn-outline-brown:hover {
+          background-color: #8c4b32;
+          color: white;
         }
       `}</style>
         </>
