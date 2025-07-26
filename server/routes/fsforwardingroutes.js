@@ -70,20 +70,20 @@ router.post('/upload-document', verifyToken, async (req, res) => {
 
 // Get all files uploaded by the current user
 router.get('/my-files', verifyToken, async (req, res) => {
-    try {
-        const myFiles = await FileForward.find({ uploadedBy: req.userId })
-            .populate('currentOwner', 'name')
-            .populate('uploadedBy', 'name')
-            .populate('forwardingTrail.forwardedBy', 'name')
-            .populate('forwardingTrail.forwardedTo', 'name')
-            .populate('comments.user', 'name')
-            .sort({ createdAt: -1 }); // optional: latest first
- 
-        res.status(200).json({ files: myFiles });
-    } catch (error) {
-        console.error("Error fetching user files:", error);
-        res.status(500).json({ error: "Server error while fetching your files." });
-    }
+  try {
+    const myFiles = await FileForward.find({ uploadedBy: req.userId })
+      .populate('currentOwner', 'name')
+      .populate('uploadedBy', 'name')
+      .populate('forwardingTrail.forwardedBy', 'name')
+      .populate('forwardingTrail.forwardedTo', 'name')
+      .populate('comments.user', 'name')
+      .sort({ createdAt: -1 }); // optional: latest first
+
+    res.status(200).json({ files: myFiles });
+  } catch (error) {
+    console.error("Error fetching user files:", error);
+    res.status(500).json({ error: "Server error while fetching your files." });
+  }
 });
 
 router.put("/forward/:fileId", verifyToken, async (req, res) => {
@@ -91,44 +91,45 @@ router.put("/forward/:fileId", verifyToken, async (req, res) => {
     const { fileId } = req.params;
     const userId = req.userId; // current logged-in user
 
-    const { note, action, forwardedTo, status } = req.body;
+    const { note, action, forwardedTo, status, attachment } = req.body;
 
     if (!note || !action || !forwardedTo || !status) {
       return res.status(400).json({ error: "All fields are required." });
     }
 
-    // Fetch the file
     const file = await FileForward.findById(fileId);
     if (!file) {
       return res.status(404).json({ error: "File not found" });
     }
 
-    // Ensure only current owner can forward
     if (file.currentOwner.toString() !== userId) {
       return res.status(403).json({ error: "Not authorized to forward this file." });
     }
 
-    // Update status and current owner
+    // Update current owner and status
     file.status = status;
     file.currentOwner = forwardedTo;
 
-    // Add communication trail
+    // Push to forwarding trail with attachment
     file.forwardingTrail.push({
       forwardedBy: userId,
       forwardedTo,
       note,
       action,
+      attachment: attachment || null, // ✅ now added to the trail
       timestamp: new Date(),
     });
 
     await file.save();
 
-    res.status(200).json({ message: "File forwarded successfully", file });
+    res.status(200).json({ message: "✅ File forwarded successfully", file });
   } catch (error) {
-    console.error("Error forwarding file:", error);
+    console.error("❌ Error forwarding file:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+
 // @route   GET /my-requests
 // @desc    Get documents assigned to the current logged-in user
 // @access  Protected
@@ -156,7 +157,7 @@ router.get("/my-requests", verifyToken, async (req, res) => {
 // @route    GET /api/all-users
 // @desc     Get all users with role 'admin' or 'staff' to show for forwarding selection 
 // @access   Protected
-router.get('/all-users',verifyToken, async (req, res) => {
+router.get('/all-users', verifyToken, async (req, res) => {
   try {
     const users = await User.find(
       { role: { $in: ['admin', 'staff'] } },
@@ -171,7 +172,7 @@ router.get('/all-users',verifyToken, async (req, res) => {
 // @route    GET /api/files
 // @desc     Get all files with complete details for Super Admin
 // @access   Protected (superadmin only, optional)
-router.get('/files',verifyToken, async (req, res) => {
+router.get('/files', verifyToken, async (req, res) => {
   try {
     const files = await FileForward.find()
       .populate('uploadedBy', 'name email cid')

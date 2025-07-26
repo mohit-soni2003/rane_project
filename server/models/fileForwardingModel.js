@@ -71,26 +71,28 @@ const fileForwardSchema = new mongoose.Schema({
   ],
 
   // ✅ New Feature: Attachments by the current owner
-  attachments: [
-    {
-      fileUrl: {
-        type: String,
-        required: true, // URL of the new file (uploaded to cloud)
-      },
-      addedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true, // Usually currentOwner at the time
-      },
-      remark: {
-        type: String,
-      },
-      timestamp: {
-        type: Date,
-        default: Date.now,
-      },
+  forwardingTrail: [
+  {
+    forwardedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
-  ],
+    forwardedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    note: String,
+    action: {
+      type: String,
+      enum: ["forwarded", "viewed", "commented", "approved", "rejected"],
+    },
+    attachment: String, // ✅ ADD THIS LINE
+    timestamp: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+],
 
   createdAt: {
     type: Date,

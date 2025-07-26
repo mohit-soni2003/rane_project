@@ -54,6 +54,7 @@ export const getAllUsers = async () => {
 };
 // this route is to forward the document from done user to another 
 export const forwardDocument = async (fileId, forwardData) => {
+    console.log(forwardData)
     const res = await fetch(`${backend_url}/dfs/forward/${fileId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
