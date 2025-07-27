@@ -16,7 +16,7 @@ import {
 
 export default function PushDocumentAdminPage() {
   const { cid: encodedCid } = useParams();
-  const [cid, setCid] = useState(decodeURIComponent(encodedCid));
+  const [cid, setCid] = useState(decodeURIComponent(encodedCid || ''));
   const [docType, setDocType] = useState('');
   const [documentCode, setDocumentCode] = useState('');
   const [dateOfIssue, setDateOfIssue] = useState('');
@@ -51,7 +51,6 @@ export default function PushDocumentAdminPage() {
     setLoading(true);
     try {
       const documentLink = await uploadToCloudinary(file);
-
       const payload = {
         cid,
         docType,
@@ -61,7 +60,7 @@ export default function PushDocumentAdminPage() {
         documentLink,
       };
 
-      const result = await pushDocument(payload);
+      await pushDocument(payload);
 
       setDocType('');
       setDocumentCode('');
@@ -69,7 +68,6 @@ export default function PushDocumentAdminPage() {
       setRemark('');
       setFile(null);
       alert('Document pushed successfully!');
-      console.log('Server response:', result);
     } catch (err) {
       console.error('Push failed:', err);
       alert('Error: ' + err.message);
@@ -78,51 +76,44 @@ export default function PushDocumentAdminPage() {
     }
   };
 
+  const iconStyle = { marginRight: '8px', color: '#6c757d' };
+  const sectionTitleStyle = { fontWeight: '600', fontSize: '1.1rem', marginBottom: '10px' };
+
   return (
     <>
       <AdminHeader />
-      <div className="container mt-4">
-        <Card className="p-4 shadow" style={{
-          backgroundColor: 'var(--admin-card-bg)',
-          borderColor: 'var(--admin-card-border)',
-          boxShadow: '0 0.25rem 1rem var(--admin-card-shadow)',
-        }}>
-          <h4 className="mb-4 text-primary" style={{ color: 'var(--admin-heading-color)' }}>
-            <FaPaperPlane className="me-2" />
+      <div className="container-fluid w-100 mt-4">
+        <Card className="p-4 border-0 shadow-sm">
+          <div className="d-flex align-items-center mb-4" style={sectionTitleStyle}>
+            <FaPaperPlane style={{ marginRight: '10px', color: '#6c757d' }} />
             Push Document to Client
-          </h4>
-          <Form onSubmit={handleSubmit} style={{ color: 'var(--admin-text-color)' }}>
-            <Form.Group className="mb-3">
-              <Form.Label>
-                <FaIdCard className="me-2 text-info" /> Client CID *
-              </Form.Label>
-              <Form.Control
-                type="text"
-                value={cid}
-                onChange={(e) => setCid(e.target.value)}
-                required
-                style={{
-                  backgroundColor: 'var(--admin-input-bg)',
-                  borderColor: 'var(--admin-input-border)',
-                  color: 'var(--admin-input-text)'
-                }}
-              />
-            </Form.Group>
+          </div>
 
+          <Form onSubmit={handleSubmit}>
             <Row className="mb-3">
               <Col md={6}>
                 <Form.Label>
-                  <FaListAlt className="me-2 text-info" /> Document Type *
+                  <FaIdCard style={iconStyle} />
+                  Client CID *
+                </Form.Label>
+                <Form.Control
+                  type="text"
+                  value={cid}
+                  onChange={(e) => setCid(e.target.value)}
+                  placeholder="Enter client ID"
+                  required
+                />
+              </Col>
+
+              <Col md={6}>
+                <Form.Label>
+                  <FaListAlt style={iconStyle} />
+                  Document Type *
                 </Form.Label>
                 <Form.Select
                   value={docType}
                   onChange={(e) => setDocType(e.target.value)}
                   required
-                  style={{
-                    backgroundColor: 'var(--admin-input-bg)',
-                    borderColor: 'var(--admin-input-border)',
-                    color: 'var(--admin-input-text)'
-                  }}
                 >
                   <option value="">Select type</option>
                   <option value="LOA">LOA</option>
@@ -137,94 +128,110 @@ export default function PushDocumentAdminPage() {
                   <option value="Other">Other</option>
                 </Form.Select>
               </Col>
-
-              <Col md={6}>
-                <Form.Label>
-                  <FaFileCode className="me-2 text-info" /> Document Code *
-                </Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Enter document code (e.g., LOA123)"
-                  value={documentCode}
-                  onChange={(e) => setDocumentCode(e.target.value)}
-                  required
-                  style={{
-                    backgroundColor: 'var(--admin-input-bg)',
-                    borderColor: 'var(--admin-input-border)',
-                    color: 'var(--admin-input-text)'
-                  }}
-                />
-              </Col>
             </Row>
 
             <Row className="mb-3">
               <Col md={6}>
                 <Form.Label>
-                  <FaCalendarAlt className="me-2 text-info" /> Date of Issue *
+                  <FaFileCode style={iconStyle} />
+                  Document Code *
+                </Form.Label>
+                <Form.Control
+                  type="text"
+                  value={documentCode}
+                  onChange={(e) => setDocumentCode(e.target.value)}
+                  placeholder="Enter document code"
+                  required
+                />
+              </Col>
+
+              <Col md={6}>
+                <Form.Label>
+                  <FaCalendarAlt style={iconStyle} />
+                  Date of Issue *
                 </Form.Label>
                 <Form.Control
                   type="date"
                   value={dateOfIssue}
                   onChange={(e) => setDateOfIssue(e.target.value)}
                   required
-                  style={{
-                    backgroundColor: 'var(--admin-input-bg)',
-                    borderColor: 'var(--admin-input-border)',
-                    color: 'var(--admin-input-text)'
-                  }}
-                />
-              </Col>
-
-              <Col md={6}>
-                <Form.Label>
-                  <FaStickyNote className="me-2 text-muted" /> Remark (optional)
-                </Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Any notes or remark"
-                  value={remark}
-                  onChange={(e) => setRemark(e.target.value)}
-                  style={{
-                    backgroundColor: 'var(--admin-input-bg)',
-                    borderColor: 'var(--admin-input-border)',
-                    color: 'var(--admin-input-text)'
-                  }}
                 />
               </Col>
             </Row>
 
-            <Form.Group className="mb-4">
+            <Form.Group className="mb-3">
               <Form.Label>
-                <FaFileUpload className="me-2 text-danger" /> Upload Document (PDF/Image) *
+                <FaStickyNote style={iconStyle} />
+                Remark (optional)
               </Form.Label>
               <Form.Control
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={handleFileChange}
-                required
-                style={{
-                  backgroundColor: 'var(--admin-input-bg)',
-                  borderColor: 'var(--admin-input-border)',
-                  color: 'var(--admin-input-text)'
-                }}
+                type="text"
+                value={remark}
+                onChange={(e) => setRemark(e.target.value)}
+                placeholder="Additional notes about this document (optional)"
               />
-              {file && (
-                <div className="text-muted mt-2" style={{ fontSize: '0.9rem' }}>
-                  Selected: {file.name}
-                </div>
-              )}
             </Form.Group>
 
-            <div className="text-end">
-              <Button
-                type="submit"
-                disabled={loading}
+            <Form.Group className="mb-4">
+              <Form.Label>
+                <FaFileUpload style={iconStyle} />
+                Upload Document *
+              </Form.Label>
+
+              <div
+                className="p-4 text-center rounded position-relative"
                 style={{
-                  backgroundColor: 'var(--admin-btn-primary-bg)',
-                  borderColor: 'var(--admin-btn-primary-bg)',
-                  color: 'var(--admin-btn-primary-text)'
+                  background: '#fef8f6',
+                  border: '1px dashed #e4cfc3',
+                  color: '#6c4f42',
                 }}
               >
+                <div className="mb-2">
+                  <FaFileUpload size={28} />
+                </div>
+                <p className="mb-1 fw-medium">Drag & drop files here or click to browse</p>
+                <small className="text-muted">PDF, JPG, or PNG up to 10MB</small>
+
+                {/* Hidden Input */}
+                <input
+                  id="customFileInput"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={handleFileChange}
+                  required
+                  hidden
+                />
+
+                {/* Trigger Button */}
+                <div className="mt-3">
+                  <label htmlFor="customFileInput" style={{ cursor: 'pointer' }}>
+                    <div
+                      className="px-4 py-2 rounded"
+                      style={{
+                        backgroundColor: '#fcd8cd',
+                        color: '#6c4f42',
+                        fontWeight: 500,
+                        display: 'inline-block',
+                      }}
+                    >
+                      <FaFileUpload className="me-2" />
+                      Browse Files
+                    </div>
+                  </label>
+                </div>
+
+                {file && (
+                  <div className="text-muted mt-2 small">Selected: {file.name}</div>
+                )}
+              </div>
+            </Form.Group>
+
+
+            <div className="d-flex justify-content-end">
+              <Button variant="secondary" className="me-2" disabled={loading}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading} style={{ backgroundColor: '#7c3f2c', borderColor: '#7c3f2c' }}>
                 {loading ? (
                   <>
                     <Spinner size="sm" animation="border" className="me-2" />

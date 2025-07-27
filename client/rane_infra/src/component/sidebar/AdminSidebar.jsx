@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     FaTachometerAlt, FaFileInvoice, FaUserTie, FaChevronDown, FaChevronUp,
-    FaTools, FaQuestionCircle, FaBell, FaSignOutAlt, FaLayerGroup, FaFileAlt
+    FaTools, FaQuestionCircle, FaBell, FaSignOutAlt, FaLayerGroup, FaFileAlt,FaMoneyBillWave 
 } from 'react-icons/fa';
 import dummyUser from '../../assets/images/dummyUser.jpeg';
 import { Link } from 'react-router-dom';
@@ -84,7 +84,7 @@ const AdminSidebar = () => {
                 </div>
                 <div style={submenuStyle(openMenu === 'dfs')}>
                     <div className="py-1"><Link to="/admin/dfsrequest" style={{ textDecoration: 'none', color: 'inherit' }}>
-                        Document assigned to me 
+                        Document assigned to me
                     </Link></div>
                     <div className="py-1">Current Document</div>
                 </div>
@@ -100,6 +100,25 @@ const AdminSidebar = () => {
                     <div className="py-1"><Link to="/admin/push-document" style={{ textDecoration: 'none', color: 'inherit' }}>
                         Push new Document
                     </Link></div>
+                </div>
+            </div>
+            {/* salary */}
+            <div className="mb-3" onClick={() => toggleMenu('salary')}>
+                <div className="d-flex justify-content-between align-items-center cursor-pointer">
+                    <span><FaMoneyBillWave  className="me-2" /> Salary</span>
+                    {openMenu === 'salary' ? <FaChevronDown  /> : <FaChevronDown  />}
+                </div>
+                <div style={submenuStyle(openMenu === 'salary')}>
+                    <div className="py-1">
+                        <Link to="/admin/salary/all-client-list" style={{ textDecoration: 'none', color: 'inherit' }}>
+                            Pay Salary
+                        </Link>
+                    </div>
+                    <div className="py-1">
+                        <Link to="#" style={{ textDecoration: 'none', color: 'inherit' }}>
+                            Overview
+                        </Link>
+                    </div>
                 </div>
             </div>
             {/* Notification */}

@@ -55,6 +55,7 @@ app.use(require("./routes/adminroutes"))
 app.use(require("./routes/transactionroutes"))
 app.use(require("./routes/documentroutes"))
 app.use("/dfs",require("./routes/fsforwardingroutes"))
+app.use("/salary",require("./routes/salaryroutes"))
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

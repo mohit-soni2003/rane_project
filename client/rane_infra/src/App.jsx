@@ -13,7 +13,7 @@ import BillbookForm from "./assets/components/elements/BillbookForm";
 import AdminDashboard from "./assets/components/elements/dashboard/AdminDashboard";
 import UserDashboard from "./assets/components/elements/dashboard/UserDashboard";
 import { useAuthStore } from "./store/authStore";
-import AdminLogin from "./assets/components/elements/AdminLogin"; 
+import AdminLogin from "./assets/components/elements/AdminLogin";
 import Spinner from "react-bootstrap/esm/Spinner";
 import Maintainence from "./assets/components/unique_component/Maintainence";
 import ForgotPass from "./assets/components/elements/ForgotPass";
@@ -44,6 +44,11 @@ import SingleBillDetailAdminPage from "./pages/admin/SingleBillDetailAdminPage.j
 import SinglePRdetailAdminPAge from "./pages/admin/SinglePRdetailAdminPAge.jsx";
 import DfsRequest from "./pages/admin/DfsRequest.jsx";
 import SingleDfsRequestDetail from "./pages/admin/SingleDfsRequestDetail.jsx";
+import ClientSalaryAll from "./pages/admin/ClientSalaryAll.jsx";
+import SingleUSerSalaryDetailAdmin from "./pages/admin/SingleUSerSalaryDetailAdmin.jsx";
+
+
+import MaintainencePage from "./pages/MaintainencePage.jsx";
 
 function App() {
   const { checkAuth, isAuthenticated, user, role } = useAuthStore();
@@ -121,25 +126,27 @@ function App() {
           <Route path="upload-bill" element={<UploadBillPage />} />
           <Route path="my-bill" element={<MyBillPage />} />
           <Route path="payment-request" element={<PaymentRequestPage />} />
-          <Route path="support" element={<SupportPage/>} />
-          <Route path="document/category" element={<DocumentCategory/>} />
-          <Route path="setting" element={<Setting/>} />
-          <Route path="upload-document" element={<UploadDocumentPage/>} />
+          <Route path="support" element={<SupportPage />} />
+          <Route path="document/category" element={<DocumentCategory />} />
+          <Route path="setting" element={<Setting />} />
+          <Route path="upload-document" element={<UploadDocumentPage />} />
         </Route>
 
-        <Route path="/admin" element={<AdminLayout />}> 
+        <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<HomePageAdmin />} />
           <Route path="home" element={<HomePageAdmin />} />
           <Route path="bill" element={<AllBillPage />} />
           <Route path="bill/:id" element={<SingleBillDetailAdminPage />} />
-          <Route path="payment-request" element={<PaymentRequestListAdmin/>} />
-          <Route path="payment-request/:id" element={<SinglePRdetailAdminPAge/>} />
-          <Route path="push-document/:cid" element={<PushDocumentAdminPage/>} />
-          <Route path="push-document" element={<PushDocumentAdminPage/>} />
-          <Route path="all-client" element={<ClientsListAdminPage/>} />
-          <Route path="client-detail/:id" element={<ClientDetailAdminPage/>} />
-          <Route path="dfsrequest" element={<DfsRequest/>} />
-          <Route path="dfsrequest/:id" element={<SingleDfsRequestDetail/>} />
+          <Route path="payment-request" element={<PaymentRequestListAdmin />} />
+          <Route path="payment-request/:id" element={<SinglePRdetailAdminPAge />} />
+          <Route path="push-document/:cid" element={<PushDocumentAdminPage />} />
+          <Route path="push-document" element={<PushDocumentAdminPage />} />
+          <Route path="all-client" element={<ClientsListAdminPage />} />
+          <Route path="client-detail/:id" element={<ClientDetailAdminPage />} />
+          <Route path="dfsrequest" element={<DfsRequest />} />
+          <Route path="dfsrequest/:id" element={<SingleDfsRequestDetail />} />
+          <Route path="salary/all-client-list" element={<ClientSalaryAll />} />
+          <Route path="salary-detail/:clientid/:currmonth" element={<SingleUSerSalaryDetailAdmin />} />
           <Route path="setting" element={<Setting />} />
         </Route>
 
