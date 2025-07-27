@@ -65,3 +65,27 @@ export const getPaymentRequestById = async (id) => {    //id is of particual pam
     throw err;
   }
 };
+// give all payment of particular by is user id 
+
+export const getPaymentsByUserId = async (userId) => {
+  try {
+    const res = await fetch(`${backend_url}/my-payment-request/${userId}`, {
+      method: 'GET',
+      credentials: 'include', // if using sessions/cookies
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to fetch payments');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching payments by user ID:', error.message);
+    throw error;
+  }
+};

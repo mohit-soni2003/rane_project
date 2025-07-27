@@ -42,6 +42,10 @@ const billSchema = new mongoose.Schema({
         ref: "User", // Name of the user model
         required: true, // Ensure user is always provided
     },
+    paidby:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"User",
+    }
 });
 
 module.exports = mongoose.model("Bill", billSchema);

@@ -1,90 +1,101 @@
-import React from 'react';
-import { Table, Button, InputGroup, FormControl, Badge, Container, Card, Row, Col } from 'react-bootstrap';
-import { FaSearch, FaFilter, FaFileInvoice, FaPlus, FaFileExport } from 'react-icons/fa';
+import React, { useEffect, useState } from 'react';
+import {Table,Button,InputGroup,FormControl,Badge,Container,Card,Row,  Col,Spinner,} from 'react-bootstrap';
+import {FaSearch,FaFileExport,FaPlus, FaFileAlt} from 'react-icons/fa';
 import ClientHeader from '../../component/header/ClientHeader';
+import { getBillsByUserId } from '../../services/billServices';
+import { useAuthStore } from '../../store/authStore';
+import { useNavigate } from 'react-router-dom';
 
-const bills = [
-    {
-        firm: 'Karnataka Power Ltd.',
-        workArea: 'Electrical Maintenance',
-        loaNo: 'LOA-2023-001',
-        invoiceNo: 'INV-2023-0458',
-        status: 'Completed',
-    },
-    {
-        firm: 'Tata Constructions',
-        workArea: 'Civil Work',
-        loaNo: 'LOA-2023-015',
-        invoiceNo: 'INV-2023-0523',
-        status: 'Pending',
-    },
-    {
-        firm: 'Mahindra Engineering',
-        workArea: 'Mechanical Support',
-        loaNo: 'LOA-2023-008',
-        invoiceNo: 'INV-2023-0612',
-        status: 'Rejected',
-    },
-    {
-        firm: 'Larsen & Toubro',
-        workArea: 'Structural Design',
-        loaNo: 'LOA-2023-022',
-        invoiceNo: 'INV-2023-0721',
-        status: 'Partial',
-    },
-    {
-        firm: 'Reliance Industrial',
-        workArea: 'System Integration',
-        loaNo: 'LOA-2023-018',
-        invoiceNo: 'INV-2023-0836',
-        status: 'Completed',
-    },
-    {
-        firm: 'Adani Power',
-        workArea: 'Power Distribution',
-        loaNo: 'LOA-2023-025',
-        invoiceNo: 'INV-2023-0947',
-        status: 'Pending',
-    },
-];
-
+// Reusable badge renderer
 const getStatusBadge = (status) => {
     switch (status) {
-        case 'Completed':
-            return <Badge bg="success">Completed</Badge>;
+        case 'Paid':
+            return <Badge bg="success">Paid</Badge>;
         case 'Pending':
             return <Badge bg="warning" text="dark">Pending</Badge>;
-        case 'Rejected':
+        case 'Overdue':
+            return <Badge bg="danger">Overdue</Badge>;
+        case 'Sanctioned':
+            return <Badge bg="primary">Sanctioned</Badge>;
+        case 'Reject':
             return <Badge bg="danger">Rejected</Badge>;
-        case 'Partial':
-            return <Badge bg="primary">Partial</Badge>;
+        case 'Unpaid':
+            return <Badge bg="secondary">Unpaid</Badge>;
         default:
             return <Badge bg="secondary">{status}</Badge>;
     }
 };
 
+
 export default function MyBillPage() {
+    const [bills, setBills] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchText, setSearchText] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [sortOrder, setSortOrder] = useState('asc');
+
+
+    // ✅ Get logged-in user from Zustand store
+    const user = useAuthStore((state) => state.user);
+    const userId = user?._id;
+
+    const navigate = useNavigate();
+    // Fetch bills for this user
+    useEffect(() => {
+        const fetchBills = async () => {
+            try {
+                const result = await getBillsByUserId(userId);
+                setBills(Array.isArray(result) ? result : []);
+            } catch (error) {
+                console.error('Failed to fetch bills:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (userId) fetchBills();
+    }, [userId]);
+
+    // Filter + Sort Logic
+    const filteredBills = bills
+        .filter((bill) =>
+            (statusFilter === 'all' || bill.status === statusFilter) &&
+            (bill.firm?.toLowerCase().includes(searchText.toLowerCase()) ||
+                bill.invoiceNo?.toLowerCase().includes(searchText.toLowerCase()))
+        )
+        .sort((a, b) =>
+            sortOrder === 'asc'
+                ? a.invoiceNo.localeCompare(b.invoiceNo)
+                : b.invoiceNo.localeCompare(a.invoiceNo)
+        );
+
     return (
         <>
             <ClientHeader />
 
             <Container fluid className="py-4 px-0">
-                <Card className="p-4 shadow-sm"
-                style={{backgroundColor:"var(--client-component-bg-color)"}}>
+                <Card className="p-4 shadow-sm" style={{ backgroundColor: "var(--client-component-bg-color)" }}>
                     <Row className="align-items-center mb-3">
                         <Col md={6} className="text-muted">
-                            Total {bills.length} bills found
+                            Total {filteredBills.length} bills found
                         </Col>
                         <Col md={6}>
                             <div className="d-flex justify-content-end gap-2 flex-wrap">
-                                {/* Search input */}
                                 <InputGroup style={{ maxWidth: '220px' }}>
                                     <InputGroup.Text><FaSearch /></InputGroup.Text>
-                                    <FormControl placeholder="Search bills..." />
+                                    <FormControl
+                                        placeholder="Search bills..."
+                                        value={searchText}
+                                        onChange={(e) => setSearchText(e.target.value)}
+                                    />
                                 </InputGroup>
 
-                                {/* Filter by Status */}
-                                <FormControl as="select" className="w-auto">
+                                <FormControl
+                                    as="select"
+                                    className="w-auto"
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                >
                                     <option value="all">All Status</option>
                                     <option value="Completed">Completed</option>
                                     <option value="Pending">Pending</option>
@@ -92,54 +103,79 @@ export default function MyBillPage() {
                                     <option value="Partial">Partial</option>
                                 </FormControl>
 
-                                {/* Sort Order */}
-                                <FormControl as="select" className="w-auto">
-                                    <option value="asc"><span className='fw-bolder'>Sort:</span> ▲ Ascending</option>
+                                <FormControl
+                                    as="select"
+                                    className="w-auto"
+                                    value={sortOrder}
+                                    onChange={(e) => setSortOrder(e.target.value)}
+                                >
+                                    <option value="asc">Sort: ▲ Ascending</option>
                                     <option value="desc">Sort: ▼ Descending</option>
                                 </FormControl>
-                                {/* Apply Button */}
+
                                 <Button variant="primary">Apply</Button>
                             </div>
                         </Col>
                     </Row>
 
-
-                    <Table responsive bordered hover className="mb-3 align-middle">
-                        <thead className="table-light">
-                            <tr>
-                                <th>S.No.</th>
-                                <th>Firm Name</th>
-                                <th>Work Area</th>
-                                <th>LOA No.</th>
-                                <th>Invoice No.</th>
-                                <th>Payment Status</th>
-                                <th>View Bill</th>
-                                <th>Know More</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {bills.map((bill, idx) => (
-                                <tr key={idx}>
-                                    <td>{idx + 1}</td>
-                                    <td>{bill.firm}</td>
-                                    <td>{bill.workArea}</td>
-                                    <td>{bill.loaNo}</td>
-                                    <td>{bill.invoiceNo}</td>
-                                    <td>{getStatusBadge(bill.status)}</td>
-                                    <td><Button size="sm" variant="primary">View</Button></td>
-                                    <td><Button size="sm" variant="outline-secondary">Details</Button></td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </Table>
-
-                    <div className="d-flex justify-content-between">
-                        <div className="text-muted">Showing 1 to {bills.length} of {bills.length} entries</div>
-                        <div>
-                            <Button variant="outline-primary" className="me-2"><FaPlus className="me-1" /> Upload New Bill</Button>
-                            <Button variant="outline-dark"><FaFileExport className="me-1" /> Export Bills</Button>
+                    {loading ? (
+                        <div className="text-center my-5">
+                            <Spinner animation="border" variant="primary" />
                         </div>
-                    </div>
+                    ) : (
+                        <Table responsive bordered hover className="mb-3 align-middle">
+                            <thead className="table-light">
+                                <tr>
+                                    <th>S.No.</th>
+                                    <th>Firm Name</th>
+                                    <th>Work Area</th>
+                                    <th>LOA No.</th>
+                                    <th>Invoice No.</th>
+                                    <th>Payment Status</th>
+                                    <th>View Bill</th>
+                                    <th>Know More</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredBills.map((bill, idx) => (
+                                    <tr key={bill._id || idx}>
+                                        <td>{idx + 1}</td>
+                                        <td>{bill.firmName}</td>
+                                        <td>{bill.workArea}</td>
+                                        <td>{bill.loaNo}</td>
+                                        <td>{bill.invoiceNo}</td>
+                                        <td>{getStatusBadge(bill.paymentStatus)}</td>
+                                        <td className="text-center">
+                                            <a
+                                                href={bill.pdfurl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-secondary text-decoration-none"
+                                            >
+                                                <FaFileAlt size={20} />
+                                            </a>
+                                        </td>
+
+                                        <td><Button size="sm" variant="outline-secondary" onClick={()=>navigate(`/client/bill/${bill._id}`)}>Details</Button></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </Table>
+                    )}
+
+                    {!loading && (
+                        <div className="d-flex justify-content-between">
+                            <div className="text-muted">Showing 1 to {filteredBills.length} of {bills.length} entries</div>
+                            <div>
+                                <Button variant="outline-primary" className="me-2">
+                                    <FaPlus className="me-1" /> Upload New Bill
+                                </Button>
+                                <Button variant="outline-dark">
+                                    <FaFileExport className="me-1" /> Export Bills
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                 </Card>
             </Container>
         </>

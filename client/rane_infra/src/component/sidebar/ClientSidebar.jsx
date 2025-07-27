@@ -116,12 +116,15 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
         </div>
         <div style={submenuStyle(openDropdown === "payment")}>
           <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />
-          <Link to="/client/payment-request" style={{ textDecoration: 'none', color: 'inherit' }}>
-          Payment Request
-        </Link>
+            <Link to="/client/payment-request" style={{ textDecoration: 'none', color: 'inherit' }}>
+              Payment Request
+            </Link>
           </div>
-          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Payment Status</div>
-        </div>
+          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />
+            <Link to="/client/my-payment-request" style={{ textDecoration: 'none', color: 'inherit' }}>
+              Payment Request Status
+            </Link>
+          </div>        </div>
       </div>
 
       {/* Transactions */}
@@ -152,9 +155,9 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
         </div>
         <div style={submenuStyle(openDropdown === "dfs")}>
           <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />
-          <Link to="/client/upload-document" style={{ textDecoration: 'none', color: 'inherit' }}>
-          Upload Document
-        </Link>
+            <Link to="/client/upload-document" style={{ textDecoration: 'none', color: 'inherit' }}>
+              Upload Document
+            </Link>
           </div>
           <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Track Doc</div>
           <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Closed File</div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     FaTachometerAlt, FaFileInvoice, FaUserTie, FaChevronDown, FaChevronUp,
-    FaTools, FaQuestionCircle, FaBell, FaSignOutAlt, FaLayerGroup, FaFileAlt,FaMoneyBillWave 
+    FaTools, FaQuestionCircle, FaBell, FaSignOutAlt, FaLayerGroup, FaFileAlt, FaMoneyBillWave
 } from 'react-icons/fa';
 import dummyUser from '../../assets/images/dummyUser.jpeg';
 import { Link } from 'react-router-dom';
@@ -69,10 +69,16 @@ const AdminSidebar = () => {
                     {openMenu === 'client' ? <FaChevronUp /> : <FaChevronDown />}
                 </div>
                 <div style={submenuStyle(openMenu === 'client')}>
-                    <div className="py-1"><Link to="/admin/all-client" style={{ textDecoration: 'none', color: 'inherit' }}>
-                        All Client
-                    </Link></div>
-                    <div className="py-1">Add Client</div>
+                    <div className="py-1">
+                        <Link to="/admin/all-client" style={{ textDecoration: 'none', color: 'inherit' }}>
+                            All Client
+                        </Link>
+                    </div>
+                    <div className="py-1">
+                        <Link to="/admin/under-dev" style={{ textDecoration: 'none', color: 'inherit' }}>
+                            Add new Client
+                        </Link>
+                    </div>
                 </div>
             </div>
 
@@ -105,8 +111,8 @@ const AdminSidebar = () => {
             {/* salary */}
             <div className="mb-3" onClick={() => toggleMenu('salary')}>
                 <div className="d-flex justify-content-between align-items-center cursor-pointer">
-                    <span><FaMoneyBillWave  className="me-2" /> Salary</span>
-                    {openMenu === 'salary' ? <FaChevronDown  /> : <FaChevronDown  />}
+                    <span><FaMoneyBillWave className="me-2" /> Salary</span>
+                    {openMenu === 'salary' ? <FaChevronDown /> : <FaChevronDown />}
                 </div>
                 <div style={submenuStyle(openMenu === 'salary')}>
                     <div className="py-1">
@@ -115,7 +121,7 @@ const AdminSidebar = () => {
                         </Link>
                     </div>
                     <div className="py-1">
-                        <Link to="#" style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <Link to="/admin/under-dev" style={{ textDecoration: 'none', color: 'inherit' }}>
                             Overview
                         </Link>
                     </div>
@@ -124,7 +130,11 @@ const AdminSidebar = () => {
             {/* Notification */}
             <div className="mb-3 d-flex align-items-center cursor-pointer">
                 <FaBell className="me-2" />
-                Notification
+                <div className="">
+                    <Link to="/admin/under-dev" style={{ textDecoration: 'none', color: 'inherit' }}>
+                        Notifications
+                    </Link>
+                </div>
             </div>
             {/* Important Routes */}
             <div className="mb-3" onClick={() => toggleMenu('important')}>
@@ -133,9 +143,16 @@ const AdminSidebar = () => {
                     {openMenu === 'important' ? <FaChevronUp /> : <FaChevronDown />}
                 </div>
                 <div style={submenuStyle(openMenu === 'important')}>
-                    <div className="py-1">All User Details</div>
-                    <div className="py-1">All DFS Request</div>
-                </div>
+                    <div className="py-1">
+                        <Link to="/admin/under-dev" style={{ textDecoration: 'none', color: 'inherit' }}>
+                            All User Details
+                        </Link>
+                    </div>
+                    <div className="py-1">
+                        <Link to="/admin/under-dev" style={{ textDecoration: 'none', color: 'inherit' }}>
+                            All DFS Details
+                        </Link>
+                    </div>                </div>
             </div>
             {/* Settings */}
             <div className="mb-3 d-flex align-items-center cursor-pointer">
@@ -148,7 +165,10 @@ const AdminSidebar = () => {
             {/* Help */}
             <div className="mb-3 d-flex align-items-center cursor-pointer">
                 <FaQuestionCircle className="me-2" />
-                Help
+                        <Link to="/admin/under-dev" style={{ textDecoration: 'none', color: 'inherit' }}>
+                            Help
+                        </Link>
+                    
             </div>
 
 

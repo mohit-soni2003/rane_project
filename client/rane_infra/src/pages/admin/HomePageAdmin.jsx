@@ -1,7 +1,11 @@
 import React from 'react'
-
+import MaintainencePage from '../MaintainencePage'
+import AdminHeader from '../../component/header/AdminHeader'
 export default function HomePageAdmin() {
   return (
-    <div>HomePageAdminjsx</div>
+    <>
+    <AdminHeader></AdminHeader>
+    <MaintainencePage></MaintainencePage>
+    </>
   )
 }

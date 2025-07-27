@@ -85,7 +85,7 @@ router.post("/post-payment", async (req, res) => {
 });
 
 
-
+// all payment of particular user id 
 router.get('/my-payment-request/:id', async (req, res) => {
   console.log("show all my payment route hitted ..")
   const { id } = req.params;

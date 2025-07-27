@@ -32,6 +32,8 @@ import SupportPage from "./pages/client/SupportPage";
 import DocumentCategory from "./pages/client/DocumentCategory";
 import Setting from "./pages/client/Setting";
 import UploadDocumentPage from "./pages/client/UploadDocumentPage";
+import SingleBillDetailsClient from "./pages/client/SingleBillDetailsClient.jsx";
+import MyPaymentRequestPage from "./pages/client/MyPaymentRequestPage.jsx";
 
 import AdminLayout from "./Layout/AdminLayout";
 import HomePageAdmin from "./pages/admin/HomePageAdmin.jsx";
@@ -49,6 +51,8 @@ import SingleUSerSalaryDetailAdmin from "./pages/admin/SingleUSerSalaryDetailAdm
 
 
 import MaintainencePage from "./pages/MaintainencePage.jsx";
+import UnderDevPage from "./pages/UnderDevPage.jsx";
+
 
 function App() {
   const { checkAuth, isAuthenticated, user, role } = useAuthStore();
@@ -125,11 +129,15 @@ function App() {
           <Route path="home" element={<HomePageClient />} />
           <Route path="upload-bill" element={<UploadBillPage />} />
           <Route path="my-bill" element={<MyBillPage />} />
+          <Route path="bill/:id" element={<SingleBillDetailsClient />} />
           <Route path="payment-request" element={<PaymentRequestPage />} />
+          <Route path="my-payment-request" element={<MyPaymentRequestPage />} />
           <Route path="support" element={<SupportPage />} />
           <Route path="document/category" element={<DocumentCategory />} />
           <Route path="setting" element={<Setting />} />
           <Route path="upload-document" element={<UploadDocumentPage />} />
+          <Route path="under-dev" element={<UnderDevPage />} />
+
         </Route>
 
         <Route path="/admin" element={<AdminLayout />}>
@@ -148,6 +156,7 @@ function App() {
           <Route path="salary/all-client-list" element={<ClientSalaryAll />} />
           <Route path="salary-detail/:clientid/:currmonth" element={<SingleUSerSalaryDetailAdmin />} />
           <Route path="setting" element={<Setting />} />
+          <Route path="under-dev" element={<UnderDevPage />} />
         </Route>
 
         <Route

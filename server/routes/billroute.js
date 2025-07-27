@@ -76,7 +76,7 @@ router.get('/mybill/:id', async (req, res) => {
   }
 });
  
-
+ 
 router.get('/allbill', async (req, res) => {
   console.log("show all bill route hitted")
 
@@ -100,7 +100,7 @@ router.get('/bill/:id', async (req, res) => {
 
   try {
     // Find bills that match the user's ID
-    const bill = await Bill.findById(id).populate("user");
+    const bill = await Bill.findById(id).populate("user paidby");
     console.log(bill)
     if (bill) {
       res.status(200).json(bill);
