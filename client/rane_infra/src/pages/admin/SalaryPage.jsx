@@ -8,7 +8,7 @@ import {
     Form,
     Button,
     Container,
-    ListGroup,
+    ListGroup,Table 
 } from 'react-bootstrap';
 import { FaRupeeSign, FaFileDownload } from 'react-icons/fa';
 import { MdOutlinePendingActions, MdOutlineCheckCircle } from 'react-icons/md';
@@ -69,8 +69,8 @@ export default function SalaryPage() {
     return (
         <>
             <ClientHeader />
-            <Container className="py-4">
-                <Card className="p-4 shadow-sm mb-4" style={{ backgroundColor: 'var(--client-component-bg-color)' }}>
+            <Container fluid className="py-4 mt-3" style={{ backgroundColor: 'var(--client-component-bg-color)' }}>
+                <Card className="p-4 shadow-sm border-0 mb-4" style={{ backgroundColor: 'var(--client-dashboard-bg-color)' }}>
                     <Row className="align-items-center">
                         <Col>
                             <h4 className="fw-bold" style={{ color: 'var(--client-heading-color)' }}>
@@ -114,7 +114,7 @@ export default function SalaryPage() {
                     </div>
                 ) : (
                     <>
-                        <Card className="mb-4 p-4 shadow-sm" style={{ backgroundColor: 'var(--client-component-bg-color)' }}>
+                        <Card className="mb-4 p-4 shadow-sm border-0" style={{ backgroundColor: 'var(--client-dashboard-bg-color)' }}>
                             <h5 className="mb-4" style={{ color: 'var(--client-heading-color)' }}>Salary Breakdown</h5>
                             <Row className="g-4">
                                 <Col md={4}><Card body style={{ backgroundColor: '#fff' }}>💰 Base Salary: ₹{baseSalary?.amount}</Card></Col>
@@ -156,13 +156,41 @@ export default function SalaryPage() {
                             </Row>
                         </Card>
 
-                        <Card className="p-4 shadow-sm" style={{ backgroundColor: 'var(--client-component-bg-color)' }}>
+                        <Card className="p-4 shadow-sm border-0" style={{ backgroundColor: 'var(--client-dashboard-bg-color)' }}>
                             <h5 className="mb-3" style={{ color: 'var(--client-heading-color)' }}>💡 Salary Calculation</h5>
-                            <p style={{ color: 'var(--client-text-color)' }}>
-                                Base ₹{baseSalary?.amount} + Bonus ₹{monthlySalary?.bonus} + Allowances ₹{totalAllowances} +
-                                Overtime ₹{totalOvertime} - Leaves ₹{totalLeaves} - Advance ₹{totalAdvance} =
-                                <strong> ₹{finalSalary}</strong>
-                            </p>
+
+                            <Table bordered hover size="sm" className="mb-4">
+                                <tbody style={{ color: 'var(--client-text-color)' }}>
+                                    <tr>
+                                        <td>Base Salary</td>
+                                        <td><strong>₹{baseSalary?.amount}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Bonus</td>
+                                        <td><strong>₹{monthlySalary?.bonus}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Allowances</td>
+                                        <td><strong>₹{totalAllowances}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Overtime</td>
+                                        <td><strong>₹{totalOvertime}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Leaves Deduction</td>
+                                        <td><strong>- ₹{totalLeaves}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Advance Deduction</td>
+                                        <td><strong>- ₹{totalAdvance}</strong></td>
+                                    </tr>
+                                    <tr style={{ backgroundColor: '#f8f4f1' }}>
+                                        <td><strong>Net Salary</strong></td>
+                                        <td><h5 className="text-success fw-bold mb-0">₹{finalSalary}</h5></td>
+                                    </tr>
+                                </tbody>
+                            </Table>
 
                             <div className="text-end">
                                 <Button
@@ -172,7 +200,11 @@ export default function SalaryPage() {
                                         border: 'none',
                                     }}
                                     disabled={!monthlySalary?.finalized}
-                                    onClick={() => alert("⚠️ This service is currently unavailable. We're working on it and will make it available soon. Thank you for your patience!")}
+                                    onClick={() =>
+                                        alert(
+                                            "⚠️ This service is currently unavailable. We're working on it and will make it available soon. Thank you for your patience!"
+                                        )
+                                    }
                                 >
                                     <FaFileDownload className="me-2" /> Download Salary PDF
                                 </Button>
