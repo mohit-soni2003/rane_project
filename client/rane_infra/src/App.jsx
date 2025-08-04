@@ -132,7 +132,18 @@ function App() {
         <Route path="/reset-password" element={<ForgotPass />} />
         <Route path="/reset-password-page/:id" element={<ResetPass />} />
 
-        <Route path="/client" element={<ClientLayout />}>
+
+
+        <Route
+          path="/client"
+          element={
+            <ProtectedRoute>
+              <ClientRoute>
+                <ClientLayout />
+              </ClientRoute>
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<HomePageClient />} />
           <Route path="home" element={<HomePageClient />} />
           <Route path="upload-bill" element={<UploadBillPage />} />
@@ -142,16 +153,25 @@ function App() {
           <Route path="my-payment-request" element={<MyPaymentRequestPage />} />
           <Route path="support" element={<SupportPage />} />
           <Route path="document/category" element={<DocumentCategory />} />
-          <Route path="document/category/:docType" element={< ViewDocumentPage/>} />
+          <Route path="document/category/:docType" element={<ViewDocumentPage />} />
           <Route path="salary" element={<SalaryPage />} />
           <Route path="setting" element={<Setting />} />
           <Route path="upload-document" element={<UploadDocumentPage />} />
           <Route path="track-dfs/all" element={<TrackMyAllDocument />} />
           <Route path="under-dev" element={<UnderDevPage />} />
-
         </Route>
 
-        <Route path="/admin" element={<AdminLayout />}>
+
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminRoute>
+                <AdminLayout />
+              </AdminRoute>
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<HomePageAdmin />} />
           <Route path="home" element={<HomePageAdmin />} />
           <Route path="bill" element={<AllBillPage />} />
@@ -168,29 +188,9 @@ function App() {
           <Route path="salary-detail/:clientid/:currmonth" element={<SingleUSerSalaryDetailAdmin />} />
           <Route path="danger/all-user" element={<AllUser />} />
           <Route path="danger/all-dfs" element={<AllDFSRequests />} />
-
           <Route path="setting" element={<Setting />} />
           <Route path="under-dev" element={<UnderDevPage />} />
         </Route>
-
-        <Route path="/staff" element={<StaffLayout />}>
-          <Route index element={<HomePageAdmin />} />
-          <Route path="home" element={<HomePageStaff />} />
-          <Route path="bill" element={<AllBillPage />} />
-          <Route path="all-client" element={<ClientsListAdminPage />} />
-          <Route path="payment-request" element={<PaymentRequestListAdmin />} />
-          <Route path="request-payment" element={<PaymentRequestPage />} />
-          <Route path="my-payment-request" element={<MyPaymentRequestPage />} />
-          <Route path="dfsrequest" element={<DfsRequest />} />
-          <Route path="upload-document" element={<UploadDocumentPage />} />
-          <Route path="track-dfs/all" element={<TrackMyAllDocument />} />   { /*Track all document uploaded by the staff */}
-          <Route path="push-document/:cid" element={<PushDocumentAdminPage />} />
-          <Route path="push-document" element={<PushDocumentAdminPage />} />
-          <Route path="salary" element={<SalaryPage />} />
-          <Route path="setting" element={<Setting />} />
-          <Route path="under-dev" element={<UnderDevPage />} />
-        </Route>
-
         <Route
           path="/user-dashboard"
           element={
@@ -237,3 +237,70 @@ function App() {
 }
 
 export default App;
+
+
+
+
+
+
+
+
+
+{/* <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<HomePageAdmin />} />
+          <Route path="home" element={<HomePageAdmin />} />
+          <Route path="bill" element={<AllBillPage />} />
+          <Route path="bill/:id" element={<SingleBillDetailAdminPage />} />
+          <Route path="payment-request" element={<PaymentRequestListAdmin />} />
+          <Route path="payment-request/:id" element={<SinglePRdetailAdminPAge />} />
+          <Route path="push-document/:cid" element={<PushDocumentAdminPage />} />
+          <Route path="push-document" element={<PushDocumentAdminPage />} />
+          <Route path="all-client" element={<ClientsListAdminPage />} />
+          <Route path="client-detail/:id" element={<ClientDetailAdminPage />} />
+          <Route path="dfsrequest" element={<DfsRequest />} />
+          <Route path="dfsrequest/:id" element={<SingleDfsRequestDetail />} />
+          <Route path="salary/all-client-list" element={<ClientSalaryAll />} />
+          <Route path="salary-detail/:clientid/:currmonth" element={<SingleUSerSalaryDetailAdmin />} />
+          <Route path="danger/all-user" element={<AllUser />} />
+          <Route path="danger/all-dfs" element={<AllDFSRequests />} />
+
+          <Route path="setting" element={<Setting />} />
+          <Route path="under-dev" element={<UnderDevPage />} />
+        </Route> */}
+
+{/* <Route path="/staff" element={<StaffLayout />}>
+          <Route index element={<HomePageAdmin />} />
+          <Route path="home" element={<HomePageStaff />} />
+          <Route path="bill" element={<AllBillPage />} />
+          <Route path="all-client" element={<ClientsListAdminPage />} />
+          <Route path="payment-request" element={<PaymentRequestListAdmin />} />
+          <Route path="request-payment" element={<PaymentRequestPage />} />
+          <Route path="my-payment-request" element={<MyPaymentRequestPage />} />
+          <Route path="dfsrequest" element={<DfsRequest />} />
+          <Route path="upload-document" element={<UploadDocumentPage />} />
+          <Route path="track-dfs/all" element={<TrackMyAllDocument />} />   { /*Track all document uploaded by the staff */}
+{/* <Route path="push-document/:cid" element={<PushDocumentAdminPage />} />
+          <Route path="push-document" element={<PushDocumentAdminPage />} />
+          <Route path="salary" element={<SalaryPage />} />
+          <Route path="setting" element={<Setting />} />
+          <Route path="under-dev" element={<UnderDevPage />} /> */}
+{/* </Route> */ }
+
+{/* <Route path="/client" element={<ClientLayout />}>
+          <Route index element={<HomePageClient />} />
+          <Route path="home" element={<HomePageClient />} />
+          <Route path="upload-bill" element={<UploadBillPage />} />
+          <Route path="my-bill" element={<MyBillPage />} />
+          <Route path="bill/:id" element={<SingleBillDetailsClient />} />
+          <Route path="payment-request" element={<PaymentRequestPage />} />
+          <Route path="my-payment-request" element={<MyPaymentRequestPage />} />
+          <Route path="support" element={<SupportPage />} />
+          <Route path="document/category" element={<DocumentCategory />} />
+          <Route path="document/category/:docType" element={< ViewDocumentPage/>} />
+          <Route path="salary" element={<SalaryPage />} />
+          <Route path="setting" element={<Setting />} />
+          <Route path="upload-document" element={<UploadDocumentPage />} />
+          <Route path="track-dfs/all" element={<TrackMyAllDocument />} />
+          <Route path="under-dev" element={<UnderDevPage />} />
+
+        </Route> */}

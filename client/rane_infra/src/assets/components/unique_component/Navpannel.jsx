@@ -1,4 +1,4 @@
-import React ,{useEffect}from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
@@ -21,34 +21,34 @@ function Navpannel() {
   const { checkAuth, isAuthenticated, user, role } = useAuthStore();
 
   useEffect(() => {
-  checkuserLoggedin(); // This should hit your /check-auth backend API
-}, []);
+    checkuserLoggedin(); // This should hit your /check-auth backend API
+  }, []);
 
-const checkuserLoggedin = async () => {
-  try {
-    const res = await fetch(`${backend_url}/check-auth`, {
-      credentials: "include",
-    });
+  const checkuserLoggedin = async () => {
+    try {
+      const res = await fetch(`${backend_url}/check-auth`, {
+        credentials: "include",
+      });
 
-    if (!res.ok) throw new Error("Authentication check failed");
+      if (!res.ok) throw new Error("Authentication check failed");
 
-    const data = await res.json();
+      const data = await res.json();
 
-    useAuthStore.setState({
-      user: data.user,
-      isAuthenticated: true,
-      role: data.user.role,
-    });
+      useAuthStore.setState({
+        user: data.user,
+        isAuthenticated: true,
+        role: data.user.role,
+      });
 
-  } catch (err) {
-    // Not logged in
-    useAuthStore.setState({
-      user: null,
-      isAuthenticated: false,
-      role: null,
-    });
-  }
-};
+    } catch (err) {
+      // Not logged in
+      useAuthStore.setState({
+        user: null,
+        isAuthenticated: false,
+        role: null,
+      });
+    }
+  };
 
 
   // Logout handler
@@ -79,18 +79,20 @@ const checkuserLoggedin = async () => {
       alert("An error occurred while logging out. Please try again.");
     }
   };
-const getDashboardPath = (role) => {
-  if (role === 'admin') {
-    return "/admin-dashboard";
-  } else if (role === 'client') {
-    return "/user-dashboard";
-  } else if (role === 'staff') {
-    return "/staff-dashboard";
-    // return "/admin-dashboard";
-  } else {
-    return "/";
-  }
-};
+  const getDashboardPath = (role) => {
+    if (role === 'admin') {
+      return "/admin";
+    }
+    else if (role === 'client') {
+      return "/client";
+    }
+    else if (role === 'staff') {
+      return "/staff";
+    }
+    else {
+      return "/";
+    }
+  };
 
 
 
