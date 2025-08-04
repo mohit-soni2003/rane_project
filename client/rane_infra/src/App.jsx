@@ -34,6 +34,9 @@ import Setting from "./pages/client/Setting";
 import UploadDocumentPage from "./pages/client/UploadDocumentPage";
 import SingleBillDetailsClient from "./pages/client/SingleBillDetailsClient.jsx";
 import MyPaymentRequestPage from "./pages/client/MyPaymentRequestPage.jsx";
+import ViewDocumentPage from "./pages/client/ViewDocumentPage.jsx";
+import TrackMyAllDocument from "./pages/client/TrackMyAllDocument.jsx";
+import SalaryPage from "./pages/admin/SalaryPage.jsx";
 
 import AdminLayout from "./Layout/AdminLayout";
 import HomePageAdmin from "./pages/admin/HomePageAdmin.jsx";
@@ -48,6 +51,11 @@ import DfsRequest from "./pages/admin/DfsRequest.jsx";
 import SingleDfsRequestDetail from "./pages/admin/SingleDfsRequestDetail.jsx";
 import ClientSalaryAll from "./pages/admin/ClientSalaryAll.jsx";
 import SingleUSerSalaryDetailAdmin from "./pages/admin/SingleUSerSalaryDetailAdmin.jsx";
+import AllUser from "./pages/admin/AllUser.jsx";
+import AllDFSRequests from "./pages/admin/AllDFSRequests.jsx";
+
+import StaffLayout from "./Layout/StaffLayout.jsx";
+import HomePageStaff from "./pages/staff/HomePageStaff.jsx";
 
 
 import MaintainencePage from "./pages/MaintainencePage.jsx";
@@ -115,7 +123,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/test" element={<ClientLayout />} />
+        <Route path="/test" element={<StaffSidebar />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/admin-login" element={<AdminLogin />} />
@@ -134,8 +142,11 @@ function App() {
           <Route path="my-payment-request" element={<MyPaymentRequestPage />} />
           <Route path="support" element={<SupportPage />} />
           <Route path="document/category" element={<DocumentCategory />} />
+          <Route path="document/category/:docType" element={< ViewDocumentPage/>} />
+          <Route path="salary" element={<SalaryPage />} />
           <Route path="setting" element={<Setting />} />
           <Route path="upload-document" element={<UploadDocumentPage />} />
+          <Route path="track-dfs/all" element={<TrackMyAllDocument />} />
           <Route path="under-dev" element={<UnderDevPage />} />
 
         </Route>
@@ -155,6 +166,27 @@ function App() {
           <Route path="dfsrequest/:id" element={<SingleDfsRequestDetail />} />
           <Route path="salary/all-client-list" element={<ClientSalaryAll />} />
           <Route path="salary-detail/:clientid/:currmonth" element={<SingleUSerSalaryDetailAdmin />} />
+          <Route path="danger/all-user" element={<AllUser />} />
+          <Route path="danger/all-dfs" element={<AllDFSRequests />} />
+
+          <Route path="setting" element={<Setting />} />
+          <Route path="under-dev" element={<UnderDevPage />} />
+        </Route>
+
+        <Route path="/staff" element={<StaffLayout />}>
+          <Route index element={<HomePageAdmin />} />
+          <Route path="home" element={<HomePageStaff />} />
+          <Route path="bill" element={<AllBillPage />} />
+          <Route path="all-client" element={<ClientsListAdminPage />} />
+          <Route path="payment-request" element={<PaymentRequestListAdmin />} />
+          <Route path="request-payment" element={<PaymentRequestPage />} />
+          <Route path="my-payment-request" element={<MyPaymentRequestPage />} />
+          <Route path="dfsrequest" element={<DfsRequest />} />
+          <Route path="upload-document" element={<UploadDocumentPage />} />
+          <Route path="track-dfs/all" element={<TrackMyAllDocument />} />   { /*Track all document uploaded by the staff */}
+          <Route path="push-document/:cid" element={<PushDocumentAdminPage />} />
+          <Route path="push-document" element={<PushDocumentAdminPage />} />
+          <Route path="salary" element={<SalaryPage />} />
           <Route path="setting" element={<Setting />} />
           <Route path="under-dev" element={<UnderDevPage />} />
         </Route>

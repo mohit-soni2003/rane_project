@@ -10,6 +10,7 @@ import dummyUser from "../../assets/images/dummyUser.jpeg";
 import { updateUser } from '../../services/userServices';
 import { CLOUDINARY_URL_IMAGE } from '../../store/keyStore';
 import { CLOUD_NAME } from '../../store/keyStore';
+import MaintainencePage from '../MaintainencePage';
 
 import { UPLOAD_PRESET } from '../../store/keyStore'; // ← Replace with actual value from Cloudinary
 
@@ -223,6 +224,9 @@ export default function SettingPage() {
 
           {/* DOCUMENTS (Static) */}
           <div className="tab-pane fade" id="documentupload">
+            <MaintainencePage></MaintainencePage>
+          </div>
+          {/* <div className="tab-pane fade" id="documentupload">
             <div className="card p-4 mb-4 shadow-sm" style={{ border: 'none' }}>
               <h6 className="mb-3 fw-semibold text-primary">Document Upload</h6>
               <div className="row g-4">
@@ -250,10 +254,13 @@ export default function SettingPage() {
                 ))}
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* SECURITY (Static) */}
           <div className="tab-pane fade" id="security">
+           <MaintainencePage></MaintainencePage>
+          </div>
+          {/* <div className="tab-pane fade" id="security">
             <div className="card p-4 shadow-sm" style={{ border: 'none' }}>
               <h6 className="mb-3 fw-semibold text-warning"><FaKey className="me-2" /> Security</h6>
               {[
@@ -282,7 +289,7 @@ export default function SettingPage() {
                 Update Password
               </button>
             </div>
-          </div>
+          </div> */}
 
         </div>
       </div>

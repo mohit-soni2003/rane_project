@@ -19,22 +19,22 @@ const documentSchema = new mongoose.Schema({
   },
   documentCode: { type: String, required: true },//LOA No , POA No 
 
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // user for whom document uploaded
+  uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, //admin id who upload document
 
-  dateOfIssue: { type: Date, required: true },
+  dateOfIssue: { type: Date, required: true },  // enter manually by admin
   uploadDate: { type: Date, default: Date.now },
 
   documentLink: { type: String, required: true },
 
-  remark: { type: String },
+  remark: { type: String }, // enter by admin
 
   status: {
     type: String,
     enum: ['accepted', 'rejected', 'pending'],
     default: 'pending'
   },
-  statusUpdatedAt: {
+  statusUpdatedAt: {   // when status changes
     type: Date,
     default: null
   }

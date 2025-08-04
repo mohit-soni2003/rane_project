@@ -84,4 +84,25 @@ export const getFileById = async (id) => {
     console.error("❌ Error in getFileById service:", error);
     throw error;
   }
+}; 
+
+//  Get all files uploaded by the current user
+export const getMyUploadedFiles = async () => {
+  try {
+    const res = await fetch(`${backend_url}/dfs/my-files`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to fetch your uploaded files.");
+    }
+
+    return data.files; // array of uploaded FileForward documents
+  } catch (err) {
+    console.error("Error in getMyUploadedFiles:", err);
+    throw err;
+  }
 };

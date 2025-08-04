@@ -8,15 +8,24 @@ import { MdPayment } from 'react-icons/md';
 import dummyUser from "../../assets/images/dummyUser.jpeg";
 import { useAuthStore } from '../../store/authStore';
 import { useNavigate, Link } from 'react-router-dom';
+import LogoutModal from '../models/LogoutModal';
 
 
+
+ 
 
 const ClientSidebar = ({ isOpen, toggleSidebar }) => {
   const { user } = useAuthStore();
   const [openDropdown, setOpenDropdown] = useState(null);
   const navigate = useNavigate();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
   const toggleDropdown = (menu) => {
     setOpenDropdown(openDropdown === menu ? null : menu);
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
   };
 
   const submenuStyle = (isOpen) => ({
@@ -159,8 +168,16 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
               Upload Document
             </Link>
           </div>
-          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Track Doc</div>
-          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Closed File</div>
+          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />
+            <Link to="/client/track-dfs/all" style={{ textDecoration: 'none', color: 'inherit' }}>
+              Track Document
+            </Link>
+          </div>
+          {/* <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />
+            <Link to="/client/under-dev" style={{ textDecoration: 'none', color: 'inherit' }}>
+              Closed Files
+            </Link>
+          </div> */}
         </div>
       </div>
 
@@ -173,19 +190,12 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
       </div>
 
       {/* Salary */}
-      <div className="mb-2">
-        <div
-          onClick={() => toggleDropdown("salary")}
-          className="d-flex justify-content-between align-items-center sidebar-item"
-          style={sidebarItemStyle}
-        >
-          <span><FaMoneyBillWave className="me-2" /> Salary</span>
-          {openDropdown === "salary" ? <FaChevronUp /> : <FaChevronDown />}
-        </div>
-        <div style={submenuStyle(openDropdown === "salary")}>
-          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Overview</div>
-          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Receipt</div>
-        </div>
+
+      <div className="mb-2 d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
+        <FaMoneyBillWave className="me-2" />
+        <Link to="/client/salary" style={{ textDecoration: 'none', color: 'inherit' }}>
+          Salary
+        </Link>
       </div>
 
       {/* Settings */}
@@ -205,10 +215,13 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
       </div>
 
       {/* Logout */}
-      <div className="mt-auto d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
+      <div className="mt-auto d-flex align-items-center sidebar-item " onClick={handleLogoutClick}>
         <FaSignOutAlt className="me-2" />
         Logout
       </div>
+
+      <LogoutModal show={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
+
     </div>
   );
 };

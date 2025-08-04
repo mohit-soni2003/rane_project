@@ -4,21 +4,24 @@ import {
   FaFileAlt, FaFileInvoice, FaCartPlus, FaArrowDown, FaArrowUp, FaCalculator,
   FaTruck, FaMoneyBillWave, FaUniversity, FaEllipsisH
 } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const documents = [
-  { name: 'LOA', description: 'View all Letter of Authorization', icon: <FaFileAlt />, color: 'primary' },
-  { name: 'Sales Order', description: 'View all Sales Orders', icon: <FaFileInvoice />, color: 'success' },
-  { name: 'Purchase Order', description: 'View all Purchase Orders', icon: <FaCartPlus />, color: 'danger' },
-  { name: 'Pay-In', description: 'View all Pay-In documents', icon: <FaArrowDown />, color: 'info' },
-  { name: 'Pay-Out', description: 'View all Pay-Out documents', icon: <FaArrowUp />, color: 'warning' },
-  { name: 'Estimate', description: 'View all Estimates', icon: <FaCalculator />, color: 'success' },
-  { name: 'Delivery Challan', description: 'View all Delivery Challans', icon: <FaTruck />, color: 'warning' },
-  { name: 'Expense', description: 'View all Expenses', icon: <FaMoneyBillWave />, color: 'purple' },
-  { name: 'Bank Reference', description: 'View all Bank References', icon: <FaUniversity />, color: 'secondary' },
-  { name: 'Other', description: 'View all other documents', icon: <FaEllipsisH />, color: 'dark' },
+  { name: 'LOA', slug: 'LOA', description: 'View all Letter of Authorization', icon: <FaFileAlt />, color: 'primary' },
+  { name: 'Sales Order', slug: 'SalesOrder', description: 'View all Sales Orders', icon: <FaFileInvoice />, color: 'success' },
+  { name: 'Purchase Order', slug: 'PurchaseOrder', description: 'View all Purchase Orders', icon: <FaCartPlus />, color: 'danger' },
+  { name: 'Pay-In', slug: 'PayIn', description: 'View all Pay-In documents', icon: <FaArrowDown />, color: 'info' },
+  { name: 'Pay-Out', slug: 'PayOut', description: 'View all Pay-Out documents', icon: <FaArrowUp />, color: 'warning' },
+  { name: 'Estimate', slug: 'Estimate', description: 'View all Estimates', icon: <FaCalculator />, color: 'success' },
+  { name: 'Delivery Challan', slug: 'DeliveryChallan', description: 'View all Delivery Challans', icon: <FaTruck />, color: 'warning' },
+  { name: 'Expense', slug: 'Expense', description: 'View all Expenses', icon: <FaMoneyBillWave />, color: 'purple' },
+  { name: 'Bank Reference', slug: 'BankReference', description: 'View all Bank References', icon: <FaUniversity />, color: 'secondary' },
+  { name: 'Other', slug: 'Other', description: 'View all other documents', icon: <FaEllipsisH />, color: 'dark' },
 ];
 
+
 export default function DocumentCategory() {
+  const navigate = useNavigate();
   return (
     <>
       <ClientHeader />
@@ -29,9 +32,10 @@ export default function DocumentCategory() {
         <h4 className="mb-4 fw-bold">Document Categories</h4>
         <div className="row">
           {documents.map((doc, index) => (
-            <div className="col-md-4 mb-4" key={index}>
+            <div className="col-md-4 mb-4 " key={index}>
               <div
                 className="card shadow-sm h-100 border-0"
+                onClick={() => navigate(`/client/document/category/${doc.slug}`)}
                 role="button"
                 style={{
                   transition: 'transform 0.2s, box-shadow 0.2s',
