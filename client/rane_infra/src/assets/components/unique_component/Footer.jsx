@@ -66,16 +66,16 @@ const Footer = () => {
        {/* Developer Credit */}
       <div className="bg-black py-1">
         <small className="">
-          Designed & Maintained by @Mohit Soni{" "}
+          Designed & Maintained by Mohit Soni&nbsp; &nbsp;&nbsp;
           <a
             href="https://mohitsoni.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-warning text-decoration-none fw-semibold"
           >
-            Contact Developer
+            Contact Developer {" "}
           </a>
-         {"  "} <FaPhoneAlt></FaPhoneAlt> Phone {"   "} +91 9589571577
+         &nbsp; &nbsp;&nbsp;|| &nbsp; &nbsp;&nbsp; <FaPhoneAlt></FaPhoneAlt>  Phone {"   "} +91 9589571577
         </small>
       </div>
     </footer>

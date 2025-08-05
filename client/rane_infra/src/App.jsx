@@ -123,7 +123,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/test" element={<LandingPage />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signin />} />
@@ -202,14 +202,14 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
+        {/* <Route
           path="/upload-bill"
           element={
             <ProtectedRoute>
               <BillbookForm />
             </ProtectedRoute>
           }
-        />
+        /> */}
         <Route
           path="/admin-dashboard"
           element={

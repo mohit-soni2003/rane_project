@@ -1,11 +1,21 @@
 import React, { useState } from "react";
-import { useAuthStore } from '../../../store/authStore';
-import { Navigate, useNavigate, Link } from 'react-router-dom';
-import { Loader } from 'lucide-react';
-
+import { useAuthStore } from "../../../store/authStore";
+import { useNavigate, Link } from "react-router-dom";
+import { Loader } from "lucide-react";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  Alert
+} from "react-bootstrap";
+import { FiMail, FiLock, FiTool } from "react-icons/fi";
+import "animate.css";
 
 const Signin = () => {
-  const naviigate = useNavigate()
+  const navigate = useNavigate();
   const { login, isLoading, error } = useAuthStore();
 
   const [formData, setFormData] = useState({
@@ -23,147 +33,130 @@ const Signin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // console.log(formData)
-   const istrue= await login(formData.email, formData.password);
-
+    const istrue = await login(formData.email, formData.password);
     if (istrue) {
-      naviigate("/user-dashboard")
+      navigate("/client", { replace: true });
     }
-    // Add sign-in logic here 
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h1 style={styles.heading}>Account sign in</h1>
-        <p style={styles.subheading}>
-          Sign in to your account to access your profile, history, and any
-          private pages you've been granted access to.
-        </p>
-        <form onSubmit={handleSubmit} style={styles.form}>
-          {/* Email Input */}
-          <div style={styles.inputGroup}>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Email"
-              required
-              style={styles.input}
-            />
-          </div>
+    <div style={styles.wrapper}>
+      <Container fluid className="min-vh-100 d-flex align-items-center justify-content-center px-0 px-md-3">
+        <Row className="w-100 " style={{ maxWidth: "960px" }}>
+          <Col md={6} className="d-none d-md-flex align-items-center justify-content-center">
+            <div className="text-center animate__animated animate__fadeInLeft">
+              <img src="/images/illustration-signin.png" alt="Illustration" style={{ maxWidth: "100%", height: "auto" }} />
+              <h5 className="mt-4" style={{ color: "var(--client-heading-color)" }}>
+                Smarter Infrastructure. Simplified.
+              </h5>
+              <p className="text-muted px-4">
+                RS-WMS helps teams manage critical infrastructure tasks with ease and security.
+              </p>
+            </div>
+          </Col>
 
-          {/* Password Input */}
-          <div style={styles.inputGroup}>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Password"
-              required
-              style={styles.input}
-            />
-          </div>
+          <Col md={6}>
+            <Card className="p-4 shadow-lg animate__animated animate__fadeInUp" style={styles.card}>
+              <div className="text-center mb-4">
+                <FiTool size={28} className="text-primary mb-2" />
+                <h4 className="fw-bold" style={styles.heading}>Welcome Back to <span style={{ color: 'var(--client-btn-bg)' }}>RS-WMS</span></h4>
+                <p className="text-muted" style={styles.subheading}>
+                  Please sign in to continue managing your infrastructure tasks.
+                </p>
+              </div>
 
-          {error && <p className='signup-error'>{error} </p>}
+              <Form onSubmit={handleSubmit}>
+                <Form.Group controlId="formEmail" className="mb-3">
+                  <Form.Label>Email</Form.Label>
+                  <div className="d-flex align-items-center border rounded px-2">
+                    <FiMail className="me-2 text-muted" />
+                    <Form.Control
+                      type="email"
+                      name="email"
+                      placeholder="Enter your email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      className="border-0 shadow-none"
+                      required
+                    />
+                  </div>
+                </Form.Group>
 
+                <Form.Group controlId="formPassword" className="mb-3">
+                  <Form.Label>Password</Form.Label>
+                  <div className="d-flex align-items-center border rounded px-2">
+                    <FiLock className="me-2 text-muted" />
+                    <Form.Control
+                      type="password"
+                      name="password"
+                      placeholder="Enter your password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      className="border-0 shadow-none"
+                      required
+                    />
+                  </div>
+                </Form.Group>
 
-          {/* Submit Button */}
-          <button type="submit" style={styles.button}>
-            {isLoading ? <Loader className='' size={24} /> : "Sign In"}
+                {error && <Alert variant="danger" className="py-1">{error}</Alert>}
 
-          </button>
+                <Button
+                  type="submit"
+                  className="w-100 mt-2"
+                  style={styles.button}
+                  disabled={isLoading}
+                >
+                  {isLoading ? <Loader size={20} className="spinner-border-sm" /> : "Sign In"}
+                </Button>
 
-          {/* Reset Password Link */}
-          <div style={styles.links}>
-            <a href="/reset-password" style={styles.link}>
-              Reset password
-            </a>
-          </div>
+                <div className="text-end mt-2">
+                  <Link to="/reset-password" style={styles.link}>
+                    Forgot Password?
+                  </Link>
+                </div>
 
-          {/* Create Account Link */}
-          <div style={styles.createAccount}>
-            <p>
-              Not a member?{" "}
-              <a href="/create-account" style={styles.link}>
-                Create account.
-              </a>
-            </p>
-          </div>
-        </form>
-      </div>
+                <div className="text-center mt-3 text-muted">
+                  Don’t have an account? {" "}
+                  <Link to="/create-account" style={styles.link}>Create one</Link>
+                </div>
+
+                <div className="text-center mt-4 text-muted small">
+                  🔧 Trusted by 100+ infrastructure teams worldwide
+                </div>
+              </Form>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
     </div>
   );
 };
 
 const styles = {
-  container: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100vh",
-    backgroundColor: "#f9f9f9",
+  wrapper: {
+    backgroundColor: "var(--client-component-bg-color)",
+    minHeight: "100vh",
   },
   card: {
-    maxWidth: "400px",
-    padding: "30px",
-    backgroundColor: "#fff",
-    borderRadius: "10px",
-    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-    textAlign: "center",
+    border: "1px solid var(--client-border-color)",
+    borderRadius: "12px",
   },
   heading: {
-    fontSize: "28px",
-    fontWeight: "bold",
-    color: "#7b524d",
-    marginBottom: "10px",
+    color: "var(--client-heading-color)",
   },
   subheading: {
     fontSize: "14px",
-    color: "#666",
-    marginBottom: "20px",
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-  },
-  inputGroup: {
-    marginBottom: "15px",
-  },
-  input: {
-    width: "100%",
-    padding: "12px",
-    border: "1px solid #ddd",
-    borderRadius: "5px",
-    fontSize: "16px",
-    boxSizing: "border-box",
-    outline: "none",
+    color: "var(--client-muted-color)",
   },
   button: {
-    padding: "12px",
-    fontSize: "16px",
-    fontWeight: "bold",
-    color: "#fff",
-    backgroundColor: "#000",
+    backgroundColor: "var(--client-btn-bg)",
+    color: "var(--client-btn-text)",
     border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-    marginBottom: "10px",
-  },
-  links: {
-    marginBottom: "15px",
   },
   link: {
-    color: "#7b524d",
-    fontSize: "14px",
+    color: "var(--client-btn-bg)",
     textDecoration: "none",
-  },
-  createAccount: {
-    marginTop: "10px",
-    fontSize: "14px",
-    color: "#666",
+    fontWeight: "500",
   },
 };
 

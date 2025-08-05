@@ -100,12 +100,15 @@ function Navpannel() {
               <Link to="/maintain" className="nav-link px-3 text-dark fw-bold">Tenders</Link>
             </Nav.Item>
             <Nav.Item>
-              <Link to="/upload-bill" className="nav-link px-3 text-dark fw-bold">Bill Uploads</Link>
+              <Link to="/client/upload-bill" className="nav-link px-3 text-dark fw-bold">Bill Uploads</Link>
             </Nav.Item>
             <Nav.Item>
               <HashLink to="#documents" smooth className="nav-link px-3 text-dark fw-bold">Documents</HashLink>
             </Nav.Item>
-          </Nav>
+            <Nav.Item>
+              <HashLink to="#contactus" smooth className="nav-link px-3 text-dark fw-bold">Contact-us</HashLink>
+            </Nav.Item>
+          </Nav> 
 
           {/* Right Side: Auth / Profile */}
           <Nav className="d-flex align-items-center gap-3 gap-md-4 me-md-5 ">

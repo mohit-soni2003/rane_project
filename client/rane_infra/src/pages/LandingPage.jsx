@@ -131,7 +131,7 @@ export default function LandingPage() {
                     </Row>
                 </Container>
             </section>
-
+ 
             <section className="py-5" style={{ backgroundColor: "#f8f9fa" }}>
                 <Container>
                     <Row className="align-items-center gy-4 flex-md-row-reverse">
@@ -231,7 +231,7 @@ export default function LandingPage() {
                 </div>
             </section>
             {/* ----------CONTACT - US ----------- */}
-            <section className="py-5 bg-white" id="contact">
+            <section className="contactus py-5 bg-white " id="contactus">
                 <Container>
                     <Row className="align-items-center">
                         {/* Text Content */}
@@ -291,7 +291,7 @@ export default function LandingPage() {
             </section>
 
             {/* ------------Documents------------------ */}
-            <section className="py-5" style={{ backgroundColor: "#f3f4f6" }} id="documents">
+            <section className="py-5 documents" style={{ backgroundColor: "#f3f4f6" }} id="documents">
                 <div className="container">
                     <h2 className="text-center fw-bold mb-1" style={{ color: "#1f2937" }}>Important Documents</h2>
 

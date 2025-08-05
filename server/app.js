@@ -27,7 +27,7 @@ const PORT = 3000;
 
 // Define a sample route
 app.get('/', (req, res) => {
-  res.send('Hello, World! Express server is running. on version 2.0');
+  res.send('Hello, World! Express server is running. on version 3.0');
 });
 
 app.get("/test-cookie", (req, res) => {
