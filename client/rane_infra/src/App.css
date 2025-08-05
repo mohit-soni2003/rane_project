@@ -3,7 +3,7 @@
   color: #3b88d5 !important;
 }
 
-:root { 
+:root {
   --client-dashboard-bg-color: #ffffff;
   --client-component-bg-color: #fff6f3;
   --user-sidebar-color: #263544;
@@ -14,6 +14,12 @@
   --client-btn-bg: #8b5e3c;
   --client-btn-hover: #74492f;
   --client-btn-text: #ffffff;
+
+   /* Color code for landing page  */
+  --primary-orange: #f97316;  
+  --primary-orange-hover: #ea580c;
+
+
 }
 
 

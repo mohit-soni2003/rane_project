@@ -60,6 +60,7 @@ import HomePageStaff from "./pages/staff/HomePageStaff.jsx";
 
 import MaintainencePage from "./pages/MaintainencePage.jsx";
 import UnderDevPage from "./pages/UnderDevPage.jsx";
+import LandingPage from "./pages/LandingPage.jsx";
 
 
 function App() {
@@ -123,7 +124,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/test" element={<StaffSidebar />} />
+        <Route path="/test" element={<LandingPage />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/admin-login" element={<AdminLogin />} />
