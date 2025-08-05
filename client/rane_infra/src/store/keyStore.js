@@ -10,7 +10,7 @@ const UPLOAD_PRESET= "rane_infra"
 const CLOUD_NAME= "mohitcloud2003"
 
 
-const backend_url = "https://rane-project-server-git-version3o-mohit-sonis-projects-6fb4d728.vercel.app/"
+const backend_url = "https://rane-project-server-git-version3o-mohit-sonis-projects-6fb4d728.vercel.app"
 
 const CLOUDINARY_URL_IMAGE = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`
 const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`
