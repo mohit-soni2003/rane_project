@@ -1,5 +1,4 @@
-// const backend_url = "https://rane-project-server.vercel.app"
-// // const backend_url = "https://rane-project-server-fzbd1lfq8-mohit-sonis-projects-6fb4d728.vercel.app/" //version2.0
+const backend_url = "https://rane-project-server.vercel.app"
 
 // const UPLOAD_PRESET= "rane_infra1"
 // const CLOUD_NAME= "drl3qqrq3"//rane
@@ -10,8 +9,9 @@ const UPLOAD_PRESET= "rane_infra"
 const CLOUD_NAME= "mohitcloud2003"
 
 
-const backend_url = "https://rane-project-server-git-version3o-mohit-sonis-projects-6fb4d728.vercel.app"
-
+// const backend_url = "https://rane-project-server-git-version3o-mohit-sonis-projects-6fb4d728.vercel.app"
+// const backend_url = "https://rane-project-server-git-version3o-mohit-sonis-projects-6fb4d728.vercel.app/" //version 3.o
+ 
 const CLOUDINARY_URL_IMAGE = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`
 const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`
 
