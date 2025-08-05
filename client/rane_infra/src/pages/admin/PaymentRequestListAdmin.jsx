@@ -10,7 +10,7 @@ import {
 } from 'react-icons/fa';
 import AdminHeader from '../../component/header/AdminHeader';
 import { getAllPayments } from '../../services/paymentService';
-import dummyuser from "../../assets/images/dummyuser.jpeg"
+import dummyuser from "../../assets/images/dummyUser.jpeg"
 import { useNavigate } from 'react-router-dom';
 import PayPrmodel from '../../component/models/PayPrModel';
 
