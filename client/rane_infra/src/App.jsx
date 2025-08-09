@@ -134,7 +134,7 @@ function App() {
         <Route path="/reset-password-page/:id" element={<ResetPass />} />
 
 
-
+        {/* // ---------Client Route  */}
         <Route
           path="/client"
           element={
@@ -162,7 +162,7 @@ function App() {
           <Route path="under-dev" element={<UnderDevPage />} />
         </Route>
 
-
+        {/* ---------Admin Route ---------- */}
         <Route
           path="/admin"
           element={
@@ -192,6 +192,35 @@ function App() {
           <Route path="setting" element={<Setting />} />
           <Route path="under-dev" element={<UnderDevPage />} />
         </Route>
+
+        {/* ---------Staff route------------ */}
+        <Route
+          path="/staff"
+          element={
+            <ProtectedRoute>
+              <StaffRoute>
+                <StaffLayout />
+              </StaffRoute>
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<HomePageAdmin />} />
+          <Route path="home" element={<HomePageStaff />} />
+          <Route path="bill" element={<AllBillPage />} />
+          <Route path="all-client" element={<ClientsListAdminPage />} />
+          <Route path="payment-request" element={<PaymentRequestListAdmin />} />
+          <Route path="request-payment" element={<PaymentRequestPage />} />
+          <Route path="my-payment-request" element={<MyPaymentRequestPage />} />
+          <Route path="dfsrequest" element={<DfsRequest />} />
+          <Route path="upload-document" element={<UploadDocumentPage />} />
+          <Route path="track-dfs/all" element={<TrackMyAllDocument />} /> 
+          <Route path="push-document/:cid" element={<PushDocumentAdminPage />} />
+          <Route path="push-document" element={<PushDocumentAdminPage />} />
+          <Route path="salary" element={<SalaryPage />} />
+          <Route path="setting" element={<Setting />} />
+          <Route path="under-dev" element={<UnderDevPage />} />
+        </Route>
+
         <Route
           path="/user-dashboard"
           element={
@@ -202,14 +231,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* <Route
-          path="/upload-bill"
-          element={
-            <ProtectedRoute>
-              <BillbookForm />
-            </ProtectedRoute>
-          }
-        /> */}
+
         <Route
           path="/admin-dashboard"
           element={

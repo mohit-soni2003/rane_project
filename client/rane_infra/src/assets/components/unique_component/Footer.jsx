@@ -66,7 +66,7 @@ const Footer = () => {
        {/* Developer Credit */}
       <div className="bg-black py-1">
         <small className="">
-          Designed & Maintained by Mohit Soni&nbsp; &nbsp;&nbsp;
+          Designed & Maintained by Mohit Soni&nbsp; &nbsp;&nbsp;<br />
           <a
             href="https://mohitsoni.vercel.app/"
             target="_blank"

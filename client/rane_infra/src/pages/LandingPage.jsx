@@ -8,11 +8,11 @@ import { GiBridge } from "react-icons/gi";
 import Footer from '../assets/components/unique_component/Footer';
 
 const departments = [
-  { name: "Rane & Rane's Sons", logo: "/logos/home.jpg" },
-  { name: "Rane's Infrastructure", logo: "/logos/infrawebp.jpg" },
-  { name: "Rane's Logistic", logo: "/logos/logistics.jpg" },
-  { name: "Malwa Agency", logo: "/logos/malwa.jpg" },
-  { name: "Rane's Pharmeceuticals", logo: "/logos/pharma.jpg" },
+    { name: "Rane & Rane's Sons", logo: "/logos/home.jpg" },
+    { name: "Rane's Infrastructure", logo: "/logos/infrawebp.jpg" },
+    { name: "Rane's Logistic", logo: "/logos/logistics.jpg" },
+    { name: "Malwa Agency", logo: "/logos/malwa.jpg" },
+    { name: "Rane's Pharmeceuticals", logo: "/logos/pharma.jpg" },
 ];
 
 
@@ -131,7 +131,7 @@ export default function LandingPage() {
                     </Row>
                 </Container>
             </section>
- 
+
             <section className="py-5" style={{ backgroundColor: "#f8f9fa" }}>
                 <Container>
                     <Row className="align-items-center gy-4 flex-md-row-reverse">
@@ -291,9 +291,18 @@ export default function LandingPage() {
             </section>
 
             {/* ------------Documents------------------ */}
-            <section className="py-5 documents" style={{ backgroundColor: "#f3f4f6" }} id="documents">
+            <section
+                className="py-5 documents"
+                style={{ backgroundColor: "#f3f4f6" }}
+                id="documents"
+            >
                 <div className="container">
-                    <h2 className="text-center fw-bold mb-1" style={{ color: "#1f2937" }}>Important Documents</h2>
+                    <h2
+                        className="text-center fw-bold mb-1"
+                        style={{ color: "#1f2937" }}
+                    >
+                        Important Documents
+                    </h2>
 
                     <div className="row mt-4">
                         {documents.map((doc, index) => (
@@ -303,30 +312,39 @@ export default function LandingPage() {
                                         <FaFilePdf size={32} color="red" />
                                         <span className="fw-semibold text-dark">{doc.name}</span>
                                     </div>
-                                    <a
-                                        href={doc.file}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="btn text-white fw-medium mt-3"
-                                        style={{
-                                            backgroundColor: "var(--primary-orange)",
-                                            borderRadius: "6px",
-                                            fontSize: "0.9rem",
-                                            padding: "8px 14px",
-                                            width: "fit-content"
-                                        }}
-                                        onMouseEnter={(e) => (e.target.style.backgroundColor = "var(--primary-orange-hover)")}
-                                        onMouseLeave={(e) => (e.target.style.backgroundColor = "var(--primary-orange)")}
-                                    >
-                                        Download PDF
-                                    </a>
+
+                                    {/* Center button on mobile, left-align on md+ */}
+                                    <div className="text-center text-md-start mt-3">
+                                        <a
+                                            href={doc.file}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="btn text-white fw-medium"
+                                            style={{
+                                                backgroundColor: "var(--primary-orange)",
+                                                borderRadius: "6px",
+                                                fontSize: "0.9rem",
+                                                padding: "8px 14px",
+                                                width: "fit-content",
+                                            }}
+                                            onMouseEnter={(e) =>
+                                            (e.target.style.backgroundColor =
+                                                "var(--primary-orange-hover)")
+                                            }
+                                            onMouseLeave={(e) =>
+                                                (e.target.style.backgroundColor = "var(--primary-orange)")
+                                            }
+                                        >
+                                            Download PDF
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
-                        
+
             <Footer></Footer>
 
         </>

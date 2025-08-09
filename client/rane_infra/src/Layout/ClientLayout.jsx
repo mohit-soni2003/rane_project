@@ -41,7 +41,7 @@ const ClientLayout = () => {
 
         {/* Topbar on Small Screens */}
         <div
-          className="d-md-none px-3 py-2 border-bottom d-flex justify-content-between align-items-center"
+          className="d-md-none px-3 py-2  d-flex justify-content-between align-items-center"
           style={{
             backgroundColor: "var(--client-dashboard-bg-color)",
             color: "var(--client-text-color)",
@@ -86,7 +86,7 @@ const ClientLayout = () => {
 
 
         {/* Page Content */}
-        <div className="p-3" style={{ marginLeft: windowWidth >= 768 ? '260px' : '0px' }}>
+        <div className="p-0 p-md-3   " style={{ marginLeft: windowWidth >= 768 ? '260px' : '0px' }}>
           <Outlet />
         </div>
       </div>

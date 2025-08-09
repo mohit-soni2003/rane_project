@@ -26,7 +26,7 @@ export default function DocumentCategory() {
     <>
       <ClientHeader />
       <div
-        className="container py-4 my-3"
+        className="container-fluid w-100  py-4 my-3"
         style={{ backgroundColor: 'var(--client-component-bg-color)' }}
       >
         <h4 className="mb-4 fw-bold">Document Categories</h4>

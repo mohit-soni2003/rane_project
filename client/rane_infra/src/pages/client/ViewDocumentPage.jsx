@@ -62,7 +62,7 @@ export default function ViewDocumentPage() {
     <>
       <ClientHeader />
       <Container fluid className="py-4 px-0">
-        <Card className="p-4 shadow-sm" style={{ backgroundColor: "var(--client-component-bg-color)" }}>
+        <Card className="p-4 shadow-sm border-0" style={{ backgroundColor: "var(--client-component-bg-color)" }}>
           <Row className="align-items-center mb-3">
             <Col md={6} className="text-muted">
               {loading ? 'Loading documents...' : `Total ${documents.length} documents found`}

@@ -82,26 +82,33 @@ export default function MyPaymentRequestPage() {
   return (
     <>
       <ClientHeader />
-      <Container fluid className="py-4 px-0">
-        <Card className="p-4 shadow border-0" style={{ backgroundColor: "var(--client-component-bg-color)" }}>
-          <Row className="align-items-center mb-3">
-            <Col md={6} className="text-muted">
+      <Container fluid className="py-0 px-0">
+        <Card
+          className="p-3 shadow border-0"
+          style={{ backgroundColor: 'var(--client-component-bg-color)' }}
+        >
+          {/* Filters */}
+          <Row className="align-items-center mb-3 gy-2">
+            <Col xs={12} md={6} className="text-muted mobile-text-sm">
               Total {filteredPayments.length} payments found
             </Col>
-            <Col md={6}>
-              <div className="d-flex justify-content-end gap-2 flex-wrap">
-                <InputGroup style={{ maxWidth: '220px' }}>
-                  <InputGroup.Text><FaSearch /></InputGroup.Text>
+            <Col xs={12} md={6}>
+              <div className="d-flex flex-wrap gap-2 justify-content-md-end">
+                <InputGroup style={{ flex: '1 1 auto', maxWidth: '250px' }} className="mobile-input-sm">
+                  <InputGroup.Text className="mobile-input-sm">
+                    <FaSearch />
+                  </InputGroup.Text>
                   <FormControl
                     placeholder="Search payments..."
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
+                    className="mobile-input-sm"
                   />
                 </InputGroup>
 
                 <FormControl
                   as="select"
-                  className="w-auto"
+                  className="w-auto mobile-input-sm"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -115,77 +122,92 @@ export default function MyPaymentRequestPage() {
 
                 <FormControl
                   as="select"
-                  className="w-auto"
+                  className="w-auto mobile-input-sm"
                   value={sortOrder}
                   onChange={(e) => setSortOrder(e.target.value)}
                 >
-                  <option value="asc">Sort: ▲ Ascending</option>
-                  <option value="desc">Sort: ▼ Descending</option>
+                  <option value="asc">▲ Ascending</option>
+                  <option value="desc">▼ Descending</option>
                 </FormControl>
 
-                <Button variant="primary">Apply</Button>
+                <Button variant="primary" size="sm" className="mobile-btn-sm">
+                  Apply
+                </Button>
               </div>
             </Col>
           </Row>
 
+          {/* Table */}
           {loading ? (
             <div className="text-center my-5">
               <Spinner animation="border" variant="primary" />
             </div>
           ) : (
-            <Table responsive bordered hover className="mb-3 align-middle">
-              <thead className="table-light">
-                <tr>
-                  <th>S.No.</th>
-                  <th>Tender</th>
-                  <th>Expense No</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Submitted On</th>
-                  <th>View</th>
-                  <th>Remark</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredPayments.map((payment, idx) => (
-                  <tr key={payment._id || idx}>
-                    <td>{idx + 1}</td>
-                    <td>{payment.tender}</td>
-                    <td>{payment.expenseNo}</td>
-                    <td>₹{payment.amount}</td>
-                    <td>{getStatusBadge(payment.status)}</td>
-                    <td>{new Date(payment.submittedAt).toLocaleDateString()}</td>
-                    <td className="text-center">
-                      {payment.image ? (
-                        <a
-                          href={payment.image}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-secondary text-decoration-none"
-                        >
-                          <FaFileInvoice size={20} />
-                        </a>
-                      ) : (
-                        "-"
-                      )}
-                    </td>
-                    <td>{payment.remark||"- - - - - "}</td>
+            <div style={{ overflowX: 'auto' }}>
+              <Table
+                bordered
+                hover
+                className="mb-3 align-middle"
+                style={{ minWidth: '750px' }}
+              >
+                <thead className="table-light sticky-top">
+                  <tr>
+                    <th>S.No.</th>
+                    <th>Tender</th>
+                    <th>Expense No</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Submitted On</th>
+                    <th>View</th>
+                    <th>Remark</th>
                   </tr>
-                ))}
-              </tbody>
-            </Table>
+                </thead>
+                <tbody>
+                  {filteredPayments.map((payment, idx) => (
+                    <tr key={payment._id || idx}>
+                      <td>{idx + 1}</td>
+                      <td className="text-truncate" style={{ maxWidth: '150px' }}>
+                        {payment.tender}
+                      </td>
+                      <td>{payment.expenseNo}</td>
+                      <td>₹{payment.amount}</td>
+                      <td>{getStatusBadge(payment.status)}</td>
+                      <td>{new Date(payment.submittedAt).toLocaleDateString()}</td>
+                      <td className="text-center">
+                        {payment.image ? (
+                          <a
+                            href={payment.image}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-secondary text-decoration-none"
+                          >
+                            <FaFileInvoice size={18} />
+                          </a>
+                        ) : (
+                          '-'
+                        )}
+                      </td>
+                      <td style={{ whiteSpace: 'normal' }}>
+                        {payment.remark || '- - - - - '}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </div>
           )}
 
+          {/* Footer */}
           {!loading && (
-            <div className="d-flex justify-content-between">
-              <div className="text-muted">
+            <div className="d-flex flex-wrap flex-md-nowrap justify-content-between align-items-center gap-2 mobile-text-sm">
+              <div className="text-muted small">
                 Showing 1 to {filteredPayments.length} of {payments.length} entries
               </div>
-              <div>
-                <Button variant="outline-primary" className="me-2">
+              <div className="d-flex gap-2 flex-nowrap">
+                <Button variant="outline-primary" size="sm" className="text-truncate mobile-btn-sm">
                   <FaPlus className="me-1" /> New Payment Request
                 </Button>
-                <Button variant="outline-dark">
+                <Button variant="outline-dark" size="sm" className="text-truncate mobile-btn-sm">
                   <FaFileExport className="me-1" /> Export Payments
                 </Button>
               </div>

@@ -132,7 +132,7 @@ export default function AllUser() {
                   filteredUsers.map((user, index) => (
                     <tr key={user._id}>
                       <td>{index + 1}</td>
-                      <td>{displayValue(user.name)}</td>
+                      <td>{`${user.name} (${user.role})`}</td>
                       <td>{displayValue(user.email)}</td>
                       <td>{displayValue(user.phoneNo)}</td>
                       <td>{displayValue(user.firmName)}</td>

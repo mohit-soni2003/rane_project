@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Table, Form, InputGroup, Image, Dropdown, Spinner , Button } from 'react-bootstrap';
+import { Container, Table, Form, InputGroup, Image, Dropdown, Spinner, Button } from 'react-bootstrap';
 import { BsThreeDotsVertical, BsSearch } from 'react-icons/bs';
 import AdminHeader from '../../component/header/AdminHeader';
 import { getAllClients } from '../../services/userServices'; // Adjust path as needed
@@ -79,18 +79,18 @@ export default function ClientsListAdminPage() {
                             height={40}
                           />
                         </td>
-                        <td>{client.name}</td>
+                        <td>{client.name} {" "}({client.role})</td>
                         <td>{client.email}</td>
-                        <td>{client.phone || '-'}</td>
+                        <td>{client.phoneNo || '-'}</td>
                         <td>
-                          
-                            {client.cid || `CID-${index + 1}`}
+
+                          {client.cid || `CID-${index + 1}`}
                         </td>
                         <td>
-                          <Button type="primary" onClick={()=>navigate(`/admin/client-detail/${client._id}`)}>More</Button>
+                          <Button type="primary" onClick={() => navigate(`/admin/client-detail/${client._id}`)}>More</Button>
                         </td>
                         <td>
-                          <Button variant="warning" onClick={()=>navigate(`/admin/push-document/${encodeURIComponent(client.cid)}`)}>Push Doc</Button>
+                          <Button variant="warning" onClick={() => navigate(`/admin/push-document/${encodeURIComponent(client.cid)}`)}>Push Doc</Button>
                         </td>
                       </tr>
                     ))

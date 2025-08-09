@@ -80,3 +80,28 @@
   --admin-scrollbar-thumb: #a6b1c0;
   --admin-scrollbar-track: #f0f3f7;
 }
+
+
+/* for small button on mobile  */
+@media (max-width: 576px) {
+  .mobile-btn-sm {
+    font-size: 0.75rem; /* smaller font */
+    padding: 0.25rem 0.4rem; /* tighter padding */
+  }
+}
+
+
+@media (max-width: 576px) {
+  .mobile-btn-sm {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+  .mobile-input-sm {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+  .mobile-text-sm {
+    font-size: 0.8rem !important;
+  }
+}
+
