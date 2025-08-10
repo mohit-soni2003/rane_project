@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Container, Row, Col, Table, Button, Form,
-  InputGroup, Dropdown, Pagination
+  InputGroup, Pagination
 } from 'react-bootstrap';
 import {
   FaSearch, FaFilter, FaEllipsisV, FaEye,
@@ -14,7 +14,6 @@ import dummyuser from "../../assets/images/dummyUser.jpeg"
 import { useNavigate } from 'react-router-dom';
 import PayPrmodel from '../../component/models/PayPrModel';
 
-
 const statusMap = {
   Pending: { color: '#f4b400', textColor: '#000' },
   Paid: { color: '#34a853', textColor: '#fff' },
@@ -25,11 +24,11 @@ const statusMap = {
 
 export default function PaymentRequestListAdmin() {
   const [payments, setPayments] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortAsc, setSortAsc] = useState(true);
   const navigate = useNavigate();
-
   const [showPayModal, setShowPayModal] = useState(false);
   const [selectedPaymentId, setSelectedPaymentId] = useState(null);
-
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -40,9 +39,28 @@ export default function PaymentRequestListAdmin() {
         console.error('Failed to fetch payments:', err);
       }
     };
-
     fetchPayments();
   }, []);
+
+  // Filter payments based on search term
+  const filteredPayments = payments.filter((p) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      (p.user?.name || "").toLowerCase().includes(term) ||
+      (p.tender || "").toLowerCase().includes(term) ||
+      (p.amount?.toString() || "").toLowerCase().includes(term) ||
+      (p.expenseNo || "").toLowerCase().includes(term) ||
+      (p.status || "").toLowerCase().includes(term) ||
+      (p.submittedAt?.slice(0, 10) || "").toLowerCase().includes(term)
+    );
+  });
+
+  // Sort by request date
+  const sortedPayments = [...filteredPayments].sort((a, b) => {
+    const dateA = new Date(a.submittedAt);
+    const dateB = new Date(b.submittedAt);
+    return sortAsc ? dateA - dateB : dateB - dateA;
+  });
 
   return (
     <>
@@ -82,14 +100,23 @@ export default function PaymentRequestListAdmin() {
               <InputGroup.Text style={{ backgroundColor: 'white' }}>
                 <FaSearch />
               </InputGroup.Text>
-              <Form.Control placeholder="Search users, tenders..." />
+              <Form.Control
+                placeholder="Search by user, tender, amount, expense no, status, date..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </InputGroup>
           </Col>
           <Col md={6} className="text-end">
             <Button variant="light" className="me-2">
               <FaFilter className="me-1" /> Filter by Status
             </Button>
-            <Button variant="outline-secondary">Advanced Filter</Button>
+            <Button
+              variant="outline-secondary"
+              onClick={() => setSortAsc(!sortAsc)}
+            >
+              Sort by Date {sortAsc ? "↑" : "↓"}
+            </Button>
           </Col>
         </Row>
 
@@ -107,20 +134,19 @@ export default function PaymentRequestListAdmin() {
             <thead style={{ backgroundColor: '#e7edf3' }}>
               <tr className="text-muted small text-uppercase">
                 <th>S.NO</th>
-                <th>user</th>
+                <th>User</th>
                 <th>Uploaded By</th>
                 <th>Tender</th>
                 <th>Amount</th>
                 <th>Expense No</th>
                 <th>Status</th>
                 <th>Request Date</th>
-                {/* <th>Payment Date</th> */}
                 <th>Reference Mode</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {payments.map((d, i) => {
+              {sortedPayments.map((d, i) => {
                 const status = d.status || 'Pending';
                 const icon = {
                   Pending: <FaExclamationTriangle className="me-1" />,
@@ -135,7 +161,6 @@ export default function PaymentRequestListAdmin() {
 
                 return (
                   <tr key={i} style={{ backgroundColor: bgColor }}>
-                    {/* s.no  */}
                     <td>
                       <div
                         className="rounded-circle d-inline-flex align-items-center justify-content-center"
@@ -149,7 +174,6 @@ export default function PaymentRequestListAdmin() {
                         {i + 1}
                       </div>
                     </td>
-                    {/* image  */}
                     <td>
                       <img
                         src={d.user?.profile || dummyuser}
@@ -157,13 +181,10 @@ export default function PaymentRequestListAdmin() {
                         style={{ width: '35px', height: '35px', objectFit: 'cover', borderRadius: '50%' }}
                       />
                     </td>
-                    {/* username */}
                     <td>{d.user?.name || '—'}</td>
-
                     <td>{d.tender || '—'}</td>
                     <td>{d.amount ? `₹${d.amount}` : '—'}</td>
                     <td>{d.expenseNo || '—'}</td>
-                    {/* status  */}
                     <td>
                       <span
                         className="badge"
@@ -176,9 +197,7 @@ export default function PaymentRequestListAdmin() {
                       </span>
                     </td>
                     <td>{d.submittedAt?.slice(0, 10) || '—'}</td>
-                    {/* <td>{d.paymentDate?.slice(0, 10) || '—'}</td> */}
                     <td>{d.refMode || '—'}</td>
-
                     <td>
                       <div className="d-flex align-items-center gap-2">
                         <Button
@@ -205,9 +224,7 @@ export default function PaymentRequestListAdmin() {
                         >
                           <FaRupeeSign className="me-1" /> Pay
                         </Button>
-
                         <FaEllipsisV onClick={() => navigate(`/staff/payment-request/${d._id}`)} />
-
                       </div>
                     </td>
                   </tr>
@@ -220,7 +237,7 @@ export default function PaymentRequestListAdmin() {
         {/* Pagination */}
         <Row className="mt-2">
           <Col className="text-muted small">
-            Showing 1–{payments.length} of {payments.length} entries
+            Showing {sortedPayments.length} of {payments.length} entries
           </Col>
           <Col className="text-end">
             <Pagination className="mb-0 justify-content-end">
@@ -237,7 +254,6 @@ export default function PaymentRequestListAdmin() {
         onHide={() => setShowPayModal(false)}
         id={selectedPaymentId}
       />
-
     </>
   );
 }

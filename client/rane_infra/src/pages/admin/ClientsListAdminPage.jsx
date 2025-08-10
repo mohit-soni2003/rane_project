@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Table, Form, InputGroup, Image, Dropdown, Spinner, Button } from 'react-bootstrap';
-import { BsThreeDotsVertical, BsSearch } from 'react-icons/bs';
+import { Container, Table, Form, InputGroup, Image, Spinner, Button } from 'react-bootstrap';
+import { BsSearch } from 'react-icons/bs';
 import AdminHeader from '../../component/header/AdminHeader';
 import { getAllClients } from '../../services/userServices'; // Adjust path as needed
-import dummyUser from "../../assets/images/dummyUser.jpeg"
-import { Navigate, useNavigate } from 'react-router-dom';
+import dummyUser from "../../assets/images/dummyUser.jpeg";
+import { useNavigate } from 'react-router-dom';
+
 export default function ClientsListAdminPage() {
   const [clients, setClients] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,18 +15,27 @@ export default function ClientsListAdminPage() {
   useEffect(() => {
     async function fetchClients() {
       setLoading(true);
-      const data = await getAllClients();
-      setClients(data || []);
+      try {
+        const data = await getAllClients();
+        setClients(data || []);
+      } catch (error) {
+        console.error('Error fetching clients:', error);
+      }
       setLoading(false);
     }
     fetchClients();
   }, []);
 
-  const filteredClients = clients.filter(client =>
-    (client.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (client.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (client.cid || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Search by Name, Email, CID, or Phone Number
+  const filteredClients = clients.filter(client => {
+    const term = searchTerm.toLowerCase();
+    return (
+      (client.name || '').toLowerCase().includes(term) ||
+      (client.email || '').toLowerCase().includes(term) ||
+      (client.cid || '').toLowerCase().includes(term) ||
+      (client.phoneNo || '').toString().toLowerCase().includes(term)
+    );
+  });
 
   return (
     <>
@@ -37,7 +47,7 @@ export default function ClientsListAdminPage() {
             <InputGroup>
               <InputGroup.Text><BsSearch /></InputGroup.Text>
               <Form.Control
-                placeholder="Search Clients..."
+                placeholder="Search by Name, Email, CID, Phone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -82,21 +92,30 @@ export default function ClientsListAdminPage() {
                         <td>{client.name} {" "}({client.role})</td>
                         <td>{client.email}</td>
                         <td>{client.phoneNo || '-'}</td>
+                        <td>{client.cid || `CID-${index + 1}`}</td>
                         <td>
-
-                          {client.cid || `CID-${index + 1}`}
+                          <Button
+                            type="primary"
+                            onClick={() => navigate(`/admin/client-detail/${client._id}`)}
+                          >
+                            More
+                          </Button>
                         </td>
                         <td>
-                          <Button type="primary" onClick={() => navigate(`/admin/client-detail/${client._id}`)}>More</Button>
-                        </td>
-                        <td>
-                          <Button variant="warning" onClick={() => navigate(`/admin/push-document/${encodeURIComponent(client.cid)}`)}>Push Doc</Button>
+                          <Button
+                            variant="warning"
+                            onClick={() =>
+                              navigate(`/admin/push-document/${encodeURIComponent(client.cid)}`)
+                            }
+                          >
+                            Push Doc
+                          </Button>
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7" className="text-center text-muted">
+                      <td colSpan="8" className="text-center text-muted">
                         No clients found.
                       </td>
                     </tr>
