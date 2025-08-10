@@ -1,12 +1,12 @@
-// const backend_url = "https://rane-project-server.vercel.app"
+const backend_url = "https://rane-project-server.vercel.app"
 
-// const UPLOAD_PRESET= "rane_infra1"
-// const CLOUD_NAME= "drl3qqrq3"//rane
+const UPLOAD_PRESET= "rane_infra1"
+const CLOUD_NAME= "drl3qqrq3"//rane
 
 
-const backend_url = "http://localhost:3000"
-const UPLOAD_PRESET= "rane_infra"
-const CLOUD_NAME= "mohitcloud2003"
+// const backend_url = "http://localhost:3000"
+// const UPLOAD_PRESET= "rane_infra"
+// const CLOUD_NAME= "mohitcloud2003"
 
 
 // const backend_url = "https://rane-project-server-git-version3o-mohit-sonis-projects-6fb4d728.vercel.app" //version 3.o

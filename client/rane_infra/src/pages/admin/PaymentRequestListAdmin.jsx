@@ -206,16 +206,8 @@ export default function PaymentRequestListAdmin() {
                           <FaRupeeSign className="me-1" /> Pay
                         </Button>
 
+                        <FaEllipsisV onClick={() => navigate(`/staff/payment-request/${d._id}`)} />
 
-                        <Button
-                          variant="outline-secondary"
-                          size="sm"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => navigate(`/admin/payment-request/${d._id}`)}
-                        >
-                          <FaEllipsisV />
-                        </Button>
                       </div>
                     </td>
                   </tr>

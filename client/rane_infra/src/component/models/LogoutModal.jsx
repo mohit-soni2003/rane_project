@@ -13,7 +13,20 @@ function LogoutModal({ show, onClose }) {
       const response = await logout();
       if (response) {
         alert("Logged out successfully!");
-        navigate("/", { replace: true });   
+
+        // Clear state in the store
+        useAuthStore.setState({
+          user: null,
+          isAuthenticated: false,
+          role: null,
+        });
+
+        // Replace history so "Back" won't go to previous authenticated routes
+        navigate("/", { replace: true });
+
+        // Force full reload to clear any cached components
+        window.location.reload();
+
         onClose();
       } else {
         alert("Failed to log out. Please try again.");

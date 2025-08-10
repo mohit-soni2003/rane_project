@@ -209,11 +209,13 @@ function App() {
           <Route path="bill" element={<AllBillPage />} />
           <Route path="all-client" element={<ClientsListAdminPage />} />
           <Route path="payment-request" element={<PaymentRequestListAdmin />} />
+          <Route path="payment-request/:id" element={<SinglePRdetailAdminPAge />} />
+
           <Route path="request-payment" element={<PaymentRequestPage />} />
           <Route path="my-payment-request" element={<MyPaymentRequestPage />} />
           <Route path="dfsrequest" element={<DfsRequest />} />
           <Route path="upload-document" element={<UploadDocumentPage />} />
-          <Route path="track-dfs/all" element={<TrackMyAllDocument />} /> 
+          <Route path="track-dfs/all" element={<TrackMyAllDocument />} />
           <Route path="push-document/:cid" element={<PushDocumentAdminPage />} />
           <Route path="push-document" element={<PushDocumentAdminPage />} />
           <Route path="salary" element={<SalaryPage />} />
