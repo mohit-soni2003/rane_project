@@ -4,11 +4,13 @@ import AdminHeader from "../../component/header/AdminHeader";
 import { Container, Table, Spinner, Button } from "react-bootstrap";
 import { FaEye, FaEllipsisV } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../store/authStore";
 
 export default function DfsRequest() {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const {user} = useAuthStore();
 
   useEffect(() => {
     loadRequests();
@@ -128,7 +130,7 @@ export default function DfsRequest() {
                         variant="outline-secondary"
                         size="sm"
                         title="More Options"
-                        onClick={() =>navigate(`/admin/dfsrequest/${doc._id}`)}
+                        onClick={() =>navigate(`/${user.role}/dfsrequest/${doc._id}`)}
                       >
                         <FaEllipsisV />
                       </Button>

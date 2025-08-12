@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Form, Button, Row, Col, Card } from 'react-bootstrap';
+import { Form, Button, Row, Col, Card, Spinner } from 'react-bootstrap';
 import { FaFileAlt, FaCloudUploadAlt, FaRegFileAlt, FaBuilding } from 'react-icons/fa';
 import { uploadDocument } from '../../services/dfsService';
 
 import ClientHeader from '../../component/header/ClientHeader';
 import { CLOUDINARY_URL, UPLOAD_PRESET } from '../../store/keyStore';
+import { backend_url } from '../../store/keyStore';
 
 export default function UploadDocumentPage() {
     const [fileTitle, setFileTitle] = useState('');
@@ -12,6 +13,7 @@ export default function UploadDocumentPage() {
     const [file, setFile] = useState(null);
     const [documentType, setDocumentType] = useState('');
     const [department, setDepartment] = useState('');
+    const [loading, setLoading] = useState(false); 
 
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
@@ -26,10 +28,12 @@ export default function UploadDocumentPage() {
         }
 
         try {
-            // 1. Uplo0ad file to Cloudinary
+            setLoading(true); // ✅ start spinner
+
+            // 1. Upload file to Cloudinary
             const fileUrl = await uploadDocumentToCloudinary(file);
 
-            // 2. Send metadata to your backend
+            // 2. Send metadata to backend
             const response = await uploadDocument({
                 fileTitle,
                 fileUrl,
@@ -49,6 +53,8 @@ export default function UploadDocumentPage() {
             setDepartment('');
         } catch (err) {
             alert("Upload failed: " + err.message);
+        } finally {
+            setLoading(false); // ✅ stop spinner
         }
     };
 
@@ -73,13 +79,10 @@ export default function UploadDocumentPage() {
         }
     };
 
-    
-
     return (
         <>
             <ClientHeader />
-            <div className="container-fluid w-100 p-0 my-3 ">
-                {/* Upload Card */}
+            <div className="container-fluid w-100 p-0 my-3">
                 <Card className="p-3 border-0 w-100" style={{ backgroundColor: 'var(--client-component-bg-color)' }}>
                     <h4 className="mb-4 mt-2" style={{ color: 'var(--client-heading-color)' }}>
                         <FaRegFileAlt className="me-2" />
@@ -103,11 +106,13 @@ export default function UploadDocumentPage() {
                                             required
                                             style={{ borderColor: 'var(--client-border-color)' }}
                                         >
-                                            <option value="">Select type</option>
-                                            <option value="contract">Contract</option>
-                                            <option value="report">Report</option>
-                                            <option value="invoice">Invoice</option>
-                                            <option value="proposal">Proposal</option>
+                                            <option value="">Select department</option>
+                                            <option value="Proposal">Proposal</option>
+                                            <option value="Report">Report</option>
+                                            <option value="Quotation/Estimate">Quotation/Estimate</option>
+                                            <option value="Contract">Contract</option>
+                                            <option value="Invoices">Invoices</option>
+                                            <option value="Others">Others</option>
                                         </Form.Select>
                                     </div>
                                 </Form.Group>
@@ -123,7 +128,7 @@ export default function UploadDocumentPage() {
                                             className="input-group-text bg-white"
                                             style={{
                                                 borderColor: 'var(--client-border-color)',
-                                                color: 'var(--client-text-color)', // icon color
+                                                color: 'var(--client-text-color)',
                                             }}
                                         >
                                             <FaRegFileAlt />
@@ -136,13 +141,11 @@ export default function UploadDocumentPage() {
                                             required
                                             style={{
                                                 borderColor: 'var(--client-border-color)',
-                                                color: 'var(--client-text-color)',        // text color
-                                                // backgroundColor: 'var(--client-bg-color)', // optional if you have bg color defined
+                                                color: 'var(--client-text-color)',
                                             }}
                                         />
                                     </div>
                                 </Form.Group>
-
                             </Col>
                         </Row>
 
@@ -157,7 +160,7 @@ export default function UploadDocumentPage() {
                                             className="input-group-text bg-white"
                                             style={{
                                                 borderColor: 'var(--client-border-color)',
-                                                color: 'var(--client-text-color)', // icon color
+                                                color: 'var(--client-text-color)',
                                             }}
                                         >
                                             <FaBuilding />
@@ -169,19 +172,16 @@ export default function UploadDocumentPage() {
                                             style={{
                                                 borderColor: 'var(--client-border-color)',
                                                 color: 'var(--client-text-color)',
-                                                // backgroundColor: 'var(--client-bg-color)', // optional if defined
                                             }}
                                         >
-                                            <option value="">Select department</option>
-                                            <option value="finance">Finance</option>
-                                            <option value="hr">HR</option>
-                                            <option value="legal">Legal</option>
-                                            <option value="marketing">Marketing</option>
-                                            <option value="operations">Operations</option>
+                                            <option value="">Select type</option>
+                                            <option value="Finance/Account">Finance/Account</option>
+                                            <option value="Operations">Operations</option>
+                                            <option value="Executives">Executives</option>
+                                            <option value="Info-Technology">Info-Technology</option>
                                         </Form.Select>
                                     </div>
                                 </Form.Group>
-
                             </Col>
                         </Row>
 
@@ -228,6 +228,7 @@ export default function UploadDocumentPage() {
                             <Button
                                 variant="outline-secondary"
                                 type="reset"
+                                disabled={loading}
                                 onClick={() => {
                                     setFile(null);
                                     setFileTitle('');
@@ -240,21 +241,33 @@ export default function UploadDocumentPage() {
                             </Button>
                             <Button
                                 type="submit"
+                                disabled={loading}
                                 style={{
                                     backgroundColor: 'var(--client-btn-bg)',
                                     borderColor: 'var(--client-btn-bg)',
                                     color: 'var(--client-btn-text)',
                                 }}
-                                onMouseOver={(e) => (e.target.style.backgroundColor = 'var(--client-btn-hover)')}
-                                onMouseOut={(e) => (e.target.style.backgroundColor = 'var(--client-btn-bg)')}
                             >
-                                Upload Document
+                                {loading ? (
+                                    <>
+                                        <Spinner
+                                            as="span"
+                                            animation="border"
+                                            size="sm"
+                                            role="status"
+                                            aria-hidden="true"
+                                            className="me-2"
+                                        />
+                                        Uploading...
+                                    </>
+                                ) : (
+                                    'Upload Document'
+                                )}
                             </Button>
                         </div>
                     </Form>
                 </Card>
             </div>
-
         </>
     );
 }

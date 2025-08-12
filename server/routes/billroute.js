@@ -1,6 +1,7 @@
 const express = require("express")
 const User = require("../models/usermodel")
 const Bill = require("../models/billmodel")
+const Document = require("../models/documentmodel")
 
 
 const router = express.Router();
@@ -8,7 +9,7 @@ const router = express.Router();
 router.post("/post-bill", async (req, res) => {
   console.log("Post bill route hitted....")
   try {
-    const { firmName, workArea, loaNo, pdfurl, user, invoiceNo, workDescription,amount } = req.body;
+    const { firmName, workArea, loaNo, pdfurl, user, invoiceNo, workDescription, amount } = req.body;
     // Log the fields
     console.log("Received Data:");
     console.log("Firm Name:", firmName);
@@ -20,7 +21,7 @@ router.post("/post-bill", async (req, res) => {
     console.log("Work Description:", workDescription);
 
     // Validate required fields
-    if (!firmName || !workArea || !loaNo || !pdfurl || !user ||!amount) {
+    if (!firmName || !workArea || !loaNo || !pdfurl || !user || !amount) {
       return res.status(400).json({ message: "All required fields must be provided" });
     }
 
@@ -75,8 +76,8 @@ router.get('/mybill/:id', async (req, res) => {
     return res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
- 
- 
+
+
 router.get('/allbill', async (req, res) => {
   console.log("show all bill route hitted")
 
@@ -96,7 +97,7 @@ router.get('/allbill', async (req, res) => {
 //particular signle bill details
 router.get('/bill/:id', async (req, res) => {
   console.log("show particular id bill route hitted")
-  const {id} = req.params
+  const { id } = req.params
 
   try {
     // Find bills that match the user's ID
@@ -114,8 +115,8 @@ router.get('/bill/:id', async (req, res) => {
 //this is of no use same as above
 router.get('/bill/update-payment/:id', async (req, res) => {
   console.log("Update bill payment stasus route hitted")
-  const {status} = req.body
-  const {id} = req.params
+  const { status } = req.body
+  const { id } = req.params
 
   try {
     // Find bills that match the user's ID
@@ -139,7 +140,7 @@ router.put('/bill/update-payment/:id', async (req, res) => {
   try {
     // Find and update the bill with the new payment status
     const updatedBill = await Bill.findByIdAndUpdate(
-      id, 
+      id,
       { paymentStatus: status }, // Update the paymentStatus field
       { new: true } // Return the updated document
     ).populate("user"); // Populate the "user" field if needed
@@ -178,17 +179,42 @@ router.delete("/bill/:id", async (req, res) => {
 
 router.get("/recent-bills", async (req, res) => {
   try {
-      const recentBills = await Bill.find()
-          .sort({ submittedAt: -1 }) // Sort by most recent
-          .limit(3) // Get only 3 documents
-          .populate("user"); // Populate user details (fetching only name & email)
+    const recentBills = await Bill.find()
+      .sort({ submittedAt: -1 }) // Sort by most recent
+      .limit(3) // Get only 3 documents
+      .populate("user"); // Populate user details (fetching only name & email)
 
-      res.json(recentBills);
+    res.json(recentBills);
   } catch (error) {
-      console.error("Error fetching recent bills:", error);
-      res.status(500).json({ error: "Internal Server Error" });
+    console.error("Error fetching recent bills:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
+
+// Fetch the loa of the particula user id 
+
+
+// Fetch LOA document(s) for a specific user
+router.get("/loa/:id", async (req, res) => {
+  console.log("Fetch LOA route hit...");
+  const { id } = req.params;
+
+  try {
+    // Find LOA documents for that user, latest first
+    const loaDocs = await Document.find({ userId: id, docType: "LOA" })
+      .sort({ createdAt: -1 })
+      .populate("userId uploadedBy", "name email"); // Optional: populate user details
+
+    if (!loaDocs || loaDocs.length === 0) {
+      return res.status(404).json({ message: "No LOA documents found for this user" });
+    }
+
+    res.status(200).json(loaDocs);
+  } catch (error) {
+    console.error("Error fetching LOA documents:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
 
 module.exports = router

@@ -207,6 +207,8 @@ function App() {
           <Route index element={<HomePageAdmin />} />
           <Route path="home" element={<HomePageStaff />} />
           <Route path="bill" element={<AllBillPage />} />
+          <Route path="bill/:id" element={<SingleBillDetailAdminPage />} />
+
           <Route path="all-client" element={<ClientsListAdminPage />} />
           <Route path="payment-request" element={<PaymentRequestListAdmin />} />
           <Route path="payment-request/:id" element={<SinglePRdetailAdminPAge />} />
@@ -214,6 +216,8 @@ function App() {
           <Route path="request-payment" element={<PaymentRequestPage />} />
           <Route path="my-payment-request" element={<MyPaymentRequestPage />} />
           <Route path="dfsrequest" element={<DfsRequest />} />
+          <Route path="dfsrequest/:id" element={<SingleDfsRequestDetail />} />
+
           <Route path="upload-document" element={<UploadDocumentPage />} />
           <Route path="track-dfs/all" element={<TrackMyAllDocument />} />
           <Route path="push-document/:cid" element={<PushDocumentAdminPage />} />

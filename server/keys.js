@@ -18,4 +18,4 @@ module.exports = {
     jwt_secret: "Mohit1234",
 }
 // SENDER_MAIL:"ranesons11@gmail.com",
-// MAIL_PASS:"peli uazp ttpj ejya",//rane   
+// MAIL_PASS:"peli uazp ttpj ejya",//rane    

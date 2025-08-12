@@ -142,8 +142,7 @@ export default function PaymentRequestPage() {
                             <Col md={6}>
                                 <Form.Label className="fw-semibold text-brown">Select Tender</Form.Label>
                                 <Form.Select required value={tender} onChange={(e) => setTender(e.target.value)}>
-                                    <option value="tender1">tender1</option>
-                                    <option value="tender2">tender2</option>
+                                    <option value="RTM-2024-25-69">RTM-2024-25-69</option>
                                 </Form.Select>
 
                             </Col>
@@ -228,10 +227,19 @@ export default function PaymentRequestPage() {
                             <Card className="bg-light p-3 mb-4 border border-danger-subtle">
                                 <h6 className="text-brown fw-semibold mb-3"><FaUniversity className="me-2" /> Bank Account Details</h6>
                                 <Row>
-                                    <Col md={6}><strong>Account Holder:</strong> Mohit Soni</Col>
-                                    <Col md={6}><strong>Account Number:</strong> XXXX1234</Col>
-                                    <Col md={6}><strong>IFSC:</strong> SBIN0001234</Col>
-                                    <Col md={6}><strong>Bank:</strong> State Bank of India</Col>
+                                    <Col md={6}>
+                                        <strong>Account Holder:</strong> {user?.name ?? "N/A"}
+                                    </Col>
+                                    <Col md={6}>
+                                        <strong>Account Number:</strong> {user?.accountNo ?? "N/A"}
+                                    </Col>
+                                    <Col md={6}>
+                                        <strong>IFSC:</strong> {user?.ifscCode ?? "N/A"}
+                                    </Col>
+                                    <Col md={6}>
+                                        <strong>Bank:</strong> {user?.bankName ?? "N/A"}
+                                    </Col>
+
                                 </Row>
                             </Card>
                         )}
@@ -241,8 +249,8 @@ export default function PaymentRequestPage() {
                             <Card className="bg-light p-3 mb-4 border border-primary-subtle">
                                 <h6 className="text-brown fw-semibold mb-3"><FaQrcode className="me-2" /> UPI Details</h6>
                                 <Row>
-                                    <Col md={6}><strong>UPI ID:</strong> mohitsoni@upi</Col>
-                                    <Col md={6}><strong>Linked Bank:</strong> HDFC Bank</Col>
+                                    <Col md={6}><strong>UPI ID:</strong> {user?.upi?? "N/A"}</Col>
+                                    <Col md={6}><strong>Linked Bank:</strong> {user?.bankName?? "N/A"}</Col>
                                 </Row>
                                 <div className="mt-3 text-muted" style={{ fontSize: '0.875rem' }}>
                                     Please ensure your UPI ID is correct and linked to the receiving account.

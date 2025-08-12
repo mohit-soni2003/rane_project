@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Table, Badge, Container, Card, Row, Col, Spinner, Button
+  Table, Badge, Container, Card, Row, Col, Spinner, Button, Modal
 } from 'react-bootstrap';
 import { FaEye, FaCheckCircle, FaTimesCircle, FaFileAlt } from 'react-icons/fa';
 import ClientHeader from "../../component/header/ClientHeader";
@@ -14,7 +14,12 @@ export default function ViewDocumentPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { user } = useAuthStore();
- 
+
+  // Modal state
+  const [showModal, setShowModal] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState(null);
+  const [acceptTime, setAcceptTime] = useState("");
+
   useEffect(() => {
     const fetchDocs = async () => {
       try {
@@ -33,12 +38,37 @@ export default function ViewDocumentPage() {
     }
   }, [docType, user._id]);
 
-  const handleStatusChange = async (docId, newStatus) => {
+  const handleOpenModal = (doc) => {
+    setSelectedDoc(doc);
+    setAcceptTime(new Date().toLocaleString());
+    setShowModal(true);
+  };
+
+  const handleAccept = async () => {
+    if (!selectedDoc) return;
     try {
-      await updateDocumentStatus(docId, newStatus);
+      await updateDocumentStatus(selectedDoc._id, 'accepted');
       setDocuments(prev =>
         prev.map(doc =>
-          doc._id === docId ? { ...doc, status: newStatus, statusUpdatedAt: new Date().toISOString() } : doc
+          doc._id === selectedDoc._id
+            ? { ...doc, status: 'accepted', statusUpdatedAt: new Date().toISOString() }
+            : doc
+        )
+      );
+      setShowModal(false);
+    } catch (err) {
+      alert('Failed to update status: ' + err.message);
+    }
+  };
+
+  const handleReject = async (docId) => {
+    try {
+      await updateDocumentStatus(docId, 'rejected');
+      setDocuments(prev =>
+        prev.map(doc =>
+          doc._id === docId
+            ? { ...doc, status: 'rejected', statusUpdatedAt: new Date().toISOString() }
+            : doc
         )
       );
     } catch (err) {
@@ -118,14 +148,14 @@ export default function ViewDocumentPage() {
                           <Button
                             size="sm"
                             variant="outline-success"
-                            onClick={() => handleStatusChange(doc._id, 'accepted')}
+                            onClick={() => handleOpenModal(doc)}
                           >
                             <FaCheckCircle />
                           </Button>
                           <Button
                             size="sm"
                             variant="outline-danger"
-                            onClick={() => handleStatusChange(doc._id, 'rejected')}
+                            onClick={() => handleReject(doc._id)}
                           >
                             <FaTimesCircle />
                           </Button>
@@ -141,6 +171,40 @@ export default function ViewDocumentPage() {
           )}
         </Card>
       </Container>
+
+      {/* Confirmation Modal */}
+      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+  <Modal.Header closeButton>
+    <Modal.Title>
+      <i className="bi bi-file-earmark-text me-2 text-primary"></i>
+      Accept Document
+    </Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    <p>
+      By clicking <strong>Accept</strong>, you acknowledge that you have carefully reviewed the
+      contents of this document and agree to be bound by the terms, conditions, and responsibilities
+      described herein.
+    </p>
+    <p>
+      This acceptance will serve as a record of your consent and may be referenced in the future
+      for verification or compliance purposes.
+    </p>
+    <p className="mb-0">
+      <i className="bi bi-clock-history me-1 text-secondary"></i>
+      <strong>Acceptance Time:</strong> {acceptTime}
+    </p>
+  </Modal.Body>
+  <Modal.Footer>
+    <Button variant="secondary" onClick={() => setShowModal(false)}>
+      <i className="bi bi-x-circle me-1"></i> Cancel
+    </Button>
+    <Button variant="success" onClick={handleAccept}>
+      <i className="bi bi-check-circle me-1"></i> Accept
+    </Button>
+  </Modal.Footer>
+</Modal>
+
     </>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useRef , useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Form, Button, Container, Row, Col, Card, Spinner, Alert,
 } from 'react-bootstrap';
@@ -6,100 +6,123 @@ import {
   FaBuilding, FaMapMarkedAlt, FaFileInvoice,
   FaRupeeSign, FaFileUpload, FaFileAlt,
 } from 'react-icons/fa';
-import axios from 'axios';
+import { CLOUD_NAME, UPLOAD_PRESET, backend_url } from '../../store/keyStore';
+import { useAuthStore } from '../../store/authStore';
 import ClientHeader from '../../component/header/ClientHeader';
 import { postBill } from '../../services/billServices';
-import { CLOUDINARY_URL_IMAGE } from '../../store/keyStore';
-import { CLOUD_NAME } from '../../store/keyStore';
-
-import { UPLOAD_PRESET } from '../../store/keyStore'; // ← Replace with actual value from Cloudinary
-import { useAuthStore } from '../../store/authStore';
 
 export default function UploadBillPage() {
-  const {user} = useAuthStore();
+  const { user } = useAuthStore();
   const [formData, setFormData] = useState({
     firmName: '',
-    workArea: '', 
-    loaNo: 'loa1',
+    workArea: '',
+    loaNo: '',
     invoiceNo: '',
     amount: '',
     workDescription: '',
-    pdfurl: '', 
-    user:''
+    pdfurl: '',
+    user: ''
   });
   const [file, setFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [loaOptions, setLoaOptions] = useState([]);
+  const [loadingLoa, setLoadingLoa] = useState(false);
+  const fileInputRef = useRef();
 
-  const fileInputRef = useRef(); 
-//for setting the userId 
+  // Set user ID in formData
   useEffect(() => {
-  if (user?._id) {
-    setFormData(prev => ({ ...prev, user: user._id }));
-  }
-}, [user]);
+    if (user?._id) {
+      setFormData(prev => ({ ...prev, user: user._id }));
+    }
+  }, [user]);
+
+  // Fetch LOA list for user
+  useEffect(() => {
+    if (!user?._id) return;
+
+    const fetchLoas = async () => {
+      setLoadingLoa(true);
+      try {
+        const res = await fetch(`${backend_url}/loa/${user._id}`);
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.message || 'Failed to fetch LOA documents');
+        }
+        const data = await res.json();
+        setLoaOptions(data);
+        if (data.length > 0) {
+          setFormData(prev => ({ ...prev, loaNo: data[0].documentCode }));
+        }
+      } catch (err) {
+        setMessage({ type: 'danger', text: err.message });
+      } finally {
+        setLoadingLoa(false);
+      }
+    };
+
+    fetchLoas();
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
 
-const handleUpload = async () => {
-  if (!file) return '';
-  const fileSizeMB = file.size / 1024 / 1024;
-  if (fileSizeMB > 10) throw new Error('File size exceeds 10MB limit');
+  const handleUpload = async () => {
+    if (!file) return '';
+    const fileSizeMB = file.size / 1024 / 1024;
+    if (fileSizeMB > 10) throw new Error('File size exceeds 10MB limit');
 
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', UPLOAD_PRESET); // Set in Cloudinary
+    const cloudFormData = new FormData();
+    cloudFormData.append('file', file);
+    cloudFormData.append('upload_preset', UPLOAD_PRESET);
 
-  const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
+    const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
 
-  const response = await axios.post(cloudinaryUrl, formData, {
-    withCredentials: false, // ✅ IMPORTANT: Disable credentials
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+    const res = await fetch(cloudinaryUrl, {
+      method: 'POST',
+      body: cloudFormData
+    });
 
-  return response.data.secure_url;
-};
+    if (!res.ok) throw new Error('Failed to upload file to Cloudinary');
 
+    const data = await res.json();
+    return data.secure_url;
+  };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  setSubmitting(true);
-  setMessage({ type: '', text: '' });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setMessage({ type: '', text: '' });
 
-  try {
-    const pdfurl = await handleUpload();
-    const payload = { ...formData, pdfurl };
-
-    await postBill(payload); // Call the service here
-
-    setMessage({ type: 'success', text: 'Bill submitted successfully!' });
-    handleClear();
-  } catch (err) {
-    setMessage({ type: 'danger', text: 'Submission failed: ' + err.message });
-  } finally {
-    setSubmitting(false);
-  }
-};
-
+    try {
+      const pdfurl = await handleUpload();
+      const payload = { ...formData, pdfurl };
+      await postBill(payload);
+      setMessage({ type: 'success', text: 'Bill submitted successfully!' });
+      handleClear();
+    } catch (err) {
+      setMessage({ type: 'danger', text: 'Submission failed: ' + err.message });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleClear = () => {
     setFormData({
       firmName: '',
       workArea: '',
-      loaNo: 'loa1',
+      loaNo: '',
       invoiceNo: '',
       amount: '',
       workDescription: '',
       pdfurl: '',
+      user: user?._id || ''
     });
     setFile(null);
     setMessage({ type: '', text: '' });
@@ -108,7 +131,7 @@ const handleUpload = async () => {
   return (
     <>
       <ClientHeader />
-      <Container fluid  className="my-3 px-0">
+      <Container fluid className="my-3 px-0">
         <Card className="p-4 shadow-sm w-100" style={{ background: 'var(--client-component-bg-color)', borderRadius: '5px' }}>
           <h5 className="mb-1 text-brown fw-semibold">
             <FaFileAlt className="me-2 text-brown" />
@@ -166,15 +189,29 @@ const handleUpload = async () => {
                     <FaFileAlt className="me-2" />
                     LOA
                   </Form.Label>
-                  <Form.Select
-                    name="loaNo"
-                    value={formData.loaNo}
-                    onChange={handleChange}
-                    className="custom-input"
-                  >
-                    <option value="loa1">LOA #123</option>
-                    <option value="loa2">LOA #456</option>
-                  </Form.Select>
+                  {loadingLoa ? (
+                    <div className="d-flex align-items-center">
+                      <Spinner animation="border" size="sm" className="me-2" /> Loading LOAs...
+                    </div>
+                  ) : (
+                    <Form.Select
+                      name="loaNo"
+                      value={formData.loaNo}
+                      onChange={handleChange}
+                      className="custom-input"
+                      required
+                    >
+                      {loaOptions.length > 0 ? (
+                        loaOptions.map((loa) => (
+                          <option key={loa._id} value={loa.documentCode}>
+                            {loa.documentCode}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="">No LOA available</option>
+                      )}
+                    </Form.Select>
+                  )}
                 </Form.Group>
               </Col>
 

@@ -13,6 +13,7 @@ import AdminHeader from '../../component/header/AdminHeader';
 import { getAllBills } from '../../services/billServices';
 import { useNavigate } from 'react-router-dom';
 import PayBillModal from '../../component/models/PayBillModel';
+import { useAuthStore } from '../../store/authStore';
 
 export default function AllBillPage() {
   const [bills, setBills] = useState([]);
@@ -23,6 +24,7 @@ export default function AllBillPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("desc"); // default newest first
+  const {user} = useAuthStore();
 
   const navigate = useNavigate();
 
@@ -216,7 +218,7 @@ export default function AllBillPage() {
                         </Button>
                       </td>
                       <td>
-                        <FaEllipsisV onClick={() => { navigate(`/admin/bill/${bill._id}`) }} />
+                        <FaEllipsisV onClick={() => { navigate(`/${user.role}/bill/${bill._id}`) }} />
                       </td>
                     </tr>
                   );

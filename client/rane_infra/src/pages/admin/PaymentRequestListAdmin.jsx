@@ -13,6 +13,7 @@ import { getAllPayments } from '../../services/paymentService';
 import dummyuser from "../../assets/images/dummyUser.jpeg"
 import { useNavigate } from 'react-router-dom';
 import PayPrmodel from '../../component/models/PayPrModel';
+import { useAuthStore } from '../../store/authStore';
 
 const statusMap = {
   Pending: { color: '#f4b400', textColor: '#000' },
@@ -29,6 +30,7 @@ export default function PaymentRequestListAdmin() {
   const navigate = useNavigate();
   const [showPayModal, setShowPayModal] = useState(false);
   const [selectedPaymentId, setSelectedPaymentId] = useState(null);
+  const {user} = useAuthStore()
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -224,7 +226,7 @@ export default function PaymentRequestListAdmin() {
                         >
                           <FaRupeeSign className="me-1" /> Pay
                         </Button>
-                        <FaEllipsisV onClick={() => navigate(`/staff/payment-request/${d._id}`)} />
+                        <FaEllipsisV onClick={() => navigate(`/${user.role}/payment-request/${d._id}`)} />
                       </div>
                     </td>
                   </tr>
