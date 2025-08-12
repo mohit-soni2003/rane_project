@@ -35,7 +35,7 @@ export default function LandingPage() {
             <section
                 className="d-flex align-items-center text-white position-relative"
                 style={{
-                    backgroundImage: 'url("/images/hero-bg.png")',
+                    backgroundImage: 'url("/images/train1.jpg")',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     backgroundRepeat: 'no-repeat',
