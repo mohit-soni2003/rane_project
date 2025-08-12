@@ -119,6 +119,7 @@ export default function ViewDocumentPage() {
                   <th>Document</th>
                   <th>Remark</th>
                   <th>Status</th>
+                  <th>Uploaded By</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -142,6 +143,17 @@ export default function ViewDocumentPage() {
                     </td>
                     <td style={{ maxWidth: '200px', whiteSpace: 'normal' }}>{doc.remark || '-'}</td>
                     <td>{getStatusBadge(doc.status)}</td>
+                    <td className="d-flex align-items-center">
+                      <img
+                        src={doc.uploadedBy.profile}
+                        alt={doc.uploadedBy.name}
+                        className="rounded-circle me-2"
+                        style={{ width: "32px", height: "32px", objectFit: "cover" }}
+                      />
+                      <small className=" text-truncate" style={{ maxWidth: "120px" }}>
+                        {doc.uploadedBy.name}
+                      </small>
+                    </td>
                     <td className="text-center">
                       {doc.status === 'pending' ? (
                         <div className="d-flex justify-content-center gap-2">
@@ -173,37 +185,80 @@ export default function ViewDocumentPage() {
       </Container>
 
       {/* Confirmation Modal */}
-      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-  <Modal.Header closeButton>
-    <Modal.Title>
-      <i className="bi bi-file-earmark-text me-2 text-primary"></i>
-      Accept Document
-    </Modal.Title>
-  </Modal.Header>
-  <Modal.Body>
-    <p>
-      By clicking <strong>Accept</strong>, you acknowledge that you have carefully reviewed the
-      contents of this document and agree to be bound by the terms, conditions, and responsibilities
-      described herein.
-    </p>
-    <p>
-      This acceptance will serve as a record of your consent and may be referenced in the future
-      for verification or compliance purposes.
-    </p>
-    <p className="mb-0">
-      <i className="bi bi-clock-history me-1 text-secondary"></i>
-      <strong>Acceptance Time:</strong> {acceptTime}
-    </p>
-  </Modal.Body>
-  <Modal.Footer>
-    <Button variant="secondary" onClick={() => setShowModal(false)}>
-      <i className="bi bi-x-circle me-1"></i> Cancel
-    </Button>
-    <Button variant="success" onClick={handleAccept}>
-      <i className="bi bi-check-circle me-1"></i> Accept
-    </Button>
-  </Modal.Footer>
-</Modal>
+      <Modal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        centered
+        size="lg"
+      >
+        <div
+          className="p-4"
+          style={{
+            backgroundColor: "#fdf2e9", // light beige
+            borderRadius: "15px",
+          }}
+        >
+          {/* Title */}
+          <h4 className="text-center text-primary fw-bold mb-3">
+            RS-WMS DigiSigner
+          </h4>
+          <hr className="my-2" style={{ borderTop: "3px solid black", width: "80%", margin: "0 auto" }} />
+
+          {/* Certificate Heading */}
+          <h5 className="text-center fw-bold mt-3">DIGITAL SIGNATURE CERTIFICATE</h5>
+
+          {/* Body Content */}
+          <div className="mt-4">
+            <p className="fst-italic fw-semibold">
+              By signing this document, I confirm:
+            </p>
+            <p>
+              By clicking <strong>Accept & Sign</strong>, you acknowledge that you have carefully reviewed the contents of this document and agree to be bound by the terms, conditions, and responsibilities described herein.
+            </p>
+            <p>
+              This acceptance will serve as a record of your consent and may be referenced in the future for verification or compliance purposes.
+            </p>
+
+            <p className="fst-italic fw-semibold mt-3">Some Important Points</p>
+            <ol className="mb-4 ps-3">
+              <li>I understand the document and sign of my own free will.</li>
+              <li>I consent to the use of this electronic signature as legal evidence.</li>
+              <li>I sign this document in my senses through the RS-WMS DigiSigner.</li>
+              <li>I have entered my full legal name without abbreviations or nicknames.</li>
+            </ol>
+
+            {/* Signature Block */}
+            <p className="fst-italic fw-semibold">I ACKNOWLEDGE</p>
+            <p className="mb-1"><strong>NAME:</strong> {user.name}</p>
+            <p className="mb-4"><strong>CID:</strong> RS-CTO</p>
+          </div>
+
+          {/* Timestamp */}
+          <p className="text-center text-muted fst-italic">
+            Timestamps: {acceptTime}
+          </p>
+
+          {/* Footer Buttons */}
+          <div className="d-flex justify-content-center gap-3 mt-3">
+            <Button
+              variant="danger"
+              className="px-4 fw-bold"
+              onClick={() => setShowModal(false)}
+            >
+              <i className="bi bi-x-circle me-1"></i> CANCEL
+            </Button>
+            <Button
+              variant="primary"
+              className="px-4 fw-bold"
+              onClick={handleAccept}
+            >
+              <i className="bi bi-check-circle me-1"></i> ACCEPT & SIGN
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+
 
     </>
   );

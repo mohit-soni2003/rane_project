@@ -82,7 +82,7 @@ export default function MyPaymentRequestPage() {
   return (
     <>
       <ClientHeader />
-      <Container fluid className="py-0 px-0">
+      <Container fluid className="py-0 px-0 my-md-3">
         <Card
           className="p-3 shadow border-0"
           style={{ backgroundColor: 'var(--client-component-bg-color)' }}

@@ -57,10 +57,10 @@ export default function HomePageClient() {
   return (
     <>
       <ClientHeader />
-      <div className="container-fluid mt-4 w-100" style={{ background: "var(--client-component-bg-color)", minHeight: "100vh" }}>
+      <div className="container-fluid mt-4 w-100 px-md-5" style={{ background: "var(--client-component-bg-color)", minHeight: "100vh" }}>
         <div className="row">
-          {/* Left: Stats Section */}
-          <div className="col-md-8">
+          {/* Stats Section - Now Full Width */}
+          <div className="col-12">
             {/* Bill Statistics */}
             <h6 className="fw-bold mb-3 mt-4" style={{ color: "var(--client-heading-color)" }}>
               <FaFileAlt className="me-2 text-primary" />Bill Statistics
@@ -114,29 +114,10 @@ export default function HomePageClient() {
               </div>
             </div>
           </div>
-
-          {/* Right: Notification Panel with Lottie */}
-          <div className="col-md-4 mt-5">
-            <Card className="shadow-sm border-light" style={{ backgroundColor: "var(--client-dashboard-bg-color)" }}>
-              <Card.Header className="d-flex justify-content-between align-items-center bg-white">
-                <span className="fw-bold text-dark">
-                  <FaFileAlt className="me-2 text-primary" /> Notification Updates
-                </span>
-              </Card.Header>
-              <Card.Body className="text-center">
-                <div style={{ maxWidth: "300px", margin: "0 auto" }}>
-                  <Lottie animationData={doggyAnimation} loop={true} />
-                </div>
-                <p className="mt-3 fw-semibold" style={{ color: "var(--client-text-color)" }}>
-                  Service not available, come later
-                </p>
-              </Card.Body>
-            </Card>
-          </div>
         </div>
 
         {/* Company Description Section */}
-        <div className="row ">
+        <div className="row">
           <div className="col-12">
             <Card className="shadow-sm border-light mb-5" style={{ backgroundColor: "var(--client-dashboard-bg-color)" }}>
               <Card.Body>
@@ -151,6 +132,7 @@ export default function HomePageClient() {
           </div>
         </div>
       </div>
+
     </>
   );
 }
@@ -160,39 +142,39 @@ export default function HomePageClient() {
 
 
 
-  // <Card className="shadow-sm border-light"
-  //             style={{ backgroundColor: "var(--client-dashboard-bg-color)" }}>
-  //             <Card.Header className="d-flex justify-content-between align-items-center bg-white">
-  //               <span className="fw-bold text-dark">
-  //                 <FaFileAlt className="me-2 text-primary" /> Notification Updates
-  //               </span>
-  //               <Button variant="link" size="sm">View All</Button>
-  //             </Card.Header>
-  //             <Card.Body>
-  //               {[{
-  //                 title: 'Bill ID #2458 Uploaded',
-  //                 desc: 'Bill uploaded and is awaiting approval.',
-  //                 icon: <FaFileAlt className="text-primary me-3 mt-1" size={20} />,
-  //                 time: '10 minutes ago'
-  //               }, {
-  //                 title: 'Payment #3892 Approved',
-  //                 desc: 'Payment request has been approved and processed.',
-  //                 icon: <FaCheckCircle className="text-success me-3 mt-1" size={20} />,
-  //                 time: '2 hours ago'
-  //               }, {
-  //                 title: 'Bill ID #2456 Rejected',
-  //                 desc: 'Rejected. Please check comments and resubmit.',
-  //                 icon: <FaTimesCircle className="text-danger me-3 mt-1" size={20} />,
-  //                 time: '1 day ago'
-  //               }].map((item, idx) => (
-  //                 <div className="d-flex align-items-start mb-3 p-2 rounded bg-white shadow-sm" key={idx}>
-  //                   {item.icon}
-  //                   <div>
-  //                     <strong>{item.title}</strong>
-  //                     <p className="mb-1 text-muted small">{item.desc}</p>
-  //                     <small className="text-secondary"><FaClock className="me-1" />{item.time}</small>
-  //                   </div>
-  //                 </div>
-  //               ))}
-  //             </Card.Body>
-  //           </Card>
+// <Card className="shadow-sm border-light"
+//             style={{ backgroundColor: "var(--client-dashboard-bg-color)" }}>
+//             <Card.Header className="d-flex justify-content-between align-items-center bg-white">
+//               <span className="fw-bold text-dark">
+//                 <FaFileAlt className="me-2 text-primary" /> Notification Updates
+//               </span>
+//               <Button variant="link" size="sm">View All</Button>
+//             </Card.Header>
+//             <Card.Body>
+//               {[{
+//                 title: 'Bill ID #2458 Uploaded',
+//                 desc: 'Bill uploaded and is awaiting approval.',
+//                 icon: <FaFileAlt className="text-primary me-3 mt-1" size={20} />,
+//                 time: '10 minutes ago'
+//               }, {
+//                 title: 'Payment #3892 Approved',
+//                 desc: 'Payment request has been approved and processed.',
+//                 icon: <FaCheckCircle className="text-success me-3 mt-1" size={20} />,
+//                 time: '2 hours ago'
+//               }, {
+//                 title: 'Bill ID #2456 Rejected',
+//                 desc: 'Rejected. Please check comments and resubmit.',
+//                 icon: <FaTimesCircle className="text-danger me-3 mt-1" size={20} />,
+//                 time: '1 day ago'
+//               }].map((item, idx) => (
+//                 <div className="d-flex align-items-start mb-3 p-2 rounded bg-white shadow-sm" key={idx}>
+//                   {item.icon}
+//                   <div>
+//                     <strong>{item.title}</strong>
+//                     <p className="mb-1 text-muted small">{item.desc}</p>
+//                     <small className="text-secondary"><FaClock className="me-1" />{item.time}</small>
+//                   </div>
+//                 </div>
+//               ))}
+//             </Card.Body>
+//           </Card>

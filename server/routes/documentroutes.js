@@ -72,7 +72,8 @@ router.get('/admin/document/user/:userId', verifyToken, async (req, res) => {
       query.docType = docType;
     }
 
-    const documents = await Document.find(query).sort({ createdAt: -1 });
+    const documents = await Document.find(query)
+    .populate("uploadedBy").sort({ createdAt: -1 });
 
     res.status(200).json({ documents });
 
