@@ -16,16 +16,21 @@ export default function SingleUSerSalaryDetailAdmin() {
         leaveCuts: { date: "", amount: "", note: "" }
     });
 
-    const [submitting, setSubmitting] = useState({});
+    const [submitting, setSubmitting] = useState({
+        overtime: false,
+        advancePay: false,
+        leaveCuts: false
+    });
+
     const [editedAllowances, setEditedAllowances] = useState({});
     const [savingAllowances, setSavingAllowances] = useState(false);
-
     const [baseSalary, setBaseSalary] = useState(0);
 
     useEffect(() => {
         async function fetchSalary() {
             try {
                 setLoading(true);
+                setError("");
                 const data = await getMonthlySalary(clientid, currmonth);
                 const baseData = await getBaseSalary(clientid);
 
@@ -49,6 +54,7 @@ export default function SingleUSerSalaryDetailAdmin() {
     };
 
     const handleAddEntry = async (section) => {
+        if (submitting[section]) return; // Prevent double submit
         const entry = form[section];
         if (!entry.date || !entry.amount) {
             alert("Please fill date and amount");
@@ -56,14 +62,22 @@ export default function SingleUSerSalaryDetailAdmin() {
         }
         try {
             setSubmitting(prev => ({ ...prev, [section]: true }));
-            const payload = {
-                [section]: [...salaryData[section], entry]
-            };
+
+            // Use latest entries from salaryData state, fallback empty array if undefined
+            const currentEntries = salaryData?.[section] ?? [];
+
+            // Append new entry
+            const updatedEntries = [...currentEntries, entry];
+
+            const payload = { [section]: updatedEntries };
             const updated = await updateMonthlySalary(clientid, currmonth, payload);
+
             setSalaryData(updated);
+
+            // Clear form fields for this section
             setForm(prev => ({ ...prev, [section]: { date: "", amount: "", note: "" } }));
         } catch (err) {
-            alert(err.message);
+            alert(err.message || "Failed to add entry.");
         } finally {
             setSubmitting(prev => ({ ...prev, [section]: false }));
         }
@@ -77,6 +91,7 @@ export default function SingleUSerSalaryDetailAdmin() {
     };
 
     const handleSaveAllowances = async () => {
+        if (savingAllowances) return;
         try {
             setSavingAllowances(true);
             const payload = {
@@ -87,7 +102,7 @@ export default function SingleUSerSalaryDetailAdmin() {
             setSalaryData(updated);
             alert("Allowances and Bonus updated successfully.");
         } catch (err) {
-            alert("Error updating data: " + err.message);
+            alert("Error updating data: " + (err.message || "Unknown error"));
         } finally {
             setSavingAllowances(false);
         }
@@ -100,10 +115,9 @@ export default function SingleUSerSalaryDetailAdmin() {
             setSalaryData(updated);
             alert("Salary finalized successfully.");
         } catch (err) {
-            alert("Error finalizing salary: " + err.message);
+            alert("Error finalizing salary: " + (err.message || "Unknown error"));
         }
     };
-
 
     const formatDate = (dateStr) =>
         dateStr ? new Date(dateStr).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }) : "-";
@@ -111,12 +125,11 @@ export default function SingleUSerSalaryDetailAdmin() {
     let totalAllowances = 0, totalOvertime = 0, totalAdvancePay = 0, totalLeaveCuts = 0, netPayable = 0;
     if (salaryData) {
         totalAllowances = Object.values(editedAllowances).reduce((sum, val) => sum + Number(val || 0), 0);
-        totalOvertime = salaryData.overtime.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-        totalAdvancePay = salaryData.advancePay.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-        totalLeaveCuts = salaryData.leaveCuts.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-        netPayable = baseSalary + totalAllowances + totalOvertime + salaryData.bonus - totalAdvancePay - totalLeaveCuts;
+        totalOvertime = salaryData.overtime?.reduce((sum, item) => sum + Number(item.amount || 0), 0) || 0;
+        totalAdvancePay = salaryData.advancePay?.reduce((sum, item) => sum + Number(item.amount || 0), 0) || 0;
+        totalLeaveCuts = salaryData.leaveCuts?.reduce((sum, item) => sum + Number(item.amount || 0), 0) || 0;
+        netPayable = baseSalary + totalAllowances + totalOvertime + (salaryData.bonus || 0) - totalAdvancePay - totalLeaveCuts;
     }
-
 
     const renderTransactionTable = (data, title, sectionKey) => (
         <Card className="mb-4 shadow-sm">
@@ -129,7 +142,7 @@ export default function SingleUSerSalaryDetailAdmin() {
                             type="date"
                             value={form[sectionKey].date}
                             onChange={(e) => handleInput(sectionKey, "date", e.target.value)}
-                            disabled={salaryData.finalized}
+                            disabled={salaryData?.finalized}
                         />
                     </Col>
                     <Col md={3}>
@@ -139,7 +152,7 @@ export default function SingleUSerSalaryDetailAdmin() {
                             value={form[sectionKey].amount}
                             onChange={(e) => handleInput(sectionKey, "amount", e.target.value)}
                             placeholder="₹"
-                            disabled={salaryData.finalized}
+                            disabled={salaryData?.finalized}
                         />
                     </Col>
                     <Col md={4}>
@@ -149,14 +162,14 @@ export default function SingleUSerSalaryDetailAdmin() {
                             value={form[sectionKey].note}
                             onChange={(e) => handleInput(sectionKey, "note", e.target.value)}
                             placeholder="Optional"
-                            disabled={salaryData.finalized}
+                            disabled={salaryData?.finalized}
                         />
                     </Col>
                     <Col md={2}>
                         <Button
                             variant="primary"
                             onClick={() => handleAddEntry(sectionKey)}
-                            disabled={submitting[sectionKey] || salaryData.finalized}
+                            disabled={submitting[sectionKey] || salaryData?.finalized}
                             className="w-100"
                         >
                             {submitting[sectionKey] ? "Adding..." : "Add Entry"}
@@ -164,7 +177,7 @@ export default function SingleUSerSalaryDetailAdmin() {
                     </Col>
                 </Row>
 
-                {data.length === 0 ? (
+                {!data || data.length === 0 ? (
                     <div className="text-muted">No records found</div>
                 ) : (
                     <Table hover size="sm" className="mb-0">
@@ -223,11 +236,10 @@ export default function SingleUSerSalaryDetailAdmin() {
                     <Col md={3}><strong>Created At:</strong> {formatDate(createdAt)}</Col>
                 </Row>
 
-
                 <Card className="mb-4 shadow-sm">
                     <Card.Header className="fw-bold d-flex justify-content-between align-items-center">
                         <span>Allowances & Bonus</span>
-                        <Button variant="success" size="sm" onClick={handleSaveAllowances} disabled={savingAllowances || salaryData.finalized}>
+                        <Button variant="success" size="sm" onClick={handleSaveAllowances} disabled={savingAllowances || finalized}>
                             {savingAllowances ? "Saving..." : "Save Changes"}
                         </Button>
                     </Card.Header>
@@ -241,7 +253,7 @@ export default function SingleUSerSalaryDetailAdmin() {
                                             type="number"
                                             value={value}
                                             onChange={(e) => handleAllowanceChange(key, Number(e.target.value))}
-                                            disabled={salaryData.finalized}
+                                            disabled={finalized}
                                         />
                                     </Form.Group>
                                 </Col>
@@ -252,9 +264,9 @@ export default function SingleUSerSalaryDetailAdmin() {
                                     <Form.Label>Bonus</Form.Label>
                                     <Form.Control
                                         type="number"
-                                        value={salaryData.bonus}
+                                        value={bonus}
                                         onChange={(e) => setSalaryData((prev) => ({ ...prev, bonus: Number(e.target.value) }))}
-                                        disabled={salaryData.finalized}
+                                        disabled={finalized}
                                     />
                                 </Form.Group>
                             </Col>
@@ -262,9 +274,9 @@ export default function SingleUSerSalaryDetailAdmin() {
                     </Card.Body>
                 </Card>
 
-                {renderTransactionTable(overtime, "Overtime Entries", "overtime")}
-                {renderTransactionTable(advancePay, "Advance Pay Entries", "advancePay")}
-                {renderTransactionTable(leaveCuts, "Leave Cut Entries", "leaveCuts")}
+                {renderTransactionTable(overtime || [], "Overtime Entries", "overtime")}
+                {renderTransactionTable(advancePay || [], "Advance Pay Entries", "advancePay")}
+                {renderTransactionTable(leaveCuts || [], "Leave Cut Entries", "leaveCuts")}
 
                 <Card className="mb-5 shadow-sm">
                     <Card.Header className="fw-bold">Salary Summary</Card.Header>
@@ -275,7 +287,7 @@ export default function SingleUSerSalaryDetailAdmin() {
                             <Col md={4}><strong>Total Overtime:</strong> ₹{totalOvertime}</Col>
                         </Row>
                         <Row className="mb-2">
-                            <Col md={4}><strong>Bonus:</strong> ₹{salaryData.bonus}</Col>
+                            <Col md={4}><strong>Bonus:</strong> ₹{bonus}</Col>
                             <Col md={4}><strong>Advance Pay:</strong> -₹{totalAdvancePay}</Col>
                             <Col md={4}><strong>Leave Cuts:</strong> -₹{totalLeaveCuts}</Col>
                         </Row>
@@ -284,16 +296,15 @@ export default function SingleUSerSalaryDetailAdmin() {
                             <Col md={4}><strong>Net Payable Salary:</strong> ₹{netPayable}</Col>
                         </Row>
 
-
                         <hr />
 
                         <div className="d-flex justify-content-end gap-3">
                             <Button
                                 variant="warning"
-                                disabled={salaryData.finalized}
+                                disabled={finalized}
                                 onClick={handleFinalizeSalary}
                             >
-                                {salaryData.finalized ? "Already Finalized" : "Finalize Salary"}
+                                {finalized ? "Already Finalized" : "Finalize Salary"}
                             </Button>
                             <Button variant="secondary" onClick={() => alert("PDF generation to be implemented")}>View PDF</Button>
                         </div>

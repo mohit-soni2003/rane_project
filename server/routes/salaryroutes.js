@@ -84,7 +84,7 @@ router.post("/monthly/:month/advance/:userId", verifyToken, async (req, res) => 
             { new: true, upsert: true }
         );
         res.json({ message: "Advance added", salary });
-    } catch (err) {
+    } catch (err) { 
         res.status(500).json({ error: err.message });
     }
 });
@@ -113,20 +113,15 @@ router.put("/monthly/:month/update/:userId", verifyToken, async (req, res) => {
         const { allowances, bonus, overtime, advancePay, leaveCuts } = req.body;
 
         const update = {};
-        if (allowances) update.allowances = allowances;
+        if (allowances !== undefined) update.allowances = allowances;
         if (bonus !== undefined) update.bonus = bonus;
-
-        const pushFields = {};
-        if (overtime?.length) pushFields.overtime = { $each: overtime };
-        if (advancePay?.length) pushFields.advancePay = { $each: advancePay };
-        if (leaveCuts?.length) pushFields.leaveCuts = { $each: leaveCuts };
+        if (overtime) update.overtime = overtime;        // replace full array
+        if (advancePay) update.advancePay = advancePay;  // replace full array
+        if (leaveCuts) update.leaveCuts = leaveCuts;     // replace full array
 
         const salary = await MonthlySalary.findOneAndUpdate(
             { user: userId, month },
-            {
-                ...(Object.keys(update).length > 0 && { $set: update }),
-                ...(Object.keys(pushFields).length > 0 && { $push: pushFields })
-            },
+            { $set: update },
             { new: true }
         );
 
@@ -139,6 +134,7 @@ router.put("/monthly/:month/update/:userId", verifyToken, async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 
 // 📌 Finalize salary
 router.post("/monthly/:month/finalize/:userId", verifyToken, async (req, res) => {
