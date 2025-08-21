@@ -6,22 +6,12 @@ import {
   forwardDocument
 } from "../../services/dfsService";
 import { CLOUDINARY_URL, UPLOAD_PRESET } from "../../store/keyStore";
-import {
-  Container,
-  Spinner,
-  Card,
-  Row,
-  Col,
-  Table,
-  Image,
-  Badge,
-  Button,
-  Form
-} from "react-bootstrap";
+import {Container,Spinner,Card,Row,Col,Table,Image,Badge,Button,Form} from "react-bootstrap";
 import AdminHeader from "../../component/header/AdminHeader";
 import moment from "moment";
 import { FaPaperPlane, FaFilePdf, FaUserCircle } from "react-icons/fa";
 import { MdAttachFile } from "react-icons/md";
+import { useAuthStore } from "../../store/authStore";
 
 export default function SingleDfsRequestDetail() {
   const { id } = useParams();
@@ -260,6 +250,8 @@ export default function SingleDfsRequestDetail() {
                             {user.name}
                           </option>
                         ))}
+                        <option value={file.uploadedBy._id}>{file.uploadedBy.name}</option>
+
                       </Form.Select>
                     </Col>
 

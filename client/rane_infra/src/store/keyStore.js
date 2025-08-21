@@ -7,7 +7,7 @@ const CLOUD_NAME= "drl3qqrq3"//rane
 // const backend_url = "http://localhost:3000"
 
 // const UPLOAD_PRESET= "rane_infra"
-// const CLOUD_NAME= "mohitcloud2003"
+// const CLOUD_NAME= "mohitcloud2003" 
 
 
  
