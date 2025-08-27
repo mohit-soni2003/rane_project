@@ -38,3 +38,26 @@ export const getTransactionsByPaymentId = async (paymentId) => {
     throw err;
   }
 };
+// ✅ Get all transactions (Bill + PayReq) for a user from backend
+export const getAllTransactionsByUserId = async (userId) => {
+  try {
+    const res = await fetch(`${backend_url}/transaction/all/${userId}`, {
+      method: "GET",
+      credentials: "include", // include cookies if authentication is required
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to fetch transactions");
+    }
+
+    return data.transactions || [];
+  } catch (error) {
+    console.error("Error fetching all transactions:", error);
+    throw error;
+  }
+};

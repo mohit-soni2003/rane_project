@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const billSchema = new mongoose.Schema({
-    firmName: {
+    firmName: {                     // Redundantly store but cant be removed. its already fetched from user in collection
         type: String,
         required: true,
     },

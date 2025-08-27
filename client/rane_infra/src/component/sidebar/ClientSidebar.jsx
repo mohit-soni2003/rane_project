@@ -12,7 +12,7 @@ import LogoutModal from '../models/LogoutModal';
 
 
 
- 
+
 
 const ClientSidebar = ({ isOpen, toggleSidebar }) => {
   const { user } = useAuthStore();
@@ -147,7 +147,11 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
           {openDropdown === "transaction" ? <FaChevronUp /> : <FaChevronDown />}
         </div>
         <div style={submenuStyle(openDropdown === "transaction")}>
-          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Bill/IPR/Overall</div>
+          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />
+            <Link to="/client/transaction" style={{ textDecoration: 'none', color: 'inherit' }}>
+              Bill/IP/IPR
+            </Link>
+          </div>
           <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />Overview</div>
         </div>
       </div>

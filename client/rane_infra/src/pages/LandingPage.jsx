@@ -2,9 +2,7 @@ import React from 'react';
 import Navpannel from '../assets/components/unique_component/Navpannel';
 import { Link } from 'react-router-dom';
 import { Container, Button, Row, Col } from 'react-bootstrap';
-import { FaFilePdf, FaWhatsapp, FaEnvelope, FaMapMarkerAlt, FaClock } from "react-icons/fa"; // red PDF icon
-import { FaTrain, FaRoad, FaTools, FaBuilding } from "react-icons/fa";
-import { GiBridge } from "react-icons/gi";
+import { FaFilePdf, FaWhatsapp, FaEnvelope, FaMapMarkerAlt, FaClock } from "react-icons/fa";
 import Footer from '../assets/components/unique_component/Footer';
 
 const departments = [
@@ -15,9 +13,7 @@ const departments = [
     { name: "Rane's Pharmeceuticals", logo: "/logos/pharma.jpg" },
 ];
 
-
 export default function LandingPage() {
-
 
     const documents = [
         { name: "Rane GST Certificate", file: "/documents/Rane GST Certificate.pdf" },
@@ -32,6 +28,7 @@ export default function LandingPage() {
         <>
             <Navpannel />
 
+            {/* ---------- HERO ---------- */}
             <section
                 className="d-flex align-items-center text-white position-relative"
                 style={{
@@ -49,8 +46,6 @@ export default function LandingPage() {
                 ></div>
 
                 <Container style={{ zIndex: 2 }}>
-                    ;
-
                     <Row className="justify-content-start">
                         <Col md={8} lg={6}>
                             <h1
@@ -91,6 +86,7 @@ export default function LandingPage() {
                                         borderRadius: '6px',
                                         fontSize: '1rem',
                                         fontFamily: 'Segoe UI, Roboto, Helvetica, Arial, sans-serif',
+                                        transition: "all 0.3s ease",
                                     }}
                                     onMouseEnter={(e) => (e.target.style.backgroundColor = 'var(--primary-orange-hover)')}
                                     onMouseLeave={(e) => (e.target.style.backgroundColor = 'var(--primary-orange)')}
@@ -103,6 +99,7 @@ export default function LandingPage() {
                 </Container>
             </section>
 
+            {/* ---------- ABOUT ---------- */}
             <section className="py-5 bg-white">
                 <Container>
                     <Row className="align-items-center gy-4">
@@ -126,12 +123,16 @@ export default function LandingPage() {
                                 src="/images/landing-page-about.png"
                                 alt="About Our Company"
                                 className="img-fluid rounded shadow"
+                                style={{ transition: "transform 0.3s ease" }}
+                                onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+                                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
                             />
                         </Col>
                     </Row>
                 </Container>
             </section>
 
+            {/* ---------- EXPERTISE ---------- */}
             <section className="py-5" style={{ backgroundColor: "#f8f9fa" }}>
                 <Container>
                     <Row className="align-items-center gy-4 flex-md-row-reverse">
@@ -154,19 +155,25 @@ export default function LandingPage() {
                                 src="/images/landing-page-expertise.png"
                                 alt="Our Expertise"
                                 className="img-fluid rounded shadow"
+                                style={{ transition: "transform 0.3s ease" }}
+                                onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+                                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
                             />
                         </Col>
                     </Row>
                 </Container>
             </section>
 
+            {/* ---------- DIRECTOR ---------- */}
             <section className="py-5 text-center bg-white">
                 <div className="container">
                     <img
                         src="/images/rane.webp"
                         alt="Tejprakash Rane"
                         className="rounded-circle shadow mb-4"
-                        style={{ width: "120px", height: "120px", objectFit: "cover" }}
+                        style={{ width: "120px", height: "120px", objectFit: "cover", transition: "transform 0.3s ease" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
                     />
                     <h3 className="fw-bold text-dark mb-1" style={{ fontSize: "1.6rem" }}>
                         Tejprakash Rane
@@ -190,6 +197,7 @@ export default function LandingPage() {
                             borderRadius: "8px",
                             border: "none",
                             fontSize: "1rem",
+                            transition: "all 0.3s ease",
                         }}
                         onMouseEnter={(e) => (e.target.style.backgroundColor = "var(--primary-orange-hover)")}
                         onMouseLeave={(e) => (e.target.style.backgroundColor = "var(--primary-orange)")}
@@ -199,6 +207,7 @@ export default function LandingPage() {
                 </div>
             </section>
 
+            {/* ---------- DEPARTMENTS ---------- */}
             <section style={{ backgroundColor: "#f3f4f6", padding: "60px 0" }}>
                 <div className="container text-center">
                     <h2 className="fw-bold mb-5" style={{ color: "#1f2937" }}>
@@ -210,7 +219,19 @@ export default function LandingPage() {
                             <div className="col-6 col-sm-4 col-md-2 mb-4" key={idx}>
                                 <div
                                     className="bg-white shadow-sm rounded py-4 px-3 text-center h-100"
-                                    style={{ minWidth: "120px" }}
+                                    style={{
+                                        minWidth: "120px",
+                                        cursor: "pointer",
+                                        transition: "all 0.3s ease",
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.transform = "translateY(-5px) scale(1.05)";
+                                        e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.15)";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = "translateY(0) scale(1)";
+                                        e.currentTarget.style.boxShadow = "0 4px 10px rgba(0,0,0,0.05)";
+                                    }}
                                 >
                                     <div className="mb-2">
                                         <img
@@ -230,7 +251,8 @@ export default function LandingPage() {
                     </div>
                 </div>
             </section>
-            {/* ----------CONTACT - US ----------- */}
+
+            {/* ---------- CONTACT ---------- */}
             <section className="contactus py-5 bg-white " id="contactus">
                 <Container>
                     <Row className="align-items-center">
@@ -246,24 +268,44 @@ export default function LandingPage() {
                             </p>
 
                             <ul className="list-unstyled mt-4">
-                                <li className="mb-2 d-flex align-items-center gap-2">
+                                <li
+                                    className="mb-2 d-flex align-items-center gap-2"
+                                    style={{ transition: "all 0.3s ease", cursor: "pointer" }}
+                                    onMouseEnter={(e) => (e.currentTarget.style.transform = "translateX(5px)")}
+                                    onMouseLeave={(e) => (e.currentTarget.style.transform = "translateX(0)")}
+                                >
                                     <FaWhatsapp color="#25D366" size={18} />
                                     <span>WhatsApp Available</span>
                                 </li>
-                                <li className="mb-2 d-flex align-items-center gap-2">
+                                <li
+                                    className="mb-2 d-flex align-items-center gap-2"
+                                    style={{ transition: "all 0.3s ease", cursor: "pointer" }}
+                                    onMouseEnter={(e) => (e.currentTarget.style.transform = "translateX(5px)")}
+                                    onMouseLeave={(e) => (e.currentTarget.style.transform = "translateX(0)")}
+                                >
                                     <FaEnvelope color="#FF5722" size={18} />
                                     <span>
                                         ranendranesons@gmail.com <br />
                                     </span>
                                 </li>
-                                <li className="mb-2 d-flex align-items-start gap-2">
+                                <li
+                                    className="mb-2 d-flex align-items-start gap-2"
+                                    style={{ transition: "all 0.3s ease", cursor: "pointer" }}
+                                    onMouseEnter={(e) => (e.currentTarget.style.transform = "translateX(5px)")}
+                                    onMouseLeave={(e) => (e.currentTarget.style.transform = "translateX(0)")}
+                                >
                                     <FaMapMarkerAlt color="#EF4444" size={18} />
                                     <span>
                                         101, Ranipura Main Road, Opp. Bhaiyya Ji Pyao, Jagjivan Ram Mohalla,
                                         Indore, MP, India
                                     </span>
                                 </li>
-                                <li className="d-flex align-items-center gap-2">
+                                <li
+                                    className="d-flex align-items-center gap-2"
+                                    style={{ transition: "all 0.3s ease", cursor: "pointer" }}
+                                    onMouseEnter={(e) => (e.currentTarget.style.transform = "translateX(5px)")}
+                                    onMouseLeave={(e) => (e.currentTarget.style.transform = "translateX(0)")}
+                                >
                                     <FaClock color="#F59E0B" size={18} />
                                     <span>Open today 11:45 am – 05:00 pm</span>
                                 </li>
@@ -285,12 +327,11 @@ export default function LandingPage() {
                                 ></iframe>
                             </div>
                         </Col>
-
                     </Row>
                 </Container>
             </section>
 
-            {/* ------------Documents------------------ */}
+            {/* ---------- DOCUMENTS ---------- */}
             <section
                 className="py-5 documents"
                 style={{ backgroundColor: "#f3f4f6" }}
@@ -307,13 +348,25 @@ export default function LandingPage() {
                     <div className="row mt-4">
                         {documents.map((doc, index) => (
                             <div className="col-md-6 col-lg-4 mb-4" key={index}>
-                                <div className="shadow-sm rounded bg-white p-3 h-100 d-flex flex-column justify-content-between">
+                                <div
+                                    className="shadow-sm rounded bg-white p-3 h-100 d-flex flex-column justify-content-between"
+                                    style={{ transition: "all 0.3s ease", cursor: "pointer" }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = "#fff7f2";
+                                        e.currentTarget.style.transform = "translateY(-5px)";
+                                        e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.15)";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = "#fff";
+                                        e.currentTarget.style.transform = "translateY(0)";
+                                        e.currentTarget.style.boxShadow = "0 4px 10px rgba(0,0,0,0.05)";
+                                    }}
+                                >
                                     <div className="d-flex align-items-center gap-3 mb-2">
                                         <FaFilePdf size={32} color="red" />
                                         <span className="fw-semibold text-dark">{doc.name}</span>
                                     </div>
 
-                                    {/* Center button on mobile, left-align on md+ */}
                                     <div className="text-center text-md-start mt-3">
                                         <a
                                             href={doc.file}
@@ -326,10 +379,10 @@ export default function LandingPage() {
                                                 fontSize: "0.9rem",
                                                 padding: "8px 14px",
                                                 width: "fit-content",
+                                                transition: "all 0.3s ease",
                                             }}
                                             onMouseEnter={(e) =>
-                                            (e.target.style.backgroundColor =
-                                                "var(--primary-orange-hover)")
+                                                (e.target.style.backgroundColor = "var(--primary-orange-hover)")
                                             }
                                             onMouseLeave={(e) =>
                                                 (e.target.style.backgroundColor = "var(--primary-orange)")
@@ -345,8 +398,7 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            <Footer></Footer>
-
+            <Footer />
         </>
     );
 }

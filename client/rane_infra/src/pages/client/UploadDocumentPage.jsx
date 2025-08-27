@@ -65,7 +65,7 @@ export default function UploadDocumentPage() {
             formData.append('upload_preset', UPLOAD_PRESET);
 
             const res = await fetch(CLOUDINARY_URL, {
-                method: 'POST',
+                method: 'POST', 
                 body: formData,
             });
 
