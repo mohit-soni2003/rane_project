@@ -79,3 +79,29 @@ export const updateDocumentStatus = async (documentId, status) => {
     throw error;
   }
 };
+
+
+
+// Fetch documents uploaded by the logged-in user. Used by admin and staff to find all document that are pushed by them.
+export const getMyUploadedDocuments = async () => {
+  try {
+    const response = await fetch(`${backend_url}/my-uploaded-documents`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // ✅ Needed to send cookies
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to fetch uploaded documents.');
+    }
+
+    return data.documents;
+  } catch (error) {
+    console.error('Error in getMyUploadedDocuments:', error);
+    throw error;
+  }
+};

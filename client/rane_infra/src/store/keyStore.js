@@ -15,4 +15,4 @@ const CLOUDINARY_URL_IMAGE = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/imag
 const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`
 
 
-export {backend_url , CLOUDINARY_URL,UPLOAD_PRESET,CLOUD_NAME,CLOUDINARY_URL_IMAGE}  
+export {backend_url , CLOUDINARY_URL,UPLOAD_PRESET,CLOUD_NAME,CLOUDINARY_URL_IMAGE}

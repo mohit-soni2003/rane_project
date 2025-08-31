@@ -44,6 +44,7 @@ import HomePageAdmin from "./pages/admin/HomePageAdmin.jsx";
 import AllBillPage from "./pages/admin/AllBillPage.jsx";
 import PaymentRequestListAdmin from "./pages/admin/PaymentRequestListAdmin.jsx";
 import PushDocumentAdminPage from "./pages/admin/PushDocumentAdminPage.jsx";
+import MyPushedDocument from "./pages/admin/MyPushedDocument.jsx";
 import ClientsListAdminPage from "./pages/admin/ClientsListAdminPage.jsx";
 import ClientDetailAdminPage from "./pages/admin/ClientDetailAdminPage.jsx";
 import SingleBillDetailAdminPage from "./pages/admin/SingleBillDetailAdminPage.jsx";
@@ -54,6 +55,7 @@ import ClientSalaryAll from "./pages/admin/ClientSalaryAll.jsx";
 import SingleUSerSalaryDetailAdmin from "./pages/admin/SingleUSerSalaryDetailAdmin.jsx";
 import AllUser from "./pages/admin/AllUser.jsx";
 import AllDFSRequests from "./pages/admin/AllDFSRequests.jsx";
+
 
 import StaffLayout from "./Layout/StaffLayout.jsx";
 import HomePageStaff from "./pages/staff/HomePageStaff.jsx";
@@ -183,6 +185,7 @@ function App() {
           <Route path="payment-request/:id" element={<SinglePRdetailAdminPAge />} />
           <Route path="push-document/:cid" element={<PushDocumentAdminPage />} />
           <Route path="push-document" element={<PushDocumentAdminPage />} />
+          <Route path="push-document/by-me" element={<MyPushedDocument />} />
           <Route path="all-client" element={<ClientsListAdminPage />} />
           <Route path="client-detail/:id" element={<ClientDetailAdminPage />} />
           <Route path="dfsrequest" element={<DfsRequest />} />

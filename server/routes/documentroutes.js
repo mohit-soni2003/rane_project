@@ -115,4 +115,28 @@ router.put('/client/document/update-status/:documentId', verifyToken, async (req
   }
 });
 
+// This route returns documents uploaded by the logged-in user (Admin/Staff) . This is used by admin and Staff. 
+router.get('/my-uploaded-documents', verifyToken, async (req, res) => {
+  try {
+    const userId = req.userId; // ✅ Extracted from cookies via verifyToken middleware
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized. User ID missing." });
+    }
+
+    // Fetch documents where uploadedBy = logged-in user
+    const documents = await Document.find({ uploadedBy: userId })
+      .populate("userId", "name cid email profile _id")   // user for whom doc uploaded
+      .populate("uploadedBy", "name email cid profile _id")  // uploader info
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ documents });
+
+  } catch (error) {
+    console.error("Error fetching uploaded documents:", error);
+    res.status(500).json({ error: "Server error while fetching uploaded documents." });
+  }
+});
+
+
 module.exports = router;

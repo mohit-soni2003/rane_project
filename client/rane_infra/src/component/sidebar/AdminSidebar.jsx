@@ -35,7 +35,7 @@ const AdminSidebar = () => {
     <div className="d-flex flex-column vh-100 p-3" style={{ width: '260px', backgroundColor: '#1e1e2f', color: '#f1f1f1' }}>
 
       {/* Profile Section */}
-      <div className="text-center mb-3 mt-2">
+      <div className="text-center mb-2 mt-2">
         <img
           src={user.profile || dummyUser}
           alt="Admin"
@@ -48,7 +48,7 @@ const AdminSidebar = () => {
       </div>
 
       {/* Home  */}
-      <div className="mb-3 d-flex align-items-center cursor-pointer">
+      <div className="mb-2 d-flex align-items-center cursor-pointer">
         <FaTachometerAlt className="me-2" />
         <Link to="/admin" style={{ textDecoration: 'none', color: 'inherit' }}>
           Home
@@ -56,14 +56,14 @@ const AdminSidebar = () => {
       </div>
 
       {/* Bills */}
-      <div className="mb-3 d-flex align-items-center cursor-pointer">
+      <div className="mb-2 d-flex align-items-center cursor-pointer">
         <FaFileInvoice className="me-2" />
         <Link to="/admin/bill" style={{ textDecoration: 'none', color: 'inherit' }}>
           Bills
         </Link>
       </div>
       {/* payment Request  */}
-      <div className="mb-3 d-flex align-items-center cursor-pointer">
+      <div className="mb-2 d-flex align-items-center cursor-pointer">
         <FaFileInvoice className="me-2" />
         <Link to="/admin/payment-request" style={{ textDecoration: 'none', color: 'inherit' }}>
           Payment Request
@@ -71,7 +71,7 @@ const AdminSidebar = () => {
       </div>
 
       {/* Client */}
-      <div className="mb-3" onClick={() => toggleMenu('client')}>
+      <div className="mb-2" onClick={() => toggleMenu('client')}>
         <div className="d-flex justify-content-between align-items-center cursor-pointer">
           <span><FaUserTie className="me-2" /> Client</span>
           {openMenu === 'client' ? <FaChevronUp /> : <FaChevronDown />}
@@ -91,7 +91,7 @@ const AdminSidebar = () => {
       </div>
 
       {/* DFS Request */}
-      <div className="mb-3" onClick={() => toggleMenu('dfs')}>
+      <div className="mb-2" onClick={() => toggleMenu('dfs')}>
         <div className="d-flex justify-content-between align-items-center cursor-pointer">
           <span><FaFileAlt className="me-2" /> DFS</span>
           {openMenu === 'dfs' ? <FaChevronUp /> : <FaChevronDown />}
@@ -105,7 +105,7 @@ const AdminSidebar = () => {
       </div>
 
       {/* Push Document */}
-      <div className="mb-3" onClick={() => toggleMenu('push')}>
+      <div className="mb-2" onClick={() => toggleMenu('push')}>
         <div className="d-flex justify-content-between align-items-center cursor-pointer">
           <span><FaFileAlt className="me-2" /> Push Document</span>
           {openMenu === 'push' ? <FaChevronUp /> : <FaChevronDown />}
@@ -114,10 +114,13 @@ const AdminSidebar = () => {
           <div className="py-1"><Link to="/admin/push-document" style={{ textDecoration: 'none', color: 'inherit' }}>
             Push new Document
           </Link></div>
+          <div className="py-1"><Link to="/admin/push-document/by-me" style={{ textDecoration: 'none', color: 'inherit' }}>
+            See all document
+          </Link></div>
         </div>
       </div>
       {/* salary */}
-      <div className="mb-3" onClick={() => toggleMenu('salary')}>
+      <div className="mb-2" onClick={() => toggleMenu('salary')}>
         <div className="d-flex justify-content-between align-items-center cursor-pointer">
           <span><FaMoneyBillWave className="me-2" /> Salary</span>
           {openMenu === 'salary' ? <FaChevronDown /> : <FaChevronDown />}
@@ -136,7 +139,7 @@ const AdminSidebar = () => {
         </div>
       </div>
       {/* Notification */}
-      <div className="mb-3 d-flex align-items-center cursor-pointer">
+      <div className="mb-2 d-flex align-items-center cursor-pointer">
         <FaBell className="me-2" />
         <div className="">
           <Link to="/admin/under-dev" style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -145,7 +148,7 @@ const AdminSidebar = () => {
         </div>
       </div>
       {/* Important Routes */}
-      <div className="mb-3" onClick={() => toggleMenu('important')}>
+      <div className="mb-2" onClick={() => toggleMenu('important')}>
         <div className="d-flex justify-content-between align-items-center cursor-pointer">
           <span><FaLayerGroup className="me-2" /> Important Routes</span>
           {openMenu === 'important' ? <FaChevronUp /> : <FaChevronDown />}
@@ -163,7 +166,7 @@ const AdminSidebar = () => {
           </div>                </div>
       </div>
       {/* Settings */}
-      <div className="mb-3 d-flex align-items-center cursor-pointer">
+      <div className="mb-2 d-flex align-items-center cursor-pointer">
         <FaTools className="me-2" />
         <Link to="/admin/setting" style={{ textDecoration: 'none', color: 'inherit' }}>
           Setting
@@ -171,7 +174,7 @@ const AdminSidebar = () => {
       </div>
 
       {/* Help */}
-      <div className="mb-3 d-flex align-items-center cursor-pointer">
+      <div className="mb-2 d-flex align-items-center cursor-pointer">
         <FaQuestionCircle className="me-2" />
         <Link to="/admin/under-dev" style={{ textDecoration: 'none', color: 'inherit' }}>
           Help

@@ -81,7 +81,7 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
       </div>
 
       {/* Home */}
-      <div className="mb-2 d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
+      <div className="d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
         <FaHome className="me-2" />
         <Link to="/client" style={{ textDecoration: 'none', color: 'inherit' }}>
           Home
@@ -90,7 +90,7 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
       </div>
 
       {/* Dropdown: Bill */}
-      <div className="mb-2">
+      <div className="">
         <div
           onClick={() => toggleDropdown("bill")}
           className="d-flex justify-content-between align-items-center sidebar-item"
@@ -114,7 +114,7 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
       </div>
 
       {/* Payment */}
-      <div className="mb-2">
+      <div className="">
         <div
           onClick={() => toggleDropdown("payment")}
           className="d-flex justify-content-between align-items-center sidebar-item"
@@ -137,7 +137,7 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
       </div>
 
       {/* Transactions */}
-      <div className="mb-2">
+      <div className="">
         <div
           onClick={() => toggleDropdown("transaction")}
           className="d-flex justify-content-between align-items-center sidebar-item"
@@ -157,7 +157,7 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
       </div>
 
       {/* DFS */}
-      <div className="mb-2">
+      <div className="">
         <div
           onClick={() => toggleDropdown("dfs")}
           className="d-flex justify-content-between align-items-center sidebar-item"
@@ -186,7 +186,7 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
       </div>
 
       {/* Document */}
-      <div className="mb-2 d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
+      <div className="d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
         <FaFileAlt className="me-2" />
         <Link to="/client/document/category" style={{ textDecoration: 'none', color: 'inherit' }}>
           Document
@@ -195,7 +195,7 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
 
       {/* Salary */}
 
-      <div className="mb-2 d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
+      <div className="d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
         <FaMoneyBillWave className="me-2" />
         <Link to="/client/salary" style={{ textDecoration: 'none', color: 'inherit' }}>
           Salary
@@ -203,7 +203,7 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
       </div>
 
       {/* Settings */}
-      <div className="mb-2 d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
+      <div className="d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
         <FaUserCog className="me-2" />
         <Link to="/client/setting" style={{ textDecoration: 'none', color: 'inherit' }}>
           Setting
@@ -211,7 +211,7 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
       </div>
 
       {/* Support */}
-      <div className="mb-2 d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
+      <div className="d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
         <FaHeadset className="me-2" />
         <Link to="/client/support" style={{ textDecoration: 'none', color: 'inherit' }}>
           Support

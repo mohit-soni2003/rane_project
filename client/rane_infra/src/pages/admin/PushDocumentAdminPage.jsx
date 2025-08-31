@@ -80,10 +80,10 @@ export default function PushDocumentAdminPage() {
   const sectionTitleStyle = { fontWeight: '600', fontSize: '1.1rem', marginBottom: '10px' };
 
   return (
-    <>
+    <> 
       <AdminHeader />
-      <div className="container-fluid w-100 mt-4">
-        <Card className="p-4 border-0 shadow-sm">
+      <div className="container-fluid w-100 mt-4 ">
+        <Card className="p-4 border-0 shadow-sm" style={{backgroundColor:"var(--client-component-bg-color)"}}>
           <div className="d-flex align-items-center mb-4" style={sectionTitleStyle}>
             <FaPaperPlane style={{ marginRight: '10px', color: '#6c757d' }} />
             Push Document to Client

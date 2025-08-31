@@ -59,19 +59,19 @@ const StaffSidebar = () => {
 
       {/* Sidebar Links */}
       <Link to="/staff/home" style={menuItemStyle}>
-        <div className="mb-2 d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
+        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
           <FaTachometerAlt className="me-2" /> Home
         </div>
       </Link>
 
       <Link to="/staff/bill" style={menuItemStyle}>
-        <div className="mb-2 d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
+        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
           <FaFileInvoice className="me-2" /> Bills
         </div>
       </Link>
 
       {/* Client Dropdown */}
-      <div className="mb-2 px-2 py-2 rounded cursor-pointer hover-effect" onClick={() => toggleMenu('client')}>
+      <div className="px-2 py-2 rounded cursor-pointer hover-effect" onClick={() => toggleMenu('client')}>
         <div className="d-flex justify-content-between align-items-center">
           <span><FaUserTie className="me-2" /> Client</span>
           {openMenu === 'client' ? <FaChevronUp /> : <FaChevronDown />}
@@ -103,7 +103,7 @@ const StaffSidebar = () => {
       </div>
 
       {/* DFS Section Dropdown */}
-      <div className="mb-2 px-2 py-2 rounded cursor-pointer hover-effect" onClick={() => toggleMenu('dfs')}>
+      <div className="px-2 py-2 rounded cursor-pointer hover-effect" onClick={() => toggleMenu('dfs')}>
         <div className="d-flex justify-content-between align-items-center">
           <span><FaFileAlt className="me-2" /> DFS Section</span>
           {openMenu === 'dfs' ? <FaChevronUp /> : <FaChevronDown />}
@@ -123,34 +123,34 @@ const StaffSidebar = () => {
 
       {/* Notification */}
       <Link to="/staff/under-dev" style={menuItemStyle}>
-        <div className="mb-2 d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
+        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
           <FaBell className="me-2" /> Notification
         </div>
       </Link>
 
       {/* Salary */}
       <Link to="/staff/salary" style={menuItemStyle}>
-        <div className="mb-2 d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
+        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
           <FaFileInvoice className="me-2" /> Salary
         </div>
       </Link>
 
       {/* Settings */}
       <Link to="/staff/setting" style={menuItemStyle}>
-        <div className="mb-2 d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
+        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
           <FaTools className="me-2" /> Setting
         </div>
       </Link>
 
       {/* Help */}
       <Link to="/staff/under-dev" style={menuItemStyle}>
-        <div className="mb-2 d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
+        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
           <FaQuestionCircle className="me-2" /> Help
         </div>
       </Link>
 
       {/* Logout */}
-      <div className="mb-2 mt-auto d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
+      <div className="mt-auto d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
         <FaSignOutAlt className="me-2" /> Logout
       </div>
 
