@@ -6,10 +6,10 @@ export const updateUser = async (userData) => {
   try {
     const response = await fetch(`${backend_url}/update-user`, {
       method: "PUT",
-      headers: { 
+      headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(userData), 
+      body: JSON.stringify(userData),
     });
 
     const data = await response.json();
@@ -18,11 +18,11 @@ export const updateUser = async (userData) => {
     }
 
     return data; // { message, user }
-  } catch (error) { 
+  } catch (error) {
     console.error("Update user error:", error);
     throw error;
   }
-}; 
+};
 
 
 export const getAllClients = async () => {
@@ -44,7 +44,7 @@ export const getAllClients = async () => {
   } catch (error) {
     console.error('Error fetching clients:', error.message);
     return [];
-  } 
+  }
 };
 
 // THis route is for admin to vies full user detaules
@@ -59,6 +59,62 @@ export const getUserFullDetails = async (id) => {
     return data;
   } catch (error) {
     console.error("Error fetching user details:", error);
+    throw error;
+  }
+};
+
+
+// CHANGE PASSWORD (using cookies for auth)
+export const changePassword = async (currentPassword, newPassword) => {
+  try {
+    const response = await fetch(`${backend_url}/change-password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // ✅ send cookies automatically
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to change password");
+    }
+
+    return data; // { success: true, message: "Password changed successfully" }
+  } catch (error) {
+    console.error("Error changing password:", error.message);
+    throw error;
+  }
+};
+
+// UPDATE ID PROOF (Aadhar / PAN)
+// UPDATE ID PROOF (Aadhar / PAN)
+export const updateIdProof = async (id, idproofData) => {
+  try {
+    console.log("[updateIdProof] outgoing payload:", { id, ...idproofData });
+
+    const response = await fetch(`${backend_url}/update-idproof`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, ...idproofData }),
+    });
+
+    // try to parse any json response (even when !ok)
+    const text = await response.text();
+    let data;
+    try { data = text ? JSON.parse(text) : {}; } catch (e) { data = { raw: text }; }
+
+    console.log("[updateIdProof] response:", response.status, data);
+
+    if (!response.ok) {
+      // include server message when possible
+      throw new Error(data.error || data.message || `HTTP ${response.status}`);
+    }
+    return data;
+  } catch (error) {
+    console.error("Error updating ID proof:", error.message || error);
     throw error;
   }
 };

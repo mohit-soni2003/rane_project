@@ -7,8 +7,8 @@ import {
 } from 'react-icons/fa';
 import ClientHeader from '../../component/header/ClientHeader';
 import dummyUser from "../../assets/images/dummyUser.jpeg";
-import { updateUser } from '../../services/userServices';
-import { CLOUDINARY_URL_IMAGE } from '../../store/keyStore';
+import { updateUser, changePassword, updateIdProof } from '../../services/userServices';
+import { CLOUDINARY_URL_IMAGE, CLOUDINARY_URL } from '../../store/keyStore';
 import { CLOUD_NAME } from '../../store/keyStore';
 import MaintainencePage from '../MaintainencePage';
 
@@ -37,6 +37,17 @@ export default function SettingPage() {
     upi: user.upi || '',
   });
 
+  const [passwords, setPasswords] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const [documents, setDocuments] = useState({
+    aadhar: { number: user?.idproof?.aadhar?.number || "", link: user?.idproof?.aadhar?.link || "" },
+    pan: { number: user?.idproof?.pan?.number || "", link: user?.idproof?.pan?.link || "" },
+  });
+
   const handleChange = (field) => (e) => {
     setFormData({ ...formData, [field]: e.target.value });
   };
@@ -50,32 +61,104 @@ export default function SettingPage() {
     }
   };
 
+  // PROFILE UPLOAD - use uploadData variable name to avoid shadowing `formData`
   const handleProfileUpload = async () => {
     if (!profileFile) return alert("Please select an image first.");
 
-    const formData = new FormData();
-    formData.append("file", profileFile);
-    formData.append("upload_preset", UPLOAD_PRESET);
+    const uploadData = new FormData();
+    uploadData.append("file", profileFile);
+    uploadData.append("upload_preset", UPLOAD_PRESET);
 
     try {
-      // Upload to Cloudinary
+      // Use same Cloudinary URL you used successfully for profile images
       const cloudRes = await fetch(CLOUDINARY_URL_IMAGE, {
         method: "POST",
-        body: formData,
+        body: uploadData,
       });
       const cloudData = await cloudRes.json();
 
-      // Update backend with new profile image URL
-      const updatedData = { ...formData, id: user._id, profile: cloudData.secure_url };
-      await updateUser(updatedData);
+      if (!cloudData?.secure_url) throw new Error("Cloudinary upload failed");
+
+      // Prepare update payload and call updateUser
+      const updatedUserData = { id: user._id, profile: cloudData.secure_url };
+      await updateUser(updatedUserData);
 
       alert("Profile picture updated!");
-      window.location.reload(); // optional: refresh to reflect new image
+      // optionally reload or update user in store
+      window.location.reload();
     } catch (error) {
       console.error("Upload failed:", error);
       alert("Failed to update profile picture.");
     }
   };
+
+  const handlePasswordUpdate = async () => {
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      alert("New password and confirm password do not match!");
+      return;
+    }
+    try {
+      const res = await changePassword(passwords.currentPassword, passwords.newPassword);
+      alert(res.message || "Password updated successfully!");
+      setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (err) {
+      alert(err.message || "Failed to change password");
+    }
+  };
+
+// DOCUMENT UPLOAD (aadhar / pan)
+const handleDocUpload = async (type, file) => {
+  if (!file) return alert("Please select a file first");
+
+  const uploadData = new FormData();
+  uploadData.append("file", file);
+  uploadData.append("upload_preset", UPLOAD_PRESET);
+
+  try {
+    // Upload to Cloudinary (use the same working URL constant)
+    const cloudRes = await fetch(CLOUDINARY_URL_IMAGE, {
+      method: "POST",
+      body: uploadData,
+    });
+    const cloudData = await cloudRes.json();
+    if (!cloudData?.secure_url) throw new Error("Cloudinary upload failed");
+
+    // Build payload expected by backend: { aadhar: {...} } or { pan: {...} }
+    const payload = {
+      [type]: {
+        number: documents[type].number || "", // use whatever user entered
+        link: cloudData.secure_url,
+      },
+    };
+
+    // Call backend and pass id + payload via service
+    const res = await updateIdProof(user._id, payload);
+    console.log("updateIdProof response:", res);
+
+    if (res?.idproof) {
+      // backend returns idproof object -> keep UI in sync
+      setDocuments({
+        aadhar: {
+          number: res.idproof?.aadhar?.number || "",
+          link: res.idproof?.aadhar?.link || "",
+        },
+        pan: {
+          number: res.idproof?.pan?.number || "",
+          link: res.idproof?.pan?.link || "",
+        },
+      });
+      alert(`${type.toUpperCase()} updated successfully!`);
+    } else {
+      alert("Document updated, but server didn't return updated data.");
+    }
+  } catch (err) {
+    console.error("Document upload failed:", err);
+    alert("Failed to upload document");
+  }
+};
+
+
+
 
   useEffect(() => {
     if (profileFile) handleProfileUpload();
@@ -223,73 +306,171 @@ export default function SettingPage() {
           </div>
 
           {/* DOCUMENTS (Static) */}
+
           <div className="tab-pane fade" id="documentupload">
-            <MaintainencePage></MaintainencePage>
-          </div>
-          {/* <div className="tab-pane fade" id="documentupload">
             <div className="card p-4 mb-4 shadow-sm" style={{ border: 'none' }}>
               <h6 className="mb-3 fw-semibold text-primary">Document Upload</h6>
               <div className="row g-4">
-                {[
-                  ['Aadhar Card', 'Not Provided', 'aadhar.pdf'],
-                  ['PAN Card', 'ABCDE1234F', 'pan.pdf']
-                ].map(([title, number, file], i) => (
-                  <div className="col-md-6" key={i}>
-                    <div className="card p-3 shadow-sm">
-                      <h6><FaIdCard className="me-2 text-danger" /> {title}</h6>
-                      <input type="text" className="form-control my-2" defaultValue={number} />
+
+                {/* Aadhaar */}
+                <div className="col-md-6">
+                  <div className="card p-3 shadow-sm">
+                    <h6><FaIdCard className="me-2 text-danger" /> Aadhar Card</h6>
+                    <input
+                      type="text"
+                      className="form-control my-2"
+                      value={documents.aadhar.number}
+                      onChange={(e) =>
+                        setDocuments({ ...documents, aadhar: { ...documents.aadhar, number: e.target.value } })
+                      }
+                      placeholder="Enter Aadhar Number"
+                    />
+                    {documents.aadhar.link ? (
                       <div className="bg-light text-center p-3 border rounded">
                         <FaFilePdf size={40} className="text-danger mb-2" />
-                        <p className="mb-0">{file}</p>
-                        <small className="text-muted">Uploaded 2 months ago</small>
+                        <p className="mb-0">Aadhar.pdf</p>
+                        <a href={documents.aadhar.link} target="_blank" rel="noreferrer" className="btn btn-outline-secondary btn-sm mt-2">
+                          View Document
+                        </a>
                       </div>
-                      <div className="d-flex justify-content-between mt-3">
-                        <button className="btn btn-outline-primary btn-sm">
-                          <FaUpload className="me-1" /> Upload / Update
-                        </button>
-                        <button className="btn btn-outline-secondary btn-sm">View Document</button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div> */}
+                    ) : <small className="text-muted">No document uploaded</small>}
 
-          {/* SECURITY (Static) */}
-          <div className="tab-pane fade" id="security">
-           <MaintainencePage></MaintainencePage>
-          </div>
-          {/* <div className="tab-pane fade" id="security">
-            <div className="card p-4 shadow-sm" style={{ border: 'none' }}>
-              <h6 className="mb-3 fw-semibold text-warning"><FaKey className="me-2" /> Security</h6>
-              {[
-                ['Current Password', showPass, setShowPass],
-                ['New Password', showNewPass, setShowNewPass],
-                ['Confirm Password', showConfirmPass, setShowConfirmPass]
-              ].map(([label, state, setState], i) => (
-                <div className="mb-3" key={i}>
-                  <label className="form-label">{label}</label>
-                  <div className="input-group">
-                    <input type={state ? 'text' : 'password'} className="form-control" />
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary"
-                      onClick={() => setState(!state)}
-                    >
-                      {state ? <FaEyeSlash /> : <FaEye />}
-                    </button>
+                    <input
+                      type="file"
+                      accept="application/pdf,image/*"
+                      style={{ display: "none" }}
+                      id="aadharUpload"
+                      onChange={(e) => handleDocUpload("aadhar", e.target.files[0])}
+                    />
+                    <label htmlFor="aadharUpload" className="btn btn-outline-primary btn-sm mt-3">
+                      <FaUpload className="me-1" /> Upload / Update
+                    </label>
                   </div>
                 </div>
-              ))}
-              <button className="btn mt-2" style={{
-                backgroundColor: 'var(--client-btn-bg)',
-                color: 'var(--client-btn-text)'
-              }}>
+
+                {/* PAN */}
+                <div className="col-md-6">
+                  <div className="card p-3 shadow-sm">
+                    <h6><FaIdCard className="me-2 text-danger" /> PAN Card</h6>
+                    <input
+                      type="text"
+                      className="form-control my-2"
+                      value={documents.pan.number}
+                      onChange={(e) =>
+                        setDocuments({ ...documents, pan: { ...documents.pan, number: e.target.value } })
+                      }
+                      placeholder="Enter PAN Number"
+                    />
+                    {documents.pan.link ? (
+                      <div className="bg-light text-center p-3 border rounded">
+                        <FaFilePdf size={40} className="text-danger mb-2" />
+                        <p className="mb-0">PAN.pdf</p>
+                        <a href={documents.pan.link} target="_blank" rel="noreferrer" className="btn btn-outline-secondary btn-sm mt-2">
+                          View Document
+                        </a>
+                      </div>
+                    ) : <small className="text-muted">No document uploaded</small>}
+
+                    <input
+                      type="file"
+                      accept="application/pdf,image/*"
+                      style={{ display: "none" }}
+                      id="panUpload"
+                      onChange={(e) => handleDocUpload("pan", e.target.files[0])}
+                    />
+                    <label htmlFor="panUpload" className="btn btn-outline-primary btn-sm mt-3">
+                      <FaUpload className="me-1" /> Upload / Update
+                    </label>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+
+          {/* SECURITY (Static) */}
+
+          <div className="tab-pane fade" id="security">
+            <div className="card p-4 shadow-sm" style={{ border: 'none' }}>
+              <h6 className="mb-3 fw-semibold text-warning"><FaKey className="me-2" /> Security</h6>
+              {/* Current Password */}
+              <div className="mb-3">
+                <label className="form-label">Current Password</label>
+                <div className="input-group">
+                  <input
+                    type={showPass ? "text" : "password"}
+                    className="form-control"
+                    value={passwords.currentPassword}
+                    onChange={(e) =>
+                      setPasswords({ ...passwords, currentPassword: e.target.value })
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => setShowPass(!showPass)}
+                  >
+                    {showPass ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+              </div>
+
+              {/* New Password */}
+              <div className="mb-3">
+                <label className="form-label">New Password</label>
+                <div className="input-group">
+                  <input
+                    type={showNewPass ? "text" : "password"}
+                    className="form-control"
+                    value={passwords.newPassword}
+                    onChange={(e) =>
+                      setPasswords({ ...passwords, newPassword: e.target.value })
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => setShowNewPass(!showNewPass)}
+                  >
+                    {showNewPass ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm Password */}
+              <div className="mb-3">
+                <label className="form-label">Confirm Password</label>
+                <div className="input-group">
+                  <input
+                    type={showConfirmPass ? "text" : "password"}
+                    className="form-control"
+                    value={passwords.confirmPassword}
+                    onChange={(e) =>
+                      setPasswords({ ...passwords, confirmPassword: e.target.value })
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => setShowConfirmPass(!showConfirmPass)}
+                  >
+                    {showConfirmPass ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Update Password Button */}
+              <button
+                className="btn mt-2"
+                style={{ backgroundColor: 'var(--client-btn-bg)', color: 'var(--client-btn-text)' }}
+                onClick={handlePasswordUpdate}
+              >
                 Update Password
               </button>
+
             </div>
-          </div> */}
+          </div>
 
         </div>
       </div>

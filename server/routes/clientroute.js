@@ -4,7 +4,7 @@ const Bill = require("../models/billmodel")
 
 
 const router = express.Router();
- 
+
 router.get('/allclient', async (req, res) => {
     console.log("show all Client route hitted")
 
@@ -60,7 +60,7 @@ router.put('/update-cid/:id', async (req, res) => {
 
 router.put("/update-profile-pic", async (req, res) => {
     try {
-        const { profile,id} = req.body;
+        const { profile, id } = req.body;
 
         // Validate if the user exists
         const user = await User.findById(id);
@@ -81,13 +81,13 @@ router.put("/update-profile-pic", async (req, res) => {
 router.put("/update-profile", async (req, res) => {
     console.log("Update profile details route hitted .......")
     try {
-        const { name, email, phoneNo,id,address,clientType,idproof,gstno,idProofType,upi,bankName,ifscCode,accountNo} = req.body;
+        const { name, email, phoneNo, id, address, clientType, idproof, gstno, idProofType, upi, bankName, ifscCode, accountNo } = req.body;
         console.log("userType: " + clientType)
         console.log("IDPROOF: " + idproof)
         console.log("idProofType: " + idProofType)
-        console.log("Bank Name:" +bankName);
-        console.log("IFSC Code:"+ ifscCode);
-        console.log("Account No:"+ accountNo);
+        console.log("Bank Name:" + bankName);
+        console.log("IFSC Code:" + ifscCode);
+        console.log("Account No:" + accountNo);
 
         // Validate if the user exists
         const user = await User.findById(id);
@@ -157,4 +157,94 @@ router.put("/update-user", async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
+
+
+// UPDATE ID PROOF (nothing except id is required; updates only what you send)
+// UPDATE ONLY IDPROOF (Aadhar & PAN)
+// UPDATE ONLY IDPROOF (Aadhar & PAN) - defensive and normalizes bad shapes
+// Robust update-idproof route — normalizes bad DB shapes before updating
+router.put("/update-idproof", async (req, res) => {
+  try {
+    console.log("[update-idproof] request body:", JSON.stringify(req.body));
+    const { id, aadhar, pan } = req.body;
+    if (!id) return res.status(400).json({ error: "User ID is required" });
+
+    // 1) Fetch current user doc (lean: false so we get a Mongoose document)
+    let user = await User.findById(id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    console.log("[update-idproof] existing idproof type:", typeof user.idproof, "value:", JSON.stringify(user.idproof));
+
+    // 2) If idproof is not an object, build a safe normalized object and replace it in DB
+    let needsNormalize = false;
+    if (typeof user.idproof !== "object" || user.idproof === null) {
+      needsNormalize = true;
+    } else {
+      // if aadhar or pan are primitives (string/number) mark for normalize
+      if (typeof user.idproof.aadhar !== "object" || user.idproof.aadhar === null) needsNormalize = true;
+      if (typeof user.idproof.pan !== "object"   || user.idproof.pan === null)   needsNormalize = true;
+    }
+
+    if (needsNormalize) {
+      // Build normalized idproof preserving any primitive values found
+      const normalized = { aadhar: {}, pan: {} };
+
+      if (typeof user.idproof === "string") {
+        normalized.aadhar.number = user.idproof;
+        normalized.aadhar.lastUpdate = new Date();
+      } else {
+        // if idproof exists but subfields are primitive, copy them safely
+        if (user.idproof && typeof user.idproof.aadhar === "string") {
+          normalized.aadhar.number = user.idproof.aadhar;
+          normalized.aadhar.lastUpdate = new Date();
+        } else if (user.idproof && typeof user.idproof.aadhar === "object") {
+          normalized.aadhar = { ...user.idproof.aadhar };
+        }
+
+        if (user.idproof && typeof user.idproof.pan === "string") {
+          normalized.pan.number = user.idproof.pan;
+          normalized.pan.lastUpdate = new Date();
+        } else if (user.idproof && typeof user.idproof.pan === "object") {
+          normalized.pan = { ...user.idproof.pan };
+        }
+      }
+
+      // Replace the whole idproof field in DB (atomic)
+      await User.updateOne({ _id: id }, { $set: { idproof: normalized } });
+      // re-fetch user document after normalization
+      user = await User.findById(id);
+      console.log("[update-idproof] normalized idproof:", JSON.stringify(user.idproof));
+    }
+
+    // 3) Now `user.idproof`, `user.idproof.aadhar`, `user.idproof.pan` are objects — safe to update
+    if (aadhar) {
+      if (typeof aadhar !== "object") {
+        return res.status(400).json({ error: "aadhar must be an object like { number, link }" });
+      }
+      if (aadhar.number !== undefined) user.idproof.aadhar.number = aadhar.number;
+      if (aadhar.link   !== undefined) user.idproof.aadhar.link   = aadhar.link;
+      user.idproof.aadhar.lastUpdate = new Date();
+    }
+
+    if (pan) {
+      if (typeof pan !== "object") {
+        return res.status(400).json({ error: "pan must be an object like { number, link }" });
+      }
+      if (pan.number !== undefined) user.idproof.pan.number = pan.number;
+      if (pan.link   !== undefined) user.idproof.pan.link   = pan.link;
+      user.idproof.pan.lastUpdate = new Date();
+    }
+
+    await user.save();
+
+    return res.json({
+      message: "ID proof updated successfully",
+      idproof: user.idproof,
+    });
+  } catch (err) {
+    console.error("[update-idproof] server error:", err && err.stack ? err.stack : err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 module.exports = router;
