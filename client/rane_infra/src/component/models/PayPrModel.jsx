@@ -51,8 +51,10 @@ export default function PayPrmodel({ show, onHide, id }) {
     try {
       const response = await fetch(`${backend_url}/pay-payment`, {
         method: 'POST',
+        credentials: "include", 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ paymentId: id, upi: upiId, amount }),
+
       });
 
       const data = await response.json();

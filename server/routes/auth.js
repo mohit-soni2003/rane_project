@@ -1,7 +1,6 @@
 const express = require("express")
 const User= require("../models/usermodel")
 const generateTokenAndSetCookie =require("../utils/generateTokenAndSetCookie")
-const setadminCookie = require("../utils/setadminCookie")
 const {sendVerificationEmail , sendWelcomeEmail , sendPasswordResetEmail,sendResetSuccessEmail} = require("../mailtrap/email")
 const verifyToken = require("../middleware/verifyToken")
 const crypto = require("crypto")
@@ -244,70 +243,7 @@ router.post("/logout", async(req, res) => {
 });
 
 
-router.post("/admin-login",async (req, res) => {
-	console.log("admin login Route hitted/.")
-    const { email, password } = req.body;
-	try {
-		const user = await User.findOne({ email });
-		if (!user) {
-			return res.json({ success: false, error: "Invalid credentials" });
-		}
-		const isPasswordValid = password==user.password;
-		if (!isPasswordValid) {
-			return res.json({ success: false, error : "Invalid credentials" });
-		}
-		if(user.type=="admin")
-		localStorage.setItem()
-		// generateTokenAndSetCookie(res, user._id);
-		setadminCookie(res, user._id);
 
-		user.lastlogin = new Date();
-		await user.save();
-
-		res.status(200).json({
-			success: true,
-			message: "Admin Logged in successfully",
-			user: {
-				...user._doc,
-				password: undefined,
-			},
-		});
-	} catch (error) {
-		console.log("Error in login ", error);
-		res.status(400).json({ success: false, message: error.message });
-	}
-});
-
-router.post("/admin-signup", async (req, res) => {
-	console.log("Admin Signup post request hi..")
-    const {email,name,password , usertype} = req.body
-    if(!email||!name||!password ||!usertype){
-       return res.json({error:"please Enter all Fields"})
-    }
-    const userAlreadyExists = await User.findOne({email}); 
-    
-    if(userAlreadyExists){
-        return res.json({error:"User Already Exists with same email"})
-    }
-    const user = new User ({
-        email,
-        password,
-        name,
-		usertype,
-        isverified:true
-    })
-
-    await user.save()
-    res.status(201).json({
-        success:true,
-        message:"user created successfully",
-        user:{
-            ...user._doc,
-            password:undefined
-        }
-    })
-    // res.send("Signup route");
-});
 router.post("/change-password", verifyToken, async (req, res) => {
     console.log("Change password route hit...");
 
@@ -319,6 +255,7 @@ router.post("/change-password", verifyToken, async (req, res) => {
         }
 
         const user = await User.findById(req.userId);
+		console.log("chagePassord : " + req.userId + " This is req.userId")
 
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });

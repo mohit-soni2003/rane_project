@@ -4,15 +4,17 @@ const Transaction = require("../models/transaction");
 const User = require("../models/usermodel");
 const Bill = require("../models/billmodel");
 const Payment = require("../models/paymentmodel");
+const verifyToken = require("../middleware/verifyToken")
 
 const router = express.Router();
 
-// Pay Bill Route
-router.post("/pay-bill", async (req, res) => {
-    console.log("Received payment request:");
+// Pay Bill Route 
+router.post("/pay-bill", verifyToken , async (req, res) => {
+    console.log("Received payment request:-------------");
     try {
         const { billId, bankName, accNo, ifscCode, amount } = req.body;
         console.log("Received payment request:", { billId, bankName, accNo, ifscCode, amount });
+        const log_userId = req.userId; // id of the current login user---mainly id of user user who is paying
 
         // Validate required fields
         if (!billId || !bankName || !accNo || !ifscCode || !amount) {
@@ -41,7 +43,9 @@ router.post("/pay-bill", async (req, res) => {
             bankName,
             accNo,
             ifscCode,
+            paidBy:log_userId
         });
+        console.log("--------------------------------"+ transaction)
 
         await transaction.save();
 
@@ -53,9 +57,10 @@ router.post("/pay-bill", async (req, res) => {
 });
 
 // Pay Payment Route
-router.post("/pay-payment", async (req, res) => {
+router.post("/pay-payment", verifyToken , async (req, res) => {
     try {
         const { paymentId, upi,amount } = req.body;
+        const log_userId = req.userId; // id of the current login user---mainly id of user user who is paying
         console.log("Received payment request:", { paymentId, upi });
 
         // Validate required fields
@@ -77,15 +82,15 @@ router.post("/pay-payment", async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: "User not found." });
         }
-
+        console.log("-----------------------------------------------------")
         // Create a transaction record
         const transaction = new Transaction({
             paymentId,
             userId,
             amount, // Assuming `amount` exists in Payment model
             upiId:upi,
+            paidBy:log_userId
         });
-
         await transaction.save();
 
         res.status(201).json({ message: "Payment processed successfully", transaction });

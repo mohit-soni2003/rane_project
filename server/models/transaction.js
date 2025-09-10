@@ -4,17 +4,20 @@ const transactionSchema = new mongoose.Schema({
     billId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Bill", // Reference to the Bill model
-
     },
     paymentId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Payment", // Reference to the Payment model
-
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User", // Reference to the User model
+        ref: "User", // Reference to the user for whom trasaction is made 
         required: true
+    },
+    paidBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User", // Reference to the admin who pay the bill or payment request amount because there are multiple admin on site
+        // required: true
     },
     amount: {
         type: Number,

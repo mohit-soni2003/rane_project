@@ -92,8 +92,8 @@ export default function PayBillModal({ show, onHide, billId }) {
             setLoading(false);
         }
     };
-
-    const updatePaymentStatus = async () => {
+ 
+    const updatePaymentStatus = async () => { 
         if (!selectedStatus) {
             alert('Please select a payment status!');
             return;
@@ -106,6 +106,7 @@ export default function PayBillModal({ show, onHide, billId }) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ status: selectedStatus }),
+                credentials: "include", 
             });
 
             const data = await response.json();
