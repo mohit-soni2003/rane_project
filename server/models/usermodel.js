@@ -65,6 +65,11 @@ const userSchema = new mongoose.Schema({
     accountNo: {
         type: String,
     },
+    accountType: {
+        type: String,
+        enum: ['saving', 'current'],
+        default: 'saving'
+    },
 
     password: {
         type: String,

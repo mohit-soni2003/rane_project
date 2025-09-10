@@ -106,3 +106,24 @@ export const getMyUploadedFiles = async () => {
     throw err;
   }
 };
+
+// Get all DFS files/requests for admin
+export const getAllDfsRequests = async () => {
+  try {
+    const res = await fetch(`${backend_url}/dfs/files`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to fetch all DFS requests.");
+    }
+
+    return data; // array of all DFS files
+  } catch (err) {
+    console.error("Error in getAllDfsRequests:", err);
+    throw err;
+  }
+};

@@ -2,23 +2,24 @@ const express = require("express")
 const User = require("../models/usermodel")
 const Bill = require("../models/billmodel")
 const Document = require("../models/documentmodel")
+const { createNotification } = require("./notificationRoutes")
 
 
 const router = express.Router();
 
 router.post("/post-bill", async (req, res) => {
-  console.log("Post bill route hitted....")
+  // console.log("Post bill route hitted....")
   try {
     const { firmName, workArea, loaNo, pdfurl, user, invoiceNo, workDescription, amount } = req.body;
     // Log the fields
-    console.log("Received Data:");
-    console.log("Firm Name:", firmName);
-    console.log("Work Area:", workArea);
-    console.log("LOA No:", loaNo);
-    console.log("PDF URL:", pdfurl);
-    console.log("User ID:", user);
-    console.log("Invoice No:", invoiceNo);
-    console.log("Work Description:", workDescription);
+    // console.log("Received Data:");
+    // console.log("Firm Name:", firmName);
+    // console.log("Work Area:", workArea);
+    // console.log("LOA No:", loaNo);
+    // console.log("PDF URL:", pdfurl);
+    // console.log("User ID:", user);
+    // console.log("Invoice No:", invoiceNo);
+    // console.log("Work Description:", workDescription);
 
     // Validate required fields
     if (!firmName || !workArea || !loaNo || !pdfurl || !user || !amount) {
@@ -44,6 +45,34 @@ router.post("/post-bill", async (req, res) => {
     });
     // Save the bill to the database
     const savedBill = await newBill.save();
+
+    // Create notification for admins
+    try {
+        const admins = await User.find({ role: 'admin' });
+        for (const admin of admins) {
+            await createNotification({
+                title: 'New Bill Submitted',
+                message: `${existingUser.name} submitted a bill for ₹${amount} (${firmName})`,
+                type: 'bill',
+                priority: 'medium',
+                recipient: admin._id,
+                sender: existingUser._id,
+                relatedId: savedBill._id,
+                relatedModel: 'Bill',
+                actionUrl: `/admin/bill/${savedBill._id}`,
+                metadata: {
+                    firmName,
+                    amount,
+                    workArea,
+                    submittedAt: savedBill.submittedAt
+                }
+            });
+        }
+    } catch (notificationError) {
+        console.error('Error creating bill notification:', notificationError);
+        // Don't fail the bill creation if notification fails
+    }
+
     res.status(201).json({ message: "Bill created successfully", bill: savedBill });
   } catch (error) {
     // Handle duplicate LOA number
@@ -55,16 +84,16 @@ router.post("/post-bill", async (req, res) => {
 });
 // all bills on particual id 
 router.get('/mybill/:id', async (req, res) => {
-  console.log("Show my bill route hit");
+  // console.log("Show my bill route hit");
 
   const { id } = req.params;
-  console.log("User ID:", id);
+  // console.log("User ID:", id);
 
   try {
     // Find bills for the given user ID
     const bills = await Bill.find({ user: id });
 
-    console.log("Fetched Bills:", bills);
+    // console.log("Fetched Bills:", bills);
 
     if (bills.length > 0) {
       return res.status(200).json(bills);
@@ -79,12 +108,12 @@ router.get('/mybill/:id', async (req, res) => {
 
 
 router.get('/allbill', async (req, res) => {
-  console.log("show all bill route hitted")
+  // console.log("show all bill route hitted")
 
   try {
     // Find bills that match the user's ID
     const bills = await Bill.find({}).populate("user");
-    console.log(bills)
+    // console.log(bills)
     if (bills.length > 0) {
       res.status(200).json(bills);
     } else {
@@ -96,13 +125,13 @@ router.get('/allbill', async (req, res) => {
 });
 //particular signle bill details
 router.get('/bill/:id', async (req, res) => {
-  console.log("show particular id bill route hitted")
+  // console.log("show particular id bill route hitted")
   const { id } = req.params
 
   try {
     // Find bills that match the user's ID
     const bill = await Bill.findById(id).populate("user paidby");
-    console.log(bill)
+    // console.log(bill)
     if (bill) {
       res.status(200).json(bill);
     } else {
@@ -114,14 +143,14 @@ router.get('/bill/:id', async (req, res) => {
 });
 //this is of no use same as above
 router.get('/bill/update-payment/:id', async (req, res) => {
-  console.log("Update bill payment stasus route hitted")
+  // console.log("Update bill Zpayment stasus route hitted")
   const { status } = req.body
   const { id } = req.params
 
   try {
     // Find bills that match the user's ID
     const bill = await Bill.findById(id).populate("user");
-    console.log(bill)
+    // console.log(bill)
     if (bill) {
       res.status(200).json(bill);
     } else {
@@ -133,7 +162,7 @@ router.get('/bill/update-payment/:id', async (req, res) => {
 });
 
 router.put('/bill/update-payment/:id', async (req, res) => {
-  console.log("Update bill payment status route hit");
+  // console.log("Update bill payment status route hit");
   const { status } = req.body; // Extract the paymentStatus value from the request body
   const { id } = req.params; // Extract the bill ID from the request parameters
 
@@ -146,7 +175,7 @@ router.put('/bill/update-payment/:id', async (req, res) => {
     ).populate("user"); // Populate the "user" field if needed
 
     if (updatedBill) {
-      console.log("Bill updated:", updatedBill);
+      // console.log("Bill updated:", updatedBill);
       res.status(200).json(updatedBill); // Respond with the updated bill
     } else {
       res.status(404).json({ error: 'No bill found with this ID' }); // If no bill is found, return a 404 error
@@ -197,7 +226,7 @@ router.get("/recent-bills", async (req, res) => {
 
 // Fetch LOA document(s) for a specific user
 router.get("/loa/:id", async (req, res) => {
-  console.log("Fetch LOA route hit...");
+  // console.log("Fetch LOA route hit...");
   const { id } = req.params;
 
   try {

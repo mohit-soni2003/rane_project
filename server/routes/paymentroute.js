@@ -1,13 +1,14 @@
 const express = require("express")
 const User = require("../models/usermodel")
-const Bill = require("../models/billmodel") 
+const Bill = require("../models/billmodel")
 const Payment = require("../models/paymentmodel")
+const { createNotification } = require("./notificationRoutes")
 
 
 const router = express.Router();
 
 router.post("/post-payment", async (req, res) => {
-  console.log("Post Payment route hit...");
+  // console.log("Post Payment route hit...");
 
   try {
     const {
@@ -20,13 +21,13 @@ router.post("/post-payment", async (req, res) => {
       paymentMode
     } = req.body;
 
-    console.log("Tender:", tender);
-    console.log("User:", user);
-    console.log("Amount:", amount);
-    console.log("Description:", description);
-    console.log("Image:", image_url);
-    console.log("Payment Type:", paymentType);
-    console.log("Payment Mode:", paymentMode);
+    // console.log("Tender:", tender);
+    // console.log("User:", user);
+    // console.log("Amount:", amount);
+    // console.log("Description:", description);
+    // console.log("Image:", image_url);
+    // console.log("Payment Type:", paymentType);
+    // console.log("Payment Mode:", paymentMode);
 
     // Required field validation (image_url is not required)
     if (!tender || !amount || !user || !paymentType || !paymentMode) {
@@ -69,9 +70,36 @@ router.post("/post-payment", async (req, res) => {
     const newPayment = new Payment(paymentData);
     const savedPayment = await newPayment.save();
 
+    // Create notification for admins
+    try {
+        const admins = await User.find({ role: 'admin' });
+        for (const admin of admins) {
+            await createNotification({
+                title: 'New Payment Request',
+                message: `${existingUser.name} requested ₹${amount} (${paymentType})`,
+                type: 'payment',
+                priority: paymentType === 'IP' && amount > 50000 ? 'high' : 'medium',
+                recipient: admin._id,
+                sender: existingUser._id,
+                relatedId: savedPayment._id,
+                relatedModel: 'Payment',
+                actionUrl: `/admin/payment-request/${savedPayment._id}`,
+                metadata: {
+                    amount,
+                    paymentType,
+                    paymentMode,
+                    description
+                }
+            });
+        }
+    } catch (notificationError) {
+        console.error('Error creating payment notification:', notificationError);
+        // Don't fail the payment creation if notification fails
+    }
+
     res.status(201).json({
-      message: "Payment created successfully",
-      payment: savedPayment
+        message: "Payment created successfully",
+        payment: savedPayment
     });
   } catch (error) {
     console.error("Error creating payment:", error);
@@ -83,8 +111,6 @@ router.post("/post-payment", async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
-
-
 // all payment of particular user id 
 router.get('/my-payment-request/:id', async (req, res) => {
   console.log("show all my payment route hitted ..")
@@ -94,7 +120,7 @@ router.get('/my-payment-request/:id', async (req, res) => {
   try {
     // Find bills that match the user's ID
     const payments = await Payment.find({user:id})
-    console.log(payments)
+    // console.log(payments)
     if (payments.length > 0) {
       res.status(200).json(payments);
     } else {
@@ -106,12 +132,12 @@ router.get('/my-payment-request/:id', async (req, res) => {
 });
 // route to get all payment by admin site ----
 router.get('/allpayment', async (req, res) => {
-  console.log("show my all payment route hitted")
+  // console.log("show my all payment route hitted")
 
   try {
     // Find bills that match the user's ID
     const payments = await Payment.find({}).populate("user")
-    console.log(payments)
+    // console.log(payments)
     if (payments.length > 0) {
       res.status(200).json(payments);
     } else {
@@ -123,13 +149,13 @@ router.get('/allpayment', async (req, res) => {
 });
 
 router.get('/payment/:id', async (req, res) => {
-  console.log("show particular id payment route hitted")
+  // console.log("show particular id payment route hitted")
   const {id} = req.params
 
   try {
     // Find bills that match the user's ID
     const paymenyReq = await Payment.findById(id).populate("user");
-    console.log(paymenyReq)
+    // console.log(paymenyReq)
     if (paymenyReq) {
       res.status(200).json(paymenyReq);
     } else {
@@ -197,8 +223,8 @@ router.put("/payment/update/:id", async (req, res) => {
 
 router.delete("/payment/:id", async (req, res) => {
 
-  console.log("DELETE PAYMENT ROUTE HITTED...")
-  console.log(req.params)
+  // console.log("DELETE PAYMENT ROUTE HITTED...")
+  // console.log(req.params)
 
   try {
     const { id } = req.params;

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import {
   FaTachometerAlt, FaFileInvoice, FaUserTie, FaChevronDown, FaChevronUp,
-  FaTools, FaQuestionCircle, FaBell, FaSignOutAlt, FaFileAlt
+  FaTools, FaQuestionCircle, FaBell, FaSignOutAlt, FaFileAlt,
+  FaBars, FaTimes
 } from 'react-icons/fa';
 import dummyUser from '../../assets/images/dummyUser.jpeg';
 import { useAuthStore } from '../../store/authStore';
@@ -10,9 +11,14 @@ import { Link } from 'react-router-dom';
 const StaffSidebar = () => {
   const [openMenu, setOpenMenu] = useState(null);
   const { user } = useAuthStore();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const toggleMenu = (menu) => {
     setOpenMenu(openMenu === menu ? null : menu);
+  };
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
   const submenuStyle = (isOpen) => ({
@@ -29,129 +35,179 @@ const StaffSidebar = () => {
     color: 'inherit',
   };
 
+  const iconStyle = {
+    fontSize: '1.2rem',
+    width: '20px',
+    height: '20px',
+    flexShrink: 0
+  };
+
   return (
     <div className="d-flex flex-column p-3 staff-sidebar"
       style={{
-        width: '260px',
+        width: isSidebarCollapsed ? '60px' : '260px',
         backgroundColor: '#1e1e2f',
         color: '#f1f1f1',
         height: '100vh',
-        overflowY: 'auto',
+        overflow: 'hidden',
         position: 'fixed',
         top: 0,
         left: 0,
         zIndex: 1040,
+        transition: 'width 0.3s ease',
       }}>
 
-
-      {/* Profile Section */}
+      {/* Toggle Button */}
       <div className="text-center mb-3">
-        <img
-          src={user.profile || dummyUser}
-          alt="Staff"
-          className="rounded-circle mb-2"
-          style={{ width: '80px', height: '80px', objectFit: 'cover' }}
-        />
-        <div className='fs-6 fw-bold'>{user.name}</div>
-        <div className="fs-6 text-secondary fw-semibold">{user?.cid || "Not Assigned"}</div>
-        <hr className="text-light" />
+        <button
+          onClick={toggleSidebar}
+          className="btn btn-sm border-0"
+          style={iconStyle}
+          title={isSidebarCollapsed ? 'Show Sidebar' : 'Hide Sidebar'}
+        >
+          {isSidebarCollapsed ? <FaBars /> : <FaTimes />}
+        </button>
       </div>
+
+      {/* Profile Section - Hidden when collapsed */}
+      {!isSidebarCollapsed && (
+        <div className="text-center mb-3">
+          <img
+            src={user.profile || dummyUser}
+            alt="Staff"
+            className="rounded-circle mb-2"
+            style={{ width: '80px', height: '80px', objectFit: 'cover' }}
+          />
+          <div className='fs-6 fw-bold'>{user.name}</div>
+          <div className="fs-6 text-secondary fw-semibold">{user?.cid || "Not Assigned"}</div>
+          <hr className="text-light" />
+        </div>
+      )}
 
       {/* Sidebar Links */}
       <Link to="/staff/home" style={menuItemStyle}>
-        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
-          <FaTachometerAlt className="me-2" /> Home
+        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => isSidebarCollapsed && setIsSidebarCollapsed(false)}>
+          <FaTachometerAlt className="me-2" style={iconStyle} />
+          {!isSidebarCollapsed && 'Home'}
         </div>
       </Link>
 
       <Link to="/staff/bill" style={menuItemStyle}>
-        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
-          <FaFileInvoice className="me-2" /> Bills
+        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => isSidebarCollapsed && setIsSidebarCollapsed(false)}>
+          <FaFileInvoice className="me-2" style={iconStyle} />
+          {!isSidebarCollapsed && 'Bills'}
         </div>
       </Link>
 
       {/* Client Dropdown */}
-      <div className="px-2 py-2 rounded cursor-pointer hover-effect" onClick={() => toggleMenu('client')}>
+      <div className="px-2 py-2 rounded cursor-pointer hover-effect" onClick={() => {
+        if (isSidebarCollapsed) {
+          setIsSidebarCollapsed(false);
+          setOpenMenu('client');
+        } else {
+          toggleMenu('client');
+        }
+      }}>
         <div className="d-flex justify-content-between align-items-center">
-          <span><FaUserTie className="me-2" /> Client</span>
-          {openMenu === 'client' ? <FaChevronUp /> : <FaChevronDown />}
+          <span><FaUserTie className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Client'}</span>
+          {!isSidebarCollapsed && (openMenu === 'client' ? <FaChevronUp style={iconStyle} /> : <FaChevronDown style={iconStyle} />)}
         </div>
-        <div style={submenuStyle(openMenu === 'client')}>
-          <Link to="/staff/all-client" style={menuItemStyle}>
-            <div className="py-1">All Client</div>
-          </Link>
-        </div>
+        {!isSidebarCollapsed && (
+          <div style={submenuStyle(openMenu === 'client')}>
+            <Link to="/staff/all-client" style={menuItemStyle}>
+              <div className="py-1">All Client</div>
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Payment Request Dropdown */}
-      <div className="mb-2 px-2 py-2 rounded cursor-pointer hover-effect" onClick={() => toggleMenu('pr')}>
+      <div className="mb-2 px-2 py-2 rounded cursor-pointer hover-effect" onClick={() => {
+        if (isSidebarCollapsed) {
+          setIsSidebarCollapsed(false);
+          setOpenMenu('pr');
+        } else {
+          toggleMenu('pr');
+        }
+      }}>
         <div className="d-flex justify-content-between align-items-center">
-          <span><FaFileAlt className="me-2" /> Payment Request</span>
-          {openMenu === 'pr' ? <FaChevronUp /> : <FaChevronDown />}
+          <span><FaFileAlt className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Payment Request'}</span>
+          {!isSidebarCollapsed && (openMenu === 'pr' ? <FaChevronUp style={iconStyle} /> : <FaChevronDown style={iconStyle} />)}
         </div>
-        <div style={submenuStyle(openMenu === 'pr')}>
-          <Link to="/staff/payment-request" style={menuItemStyle}>
-            <div className="py-1">Resolve Other PR</div>
-          </Link>
-          <Link to="/staff/request-payment" style={menuItemStyle}>
-            <div className="py-1">Make PR</div>
-          </Link>
-          <Link to="/staff/my-payment-request" style={menuItemStyle}>
-            <div className="py-1">Your Personal PR</div>
-          </Link>
-        </div>
+        {!isSidebarCollapsed && (
+          <div style={submenuStyle(openMenu === 'pr')}>
+            <Link to="/staff/payment-request" style={menuItemStyle}>
+              <div className="py-1">Resolve Other PR</div>
+            </Link>
+            <Link to="/staff/request-payment" style={menuItemStyle}>
+              <div className="py-1">Make PR</div>
+            </Link>
+            <Link to="/staff/my-payment-request" style={menuItemStyle}>
+              <div className="py-1">Your Personal PR</div>
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* DFS Section Dropdown */}
-      <div className="px-2 py-2 rounded cursor-pointer hover-effect" onClick={() => toggleMenu('dfs')}>
+      <div className="px-2 py-2 rounded cursor-pointer hover-effect" onClick={() => {
+        if (isSidebarCollapsed) {
+          setIsSidebarCollapsed(false);
+          setOpenMenu('dfs');
+        } else {
+          toggleMenu('dfs');
+        }
+      }}>
         <div className="d-flex justify-content-between align-items-center">
-          <span><FaFileAlt className="me-2" /> DFS Section</span>
-          {openMenu === 'dfs' ? <FaChevronUp /> : <FaChevronDown />}
+          <span><FaFileAlt className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'DFS Section'}</span>
+          {!isSidebarCollapsed && (openMenu === 'dfs' ? <FaChevronUp style={iconStyle} /> : <FaChevronDown style={iconStyle} />)}
         </div>
-        <div style={submenuStyle(openMenu === 'dfs')}>
-          <Link to="/staff/dfsrequest" style={menuItemStyle}>
-            <div className="py-1">Assigned Document</div>
-          </Link>
-          <Link to="/staff/upload-document" style={menuItemStyle}>
-            <div className="py-1">Upload Document</div>
-          </Link>
-          <Link to="/staff/track-dfs/all" style={menuItemStyle}>
-            <div className="py-1">Track Document</div>
-          </Link>
-        </div>
+        {!isSidebarCollapsed && (
+          <div style={submenuStyle(openMenu === 'dfs')}>
+            <Link to="/staff/dfsrequest" style={menuItemStyle}>
+              <div className="py-1">Assigned Document</div>
+            </Link>
+            <Link to="/staff/upload-document" style={menuItemStyle}>
+              <div className="py-1">Upload Document</div>
+            </Link>
+            <Link to="/staff/track-dfs/all" style={menuItemStyle}>
+              <div className="py-1">Track Document</div>
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Notification */}
       <Link to="/staff/under-dev" style={menuItemStyle}>
-        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
-          <FaBell className="me-2" /> Notification
+        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => isSidebarCollapsed && setIsSidebarCollapsed(false)}>
+          <FaBell className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Notification'}
         </div>
       </Link>
 
       {/* Salary */}
       <Link to="/staff/salary" style={menuItemStyle}>
-        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
-          <FaFileInvoice className="me-2" /> Salary
+        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => isSidebarCollapsed && setIsSidebarCollapsed(false)}>
+          <FaFileInvoice className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Salary'}
         </div>
       </Link>
 
       {/* Settings */}
       <Link to="/staff/setting" style={menuItemStyle}>
-        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
-          <FaTools className="me-2" /> Setting
+        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => isSidebarCollapsed && setIsSidebarCollapsed(false)}>
+          <FaTools className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Setting'}
         </div>
       </Link>
 
       {/* Help */}
       <Link to="/staff/under-dev" style={menuItemStyle}>
-        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
-          <FaQuestionCircle className="me-2" /> Help
+        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => isSidebarCollapsed && setIsSidebarCollapsed(false)}>
+          <FaQuestionCircle className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Help'}
         </div>
       </Link>
 
       {/* Logout */}
-      <div className="mt-auto d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer">
-        <FaSignOutAlt className="me-2" /> Logout
+      <div className="mt-auto d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => isSidebarCollapsed && setIsSidebarCollapsed(false)}>
+        <FaSignOutAlt className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Logout'}
       </div>
 
       {/* Hover Effect Style */}

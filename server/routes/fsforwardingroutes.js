@@ -3,6 +3,7 @@ const router = express.Router();
 const FileForward = require("../models/fileForwardingModel")
 const verifyToken = require("../middleware/verifyToken")
 const User = require("../models/usermodel")
+const { createNotification } = require("./notificationRoutes")
  
 
 // client will upload document
@@ -56,6 +57,36 @@ router.post('/upload-document', verifyToken, async (req, res) => {
       .populate('currentOwner', 'name email')
       .populate('forwardingTrail.forwardedBy', 'name email')
       .populate('forwardingTrail.forwardedTo', 'name email');
+
+    // Get uploader details for notification
+    const uploadedByUser = await User.findById(req.userId);
+
+    // Create notification for admins
+    try {
+        const admins = await User.find({ role: 'admin' });
+        for (const admin of admins) {
+            await createNotification({
+                title: 'New DFS Document Submitted',
+                message: `${uploadedByUser.name} submitted a document: ${fileTitle}`,
+                type: 'dfs',
+                priority: 'medium',
+                recipient: admin._id,
+                sender: req.userId,
+                relatedId: newFile._id,
+                relatedModel: 'FileForward',
+                actionUrl: `/admin/dfsrequest/${newFile._id}`,
+                metadata: {
+                    fileTitle,
+                    docType,
+                    Department,
+                    uploadedBy: uploadedByUser.name
+                }
+            });
+        }
+    } catch (notificationError) {
+        console.error('Error creating DFS notification:', notificationError);
+        // Don't fail the document upload if notification fails
+    }
 
     return res.status(201).json({
       message: "Document uploaded successfully.",

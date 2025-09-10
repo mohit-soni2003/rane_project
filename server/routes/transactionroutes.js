@@ -9,10 +9,10 @@ const router = express.Router();
 
 // Pay Bill Route
 router.post("/pay-bill", async (req, res) => {
-    console.log("Received payment request:");
+    // console.log("Received payment request:");
     try {
         const { billId, bankName, accNo, ifscCode, amount } = req.body;
-        console.log("Received payment request:", { billId, bankName, accNo, ifscCode, amount });
+        // console.log("Received payment request:", { billId, bankName, accNo, ifscCode, amount });
 
         // Validate required fields
         if (!billId || !bankName || !accNo || !ifscCode || !amount) {
@@ -26,7 +26,7 @@ router.post("/pay-bill", async (req, res) => {
         }
 
         const userId = bill.user._id; // Assuming `user` is stored as an ObjectId reference in Bill
-        console.log(userId+ "user iD")
+        // console.log(userId+ "user iD")
         // Check if the user exists
         const user = await User.findById(userId);
         if (!user) {
@@ -56,7 +56,7 @@ router.post("/pay-bill", async (req, res) => {
 router.post("/pay-payment", async (req, res) => {
     try {
         const { paymentId, upi,amount } = req.body;
-        console.log("Received payment request:", { paymentId, upi });
+        // console.log("Received payment request:", { paymentId, upi });
 
         // Validate required fields
         if (!paymentId || !upi ||!amount ) {
@@ -70,7 +70,7 @@ router.post("/pay-payment", async (req, res) => {
         }
 
         const userId = payment.user._id; // Assuming `user` is stored as an ObjectId reference in Payment
-        console.log("User ID:", userId);
+        // console.log("User ID:", userId);
 
         // Check if the user exists
         const user = await User.findById(userId);

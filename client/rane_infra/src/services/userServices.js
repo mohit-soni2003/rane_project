@@ -63,6 +63,30 @@ export const getUserFullDetails = async (id) => {
   }
 };
 
+// Get all users for admin dashboard
+export const getAllUsers = async () => {
+  try {
+    const response = await fetch(`${backend_url}/admin-get-users`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to fetch all users');
+    }
+
+    return data.users || [];
+  } catch (error) {
+    console.error('Error fetching all users:', error.message);
+    return [];
+  }
+};
+
 
 // CHANGE PASSWORD (using cookies for auth)
 export const changePassword = async (currentPassword, newPassword) => {

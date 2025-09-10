@@ -55,6 +55,7 @@ import ClientSalaryAll from "./pages/admin/ClientSalaryAll.jsx";
 import SingleUSerSalaryDetailAdmin from "./pages/admin/SingleUSerSalaryDetailAdmin.jsx";
 import AllUser from "./pages/admin/AllUser.jsx";
 import AllDFSRequests from "./pages/admin/AllDFSRequests.jsx";
+import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage.jsx";
 
 
 import StaffLayout from "./Layout/StaffLayout.jsx";
@@ -195,6 +196,7 @@ function App() {
           <Route path="danger/all-user" element={<AllUser />} />
           <Route path="danger/all-dfs" element={<AllDFSRequests />} />
           <Route path="setting" element={<Setting />} />
+          <Route path="notifications" element={<AdminNotificationsPage />} />
           <Route path="under-dev" element={<UnderDevPage />} />
         </Route>
 
