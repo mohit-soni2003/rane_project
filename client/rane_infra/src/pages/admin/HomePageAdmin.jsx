@@ -9,10 +9,7 @@ import {
   FaRupeeSign, FaFileAlt, FaBell, FaCog, FaPlus
 } from 'react-icons/fa';
 import AdminHeader from '../../component/header/AdminHeader';
-import { getAllBills } from '../../services/billServices';
-import { getAllUsers } from '../../services/userServices';
-import { getAllDfsRequests } from '../../services/dfsService';
-import { getAllPayments } from '../../services/paymentService';
+import { adminService } from '../../services/adminService';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 
@@ -39,71 +36,25 @@ export default function HomePageAdmin() {
 
   const fetchDashboardData = async () => {
     try {
-      const [billsData, usersData, dfsData, paymentsData] = await Promise.all([
-        getAllBills(),
-        getAllUsers(),
-        getAllDfsRequests(),
-        getAllPayments()
-      ]);
+      const response = await adminService.getDashboardStats();
 
-      // Process bills data
-      const bills = billsData || [];
-      const pendingBills = bills.filter(bill => bill.paymentStatus === 'Pending').length;
-      
-      // Sort bills by submittedAt date (newest first) and get recent 3
-      const sortedBills = bills.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
-      const recentBills = sortedBills.slice(0, 3);
+      if (response.success) {
+        const data = response.stats;
 
-      // Process users data
-      const users = usersData || [];
-      // Sort users by _id (newest first) and get recent 3
-      const sortedUsers = users.sort((a, b) => {
-        // MongoDB ObjectId contains timestamp, so we can extract it for sorting
-        const aTime = a._id ? new Date(parseInt(a._id.toString().slice(0, 8), 16) * 1000) : new Date(0);
-        const bTime = b._id ? new Date(parseInt(b._id.toString().slice(0, 8), 16) * 1000) : new Date(0);
-        return bTime - aTime;
-      });
-      const recentUsers = sortedUsers.slice(0, 3);
-
-      // Process DFS requests
-      const dfsRequests = Array.isArray(dfsData) ? dfsData : [];
-      // Sort DFS requests by creation date (newest first) and get recent 3
-      const sortedRequests = dfsRequests
-        .filter(request => request && request._id) // Filter out invalid entries
-        .sort((a, b) => {
-          const aDate = a.createdAt ? new Date(a.createdAt) : 
-                       (a._id ? new Date(parseInt(a._id.toString().slice(0, 8), 16) * 1000) : new Date(0));
-          const bDate = b.createdAt ? new Date(b.createdAt) : 
-                       (b._id ? new Date(parseInt(b._id.toString().slice(0, 8), 16) * 1000) : new Date(0));
-          return bDate - aDate;
+        setStats({
+          totalUsers: data.totalUsers || 0,
+          totalBills: data.totalBills || 0,
+          totalDfsRequests: data.totalDfsRequests || 0,
+          totalPayments: data.totalPayments || 0,
+          pendingBills: data.pendingBills || 0,
+          recentBills: data.recentBills || [],
+          recentRequests: data.recentDfs || [],
+          recentUsers: data.recentUsers || [],
+          recentPayments: data.recentPayments || []
         });
-      const recentRequests = sortedRequests.slice(0, 3);
-
-      // Process payments
-      const payments = Array.isArray(paymentsData) ? paymentsData : [];
-      // Sort payments by submittedAt date (newest first) and get recent 3
-      const sortedPayments = payments
-        .filter(payment => payment && payment._id) // Filter out invalid entries
-        .sort((a, b) => {
-          const aDate = a.submittedAt ? new Date(a.submittedAt) : 
-                       (a._id ? new Date(parseInt(a._id.toString().slice(0, 8), 16) * 1000) : new Date(0));
-          const bDate = b.submittedAt ? new Date(b.submittedAt) : 
-                       (b._id ? new Date(parseInt(b._id.toString().slice(0, 8), 16) * 1000) : new Date(0));
-          return bDate - aDate;
-        });
-      const recentPayments = sortedPayments.slice(0, 3);
-
-      setStats({
-        totalUsers: users.length,
-        totalBills: bills.length,
-        totalDfsRequests: dfsRequests.length,
-        totalPayments: payments.length,
-        pendingBills,
-        recentBills,
-        recentRequests,
-        recentUsers,
-        recentPayments
-      });
+      } else {
+        console.error('Failed to fetch dashboard stats:', response.message);
+      }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -246,7 +197,6 @@ export default function HomePageAdmin() {
               value={stats.totalUsers}
               icon={<FaUsers />}
               color="var(--admin-btn-primary-bg)"
-              trend="+12% this month"
             />
           </Col>
           <Col lg={3} md={6} className="mb-3">
@@ -255,7 +205,6 @@ export default function HomePageAdmin() {
               value={stats.totalBills}
               icon={<FaFileInvoiceDollar />}
               color="var(--admin-info-color)"
-              trend="+8% this month"
             />
           </Col>
           <Col lg={3} md={6} className="mb-3">
@@ -264,7 +213,6 @@ export default function HomePageAdmin() {
               value={stats.totalDfsRequests}
               icon={<FaClipboardList />}
               color="var(--admin-warning-color)"
-              trend="+15% this month"
             />
           </Col>
           <Col lg={3} md={6} className="mb-3">
@@ -273,7 +221,6 @@ export default function HomePageAdmin() {
               value={stats.totalPayments}
               icon={<FaRupeeSign />}
               color="var(--admin-success-color)"
-              trend="+20% this month"
             />
           </Col>
         </Row>
@@ -296,10 +243,12 @@ export default function HomePageAdmin() {
                   <Col sm={6}>
                     <div className="d-flex justify-content-between align-items-center mb-2">
                       <span className="small text-muted">Bill Processing</span>
-                      <span className="small fw-bold">75%</span>
+                      <span className="small fw-bold">
+                        {stats.totalBills > 0 ? Math.round(((stats.totalBills - stats.pendingBills) / stats.totalBills) * 100) : 0}%
+                      </span>
                     </div>
                     <ProgressBar
-                      now={75}
+                      now={stats.totalBills > 0 ? ((stats.totalBills - stats.pendingBills) / stats.totalBills) * 100 : 0}
                       style={{ height: '6px' }}
                       variant="success"
                     />
@@ -307,10 +256,12 @@ export default function HomePageAdmin() {
                   <Col sm={6}>
                     <div className="d-flex justify-content-between align-items-center mb-2">
                       <span className="small text-muted">Payment Collection</span>
-                      <span className="small fw-bold">60%</span>
+                      <span className="small fw-bold">
+                        {stats.totalPayments > 0 ? Math.round(((stats.totalPayments - (stats.pendingPayments || 0)) / stats.totalPayments) * 100) : 0}%
+                      </span>
                     </div>
                     <ProgressBar
-                      now={60}
+                      now={stats.totalPayments > 0 ? ((stats.totalPayments - (stats.pendingPayments || 0)) / stats.totalPayments) * 100 : 0}
                       style={{ height: '6px' }}
                       variant="info"
                     />
@@ -320,10 +271,12 @@ export default function HomePageAdmin() {
                   <Col sm={6}>
                     <div className="d-flex justify-content-between align-items-center mb-2">
                       <span className="small text-muted">User Onboarding</span>
-                      <span className="small fw-bold">85%</span>
+                      <span className="small fw-bold">
+                        {stats.totalStaff && stats.totalClients ? Math.round(((stats.totalStaff + stats.totalClients) / stats.totalUsers) * 100) : 0}%
+                      </span>
                     </div>
                     <ProgressBar
-                      now={85}
+                      now={stats.totalStaff && stats.totalClients ? ((stats.totalStaff + stats.totalClients) / stats.totalUsers) * 100 : 0}
                       style={{ height: '6px' }}
                       variant="primary"
                     />
@@ -331,10 +284,12 @@ export default function HomePageAdmin() {
                   <Col sm={6}>
                     <div className="d-flex justify-content-between align-items-center mb-2">
                       <span className="small text-muted">Document Processing</span>
-                      <span className="small fw-bold">45%</span>
+                      <span className="small fw-bold">
+                        {stats.totalDfsRequests > 0 ? Math.round(((stats.totalDfsRequests - (stats.pendingDfs || 0)) / stats.totalDfsRequests) * 100) : 0}%
+                      </span>
                     </div>
                     <ProgressBar
-                      now={45}
+                      now={stats.totalDfsRequests > 0 ? ((stats.totalDfsRequests - (stats.pendingDfs || 0)) / stats.totalDfsRequests) * 100 : 0}
                       style={{ height: '6px' }}
                       variant="warning"
                     />
@@ -426,16 +381,16 @@ export default function HomePageAdmin() {
                   <div className="d-flex justify-content-between align-items-start">
                     <div className="flex-grow-1">
                       <div className="fw-semibold small mb-1" style={{ color: 'var(--admin-text-color)' }}>
-                        {bill.firmName || 'N/A'}
+                        {bill.firmName || 'Company Name'}
                       </div>
                       <div className="small text-muted">
-                        {bill.user?.name || 'N/A'} • {new Date(bill.submittedAt).toLocaleDateString()}
+                        {bill.user?.name || 'Client'} • {bill.submittedAt ? new Date(bill.submittedAt).toLocaleDateString() : 'Recent'}
                       </div>
                     </div>
                     <Badge
                       bg={
-                        bill.paymentStatus === 'Paid' ? 'success' :
-                        bill.paymentStatus === 'Pending' ? 'warning' : 'secondary'
+                        bill.paymentStatus === 'Paid' || bill.paymentStatus === 'approved' ? 'success' :
+                        bill.paymentStatus === 'Pending' || bill.paymentStatus === 'pending' ? 'warning' : 'secondary'
                       }
                       className="ms-2"
                     >
@@ -463,17 +418,17 @@ export default function HomePageAdmin() {
                   <div className="d-flex justify-content-between align-items-start">
                     <div className="flex-grow-1">
                       <div className="fw-semibold small mb-1" style={{ color: 'var(--admin-text-color)' }}>
-                        ₹{payment.amount || 'N/A'}
+                        ₹{payment.amount ? payment.amount.toLocaleString('en-IN') : '0'}
                       </div>
                       <div className="small text-muted">
-                        {payment.user?.name || payment.requestedBy || 'Unknown'} • {payment.paymentType || 'N/A'}
+                        {payment.user?.name || payment.requestedBy || 'Client'} • {payment.createdAt ? new Date(payment.createdAt).toLocaleDateString() : 'Recent'}
                       </div>
                     </div>
                     <Badge
                       bg={
-                        payment.status === 'Paid' ? 'success' :
-                        payment.status === 'Pending' ? 'warning' :
-                        payment.status === 'Rejected' ? 'danger' : 'secondary'
+                        payment.status === 'Paid' || payment.status === 'approved' ? 'success' :
+                        payment.status === 'Pending' || payment.status === 'pending' ? 'warning' :
+                        payment.status === 'Rejected' || payment.status === 'rejected' ? 'danger' : 'secondary'
                       }
                       className="ms-2"
                     >
@@ -501,13 +456,20 @@ export default function HomePageAdmin() {
                   <div className="d-flex justify-content-between align-items-start">
                     <div className="flex-grow-1">
                       <div className="fw-semibold small mb-1" style={{ color: 'var(--admin-text-color)' }}>
-                        {request.fileTitle || request.title || 'Untitled Document'}
+                        {request.fileTitle || request.title || 'Document Request'}
                       </div>
                       <div className="small text-muted">
-                        {request.uploadedBy?.name || request.uploader || 'Unknown'} • {request.createdAt ? new Date(request.createdAt).toLocaleDateString() : 'N/A'}
+                        {request.uploadedBy?.name || request.uploader || 'User'} • {request.createdAt ? new Date(request.createdAt).toLocaleDateString() : 'Recent'}
                       </div>
                     </div>
-                    <Badge bg="info" className="ms-2">
+                    <Badge 
+                      bg={
+                        request.status === 'approved' ? 'success' :
+                        request.status === 'pending' ? 'warning' :
+                        request.status === 'rejected' ? 'danger' : 'info'
+                      } 
+                      className="ms-2"
+                    >
                       {request.status || 'Active'}
                     </Badge>
                   </div>
@@ -532,13 +494,20 @@ export default function HomePageAdmin() {
                   <div className="d-flex justify-content-between align-items-start">
                     <div className="flex-grow-1">
                       <div className="fw-semibold small mb-1" style={{ color: 'var(--admin-text-color)' }}>
-                        {user.name || 'N/A'}
+                        {user.name || 'New User'}
                       </div>
                       <div className="small text-muted">
-                        {user.email || 'N/A'} • CID: {user.cid || 'N/A'}
+                        {user.email || 'email@example.com'} • CID: {user.cid || 'Not assigned'}
                       </div>
                     </div>
-                    <Badge bg="secondary" className="ms-2">
+                    <Badge 
+                      bg={
+                        user.role === 'admin' ? 'primary' :
+                        user.role === 'staff' ? 'success' :
+                        user.role === 'client' ? 'info' : 'secondary'
+                      } 
+                      className="ms-2"
+                    >
                       {user.role || 'User'}
                     </Badge>
                   </div>

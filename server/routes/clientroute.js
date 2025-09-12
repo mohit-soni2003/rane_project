@@ -1,7 +1,8 @@
 const express = require("express")
 const User = require("../models/usermodel")
 const Bill = require("../models/billmodel")
-
+const FileForward = require("../models/fileForwardingModel");
+const Document = require("../models/documentmodel");
 
 const router = express.Router();
 
@@ -243,8 +244,80 @@ router.put("/update-idproof", async (req, res) => {
     });
   } catch (err) {
     console.error("[update-idproof] server error:", err && err.stack ? err.stack : err);
-    return res.status(500).json({ error: "Internal Server Error" });
   }
+});
+
+// Route to get all documents from both Document and FileForward models for Client users
+router.get("/client-get-all-documents", async (req, res) => {
+    try {
+        // Get all regular documents
+        const regularDocuments = await Document.find()
+            .populate("userId", "name email cid profile role")
+            .populate("uploadedBy", "name email cid profile role")
+            .sort({ createdAt: -1 });
+
+        // Get all DFS documents
+        const dfsDocuments = await FileForward.find()
+            .populate("uploadedBy", "name email cid profile role")
+            .populate("currentOwner", "name email cid profile role")
+            .populate("forwardingTrail.forwardedBy", "name email cid profile role")
+            .populate("forwardingTrail.forwardedTo", "name email cid profile role")
+            .sort({ createdAt: -1 });
+
+        // Combine and format the documents
+        const allDocuments = [
+            ...regularDocuments.map(doc => ({
+                _id: doc._id,
+                type: 'regular',
+                title: `${doc.docType} - ${doc.documentCode}`,
+                documentType: doc.docType,
+                documentCode: doc.documentCode,
+                description: doc.remark || 'No description',
+                status: doc.status,
+                uploadedBy: doc.uploadedBy,
+                userId: doc.userId,
+                dateOfIssue: doc.dateOfIssue,
+                uploadDate: doc.uploadDate,
+                documentLink: doc.documentLink,
+                createdAt: doc.createdAt,
+                updatedAt: doc.updatedAt
+            })),
+            ...dfsDocuments.map(doc => ({
+                _id: doc._id,
+                type: 'dfs',
+                title: doc.fileTitle,
+                documentType: doc.docType,
+                documentCode: null,
+                description: doc.description,
+                status: doc.status,
+                uploadedBy: doc.uploadedBy,
+                userId: doc.currentOwner,
+                dateOfIssue: null,
+                uploadDate: doc.createdAt,
+                documentLink: doc.fileUrl,
+                createdAt: doc.createdAt,
+                updatedAt: doc.createdAt
+            }))
+        ];
+
+        // Sort by creation date (newest first)
+        allDocuments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        res.status(200).json({ 
+            success: true,
+            documents: allDocuments,
+            total: allDocuments.length,
+            regularCount: regularDocuments.length,
+            dfsCount: dfsDocuments.length
+        });
+    } catch (error) {
+        console.error("Error fetching all documents:", error);
+        res.status(500).json({ 
+            success: false,
+            message: "Internal server error", 
+            error: error.message 
+        });
+    }
 });
 
 module.exports = router;

@@ -12,9 +12,10 @@ import {
   Spinner,
   Collapse,
   Alert,
+  Modal,
 } from 'react-bootstrap';
-import { FaSearch, FaFileAlt, FaPlus, FaFileExport } from 'react-icons/fa';
-import { getMyUploadedFiles } from '../../services/dfsService';
+import { FaSearch, FaFileAlt, FaPlus, FaFileExport, FaTrash } from 'react-icons/fa';
+import { getMyUploadedFiles, deleteDfsFile } from '../../services/dfsService';
 import ClientHeader from '../../component/header/ClientHeader';
 
 const getStatusBadge = (status) => {
@@ -39,6 +40,9 @@ export default function TrackMyAllDocument() {
   const [searchText, setSearchText] = useState('');
   const [sortOrder, setSortOrder] = useState('desc');
   const [error, setError] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchFiles = async () => {
@@ -56,6 +60,32 @@ export default function TrackMyAllDocument() {
 
   const toggleCollapse = (fileId) => {
     setExpandedFileId(expandedFileId === fileId ? null : fileId);
+  };
+
+  const handleDeleteClick = (file) => {
+    setFileToDelete(file);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!fileToDelete) return;
+
+    setDeleting(true);
+    try {
+      await deleteDfsFile(fileToDelete._id);
+      setFiles(files.filter(file => file._id !== fileToDelete._id));
+      setShowDeleteModal(false);
+      setFileToDelete(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
+    setFileToDelete(null);
   };
 
   const filteredFiles = files
@@ -129,6 +159,7 @@ export default function TrackMyAllDocument() {
                   <th>Date</th>
                   <th>File</th>
                   <th>Trail</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -157,10 +188,20 @@ export default function TrackMyAllDocument() {
                           {expandedFileId === file._id ? 'Hide' : 'View'}
                         </Button>
                       </td>
+                      <td className="text-center">
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => handleDeleteClick(file)}
+                          disabled={file.status === 'approved' || file.status === 'in-review'}
+                        >
+                          <FaTrash />
+                        </Button>
+                      </td>
                     </tr>
 
                     <tr>
-                      <td colSpan={10} className="p-0">
+                      <td colSpan={11} className="p-0">
                         <Collapse in={expandedFileId === file._id}>
                           <div>
                             <Card className="p-3">
@@ -236,6 +277,36 @@ export default function TrackMyAllDocument() {
           )}
         </Card>
       </Container>
+
+      {/* Delete Confirmation Modal */}
+      <Modal show={showDeleteModal} onHide={handleDeleteCancel} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Deletion</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="text-center">
+            <FaTrash size={48} className="text-danger mb-3" />
+            <h5>Are you sure you want to delete this document?</h5>
+            <p className="text-muted">
+              <strong>Title:</strong> {fileToDelete?.fileTitle}<br />
+              <strong>Type:</strong> {fileToDelete?.docType}<br />
+              <strong>Status:</strong> {fileToDelete?.status}
+            </p>
+            <Alert variant="warning">
+              <strong>Warning:</strong> This action cannot be undone. The document and all its forwarding history will be permanently deleted.
+            </Alert>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleDeleteCancel} disabled={deleting}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleDeleteConfirm} disabled={deleting}>
+            {deleting ? <Spinner animation="border" size="sm" /> : <FaTrash className="me-1" />}
+            {deleting ? 'Deleting...' : 'Delete Document'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   );
 }

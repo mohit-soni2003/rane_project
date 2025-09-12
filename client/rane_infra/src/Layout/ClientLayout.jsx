@@ -8,8 +8,14 @@ const ClientLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const {user} = useAuthStore();
+
+  // Function to be passed to ClientSidebar to sync sidebar collapse state
+  const handleSidebarCollapse = (isCollapsed) => {
+    setIsSidebarCollapsed(isCollapsed);
+  };
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
@@ -24,7 +30,7 @@ const ClientLayout = () => {
 
 
         <div className="d-none d-md-block position-fixed">
-          <ClientSidebar isOpen={true} />
+          <ClientSidebar isOpen={true} onCollapse={handleSidebarCollapse} />
         </div>
 
         {/* Sidebar on Mobile */}
@@ -86,7 +92,10 @@ const ClientLayout = () => {
 
 
         {/* Page Content */}
-        <div className="p-0 p-md-3   " style={{ marginLeft: windowWidth >= 768 ? '260px' : '0px' }}>
+        <div className="p-0 p-md-3" style={{ 
+          marginLeft: windowWidth >= 768 ? (isSidebarCollapsed ? '60px' : '260px') : '0px',
+          transition: 'margin-left 0.3s ease'
+        }}>
           <Outlet />
         </div>
       </div>

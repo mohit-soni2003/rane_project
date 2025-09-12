@@ -263,7 +263,13 @@ const AdminSidebar = ({ onCollapse }) => {
               <Link to="/admin/danger/all-dfs" style={{ textDecoration: 'none', color: 'inherit' }}>
                 All DFS Details
               </Link>
-            </div>                </div>
+            </div>
+            <div className="py-1">
+              <Link to="/admin/danger/all-documents" style={{ textDecoration: 'none', color: 'inherit' }}>
+                All Documents
+              </Link>
+            </div>
+          </div>
         )}
       </div>
       {/* Settings */}

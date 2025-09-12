@@ -127,3 +127,24 @@ export const getAllDfsRequests = async () => {
     throw err;
   }
 };
+
+// Delete a DFS file by ID
+export const deleteDfsFile = async (fileId) => {
+  try {
+    const res = await fetch(`${backend_url}/dfs/file/${fileId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to delete DFS file.");
+    }
+
+    return data;
+  } catch (err) {
+    console.error("Error in deleteDfsFile:", err);
+    throw err;
+  }
+};

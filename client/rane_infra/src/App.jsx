@@ -55,6 +55,7 @@ import ClientSalaryAll from "./pages/admin/ClientSalaryAll.jsx";
 import SingleUSerSalaryDetailAdmin from "./pages/admin/SingleUSerSalaryDetailAdmin.jsx";
 import AllUser from "./pages/admin/AllUser.jsx";
 import AllDFSRequests from "./pages/admin/AllDFSRequests.jsx";
+import AllDocuments from "./pages/admin/AllDocuments.jsx";
 import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage.jsx";
 
 
@@ -195,6 +196,7 @@ function App() {
           <Route path="salary-detail/:clientid/:currmonth" element={<SingleUSerSalaryDetailAdmin />} />
           <Route path="danger/all-user" element={<AllUser />} />
           <Route path="danger/all-dfs" element={<AllDFSRequests />} />
+          <Route path="danger/all-documents" element={<AllDocuments />} />
           <Route path="setting" element={<Setting />} />
           <Route path="notifications" element={<AdminNotificationsPage />} />
           <Route path="under-dev" element={<UnderDevPage />} />
@@ -211,7 +213,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<HomePageAdmin />} />
+          <Route index element={<HomePageStaff />} />
           <Route path="home" element={<HomePageStaff />} />
           <Route path="bill" element={<AllBillPage />} />
           <Route path="bill/:id" element={<SingleBillDetailAdminPage />} />
@@ -227,6 +229,7 @@ function App() {
 
           <Route path="upload-document" element={<UploadDocumentPage />} />
           <Route path="track-dfs/all" element={<TrackMyAllDocument />} />
+          <Route path="all-documents" element={<AllDocuments />} />
           <Route path="push-document/:cid" element={<PushDocumentAdminPage />} />
           <Route path="push-document" element={<PushDocumentAdminPage />} />
           <Route path="salary" element={<SalaryPage />} />

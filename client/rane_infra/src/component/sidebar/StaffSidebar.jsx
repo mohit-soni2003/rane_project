@@ -8,7 +8,7 @@ import dummyUser from '../../assets/images/dummyUser.jpeg';
 import { useAuthStore } from '../../store/authStore';
 import { Link } from 'react-router-dom';
 
-const StaffSidebar = () => {
+const StaffSidebar = ({ onCollapse }) => {
   const [openMenu, setOpenMenu] = useState(null);
   const { user } = useAuthStore();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -18,7 +18,12 @@ const StaffSidebar = () => {
   };
 
   const toggleSidebar = () => {
-    setIsSidebarCollapsed(!isSidebarCollapsed);
+    const newCollapseState = !isSidebarCollapsed;
+    setIsSidebarCollapsed(newCollapseState);
+    // Notify parent component about sidebar state change
+    if (onCollapse) {
+      onCollapse(newCollapseState);
+    }
   };
 
   const submenuStyle = (isOpen) => ({
@@ -172,6 +177,28 @@ const StaffSidebar = () => {
             </Link>
             <Link to="/staff/track-dfs/all" style={menuItemStyle}>
               <div className="py-1">Track Document</div>
+            </Link>
+          </div>
+        )}
+      </div>
+
+      {/* Document Dropdown */}
+      <div className="px-2 py-2 rounded cursor-pointer hover-effect" onClick={() => {
+        if (isSidebarCollapsed) {
+          setIsSidebarCollapsed(false);
+          setOpenMenu('document');
+        } else {
+          toggleMenu('document');
+        }
+      }}>
+        <div className="d-flex justify-content-between align-items-center">
+          <span><FaFileAlt className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Document'}</span>
+          {!isSidebarCollapsed && (openMenu === 'document' ? <FaChevronUp style={iconStyle} /> : <FaChevronDown style={iconStyle} />)}
+        </div>
+        {!isSidebarCollapsed && (
+          <div style={submenuStyle(openMenu === 'document')}>
+            <Link to="/staff/all-documents" style={menuItemStyle}>
+              <div className="py-1">All Documents</div>
             </Link>
           </div>
         )}

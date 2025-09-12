@@ -102,7 +102,6 @@ export default function PaymentReqUserDash() {
           image_url: uploadedImageUrl, // Retain last uploaded image URL
 
           tender: "",
-          image: null,
           paymentType: "",
         });
       } else {

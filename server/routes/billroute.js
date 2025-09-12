@@ -123,6 +123,26 @@ router.get('/allbill', async (req, res) => {
     res.json({ error: 'Server error', details: error.message });
   }
 });
+
+// Get bills for a specific user
+router.get('/mybill/:userId', async (req, res) => {
+  // console.log("Get bills for user route hit")
+  const { userId } = req.params;
+
+  try {
+    // Find bills that match the user's ID
+    const bills = await Bill.find({ user: userId }).populate("user");
+    // console.log(bills)
+    if (bills.length > 0) {
+      res.status(200).json(bills);
+    } else {
+      res.status(200).json([]); // Return empty array instead of error for no bills
+    }
+  } catch (error) {
+    console.error("Error fetching user bills:", error);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
 //particular signle bill details
 router.get('/bill/:id', async (req, res) => {
   // console.log("show particular id bill route hitted")

@@ -244,4 +244,38 @@ router.get('/file/:id', verifyToken, async (req, res) => {
   }
 });
 
+// @route   DELETE /dfs/file/:id
+// @desc    Delete a DFS file by its ID
+// @access  Protected
+router.delete('/file/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.userId;
+
+    // Find the file first to check ownership
+    const file = await FileForward.findById(id);
+
+    if (!file) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    // Check if the current user is the owner of the file or an admin
+    const user = await User.findById(userId);
+    if (file.currentOwner.toString() !== userId && user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to delete this file' });
+    }
+
+    // Delete the file
+    await FileForward.findByIdAndDelete(id);
+
+    res.status(200).json({
+      message: 'File deleted successfully',
+      deletedFileId: id
+    });
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    res.status(500).json({ error: 'Server error while deleting file' });
+  }
+});
+
 module.exports = router;

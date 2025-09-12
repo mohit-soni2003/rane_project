@@ -15,7 +15,7 @@ import LogoutModal from '../models/LogoutModal';
 
 
 
-const ClientSidebar = ({ isOpen, toggleSidebar }) => {
+const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
   const { user } = useAuthStore();
   const [openDropdown, setOpenDropdown] = useState(null);
   const navigate = useNavigate();
@@ -31,7 +31,12 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
   };
 
   const toggleSidebarCollapse = () => {
-    setIsSidebarCollapsed(!isSidebarCollapsed);
+    const newCollapseState = !isSidebarCollapsed;
+    setIsSidebarCollapsed(newCollapseState);
+    // Notify parent component about sidebar state change
+    if (onCollapse) {
+      onCollapse(newCollapseState);
+    }
   };
 
   const submenuStyle = (isOpen) => ({
@@ -242,15 +247,31 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
       </div>
 
       {/* Document */}
-      <div className="d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
-        <Link 
-          to="/client/document/category" 
-          style={{ textDecoration: 'none', color: 'inherit' }}
-          onClick={() => isSidebarCollapsed && setIsSidebarCollapsed(false)}
+      <div className="">
+        <div
+          onClick={() => {
+            if (isSidebarCollapsed) {
+              setIsSidebarCollapsed(false);
+              setOpenDropdown("document");
+            } else {
+              toggleDropdown("document");
+            }
+          }}
+          className="d-flex justify-content-between align-items-center sidebar-item"
+          style={sidebarItemStyle}
         >
-          <FaFileAlt className="me-2" style={iconStyle} />
-          {!isSidebarCollapsed && 'Document'}
-        </Link>
+          <span><FaFileAlt className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Document'}</span>
+          {!isSidebarCollapsed && (openDropdown === "document" ? <FaChevronUp style={iconStyle} /> : <FaChevronDown style={iconStyle} />)}
+        </div>
+        {!isSidebarCollapsed && (
+          <div style={submenuStyle(openDropdown === "document")}>
+            <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" style={iconStyle} />
+              <Link to="/client/all-documents" style={{ textDecoration: 'none', color: 'inherit' }}>
+                All Documents
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Salary */}

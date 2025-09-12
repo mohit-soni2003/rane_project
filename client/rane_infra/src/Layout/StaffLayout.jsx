@@ -6,8 +6,14 @@ import StaffSidebar from '../component/sidebar/StaffSidebar';
 const StaffLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
+
+  // Function to be passed to StaffSidebar to sync sidebar collapse state
+  const handleSidebarCollapse = (isCollapsed) => {
+    setIsSidebarCollapsed(isCollapsed);
+  };
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -20,7 +26,7 @@ const StaffLayout = () => {
       
       {/* Desktop Sidebar */}
       <div className="d-none d-md-block position-fixed">
-        <StaffSidebar isOpen={true} />
+        <StaffSidebar isOpen={true} onCollapse={handleSidebarCollapse} />
       </div>
 
       {/* Mobile Sidebar */}
@@ -47,7 +53,10 @@ const StaffLayout = () => {
       </div>
 
       {/* Page Content */}
-      <div className="p-3" style={{ marginLeft: windowWidth >= 768 ? '260px' : '0px' }}>
+      <div className="p-3" style={{ 
+        marginLeft: windowWidth >= 768 ? (isSidebarCollapsed ? '60px' : '260px') : '0px',
+        transition: 'margin-left 0.3s ease'
+      }}>
         <Outlet />
       </div>
     </div>
