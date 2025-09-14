@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getFileById,getAllUsers,forwardDocument} from "../../services/dfsService";   
+import { getFileById,getAllUsers,forwardDocument,
+  deleteDfsFile} from "../../services/dfsService";   
 import { CLOUDINARY_URL, UPLOAD_PRESET } from "../../store/keyStore";
 import {Container,Spinner,Card,Row,Col,Table,Image,Badge,Button,Form} from "react-bootstrap";
 import AdminHeader from "../../component/header/AdminHeader";
 import moment from "moment";
-import { FaPaperPlane, FaFilePdf, FaUserCircle } from "react-icons/fa";
+import { FaPaperPlane, FaFilePdf, FaUserCircle, FaTrash } from "react-icons/fa";
 import { MdAttachFile } from "react-icons/md";
 import { useAuthStore } from "../../store/authStore";
+import DeleteConfirmationModal from "../../component/models/DeleteConfirmationModal";
 
 export default function SingleDfsRequestDetail() {
   const { id } = useParams();
@@ -22,6 +24,8 @@ export default function SingleDfsRequestDetail() {
   const [note, setNote] = useState("");
   const [attachment, setAttachment] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const { user } = useAuthStore();
 
   useEffect(() => {
     const loadData = async () => {
@@ -92,6 +96,22 @@ export default function SingleDfsRequestDetail() {
     }
   };
 
+  const handleDeleteClick = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      setShowDeleteModal(false);
+      await deleteDfsFile(file._id);
+      alert("✅ File deleted successfully.");
+      // Navigate back to the DFS requests page
+      window.history.back();
+    } catch (err) {
+      alert("❌ Failed to delete file: " + err.message);
+    }
+  };
+
   return (
     <>
       <AdminHeader />
@@ -149,6 +169,16 @@ export default function SingleDfsRequestDetail() {
                     <p className="text-muted">
                       <small>Uploaded on: {moment(file.createdAt).format("DD MMM YYYY, hh:mm A")}</small>
                     </p>
+                    {(user?.role === "admin" || user?._id === file.uploadedBy._id) && (
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={handleDeleteClick}
+                        className="mt-2"
+                      >
+                        <FaTrash className="me-1" /> Delete File
+                      </Button>
+                    )}
                   </Col>
                 </Row>
               </Card.Body>
@@ -322,6 +352,14 @@ export default function SingleDfsRequestDetail() {
           </>
         )}
       </Container>
+
+      <DeleteConfirmationModal
+        show={showDeleteModal}
+        onHide={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteConfirm}
+        itemName={file?.fileTitle || "this file"}
+        itemType="DFS file"
+      />
     </>
   );
 }

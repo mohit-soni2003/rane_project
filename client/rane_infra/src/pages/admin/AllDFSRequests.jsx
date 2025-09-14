@@ -2,11 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { Table, Button, Collapse, Spinner, Card } from 'react-bootstrap';
 import { backend_url } from '../../store/keyStore';
 import AdminHeader from '../../component/header/AdminHeader';
+import { FaTrash } from 'react-icons/fa';
+import DeleteConfirmationModal from '../../component/models/DeleteConfirmationModal';
 
 const AllDFSRequests = () => {
   const [files, setFiles] = useState([]);
   const [expandedFileId, setExpandedFileId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   useEffect(() => {
     fetchFiles();
@@ -24,6 +28,33 @@ const AllDFSRequests = () => {
     } catch (err) {
       console.error('Error fetching files:', err);
       setLoading(false);
+    }
+  };
+
+  const handleDeleteClick = (file) => {
+    setSelectedFile(file);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedFile) return;
+
+    try {
+      const response = await fetch(`${backend_url}/dfs/file/${selectedFile._id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        // Remove the deleted file from the state
+        setFiles(files.filter(file => file._id !== selectedFile._id));
+        alert("✅ DFS file deleted successfully!");
+      } else {
+        const errorData = await response.json();
+        alert("❌ Failed to delete DFS file: " + errorData.error);
+      }
+    } catch (error) {
+      alert("❌ Failed to delete DFS file: " + error.message);
     }
   };
 
@@ -48,6 +79,7 @@ const AllDFSRequests = () => {
             <th>Status</th>
             <th>File</th>
             <th>Actions</th>
+            <th>Delete</th>
           </tr>
         </thead>
         <tbody>
@@ -63,6 +95,16 @@ const AllDFSRequests = () => {
                 <td>
                   <Button variant="info" size="sm" onClick={() => toggleCollapse(file._id)}>
                     {expandedFileId === file._id ? 'Hide Trail' : 'View Trail'}
+                  </Button>
+                </td>
+                <td>
+                  <Button
+                    variant="outline-danger"
+                    size="sm"
+                    onClick={() => handleDeleteClick(file)}
+                    title="Delete File"
+                  >
+                    <FaTrash />
                   </Button>
                 </td>
               </tr>
@@ -109,6 +151,15 @@ const AllDFSRequests = () => {
           ))}
         </tbody>
       </Table>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteConfirm}
+        itemName={selectedFile?.fileTitle}
+        itemType="DFS Document"
+      />
     </div>
     </>
   );

@@ -12,6 +12,7 @@ import {
   Spinner,
   Collapse,
   Alert,
+  Modal,
 } from 'react-bootstrap';
 import { FaSearch, FaFileAlt, FaPlus, FaFileExport } from 'react-icons/fa';
 import { getMyUploadedFiles } from '../../services/dfsService';

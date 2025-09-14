@@ -8,12 +8,31 @@ const ClientLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const {user} = useAuthStore();
+
+  // Function to be passed to ClientSidebar to sync sidebar collapse state
+  const handleSidebarCollapse = (isCollapsed) => {
+    setIsSidebarCollapsed(isCollapsed);
+  };
+
+  // Ensure immediate state synchronization
+  useEffect(() => {
+    // Force a re-render to ensure layout adjusts immediately
+    const timer = setTimeout(() => {}, 0);
+    return () => clearTimeout(timer);
+  }, [isSidebarCollapsed]);
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Ensure sidebar state is properly initialized
+  useEffect(() => {
+    // Reset collapsed state on component mount if needed
+    setIsSidebarCollapsed(false);
   }, []);
 
 
@@ -24,13 +43,21 @@ const ClientLayout = () => {
 
 
         <div className="d-none d-md-block position-fixed">
-          <ClientSidebar isOpen={true} />
+          <ClientSidebar 
+            key="desktop-sidebar" 
+            isOpen={true} 
+            onCollapse={handleSidebarCollapse} 
+          />
         </div>
 
         {/* Sidebar on Mobile */}
         {isSidebarOpen && (
           <>
-            <ClientSidebar isOpen={true} toggleSidebar={toggleSidebar} />
+            <ClientSidebar 
+              key="mobile-sidebar" 
+              isOpen={true} 
+              toggleSidebar={toggleSidebar} 
+            />
             <div
               className="position-fixed top-0 start-0 w-100 h-100"
               style={{ backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 1040 }}
@@ -86,7 +113,15 @@ const ClientLayout = () => {
 
 
         {/* Page Content */}
-        <div className="p-0 p-md-3   " style={{ marginLeft: windowWidth >= 768 ? '260px' : '0px' }}>
+        <div className="p-0 p-md-3" style={{ 
+          marginLeft: windowWidth >= 768 ? (isSidebarCollapsed ? '60px' : '260px') : '0px',
+          transition: 'margin-left 0.3s ease, width 0.3s ease',
+          minHeight: '100vh',
+          position: 'relative',
+          zIndex: 1,
+          width: windowWidth >= 768 ? `calc(100% - ${isSidebarCollapsed ? '60px' : '260px'})` : '100%',
+          overflowX: 'hidden'
+        }}>
           <Outlet />
         </div>
       </div>

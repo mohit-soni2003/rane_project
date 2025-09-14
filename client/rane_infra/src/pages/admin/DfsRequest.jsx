@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { getMyRequests } from "../../services/dfsService";
+import { getMyRequests, deleteDfsFile } from "../../services/dfsService";
 import AdminHeader from "../../component/header/AdminHeader";
 import { Container, Table, Spinner, Button } from "react-bootstrap";
-import { FaEye, FaEllipsisV } from "react-icons/fa";
+import { FaEye, FaEllipsisV, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
+import DeleteConfirmationModal from "../../component/models/DeleteConfirmationModal";
 
 export default function DfsRequest() {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState(null);
   const navigate = useNavigate();
   const {user} = useAuthStore();
 
@@ -24,6 +27,24 @@ export default function DfsRequest() {
       alert("❌ " + error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteClick = (document) => {
+    setSelectedDocument(document);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedDocument) return;
+
+    try {
+      await deleteDfsFile(selectedDocument._id);
+      // Remove the deleted document from the state
+      setDocuments(documents.filter(doc => doc._id !== selectedDocument._id));
+      alert("✅ DFS file deleted successfully!");
+    } catch (error) {
+      alert("❌ Failed to delete DFS file: " + error.message);
     }
   };
 
@@ -75,6 +96,7 @@ export default function DfsRequest() {
                   <th>Created At</th>
                   <th>View</th>
                   <th>More</th>
+                  <th>Delete</th>
                 </tr>
               </thead>
               <tbody>
@@ -135,6 +157,16 @@ export default function DfsRequest() {
                         <FaEllipsisV />
                       </Button>
                     </td>
+                    <td className="text-center">
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        title="Delete Document"
+                        onClick={() => handleDeleteClick(doc)}
+                      >
+                        <FaTrash />
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -142,6 +174,15 @@ export default function DfsRequest() {
           </div>
         )}
       </Container>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteConfirm}
+        itemName={selectedDocument?.fileTitle}
+        itemType="DFS Document"
+      />
     </>
   );
 }

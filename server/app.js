@@ -52,10 +52,13 @@ app.use(require("./routes/clientroute"))
 app.use(require("./routes/paymentroute"))
 app.use(require("./routes/commonroute"))
 app.use(require("./routes/adminroutes"))
+app.use(require("./routes/staffroutes"))
+app.use(require("./routes/clientroutes"))
 app.use(require("./routes/transactionroutes"))
 app.use(require("./routes/documentroutes"))
 app.use("/dfs",require("./routes/fsforwardingroutes"))
 app.use("/salary",require("./routes/salaryroutes"))
+app.use(require("./routes/notificationRoutes"))
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

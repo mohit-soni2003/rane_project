@@ -35,6 +35,7 @@ export default function SettingPage() {
     ifscCode: user.ifscCode || '',
     accountNo: user.accountNo || '',
     upi: user.upi || '',
+    accountType: user.accountType || 'saving', // Default to saving
   });
 
   const [passwords, setPasswords] = useState({
@@ -295,6 +296,19 @@ const handleDocUpload = async (type, file) => {
                     />
                   </div>
                 ))}
+                <div className="col-md-6">
+                  <label className="form-label">
+                    <FaIdCard className="me-1" /> Account Type
+                  </label>
+                  <select
+                    className="form-control"
+                    value={formData.accountType}
+                    onChange={handleChange('accountType')}
+                  >
+                    <option value="saving">Saving Account</option>
+                    <option value="current">Current Account</option>
+                  </select>
+                </div>
               </div>
               <button className="btn mt-3" onClick={handleSave} style={{
                 backgroundColor: 'var(--client-btn-bg)',
