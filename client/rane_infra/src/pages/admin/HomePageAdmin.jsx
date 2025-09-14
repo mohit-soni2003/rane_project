@@ -12,6 +12,7 @@ import AdminHeader from '../../component/header/AdminHeader';
 import { adminService } from '../../services/adminService';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import PendingDocumentsTableAdmin from '../../component/admin/PendingDocumentsTableAdmin';
 
 export default function HomePageAdmin() {
   const [stats, setStats] = useState({
@@ -514,6 +515,13 @@ export default function HomePageAdmin() {
                 </div>
               )}
             />
+          </Col>
+        </Row>
+
+        {/* Pending Documents Table */}
+        <Row className="mb-4">
+          <Col>
+            <PendingDocumentsTableAdmin />
           </Col>
         </Row>
 

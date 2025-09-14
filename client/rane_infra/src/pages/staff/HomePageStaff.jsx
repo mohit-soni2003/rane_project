@@ -16,6 +16,7 @@ import {
 } from 'chart.js';
 import { Pie, Bar, Line, Doughnut, Radar } from 'react-chartjs-2';
 import { Card } from 'react-bootstrap';
+import PendingDocumentsTableStaff from '../../component/staff/PendingDocumentsTableStaff';
 
 // Register Chart.js components
 ChartJS.register(
@@ -328,6 +329,13 @@ const HomePageStaff = () => {
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Pending Documents Table */}
+          <div className="row mb-4">
+            <div className="col-12">
+              <PendingDocumentsTableStaff />
             </div>
           </div>
         </>

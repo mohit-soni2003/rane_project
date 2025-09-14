@@ -34,19 +34,22 @@ const ClientHeader = () => {
 
           <div className="card-body p-4">
             {/* Top Section - Company Info */}
-            <div className="text-center mb-3">
-              <h6 className="fst-italic mb-1">E - OFFICE</h6>
-              <h5 className="fw-bold text-uppercase mb-3" style={{ fontSize: '1.1rem', letterSpacing: '0.5px' }}>
-                RANE & SONS - WORK MANAGEMENT SYSTEM
-              </h5>
+            <div className="mb-3">
+              <div className="d-flex align-items-center mb-2">
+                <h6 className="fst-italic mb-0 me-3">E - OFFICE</h6>
+                <div className="flex-grow-1 text-center">
+                  <h5 className="fw-bold text-uppercase mb-0" style={{ fontSize: '1.3rem', letterSpacing: '0.5px', fontWeight: '900' }}>
+                    RANE & SONS - WORK MANAGEMENT SYSTEM
+                  </h5>
+                </div>
+              </div>
+              <div className="text-center">
+                <h6 className="mb-0">{user?.name || "User Name"}</h6>
+              </div>
             </div>
 
-            {/* Middle Section - Welcome Message */}
-            <div className="d-flex justify-content-between align-items-center">
-              <div>
-                <h2 className="mb-2">Welcome , {user?.name}! </h2>
-                <p className="mb-0 opacity-75">Track your bills, payments, and salary information</p>
-              </div>
+            {/* Middle Section - User Info */}
+            <div className="d-flex justify-content-end align-items-center">
               <div className="text-end">
                 <h6 className="mb-1">Client ID: {user?.cid || "Not Assigned"}</h6>
                 <small className="opacity-75">

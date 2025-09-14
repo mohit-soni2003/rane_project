@@ -13,6 +13,7 @@ import { clientService } from '../../services/clientService';
 import { useNavigate } from 'react-router-dom';
 import { Pie, Bar, Line, Doughnut, Radar } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, RadialLinearScale } from 'chart.js';
+import PendingDocumentsTable from '../../component/PendingDocumentsTable';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement, RadialLinearScale);
 
@@ -482,6 +483,13 @@ export default function HomePageClient() {
                     </div>
                   </Card.Body>
                 </Card>
+              </div>
+            </div>
+
+            {/* Pending Documents Table */}
+            <div className="row mb-4">
+              <div className="col-12">
+                <PendingDocumentsTable />
               </div>
             </div>
           </>
