@@ -129,7 +129,7 @@ router.put("/forward/:fileId", verifyToken, async (req, res) => {
   }
 });
 
-
+ 
 // @route   GET /my-requests
 // @desc    Get documents assigned to the current logged-in user
 // @access  Protected
@@ -160,15 +160,21 @@ router.get("/my-requests", verifyToken, async (req, res) => {
 router.get('/all-users', verifyToken, async (req, res) => {
   try {
     const users = await User.find(
-      { role: { $in: ['admin', 'staff'] } },
+      { role: { $in: ['admin', 'staff', 'client'] } },
       '_id name cid role'
     );
+
+    const roleOrder = { admin: 1, staff: 2, client: 3 };
+
+    users.sort((a, b) => roleOrder[a.role] - roleOrder[b.role]);
+
     res.json({ users });
   } catch (err) {
     console.error('Error fetching users:', err.message);
     res.status(500).json({ error: 'Server Error' });
   }
 });
+
 // @route    GET /api/files
 // @desc     Get all files with complete details for Super Admin
 // @access   Protected (superadmin only, optional)

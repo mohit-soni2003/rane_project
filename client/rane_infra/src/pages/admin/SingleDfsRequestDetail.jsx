@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import {
-  getFileById,
-  getAllUsers,
-  forwardDocument
-} from "../../services/dfsService";
+import { getFileById,getAllUsers,forwardDocument} from "../../services/dfsService";   
 import { CLOUDINARY_URL, UPLOAD_PRESET } from "../../store/keyStore";
 import {Container,Spinner,Card,Row,Col,Table,Image,Badge,Button,Form} from "react-bootstrap";
 import AdminHeader from "../../component/header/AdminHeader";
@@ -247,10 +243,10 @@ export default function SingleDfsRequestDetail() {
                         <option value="">-- Select User --</option>
                         {users.map((user) => (
                           <option key={user._id} value={user._id}>
-                            {user.name}
+                            {user.name} <span className="fst-italic">({user.role})</span>
                           </option>
                         ))}
-                        <option value={file.uploadedBy._id}>{file.uploadedBy.name}</option>
+                        <option value={file.uploadedBy._id}>{file.uploadedBy.name}(File Owner)</option>
 
                       </Form.Select>
                     </Col>

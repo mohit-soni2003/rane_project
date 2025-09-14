@@ -177,11 +177,11 @@ const ClientSidebar = ({ isOpen, toggleSidebar }) => {
               Track Document
             </Link>
           </div>
-          {/* <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />
-            <Link to="/client/under-dev" style={{ textDecoration: 'none', color: 'inherit' }}>
-              Closed Files
+          <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />
+            <Link to="/client/dfsrequest" style={{ textDecoration: 'none', color: 'inherit' }}>
+              Document for review
             </Link>
-          </div> */}
+          </div>
         </div>
       </div>
 

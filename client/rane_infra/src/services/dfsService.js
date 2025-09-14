@@ -65,6 +65,20 @@ export const forwardDocument = async (fileId, forwardData) => {
     if (!res.ok) throw new Error(result.error || "Failed to forward document.");
     return result;
 };
+
+//this is the service used by client when file is assigned to staff for review and he can forward again to staff who forward to client 
+export const forwardDocumentToStaff = async (fileId, forwardData) => {
+    console.log(forwardData)
+    const res = await fetch(`${backend_url}/dfs/forward/${fileId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(forwardData),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || "Failed to forward document.");
+    return result;
+};
 // get all the detaisl of particula dfs by the id of DFS model . Id is dfs document id
 export const getFileById = async (id) => {
   try {
