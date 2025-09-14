@@ -1,54 +1,69 @@
 import React from 'react';
 import { useAuthStore } from '../../store/authStore';
+import { FaCalendarAlt } from 'react-icons/fa';
 
 const ClientHeader = () => {
   const { user } = useAuthStore();
 
   return (
-    <header
-      className="w-100 px-3 py-2 d-none d-md-flex align-items-center"
-      style={{
-        backgroundColor: 'var(--client-component-bg-color)',
-        fontSize: '14px',
-      }}
-    >
-      {/* Left Section */}
-      <div className="d-flex align-items-center justify-content-start flex-shrink-0" style={{ width: '200px' }}>
-        <span className="fst-italic text-nowrap">E - OFFICE</span>
+    <>
+      {/* Welcome Header Section */}
+      <div className="w-100 mb-4">
+        <div className="card shadow-sm border-0 position-relative" style={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: '15px',
+          color: 'white'
+        }}>
+          {/* Profile Picture - Top Right */}
+          <img
+            src={user?.profile || '/assets/images/dummyUser.jpeg'}
+            alt="Profile"
+            className="rounded-circle position-absolute"
+            style={{
+              width: '50px',
+              height: '50px',
+              objectFit: 'cover',
+              aspectRatio: '1 / 1',
+              borderRadius: '50%',
+              top: '15px',
+              right: '15px',
+              border: '3px solid rgba(255,255,255,0.8)',
+              zIndex: '10'
+            }}
+          />
+
+          <div className="card-body p-4">
+            {/* Top Section - Company Info */}
+            <div className="text-center mb-3">
+              <h6 className="fst-italic mb-1">E - OFFICE</h6>
+              <h5 className="fw-bold text-uppercase mb-3" style={{ fontSize: '1.1rem', letterSpacing: '0.5px' }}>
+                RANE & SONS - WORK MANAGEMENT SYSTEM
+              </h5>
+            </div>
+
+            {/* Middle Section - Welcome Message */}
+            <div className="d-flex justify-content-between align-items-center">
+              <div>
+                <h2 className="mb-2">Welcome , {user?.name}! </h2>
+                <p className="mb-0 opacity-75">Track your bills, payments, and salary information</p>
+              </div>
+              <div className="text-end">
+                <h6 className="mb-1">Client ID: {user?.cid || "Not Assigned"}</h6>
+                <small className="opacity-75">
+                  <FaCalendarAlt className="me-1" />
+                  {new Date().toLocaleDateString('en-IN', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-
-      {/* Center Section */}
-      <div className="text-center flex-grow-1 fw-bold text-uppercase" style={{ fontSize: '1.2rem', letterSpacing: '0.5px' }}>
-        RANE & SONS - WORK MANAGEMENT SYSTEM
-      </div>
-
-      {/* Right Section */}
-      <div
-        className="d-flex align-items-center justify-content-end gap-3 text-nowrap flex-shrink-0"
-        style={{ width: '200px' }}
-      >
-        <span className="d-none d-md-block medium fw-semibold text-uppercase">
-          Welcome: {user?.name || 'CLIENT NAME'}
-        </span>
-
-        <img
-          src={user?.profile || '/assets/images/dummyUser.jpeg'}
-          alt="Profile"
-          className="rounded-circle"
-          style={{
-            width: '32px',
-            height: '32px',
-            objectFit: 'cover',
-            aspectRatio: '1 / 1', // ensures equal width and height
-            borderRadius: '50%', // keeps it circular
-            display: 'block'
-          }}
-        />
-
-
-
-      </div>
-    </header>
+    </>
   );
 };
 
