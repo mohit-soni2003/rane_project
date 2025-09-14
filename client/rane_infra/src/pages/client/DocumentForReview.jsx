@@ -6,7 +6,7 @@ import { useParams } from "react-router-dom";
 import { getFileById, getAllUsers, forwardDocument } from "../../services/dfsService";
 import { CLOUDINARY_URL, UPLOAD_PRESET } from "../../store/keyStore";
 import { Container, Spinner, Card, Row, Col, Table, Image, Badge, Button, Form } from "react-bootstrap";
-import AdminHeader from "../../component/header/AdminHeader";
+import ClientHeader from "../../component/header/ClientHeader";
 import moment from "moment";
 import { FaPaperPlane, FaFilePdf, FaUserCircle } from "react-icons/fa";
 import { MdAttachFile } from "react-icons/md";
@@ -108,7 +108,7 @@ useEffect(() => {
 
     return (
         <>
-            <AdminHeader />
+            <ClientHeader/>
             <Container fluid className="py-4 w-100">
                 <h3 className="mb-4 fw-bold">
                     <FaFilePdf className="mb-1 me-2" /> DFS Request Detail
