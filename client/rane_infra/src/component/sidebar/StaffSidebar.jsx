@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FaTachometerAlt, FaFileInvoice, FaUserTie, FaChevronDown, FaChevronUp,
   FaTools, FaQuestionCircle, FaBell, FaSignOutAlt, FaFileAlt,
@@ -6,12 +6,30 @@ import {
 } from 'react-icons/fa';
 import dummyUser from '../../assets/images/dummyUser.jpeg';
 import { useAuthStore } from '../../store/authStore';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const StaffSidebar = ({ onCollapse }) => {
   const [openMenu, setOpenMenu] = useState(null);
   const { user } = useAuthStore();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const location = useLocation();
+
+  // Sync with parent component on mount and when navigation occurs
+  useEffect(() => {
+    // Ensure sidebar starts in expanded state on component mount
+    setIsSidebarCollapsed(false);
+    if (onCollapse) {
+      onCollapse(false);
+    }
+  }, []); // Empty dependency array ensures this runs only on mount
+
+  // Handle location changes to ensure proper state synchronization
+  useEffect(() => {
+    // When location changes, ensure sidebar is properly synchronized
+    if (onCollapse) {
+      onCollapse(isSidebarCollapsed);
+    }
+  }, [location.pathname]);
 
   const toggleMenu = (menu) => {
     setOpenMenu(openMenu === menu ? null : menu);
@@ -20,7 +38,7 @@ const StaffSidebar = ({ onCollapse }) => {
   const toggleSidebar = () => {
     const newCollapseState = !isSidebarCollapsed;
     setIsSidebarCollapsed(newCollapseState);
-    // Notify parent component about sidebar state change
+    // Immediately notify parent component about sidebar state change
     if (onCollapse) {
       onCollapse(newCollapseState);
     }
@@ -63,7 +81,7 @@ const StaffSidebar = ({ onCollapse }) => {
       }}>
 
       {/* Toggle Button */}
-      <div className="text-center mb-3">
+      <div className="d-flex justify-content-end" style={{ marginTop: '5px', marginBottom: '5px' }}>
         <button
           onClick={toggleSidebar}
           className="btn btn-sm border-0"
@@ -91,14 +109,26 @@ const StaffSidebar = ({ onCollapse }) => {
 
       {/* Sidebar Links */}
       <Link to="/staff/home" style={menuItemStyle}>
-        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => isSidebarCollapsed && setIsSidebarCollapsed(false)}>
+        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => {
+          if (isSidebarCollapsed) {
+            setIsSidebarCollapsed(false);
+            if (onCollapse) onCollapse(false);
+            setTimeout(() => {}, 0);
+          }
+        }}>
           <FaTachometerAlt className="me-2" style={iconStyle} />
           {!isSidebarCollapsed && 'Home'}
         </div>
       </Link>
 
       <Link to="/staff/bill" style={menuItemStyle}>
-        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => isSidebarCollapsed && setIsSidebarCollapsed(false)}>
+        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => {
+          if (isSidebarCollapsed) {
+            setIsSidebarCollapsed(false);
+            if (onCollapse) onCollapse(false);
+            setTimeout(() => {}, 0);
+          }
+        }}>
           <FaFileInvoice className="me-2" style={iconStyle} />
           {!isSidebarCollapsed && 'Bills'}
         </div>
@@ -108,7 +138,8 @@ const StaffSidebar = ({ onCollapse }) => {
       <div className="px-2 py-2 rounded cursor-pointer hover-effect" onClick={() => {
         if (isSidebarCollapsed) {
           setIsSidebarCollapsed(false);
-          setOpenMenu('client');
+          if (onCollapse) onCollapse(false);
+          setTimeout(() => toggleMenu('client'), 300);
         } else {
           toggleMenu('client');
         }
@@ -120,7 +151,12 @@ const StaffSidebar = ({ onCollapse }) => {
         {!isSidebarCollapsed && (
           <div style={submenuStyle(openMenu === 'client')}>
             <Link to="/staff/all-client" style={menuItemStyle}>
-              <div className="py-1">All Client</div>
+              <div className="py-1" onClick={() => {
+                if (isSidebarCollapsed) {
+                  setIsSidebarCollapsed(false);
+                  if (onCollapse) onCollapse(false);
+                }
+              }}>All Client</div>
             </Link>
           </div>
         )}
@@ -130,7 +166,8 @@ const StaffSidebar = ({ onCollapse }) => {
       <div className="mb-2 px-2 py-2 rounded cursor-pointer hover-effect" onClick={() => {
         if (isSidebarCollapsed) {
           setIsSidebarCollapsed(false);
-          setOpenMenu('pr');
+          if (onCollapse) onCollapse(false);
+          setTimeout(() => toggleMenu('pr'), 300);
         } else {
           toggleMenu('pr');
         }
@@ -142,13 +179,28 @@ const StaffSidebar = ({ onCollapse }) => {
         {!isSidebarCollapsed && (
           <div style={submenuStyle(openMenu === 'pr')}>
             <Link to="/staff/payment-request" style={menuItemStyle}>
-              <div className="py-1">Resolve Other PR</div>
+              <div className="py-1" onClick={() => {
+                if (isSidebarCollapsed) {
+                  setIsSidebarCollapsed(false);
+                  if (onCollapse) onCollapse(false);
+                }
+              }}>Resolve Other PR</div>
             </Link>
             <Link to="/staff/request-payment" style={menuItemStyle}>
-              <div className="py-1">Make PR</div>
+              <div className="py-1" onClick={() => {
+                if (isSidebarCollapsed) {
+                  setIsSidebarCollapsed(false);
+                  if (onCollapse) onCollapse(false);
+                }
+              }}>Make PR</div>
             </Link>
             <Link to="/staff/my-payment-request" style={menuItemStyle}>
-              <div className="py-1">Your Personal PR</div>
+              <div className="py-1" onClick={() => {
+                if (isSidebarCollapsed) {
+                  setIsSidebarCollapsed(false);
+                  if (onCollapse) onCollapse(false);
+                }
+              }}>Your Personal PR</div>
             </Link>
           </div>
         )}
@@ -158,7 +210,8 @@ const StaffSidebar = ({ onCollapse }) => {
       <div className="px-2 py-2 rounded cursor-pointer hover-effect" onClick={() => {
         if (isSidebarCollapsed) {
           setIsSidebarCollapsed(false);
-          setOpenMenu('dfs');
+          if (onCollapse) onCollapse(false);
+          setTimeout(() => toggleMenu('dfs'), 300);
         } else {
           toggleMenu('dfs');
         }
@@ -170,13 +223,28 @@ const StaffSidebar = ({ onCollapse }) => {
         {!isSidebarCollapsed && (
           <div style={submenuStyle(openMenu === 'dfs')}>
             <Link to="/staff/dfsrequest" style={menuItemStyle}>
-              <div className="py-1">Assigned Document</div>
+              <div className="py-1" onClick={() => {
+                if (isSidebarCollapsed) {
+                  setIsSidebarCollapsed(false);
+                  if (onCollapse) onCollapse(false);
+                }
+              }}>Assigned Document</div>
             </Link>
             <Link to="/staff/upload-document" style={menuItemStyle}>
-              <div className="py-1">Upload Document</div>
+              <div className="py-1" onClick={() => {
+                if (isSidebarCollapsed) {
+                  setIsSidebarCollapsed(false);
+                  if (onCollapse) onCollapse(false);
+                }
+              }}>Upload Document</div>
             </Link>
             <Link to="/staff/track-dfs/all" style={menuItemStyle}>
-              <div className="py-1">Track Document</div>
+              <div className="py-1" onClick={() => {
+                if (isSidebarCollapsed) {
+                  setIsSidebarCollapsed(false);
+                  if (onCollapse) onCollapse(false);
+                }
+              }}>Track Document</div>
             </Link>
           </div>
         )}
@@ -186,7 +254,8 @@ const StaffSidebar = ({ onCollapse }) => {
       <div className="px-2 py-2 rounded cursor-pointer hover-effect" onClick={() => {
         if (isSidebarCollapsed) {
           setIsSidebarCollapsed(false);
-          setOpenMenu('document');
+          if (onCollapse) onCollapse(false);
+          setTimeout(() => toggleMenu('document'), 300);
         } else {
           toggleMenu('document');
         }
@@ -198,7 +267,12 @@ const StaffSidebar = ({ onCollapse }) => {
         {!isSidebarCollapsed && (
           <div style={submenuStyle(openMenu === 'document')}>
             <Link to="/staff/all-documents" style={menuItemStyle}>
-              <div className="py-1">All Documents</div>
+              <div className="py-1" onClick={() => {
+                if (isSidebarCollapsed) {
+                  setIsSidebarCollapsed(false);
+                  if (onCollapse) onCollapse(false);
+                }
+              }}>All Documents</div>
             </Link>
           </div>
         )}
@@ -206,34 +280,64 @@ const StaffSidebar = ({ onCollapse }) => {
 
       {/* Notification */}
       <Link to="/staff/under-dev" style={menuItemStyle}>
-        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => isSidebarCollapsed && setIsSidebarCollapsed(false)}>
+        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => {
+          if (isSidebarCollapsed) {
+            setIsSidebarCollapsed(false);
+            if (onCollapse) onCollapse(false);
+            setTimeout(() => {}, 0);
+          }
+        }}>
           <FaBell className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Notification'}
         </div>
       </Link>
 
       {/* Salary */}
       <Link to="/staff/salary" style={menuItemStyle}>
-        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => isSidebarCollapsed && setIsSidebarCollapsed(false)}>
+        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => {
+          if (isSidebarCollapsed) {
+            setIsSidebarCollapsed(false);
+            if (onCollapse) onCollapse(false);
+            setTimeout(() => {}, 0);
+          }
+        }}>
           <FaFileInvoice className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Salary'}
         </div>
       </Link>
 
       {/* Settings */}
       <Link to="/staff/setting" style={menuItemStyle}>
-        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => isSidebarCollapsed && setIsSidebarCollapsed(false)}>
+        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => {
+          if (isSidebarCollapsed) {
+            setIsSidebarCollapsed(false);
+            if (onCollapse) onCollapse(false);
+            setTimeout(() => {}, 0);
+          }
+        }}>
           <FaTools className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Setting'}
         </div>
       </Link>
 
       {/* Help */}
       <Link to="/staff/under-dev" style={menuItemStyle}>
-        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => isSidebarCollapsed && setIsSidebarCollapsed(false)}>
+        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => {
+          if (isSidebarCollapsed) {
+            setIsSidebarCollapsed(false);
+            if (onCollapse) onCollapse(false);
+            setTimeout(() => {}, 0);
+          }
+        }}>
           <FaQuestionCircle className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Help'}
         </div>
       </Link>
 
       {/* Logout */}
-      <div className="mt-auto d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => isSidebarCollapsed && setIsSidebarCollapsed(false)}>
+      <div className="mt-auto d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => {
+        if (isSidebarCollapsed) {
+          setIsSidebarCollapsed(false);
+          if (onCollapse) onCollapse(false);
+          setTimeout(() => {}, 0);
+        }
+      }}>
         <FaSignOutAlt className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Logout'}
       </div>
 
