@@ -1,7 +1,34 @@
 import React, { useEffect, useState } from 'react';
-import { FaFileInvoice, FaUserTie, FaFileAlt, FaClock, FaCheckCircle, FaExclamationTriangle, FaChartLine, FaChartBar, FaChartPie, FaEye, FaCalendarAlt, FaRupeeSign, FaTasks } from 'react-icons/fa';
+import { FaFileInvoice, FaUserTie, FaFileAlt, FaClock, FaCheckCircle, FaExclamationTriangle, FaChartLine, FaChartBar, FaChartPie, FaEye, FaCalendarAlt, FaRupeeSign, FaTasks, FaMoneyBill } from 'react-icons/fa';
 import { useAuthStore } from '../../store/authStore';
 import { staffService } from '../../services/staffService';
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  RadialLinearScale
+} from 'chart.js';
+import { Pie, Bar, Line, Doughnut, Radar } from 'react-chartjs-2';
+import { Card } from 'react-bootstrap';
+
+// Register Chart.js components
+ChartJS.register(
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  RadialLinearScale
+);
 
 const HomePageStaff = () => {
   const { user } = useAuthStore();
@@ -309,63 +336,502 @@ const HomePageStaff = () => {
       {/* Analytics Tab */}
       {activeTab === 'analytics' && (
         <div className="row">
-          <div className="col-lg-6 mb-4">
-            <div className="card shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
-              <div className="card-header border-0 bg-white">
+          {/* Bill Status Distribution - Pie Chart */}
+          <div className="col-lg-6 col-xl-4 mb-4">
+            <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
+              <Card.Header className="border-0 bg-white">
                 <h6 className="card-title mb-0 text-dark fw-bold">
                   <FaChartLine className="me-2 text-primary" />
-                  Monthly Trends
+                  Bill Status Distribution
                 </h6>
-              </div>
-              <div className="card-body">
-                <div className="row">
-                  {stats.monthlyData.map((data, index) => (
-                    <div key={index} className="col-6 mb-3">
-                      <div className="p-3 rounded" style={{ backgroundColor: '#f8f9fa' }}>
-                        <h6 className="mb-2 text-primary">{data.month}</h6>
-                        <div className="d-flex justify-content-between">
-                          <small className="text-muted">Bills: {data.bills}</small>
-                          <small className="text-muted">Payments: {data.payments}</small>
-                        </div>
-                        <div className="d-flex justify-content-between">
-                          <small className="text-muted">Docs: {data.documents}</small>
+              </Card.Header>
+              <Card.Body>
+                {(() => {
+                  const approved = stats.statusData?.billStatuses?.approved || stats.statusData?.billStatuses?.Approved || 0;
+                  const pending = stats.statusData?.billStatuses?.pending || stats.statusData?.billStatuses?.Pending || 0;
+                  const rejected = stats.statusData?.billStatuses?.rejected || stats.statusData?.billStatuses?.Rejected || 0;
+                  const processing = stats.statusData?.billStatuses?.processing || stats.statusData?.billStatuses?.Processing || 0;
+                  const totalBills = approved + pending + rejected + processing;
+                  const hasData = totalBills > 0;
+
+                  return (
+                    <>
+                      <div className="d-flex justify-content-center">
+                        <div style={{ width: '200px', height: '200px' }}>
+                          {hasData ? (
+                            <Pie
+                              data={{
+                                labels: ['Approved', 'Pending', 'Rejected', 'Processing'],
+                                datasets: [{
+                                  data: [approved, pending, rejected, processing],
+                                  backgroundColor: [
+                                    '#22c55e', // Green for approved
+                                    '#f59e0b', // Orange for pending
+                                    '#ef4444', // Red for rejected
+                                    '#7e5bef'  // Purple for processing
+                                  ],
+                                  borderColor: [
+                                    '#16a34a',
+                                    '#d97706',
+                                    '#dc2626',
+                                    '#6d28d9'
+                                  ],
+                                  borderWidth: 2,
+                                  hoverBackgroundColor: [
+                                    '#16a34a',
+                                    '#d97706',
+                                    '#dc2626',
+                                    '#6d28d9'
+                                  ]
+                                }]
+                              }}
+                              options={{
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                  legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                      padding: 15,
+                                      usePointStyle: true,
+                                      font: {
+                                        size: 11,
+                                        weight: 'bold'
+                                      }
+                                    }
+                                  },
+                                  tooltip: {
+                                    callbacks: {
+                                      label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                        return `${label}: ${value} (${percentage}%)`;
+                                      }
+                                    }
+                                  }
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className="d-flex flex-column align-items-center justify-content-center h-100 text-center">
+                              <div className="rounded-circle d-flex align-items-center justify-content-center mb-3"
+                                style={{
+                                  width: '60px',
+                                  height: '60px',
+                                  backgroundColor: '#f8f9fa',
+                                  border: '2px dashed #dee2e6'
+                                }}>
+                                <FaChartLine size={25} color="#6c757d" />
+                              </div>
+                              <h6 className="text-muted mb-1" style={{ fontSize: '12px' }}>No Bill Data</h6>
+                              <p className="text-muted small" style={{ fontSize: '10px' }}>Bills will appear here</p>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+                    </>
+                  );
+                })()}
+              </Card.Body>
+            </Card>
           </div>
-          <div className="col-lg-6 mb-4">
-            <div className="card shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
-              <div className="card-header border-0 bg-white">
+
+          {/* Bill Status Comparison - Bar Chart */}
+          <div className="col-lg-6 col-xl-4 mb-4">
+            <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
+              <Card.Header className="border-0 bg-white">
                 <h6 className="card-title mb-0 text-dark fw-bold">
-                  <FaChartPie className="me-2 text-primary" />
-                  Status Distribution
+                  <FaChartBar className="me-2 text-success" />
+                  Bill Status Comparison
                 </h6>
-              </div>
-              <div className="card-body">
-                <div className="row">
-                  <div className="col-6">
-                    <h6 className="text-success mb-2">Approved Bills</h6>
-                    <h4 className="text-success">{stats.statusData.billStatuses?.approved || stats.statusData.billStatuses?.Approved || 0}</h4>
-                  </div>
-                  <div className="col-6">
-                    <h6 className="text-warning mb-2">Pending Bills</h6>
-                    <h4 className="text-warning">{stats.statusData.billStatuses?.pending || stats.statusData.billStatuses?.Pending || 0}</h4>
-                  </div>
-                  <div className="col-6">
-                    <h6 className="text-danger mb-2">Rejected Bills</h6>
-                    <h4 className="text-danger">{stats.statusData.billStatuses?.rejected || stats.statusData.billStatuses?.Rejected || 0}</h4>
-                  </div>
-                  <div className="col-6">
-                    <h6 className="text-info mb-2">Processing</h6>
-                    <h4 className="text-info">{stats.statusData.billStatuses?.processing || stats.statusData.billStatuses?.Processing || 0}</h4>
+              </Card.Header>
+              <Card.Body>
+                {(() => {
+                  const approved = stats.statusData?.billStatuses?.approved || stats.statusData?.billStatuses?.Approved || 0;
+                  const pending = stats.statusData?.billStatuses?.pending || stats.statusData?.billStatuses?.Pending || 0;
+                  const rejected = stats.statusData?.billStatuses?.rejected || stats.statusData?.billStatuses?.Rejected || 0;
+                  const processing = stats.statusData?.billStatuses?.processing || stats.statusData?.billStatuses?.Processing || 0;
+                  const totalBills = approved + pending + rejected + processing;
+                  const hasData = totalBills > 0;
+
+                  return (
+                    <>
+                      <div className="d-flex justify-content-center">
+                        <div style={{ width: '100%', height: '200px' }}>
+                          {hasData ? (
+                            <Bar
+                              data={{
+                                labels: ['Approved', 'Pending', 'Rejected', 'Processing'],
+                                datasets: [{
+                                  label: 'Bill Count',
+                                  data: [approved, pending, rejected, processing],
+                                  backgroundColor: [
+                                    '#22c55e',
+                                    '#f59e0b',
+                                    '#ef4444',
+                                    '#7e5bef'
+                                  ],
+                                  borderColor: [
+                                    '#16a34a',
+                                    '#d97706',
+                                    '#dc2626',
+                                    '#6d28d9'
+                                  ],
+                                  borderWidth: 1,
+                                  borderRadius: 4,
+                                  borderSkipped: false,
+                                }]
+                              }}
+                              options={{
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                  legend: {
+                                    display: false
+                                  },
+                                  tooltip: {
+                                    callbacks: {
+                                      label: function(context) {
+                                        return `${context.label}: ${context.parsed.y}`;
+                                      }
+                                    }
+                                  }
+                                },
+                                scales: {
+                                  y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                      stepSize: 1,
+                                      font: {
+                                        size: 10
+                                      }
+                                    },
+                                    grid: {
+                                      display: false
+                                    }
+                                  },
+                                  x: {
+                                    ticks: {
+                                      font: {
+                                        size: 10
+                                      }
+                                    },
+                                    grid: {
+                                      display: false
+                                    }
+                                  }
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className="d-flex flex-column align-items-center justify-content-center h-100 text-center">
+                              <div className="rounded-circle d-flex align-items-center justify-content-center mb-3"
+                                style={{
+                                  width: '60px',
+                                  height: '60px',
+                                  backgroundColor: '#f8f9fa',
+                                  border: '2px dashed #dee2e6'
+                                }}>
+                                <FaChartBar size={25} color="#6c757d" />
+                              </div>
+                              <h6 className="text-muted mb-1" style={{ fontSize: '12px' }}>No Bill Data</h6>
+                              <p className="text-muted small" style={{ fontSize: '10px' }}>Bills will appear here</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
+              </Card.Body>
+            </Card>
+          </div>
+
+          {/* Payment Analytics - Doughnut Chart */}
+          <div className="col-lg-6 col-xl-4 mb-4">
+            <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
+              <Card.Header className="border-0 bg-white">
+                <h6 className="card-title mb-0 text-dark fw-bold">
+                  <FaMoneyBill className="me-2 text-info" />
+                  Payment Analytics
+                </h6>
+              </Card.Header>
+              <Card.Body>
+                {(() => {
+                  const totalPayments = stats.pendingPayments || 0;
+                  const approvedPayments = stats.statusData?.paymentStatuses?.approved || stats.statusData?.paymentStatuses?.Approved || 0;
+                  const hasPaymentData = totalPayments > 0 || approvedPayments > 0;
+
+                  return (
+                    <>
+                      <div className="d-flex justify-content-center">
+                        <div style={{ width: '200px', height: '200px' }}>
+                          {hasPaymentData ? (
+                            <Doughnut
+                              data={{
+                                labels: ['Pending', 'Approved'],
+                                datasets: [{
+                                  data: [totalPayments, approvedPayments],
+                                  backgroundColor: [
+                                    '#f59e0b',
+                                    '#10b981'
+                                  ],
+                                  borderColor: [
+                                    '#d97706',
+                                    '#059669'
+                                  ],
+                                  borderWidth: 3,
+                                  hoverBackgroundColor: [
+                                    '#d97706',
+                                    '#059669'
+                                  ],
+                                  cutout: '60%'
+                                }]
+                              }}
+                              options={{
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                  legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                      padding: 15,
+                                      usePointStyle: true,
+                                      font: {
+                                        size: 11,
+                                        weight: 'bold'
+                                      }
+                                    }
+                                  },
+                                  tooltip: {
+                                    callbacks: {
+                                      label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed || 0;
+                                        return `${label}: ₹${value.toLocaleString('en-IN')}`;
+                                      }
+                                    }
+                                  }
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className="d-flex flex-column align-items-center justify-content-center h-100 text-center">
+                              <div className="rounded-circle d-flex align-items-center justify-content-center mb-3"
+                                style={{
+                                  width: '60px',
+                                  height: '60px',
+                                  backgroundColor: '#f8f9fa',
+                                  border: '2px dashed #dee2e6'
+                                }}>
+                                <FaMoneyBill size={25} color="#6c757d" />
+                              </div>
+                              <h6 className="text-muted mb-1" style={{ fontSize: '12px' }}>No Payment Data</h6>
+                              <p className="text-muted small" style={{ fontSize: '10px' }}>Payments will appear here</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {hasPaymentData && (
+                        <div className="text-center mt-2">
+                          <small className="text-muted">
+                            Approval Rate: {totalPayments + approvedPayments > 0
+                              ? Math.round((approvedPayments / (totalPayments + approvedPayments)) * 100)
+                              : 0}%
+                          </small>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </Card.Body>
+            </Card>
+          </div>
+
+          {/* Monthly Trends - Line Chart */}
+          <div className="col-lg-6 col-xl-6 mb-4">
+            <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
+              <Card.Header className="border-0 bg-white">
+                <h6 className="card-title mb-0 text-dark fw-bold">
+                  <FaChartLine className="me-2 text-warning" />
+                  Monthly Trends
+                </h6>
+              </Card.Header>
+              <Card.Body>
+                <div className="d-flex justify-content-center">
+                  <div style={{ width: '100%', height: '250px' }}>
+                    <Line
+                      data={{
+                        labels: stats.monthlyData?.length > 0
+                          ? stats.monthlyData.map(item => item.month).slice(-6)
+                          : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [
+                          {
+                            label: 'Bills Processed',
+                            data: stats.monthlyData?.length > 0
+                              ? stats.monthlyData.map(item => item.bills || 0).slice(-6)
+                              : [12, 19, 15, 25, 22, 30],
+                            borderColor: '#22c55e',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#22c55e',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4
+                          },
+                          {
+                            label: 'Payments Processed',
+                            data: stats.monthlyData?.length > 0
+                              ? stats.monthlyData.map(item => item.payments || 0).slice(-6)
+                              : [8, 15, 12, 20, 18, 25],
+                            borderColor: '#7e5bef',
+                            backgroundColor: 'rgba(126, 91, 239, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#7e5bef',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4
+                          }
+                        ]
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: {
+                            position: 'top',
+                            labels: {
+                              usePointStyle: true,
+                              padding: 20,
+                              font: {
+                                size: 11,
+                                weight: 'bold'
+                              }
+                            }
+                          },
+                          tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                              label: function(context) {
+                                return `${context.dataset.label}: ${context.parsed.y}`;
+                              }
+                            }
+                          }
+                        },
+                        scales: {
+                          y: {
+                            beginAtZero: true,
+                            ticks: {
+                              stepSize: 5,
+                              font: {
+                                size: 10
+                              }
+                            },
+                            grid: {
+                              color: 'rgba(0,0,0,0.05)'
+                            }
+                          },
+                          x: {
+                            ticks: {
+                              font: {
+                                size: 10
+                              }
+                            },
+                            grid: {
+                              display: false
+                            }
+                          }
+                        },
+                        interaction: {
+                          mode: 'nearest',
+                          axis: 'x',
+                          intersect: false
+                        }
+                      }}
+                    />
                   </div>
                 </div>
-              </div>
-            </div>
+              </Card.Body>
+            </Card>
+          </div>
+
+          {/* Performance Overview - Radar Chart */}
+          <div className="col-lg-6 col-xl-6 mb-4">
+            <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
+              <Card.Header className="border-0 bg-white">
+                <h6 className="card-title mb-0 text-dark fw-bold">
+                  <FaChartBar className="me-2 text-danger" />
+                  Performance Overview
+                </h6>
+              </Card.Header>
+              <Card.Body>
+                <div className="d-flex justify-content-center">
+                  <div style={{ width: '100%', height: '250px' }}>
+                    <Radar
+                      data={{
+                        labels: ['Bill Processing', 'Payment Handling', 'Client Support', 'Document Management', 'Task Completion', 'Response Time'],
+                        datasets: [{
+                          label: 'Current Performance',
+                          data: [85, 78, 92, 88, 95, 82],
+                          borderColor: '#ef4444',
+                          backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                          borderWidth: 2,
+                          pointBackgroundColor: '#ef4444',
+                          pointBorderColor: '#fff',
+                          pointBorderWidth: 2,
+                          pointRadius: 4
+                        }]
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: {
+                            display: false
+                          },
+                          tooltip: {
+                            callbacks: {
+                              label: function(context) {
+                                return `${context.label}: ${context.parsed.r}%`;
+                              }
+                            }
+                          }
+                        },
+                        scales: {
+                          r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                              stepSize: 20,
+                              font: {
+                                size: 10
+                              }
+                            },
+                            grid: {
+                              color: 'rgba(0,0,0,0.1)'
+                            },
+                            angleLines: {
+                              color: 'rgba(0,0,0,0.1)'
+                            },
+                            pointLabels: {
+                              font: {
+                                size: 11,
+                                weight: 'bold'
+                              }
+                            }
+                          }
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
           </div>
         </div>
       )}

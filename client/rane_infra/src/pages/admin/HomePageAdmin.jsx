@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Container, Row, Col, Card, Button, Table, Badge, Spinner,
-  ProgressBar, Alert, Modal
+  ProgressBar, Modal
 } from 'react-bootstrap';
 import {
   FaUsers, FaFileInvoiceDollar, FaClipboardList, FaChartLine,
@@ -516,30 +516,6 @@ export default function HomePageAdmin() {
             />
           </Col>
         </Row>
-
-        {/* Alerts Section */}
-        {stats.pendingBills > 0 && (
-          <Row className="mb-4">
-            <Col>
-              <Alert variant="warning" className="border-0 shadow-sm">
-                <div className="d-flex align-items-center">
-                  <FaExclamationTriangle className="me-2" />
-                  <div>
-                    <strong>Attention Required:</strong> You have {stats.pendingBills} pending bill{stats.pendingBills > 1 ? 's' : ''} that need{stats.pendingBills > 1 ? '' : 's'} your attention.
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="p-0 ms-2 text-decoration-none fw-bold"
-                      onClick={() => navigate('/admin/bill')}
-                    >
-                      View Bills →
-                    </Button>
-                  </div>
-                </div>
-              </Alert>
-            </Col>
-          </Row>
-        )}
 
       </Container>
 
