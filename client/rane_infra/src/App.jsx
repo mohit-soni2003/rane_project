@@ -222,6 +222,7 @@ function App() {
           <Route path="bill/:id" element={<SingleBillDetailAdminPage />} />
 
           <Route path="all-client" element={<ClientsListAdminPage />} />
+          <Route path="client-detail/:id" element={<ClientDetailAdminPage />} />
           <Route path="payment-request" element={<PaymentRequestListAdmin />} />
           <Route path="payment-request/:id" element={<SinglePRdetailAdminPAge />} />
 

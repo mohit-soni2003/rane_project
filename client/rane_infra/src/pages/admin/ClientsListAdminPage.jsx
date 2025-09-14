@@ -5,12 +5,14 @@ import AdminHeader from '../../component/header/AdminHeader';
 import { getAllClients } from '../../services/userServices'; // Adjust path as needed
 import dummyUser from "../../assets/images/dummyUser.jpeg";
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../store/authStore';
 
 export default function ClientsListAdminPage() {
   const [clients, setClients] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const {user} = useAuthStore();
 
   useEffect(() => {
     async function fetchClients() {
@@ -96,7 +98,7 @@ export default function ClientsListAdminPage() {
                         <td>
                           <Button
                             type="primary"
-                            onClick={() => navigate(`/admin/client-detail/${client._id}`)}
+                            onClick={() => navigate(`/${user.role}/client-detail/${client._id}`)}
                           >
                             More
                           </Button>
@@ -105,7 +107,7 @@ export default function ClientsListAdminPage() {
                           <Button
                             variant="warning"
                             onClick={() =>
-                              navigate(`/admin/push-document/${encodeURIComponent(client.cid)}`)
+                              navigate(`/${user.role}/push-document/${encodeURIComponent(client.cid)}`)
                             }
                           >
                             Push Doc
