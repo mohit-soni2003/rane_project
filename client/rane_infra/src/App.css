@@ -22,6 +22,19 @@
 
 }
 
+:root {
+  --client-header-gradient-start: #3b82f6; /* blue-500 */
+  --client-header-gradient-end: #1d4ed8;   /* blue-700 */
+  --client-header-shadow: rgba(0, 0, 0, 0.12);
+  --client-profile-border: rgba(255, 255, 255, 0.85);
+  --client-header-text: #ffffff;
+
+  /* Landing page */
+  --primary-orange: #f59e0b;  
+  --primary-orange-hover: #d97706;
+}
+
+
 
 :root {
   /* General Layout */
@@ -104,4 +117,3 @@
     font-size: 0.8rem !important;
   }
 }
-
