@@ -5,12 +5,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { getDocumentsByUserId, updateDocumentStatus } from '../services/documentService';
 import { getMyUploadedFiles } from '../services/dfsService';
+import { clientService } from '../services/clientService';
 
 const PendingDocumentsTable = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [documents, setDocuments] = useState([]);
   const [dfsDocuments, setDfsDocuments] = useState([]);
+  const [bills, setBills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -60,6 +62,7 @@ const PendingDocumentsTable = () => {
       const cachedData = cache.get(cacheKey);
       setDocuments(cachedData.documents || []);
       setDfsDocuments(cachedData.dfsDocuments || []);
+      setBills(cachedData.bills || []);
       setLoading(false);
       return;
     }
@@ -108,25 +111,50 @@ const PendingDocumentsTable = () => {
         }
       })();
 
+      // Fetch bills in parallel
+      const billsPromise = (async () => {
+        try {
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Timeout: Bills')), 15000)
+          );
+          
+          const fetchPromise = clientService.getMyBills(user._id);
+          const billsResult = await Promise.race([fetchPromise, timeoutPromise]);
+          
+          const billsArray = Array.isArray(billsResult) ? billsResult : [];
+          const pendingBills = billsArray.filter(bill =>
+            bill.paymentStatus === 'Unpaid' || bill.paymentStatus === 'Pending'
+          );
+          return pendingBills.map(bill => ({ ...bill, source: 'bills' }));
+        } catch (err) {
+          console.error('Error fetching bills:', err.message);
+          return [];
+        }
+      })();
+
       // Execute all requests in parallel for maximum speed
-      const [categoryResults, dfsResults] = await Promise.all([
+      const [categoryResults, dfsResults, billsResults] = await Promise.all([
         Promise.all(documentPromises),
-        dfsPromise
+        dfsPromise,
+        billsPromise
       ]);
 
       // Flatten document results
       const allDocuments = categoryResults.flat();
       const dfsDocs = dfsResults;
+      const billsDocs = billsResults;
 
       // Cache the results for better performance
       setCache(prev => new Map(prev).set(cacheKey, {
         documents: allDocuments,
-        dfsDocuments: dfsDocs
+        dfsDocuments: dfsDocs,
+        bills: billsDocs
       }));
       setLastFetchTime(now);
 
       setDocuments(allDocuments);
       setDfsDocuments(dfsDocs);
+      setBills(billsDocs);
     } catch (err) {
       console.error('Error in fetchAllPendingDocuments:', err);
       setError(err.message || 'Failed to load pending documents');
@@ -144,6 +172,8 @@ const PendingDocumentsTable = () => {
       navigate(`/client/document/category/${doc.category}`);
     } else if (doc.source === 'dfs') {
       navigate(`/client/dfsrequest/${doc._id}`);
+    } else if (doc.source === 'bills') {
+      navigate(`/client/bill/${doc._id}`);
     }
   }, [navigate]);
 
@@ -212,8 +242,8 @@ const PendingDocumentsTable = () => {
 
   // Memoized calculations for performance
   const allPendingDocuments = useMemo(() => 
-    [...documents, ...dfsDocuments], 
-    [documents, dfsDocuments]
+    [...documents, ...dfsDocuments, ...bills], 
+    [documents, dfsDocuments, bills]
   );
   
   const totalPending = useMemo(() => 
@@ -227,7 +257,7 @@ const PendingDocumentsTable = () => {
         <Card.Body className="text-center py-4">
           <Spinner animation="border" variant="primary" size="sm" />
           <p className="text-muted mt-2 mb-2">Loading pending documents...</p>
-          <small className="text-muted">Fetching from {documentCategories.length + 1} sources in parallel</small>
+          <small className="text-muted">Fetching from {documentCategories.length + 2} sources in parallel</small>
         </Card.Body>
       </Card>
     );
@@ -258,13 +288,13 @@ const PendingDocumentsTable = () => {
         <Card.Header className="border-0 bg-white" style={{ borderRadius: '15px 15px 0 0' }}>
           <h6 className="card-title mb-0 text-dark fw-bold">
             <FaCheckCircle className="me-2 text-success" />
-            Pending Documents & DFS
+            Pending Documents, DFS & Bills
           </h6>
         </Card.Header>
         <Card.Body className="text-center py-4">
           <FaCheckCircle size={48} className="text-success mb-3" />
           <h6 className="text-muted mb-1">All Caught Up!</h6>
-          <p className="text-muted mb-0">No pending documents or DFS requests</p>
+          <p className="text-muted mb-0">No pending documents, DFS requests, or bills</p>
         </Card.Body>
       </Card>
     );
@@ -277,7 +307,7 @@ const PendingDocumentsTable = () => {
           <Col>
             <h6 className="card-title mb-0 text-dark fw-bold">
               <FaClock className="me-2 text-warning" />
-              Pending Documents & DFS ({totalPending})
+              Pending Documents, DFS & Bills ({totalPending})
             </h6>
           </Col>
           <Col xs="auto" className="d-flex gap-2">
@@ -321,73 +351,55 @@ const PendingDocumentsTable = () => {
                 >
                   <td className="ps-3">
                     <FaFileAlt className="text-primary me-2" />
-                    {doc.source === 'dfs' ? 'DFS' : 'Document'}
+                    {doc.source === 'dfs' ? 'DFS' : doc.source === 'bills' ? 'Bill' : 'Document'}
                   </td>
                   <td>
                     {doc.source === 'dfs'
                       ? doc.fileTitle
+                      : doc.source === 'bills'
+                      ? (doc.invoiceNo || doc.loaNo || 'N/A')
                       : (doc.documentCode || doc.docType)
                     }
                   </td>
                   <td>
                     {doc.source === 'dfs'
                       ? (doc.docType || 'DFS')
+                      : doc.source === 'bills'
+                      ? 'Bill'
                       : doc.category
                     }
                   </td>
                   <td>
                     {doc.source === 'dfs'
                       ? new Date(doc.createdAt).toLocaleDateString()
+                      : doc.source === 'bills'
+                      ? new Date(doc.submittedAt || doc.createdAt).toLocaleDateString()
                       : new Date(doc.uploadDate || doc.dateOfIssue).toLocaleDateString()
                     }
                   </td>
                   <td>
-                    {getStatusBadge(doc.status, doc.source)}
+                    {doc.source === 'bills'
+                      ? <Badge bg={doc.paymentStatus === 'Unpaid' ? 'warning' : 'secondary'} text="dark">{doc.paymentStatus}</Badge>
+                      : getStatusBadge(doc.status, doc.source)
+                    }
                   </td>
                   <td>
-                    <Badge bg={doc.source === 'dfs' ? 'info' : 'primary'}>
-                      {doc.source === 'dfs' ? 'DFS' : 'Documents'}
+                    <Badge bg={doc.source === 'dfs' ? 'info' : doc.source === 'bills' ? 'success' : 'primary'}>
+                      {doc.source === 'dfs' ? 'DFS' : doc.source === 'bills' ? 'Bills' : 'Documents'}
                     </Badge>
                   </td>
                   <td className="text-center pe-3">
-                    {doc.source === 'documents' && doc.status === 'pending' ? (
-                      <div className="d-flex justify-content-center gap-1">
-                        <Button
-                          size="sm"
-                          variant="outline-success"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAccept(doc);
-                          }}
-                          title="Accept"
-                        >
-                          <FaCheckCircle size={12} />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline-danger"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleReject(doc._id);
-                          }}
-                          title="Reject"
-                        >
-                          <FaTimesCircle size={12} />
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="outline-primary"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDocumentClick(doc);
-                        }}
-                        title="View Details"
-                      >
-                        <FaEye size={12} />
-                      </Button>
-                    )}
+                    <Button
+                      size="sm"
+                      variant="outline-success"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDocumentClick(doc);
+                      }}
+                      title="Open"
+                    >
+                      <FaCheckCircle size={12} />
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -402,7 +414,7 @@ const PendingDocumentsTable = () => {
               size="sm"
               onClick={() => navigate('/client/document/category')}
             >
-              View All Pending Documents ({allPendingDocuments.length})
+              View All Pending Items ({allPendingDocuments.length})
             </Button>
           </div>
         )}
