@@ -76,15 +76,55 @@ const ClientLayout = () => {
         >
           {/* Left: Sidebar Toggle */}
           <button
-            className="btn p-0 m-0"
+            className="btn p-0 m-0 d-flex align-items-center justify-content-center"
             onClick={toggleSidebar}
+            aria-label="Toggle sidebar menu"
+            aria-expanded={isSidebarOpen}
             style={{
-              color: "var(--client-text-color)",
-              fontWeight: "bold",
+              color: "#ffffff",
+              fontWeight: "normal",
               fontSize: "1.2rem",
+              border: "1px solid rgba(0,0,0,0.10)",
+              borderRadius: "8px",
+              width: "36px",
+              height: "36px",
+              lineHeight: "0",
+              backgroundColor: "rgba(0,0,0,0.06)",
+              transition: "color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease",
+              cursor: "pointer"
+            }}
+            onMouseEnter={(e) => {
+              const el = e.currentTarget;
+              el.style.color = "rgba(255, 255, 255, 0.6)";
+              el.style.backgroundColor = "rgba(0,0,0,0.10)";
+              el.style.borderColor = "rgba(0,0,0,0.18)";
+            }}
+            onMouseLeave={(e) => {
+              const el = e.currentTarget;
+              el.style.color = "#ffffff";
+              el.style.backgroundColor = "rgba(0,0,0,0.06)";
+              el.style.borderColor = "rgba(0,0,0,0.10)";
+            }}
+            onPointerDown={(e) => {
+              const el = e.currentTarget;
+              el.style.color = "rgba(255, 255, 255, 0.4)";
+              el.style.backgroundColor = "rgba(0,0,0,0.12)";
+              el.style.borderColor = "rgba(0,0,0,0.22)";
+            }}
+            onPointerUp={(e) => {
+              const el = e.currentTarget;
+              el.style.color = "#ffffff";
+              el.style.backgroundColor = "rgba(0,0,0,0.06)";
+              el.style.borderColor = "rgba(0,0,0,0.10)";
+            }}
+            onPointerCancel={(e) => {
+              const el = e.currentTarget;
+              el.style.color = "#ffffff";
+              el.style.backgroundColor = "rgba(0,0,0,0.06)";
+              el.style.borderColor = "rgba(0,0,0,0.10)";
             }}
           >
-            <FaBars />
+            <FaBars size={20} />
           </button>
 
           {/* Center: Title */}

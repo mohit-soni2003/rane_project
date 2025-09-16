@@ -5,7 +5,7 @@ import {
   FaFileAlt, FaCheckCircle, FaTimesCircle, FaRupeeSign, FaMoneyBill,
   FaClock, FaCalendarCheck, FaChartLine, FaChartBar, FaEye,
   FaUpload, FaDownload, FaBell, FaInfoCircle, FaCalendarAlt,
-  FaWallet, FaFileInvoiceDollar, FaHandshake, FaCog
+  FaWallet, FaFileInvoiceDollar, FaHandshake, FaCog, FaMobileAlt
 } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useAuthStore } from '../../store/authStore';
@@ -310,7 +310,7 @@ export default function HomePageClient() {
               </div>
             </div>
 
-            {/* Quick Actions */}
+            {/* Quick Actions - Hidden on Mobile */}
             <div className="row mb-4 d-none d-lg-block">
               <div className="col-12">
                 <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
@@ -481,6 +481,29 @@ export default function HomePageClient() {
                         </Button>
                       </div>
                     </div>
+                  </Card.Body>
+                </Card>
+              </div>
+            </div>
+
+            {/* Mobile Quick Actions Message */}
+            <div className="row mb-4 d-lg-none">
+              <div className="col-12">
+                <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
+                  <Card.Header className="border-0 bg-white" style={{ borderRadius: '15px 15px 0 0' }}>
+                    <h6 className="card-title mb-0 text-dark fw-bold">
+                      <FaMobileAlt className="me-2 text-primary" />
+                      Quick Actions
+                    </h6>
+                  </Card.Header>
+                  <Card.Body className="text-center py-4">
+                    <div className="mb-3">
+                      <FaMobileAlt size={48} className="text-primary mb-3" />
+                    </div>
+                    <h6 className="text-muted mb-2">Access Quick Actions</h6>
+                    <p className="text-muted small mb-0">
+                      For the best mobile experience, use the menu button above to access all features and quick actions.
+                    </p>
                   </Card.Body>
                 </Card>
               </div>
