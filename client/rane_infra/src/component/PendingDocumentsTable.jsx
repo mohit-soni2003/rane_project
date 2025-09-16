@@ -143,7 +143,7 @@ const PendingDocumentsTable = () => {
     if (doc.source === 'documents') {
       navigate(`/client/document/category/${doc.category}`);
     } else if (doc.source === 'dfs') {
-      navigate('/client/track-dfs/all');
+      navigate(`/client/dfsrequest/${doc._id}`);
     }
   }, [navigate]);
 
