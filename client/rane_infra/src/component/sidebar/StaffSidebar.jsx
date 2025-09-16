@@ -6,13 +6,14 @@ import {
 } from 'react-icons/fa';
 import dummyUser from '../../assets/images/dummyUser.jpeg';
 import { useAuthStore } from '../../store/authStore';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const StaffSidebar = ({ onCollapse }) => {
   const [openMenu, setOpenMenu] = useState(null);
   const { user } = useAuthStore();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Sync with parent component on mount and when navigation occurs
   useEffect(() => {
@@ -47,11 +48,19 @@ const StaffSidebar = ({ onCollapse }) => {
   const submenuStyle = (isOpen) => ({
     maxHeight: isOpen ? '500px' : '0',
     overflow: 'hidden',
-    transition: 'all 0.3s ease',
+    transition: 'all 0.4s ease',
     marginLeft: '20px',
     fontSize: '0.9rem',
-    color: '#ccc',
+    color: '#d1d1d1',
+    backgroundColor: "rgba(255, 255, 255, 0.1)"
   });
+
+  const sidebarItemStyle = {
+    padding: '8px 10px',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    transition: 'background-color 0.3s ease',
+  };
 
   const menuItemStyle = {
     textDecoration: 'none',
@@ -81,14 +90,45 @@ const StaffSidebar = ({ onCollapse }) => {
       }}>
 
       {/* Toggle Button */}
-      <div className="d-flex justify-content-end" style={{ marginTop: '5px', marginBottom: '5px' }}>
+      <div className={`d-flex ${isSidebarCollapsed ? 'justify-content-center' : 'justify-content-end'}`} style={{ marginTop: '5px', marginBottom: '5px' }}>
         <button
           onClick={toggleSidebar}
-          className="btn btn-sm border-0"
-          style={iconStyle}
+          className="btn p-0 d-flex align-items-center justify-content-center"
+          aria-label={isSidebarCollapsed ? 'Show Sidebar' : 'Hide Sidebar'}
           title={isSidebarCollapsed ? 'Show Sidebar' : 'Hide Sidebar'}
+          style={{
+            color: '#ffffff',
+            width: '36px',
+            height: '36px',
+            lineHeight: '0',
+            borderRadius: '8px',
+            border: 'none',
+            backgroundColor: 'transparent',
+            transition: 'color 0.15s ease, background-color 0.15s ease',
+            cursor: 'pointer'
+          }}
+          onMouseEnter={(e) => {
+            const el = e.currentTarget;
+            el.style.color = '#222222';
+            el.style.backgroundColor = 'rgba(255,255,255,0.85)';
+          }}
+          onMouseLeave={(e) => {
+            const el = e.currentTarget;
+            el.style.color = '#ffffff';
+            el.style.backgroundColor = 'transparent';
+          }}
+          onPointerDown={(e) => {
+            const el = e.currentTarget;
+            el.style.color = '#111111';
+            el.style.backgroundColor = 'rgba(255,255,255,0.95)';
+          }}
+          onPointerUp={(e) => {
+            const el = e.currentTarget;
+            el.style.color = '#ffffff';
+            el.style.backgroundColor = 'transparent';
+          }}
         >
-          {isSidebarCollapsed ? <FaBars /> : <FaTimes />}
+          {isSidebarCollapsed ? <FaBars size={18} /> : <FaTimes size={18} />}
         </button>
       </div>
 
@@ -99,7 +139,8 @@ const StaffSidebar = ({ onCollapse }) => {
             src={user.profile || dummyUser}
             alt="Staff"
             className="rounded-circle mb-2"
-            style={{ width: '80px', height: '80px', objectFit: 'cover' }}
+            style={{ width: '80px', height: '80px', objectFit: 'cover', cursor: 'pointer' }}
+            onClick={() => navigate('/staff/home')}
           />
           <div className='fs-6 fw-bold'>{user.name}</div>
           <div className="fs-6 text-secondary fw-semibold">{user?.cid || "Not Assigned"}</div>
@@ -109,33 +150,33 @@ const StaffSidebar = ({ onCollapse }) => {
 
       {/* Sidebar Links */}
       <Link to="/staff/home" style={menuItemStyle}>
-        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => {
+        <div className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`} style={sidebarItemStyle} onClick={() => {
           if (isSidebarCollapsed) {
             setIsSidebarCollapsed(false);
             if (onCollapse) onCollapse(false);
             setTimeout(() => {}, 0);
           }
         }}>
-          <FaTachometerAlt className="me-2" style={iconStyle} />
+          <FaTachometerAlt className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
           {!isSidebarCollapsed && 'Home'}
         </div>
       </Link>
 
       <Link to="/staff/bill" style={menuItemStyle}>
-        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => {
+        <div className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`} style={sidebarItemStyle} onClick={() => {
           if (isSidebarCollapsed) {
             setIsSidebarCollapsed(false);
             if (onCollapse) onCollapse(false);
             setTimeout(() => {}, 0);
           }
         }}>
-          <FaFileInvoice className="me-2" style={iconStyle} />
+          <FaFileInvoice className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
           {!isSidebarCollapsed && 'Bills'}
         </div>
       </Link>
 
       {/* Client Dropdown */}
-      <div className="px-2 py-2 rounded cursor-pointer hover-effect" onClick={() => {
+      <div className="" onClick={() => {
         if (isSidebarCollapsed) {
           setIsSidebarCollapsed(false);
           if (onCollapse) onCollapse(false);
@@ -144,8 +185,11 @@ const StaffSidebar = ({ onCollapse }) => {
           toggleMenu('client');
         }
       }}>
-        <div className="d-flex justify-content-between align-items-center">
-          <span><FaUserTie className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Client'}</span>
+        <div
+          className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`}
+          style={sidebarItemStyle}
+        >
+          <span><FaUserTie className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} /> {!isSidebarCollapsed && 'Client'}</span>
           {!isSidebarCollapsed && (openMenu === 'client' ? <FaChevronUp style={iconStyle} /> : <FaChevronDown style={iconStyle} />)}
         </div>
         {!isSidebarCollapsed && (
@@ -163,7 +207,7 @@ const StaffSidebar = ({ onCollapse }) => {
       </div>
 
       {/* Payment Request Dropdown */}
-      <div className="mb-2 px-2 py-2 rounded cursor-pointer hover-effect" onClick={() => {
+      <div className="mb-2" onClick={() => {
         if (isSidebarCollapsed) {
           setIsSidebarCollapsed(false);
           if (onCollapse) onCollapse(false);
@@ -172,8 +216,11 @@ const StaffSidebar = ({ onCollapse }) => {
           toggleMenu('pr');
         }
       }}>
-        <div className="d-flex justify-content-between align-items-center">
-          <span><FaFileAlt className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Payment Request'}</span>
+        <div
+          className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`}
+          style={sidebarItemStyle}
+        >
+          <span><FaFileAlt className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} /> {!isSidebarCollapsed && 'Payment Request'}</span>
           {!isSidebarCollapsed && (openMenu === 'pr' ? <FaChevronUp style={iconStyle} /> : <FaChevronDown style={iconStyle} />)}
         </div>
         {!isSidebarCollapsed && (
@@ -207,7 +254,7 @@ const StaffSidebar = ({ onCollapse }) => {
       </div>
 
       {/* DFS Section Dropdown */}
-      <div className="px-2 py-2 rounded cursor-pointer hover-effect" onClick={() => {
+      <div className="" onClick={() => {
         if (isSidebarCollapsed) {
           setIsSidebarCollapsed(false);
           if (onCollapse) onCollapse(false);
@@ -216,8 +263,11 @@ const StaffSidebar = ({ onCollapse }) => {
           toggleMenu('dfs');
         }
       }}>
-        <div className="d-flex justify-content-between align-items-center">
-          <span><FaFileAlt className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'DFS Section'}</span>
+        <div
+          className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`}
+          style={sidebarItemStyle}
+        >
+          <span><FaFileAlt className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} /> {!isSidebarCollapsed && 'DFS Section'}</span>
           {!isSidebarCollapsed && (openMenu === 'dfs' ? <FaChevronUp style={iconStyle} /> : <FaChevronDown style={iconStyle} />)}
         </div>
         {!isSidebarCollapsed && (
@@ -251,7 +301,7 @@ const StaffSidebar = ({ onCollapse }) => {
       </div>
 
       {/* Document Dropdown */}
-      <div className="px-2 py-2 rounded cursor-pointer hover-effect" onClick={() => {
+      <div className="" onClick={() => {
         if (isSidebarCollapsed) {
           setIsSidebarCollapsed(false);
           if (onCollapse) onCollapse(false);
@@ -260,8 +310,11 @@ const StaffSidebar = ({ onCollapse }) => {
           toggleMenu('document');
         }
       }}>
-        <div className="d-flex justify-content-between align-items-center">
-          <span><FaFileAlt className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Document'}</span>
+        <div
+          className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`}
+          style={sidebarItemStyle}
+        >
+          <span><FaFileAlt className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} /> {!isSidebarCollapsed && 'Document'}</span>
           {!isSidebarCollapsed && (openMenu === 'document' ? <FaChevronUp style={iconStyle} /> : <FaChevronDown style={iconStyle} />)}
         </div>
         {!isSidebarCollapsed && (
@@ -280,71 +333,71 @@ const StaffSidebar = ({ onCollapse }) => {
 
       {/* Notification */}
       <Link to="/staff/under-dev" style={menuItemStyle}>
-        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => {
+        <div className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`} style={sidebarItemStyle} onClick={() => {
           if (isSidebarCollapsed) {
             setIsSidebarCollapsed(false);
             if (onCollapse) onCollapse(false);
             setTimeout(() => {}, 0);
           }
         }}>
-          <FaBell className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Notification'}
+          <FaBell className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} /> {!isSidebarCollapsed && 'Notification'}
         </div>
       </Link>
 
       {/* Salary */}
       <Link to="/staff/salary" style={menuItemStyle}>
-        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => {
+        <div className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`} style={sidebarItemStyle} onClick={() => {
           if (isSidebarCollapsed) {
             setIsSidebarCollapsed(false);
             if (onCollapse) onCollapse(false);
             setTimeout(() => {}, 0);
           }
         }}>
-          <FaFileInvoice className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Salary'}
+          <FaFileInvoice className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} /> {!isSidebarCollapsed && 'Salary'}
         </div>
       </Link>
 
       {/* Settings */}
       <Link to="/staff/setting" style={menuItemStyle}>
-        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => {
+        <div className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`} style={sidebarItemStyle} onClick={() => {
           if (isSidebarCollapsed) {
             setIsSidebarCollapsed(false);
             if (onCollapse) onCollapse(false);
             setTimeout(() => {}, 0);
           }
         }}>
-          <FaTools className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Setting'}
+          <FaTools className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} /> {!isSidebarCollapsed && 'Setting'}
         </div>
       </Link>
 
       {/* Help */}
       <Link to="/staff/under-dev" style={menuItemStyle}>
-        <div className="d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => {
+        <div className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`} style={sidebarItemStyle} onClick={() => {
           if (isSidebarCollapsed) {
             setIsSidebarCollapsed(false);
             if (onCollapse) onCollapse(false);
             setTimeout(() => {}, 0);
           }
         }}>
-          <FaQuestionCircle className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Help'}
+          <FaQuestionCircle className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} /> {!isSidebarCollapsed && 'Help'}
         </div>
       </Link>
 
       {/* Logout */}
-      <div className="mt-auto d-flex align-items-center px-2 py-2 rounded hover-effect cursor-pointer" onClick={() => {
+      <div className={`mt-auto d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`} style={sidebarItemStyle} onClick={() => {
         if (isSidebarCollapsed) {
           setIsSidebarCollapsed(false);
           if (onCollapse) onCollapse(false);
           setTimeout(() => {}, 0);
         }
       }}>
-        <FaSignOutAlt className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Logout'}
+        <FaSignOutAlt className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} /> {!isSidebarCollapsed && 'Logout'}
       </div>
 
       {/* Hover Effect Style */}
       <style>{`
-  .hover-effect:hover {
-    background-color: #2e2e4f;
+  .sidebar-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
   }
   .cursor-pointer {
     cursor: pointer;
