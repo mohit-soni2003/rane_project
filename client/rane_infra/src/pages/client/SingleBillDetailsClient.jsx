@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getBillById } from '../../services/billServices';
+import { getBillTransactions } from '../../services/billServices';
 import ClientHeader from '../../component/header/ClientHeader';
 import {
     Container,
@@ -20,6 +21,12 @@ import {
     FaArrowLeft,
     FaBuilding,
     FaEnvelope,
+    FaCreditCard,
+    FaMoneyBillWave,
+    FaWallet,
+    FaHashtag,
+    FaRupeeSign,
+    FaCalculator
 } from 'react-icons/fa';
 
 export default function SingleBillDetailsClient() {
@@ -28,12 +35,23 @@ export default function SingleBillDetailsClient() {
     const [bill, setBill] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [transactions, setTransactions] = useState([]);
 
     useEffect(() => {
-        const fetchBill = async () => {
+        const fetchBillAndTransactions = async () => {
             try {
-                const result = await getBillById(id);
-                setBill(result);
+                // Fetch bill details
+                const billResult = await getBillById(id);
+                setBill(billResult);
+
+                // Fetch transactions for this bill
+                try {
+                    const transactionResult = await getBillTransactions(id);
+                    setTransactions(transactionResult);
+                } catch (transactionError) {
+                    console.warn('Could not fetch transactions:', transactionError.message);
+                    setTransactions([]);
+                }
             } catch (err) {
                 setError(err.message || 'Failed to fetch bill.');
             } finally {
@@ -41,7 +59,7 @@ export default function SingleBillDetailsClient() {
             }
         };
 
-        if (id) fetchBill();
+        if (id) fetchBillAndTransactions();
     }, [id]);
 
     const getStatusBadge = (status) => {
@@ -140,7 +158,7 @@ export default function SingleBillDetailsClient() {
                                 </Card>
                             </Col>
 
-                            {/* Paid By Info */}
+                            {/* Transaction Details */}
                             <Col lg={4}>
                                 <Card
                                     className="shadow-sm"
@@ -158,33 +176,127 @@ export default function SingleBillDetailsClient() {
                                             color: 'var(--client-heading-color)',
                                         }}
                                     >
-                                        <FaUserTie className="me-2 text-secondary" />
-                                        Paid By
+                                        <FaCreditCard className="me-2 text-primary" />
+                                        Transaction Details
                                     </Card.Header>
-                                    <Card.Body className="text-center">
-                                        {bill.paidby ? (
-                                            <>
-                                                <img
-                                                    src={bill.paidby.profile}
-                                                    alt="Paid By"
-                                                    className="rounded-circle mb-2"
-                                                    style={{ width: '80px', height: '80px', objectFit: 'cover' }}
-                                                />
-                                                <h6 className="mb-0">{bill.paidby.name}</h6>
-                                                <div className="text-muted small">
-                                                    <FaEnvelope className="me-1" />
-                                                    {bill.paidby.email}
-                                                </div>
-                                                <div className="text-muted small">
-                                                    <FaBuilding className="me-1" />
-                                                    {bill.paidby.firmName}
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <Alert variant="info" className="mt-3">
-                                                No payer info available.
-                                            </Alert>
-                                        )}
+                                    <Card.Body>
+                                        {/* Get the latest transaction for this bill */}
+                                        {(() => {
+                                            const latestTransaction = transactions.length > 0 ? transactions[0] : null;
+                                            const isPaid = bill?.paymentStatus === 'Paid' && latestTransaction;
+
+                                            return (
+                                                <>
+                                                    {/* Amount Paid */}
+                                                    <div className="mb-3">
+                                                        <div className="d-flex align-items-center mb-2">
+                                                            <FaRupeeSign className="me-2 text-success" />
+                                                            <small className="text-muted fw-bold">AMOUNT PAID</small>
+                                                        </div>
+                                                        <h5 className="text-success mb-0">
+                                                            ₹{isPaid ? latestTransaction.amount?.toLocaleString('en-IN') : '0'}
+                                                        </h5>
+                                                    </div>
+
+                                                    {/* Paid By */}
+                                                    <div className="mb-3">
+                                                        <div className="d-flex align-items-center mb-2">
+                                                            <FaUserTie className="me-2 text-secondary" />
+                                                            <small className="text-muted fw-bold">PAID BY</small>
+                                                        </div>
+                                                        <div className="d-flex align-items-center">
+                                                            {isPaid && latestTransaction?.userId ? (
+                                                                <>
+                                                                    <div
+                                                                        className="rounded-circle me-2 d-flex align-items-center justify-content-center bg-primary"
+                                                                        style={{ width: '40px', height: '40px' }}
+                                                                    >
+                                                                        <FaUserTie className="text-white" size={16} />
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="fw-bold small">
+                                                                            {latestTransaction.userId.name || 'Unknown User'}
+                                                                        </div>
+                                                                        <div className="text-muted small">
+                                                                            {latestTransaction.userId.email || 'No email'}
+                                                                        </div>
+                                                                    </div>
+                                                                </>
+                                                            ) : (
+                                                                <div className="text-muted small">
+                                                                    Not Paid Yet
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Total Remaining */}
+                                                    <div className="mb-3">
+                                                        <div className="d-flex align-items-center mb-2">
+                                                            <FaCalculator className="me-2 text-warning" />
+                                                            <small className="text-muted fw-bold">TOTAL REMAINING</small>
+                                                        </div>
+                                                        <h6 className="text-warning mb-0">
+                                                            ₹{isPaid ? '0' : (bill?.amount ? bill.amount.toLocaleString('en-IN') : '0')}
+                                                        </h6>
+                                                    </div>
+
+                                                    {/* Payment Method */}
+                                                    <div className="mb-3">
+                                                        <div className="d-flex align-items-center mb-2">
+                                                            <FaWallet className="me-2 text-info" />
+                                                            <small className="text-muted fw-bold">PAYMENT METHOD</small>
+                                                        </div>
+                                                        <div className="d-flex align-items-center">
+                                                            <Badge
+                                                                bg={isPaid ? 'success' : 'secondary'}
+                                                                className="d-flex align-items-center"
+                                                            >
+                                                                {isPaid ? (
+                                                                    <>
+                                                                        {latestTransaction?.bankName ? (
+                                                                            <>
+                                                                                <FaMoneyBillWave className="me-1" size={10} />
+                                                                                Bank Transfer
+                                                                            </>
+                                                                        ) : latestTransaction?.upiId ? (
+                                                                            <>
+                                                                                <FaWallet className="me-1" size={10} />
+                                                                                UPI Payment
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <FaCreditCard className="me-1" size={10} />
+                                                                                Online Payment
+                                                                            </>
+                                                                        )}
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <FaWallet className="me-1" size={10} />
+                                                                        Pending
+                                                                    </>
+                                                                )}
+                                                            </Badge>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Transaction ID */}
+                                                    <div className="mb-0">
+                                                        <div className="d-flex align-items-center mb-2">
+                                                            <FaHashtag className="me-2 text-primary" />
+                                                            <small className="text-muted fw-bold">TRANSACTION ID</small>
+                                                        </div>
+                                                        <div className="bg-light p-2 rounded small font-monospace">
+                                                            {isPaid && latestTransaction?._id
+                                                                ? latestTransaction._id.toString().slice(-12).toUpperCase()
+                                                                : 'Not Available'
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            );
+                                        })()}
                                     </Card.Body>
                                 </Card>
                             </Col>

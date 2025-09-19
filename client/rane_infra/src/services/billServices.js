@@ -75,26 +75,26 @@ export const getBillById = async (id) => {
     throw error;
   }
 };
-// Get all bills of a specific user
-export const getBillsByUserId = async (userId) => {
+// Get transactions for a specific bill
+export const getBillTransactions = async (billId) => {
   try {
-    const response = await fetch(`${backend_url}/mybill/${userId}`, {
+    const res = await fetch(`${backend_url}/transactions/${billId}`, {
       method: 'GET',
-      credentials: 'include', // Optional: only if you're using cookies
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
     });
 
-    const data = await response.json();
+    const data = await res.json();
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch user bills');
+    if (!res.ok) {
+      throw new Error(data.message || 'Failed to fetch bill transactions');
     }
 
-    return data; // returns an array of bills or error message
+    return data.transactions || [];
   } catch (error) {
-    console.error('Error fetching user bills:', error.message);
+    console.error('Error fetching bill transactions:', error);
     throw error;
   }
 };
