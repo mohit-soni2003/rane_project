@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaFileInvoice, FaUserTie, FaFileAlt, FaClock, FaCheckCircle, FaExclamationTriangle, FaChartLine, FaChartBar, FaChartPie, FaEye, FaCalendarAlt, FaRupeeSign, FaTasks, FaMoneyBill } from 'react-icons/fa';
+import { FaFileInvoice, FaUserTie, FaFileAlt, FaClock, FaCheckCircle, FaExclamationTriangle, FaChartLine, FaChartBar, FaChartPie, FaEye, FaCalendarAlt, FaRupeeSign, FaTasks, FaMoneyBill, FaInfoCircle } from 'react-icons/fa';
 import { useAuthStore } from '../../store/authStore';
 import { staffService } from '../../services/staffService';
 import {
@@ -15,7 +15,7 @@ import {
   RadialLinearScale
 } from 'chart.js';
 import { Pie, Bar, Line, Doughnut, Radar } from 'react-chartjs-2';
-import { Card } from 'react-bootstrap';
+import { Card, Badge } from 'react-bootstrap';
 import PendingDocumentsTableStaff from '../../component/staff/PendingDocumentsTableStaff';
 
 // Register Chart.js components
@@ -31,6 +31,20 @@ ChartJS.register(
   RadialLinearScale
 );
 
+// Define a common color scheme for statuses
+const statusColors = {
+  'approved': '#198754', // Green
+  'paid': '#198754',     // Green
+  'pending': '#ffc107',   // Yellow
+  'rejected': '#dc3545', // Red
+  'overdue': '#dc3545',  // Red
+  'in-review': '#0dcaf0',// Cyan/Info
+  'processing': '#0dcaf0',// Cyan/Info
+  'sanctioned': '#0d6efd',// Blue
+  'regular': '#8b5cf6',   // Purple
+  'dfs': '#64748b'       // Slate
+};
+
 const HomePageStaff = () => {
   const { user } = useAuthStore();
   const [stats, setStats] = useState({
@@ -41,8 +55,10 @@ const HomePageStaff = () => {
     pendingDfs: 0,
     recentActivity: [],
     monthlyData: [],
-    statusData: [],
-    paymentTrends: []
+    statusData: {},
+    paymentTrends: [],
+    totalRegularDocs: 0, // Added for new chart
+    totalDfsDocs: 0      // Added for new chart
   });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
@@ -68,7 +84,10 @@ const HomePageStaff = () => {
               paymentStatuses: {},
               dfsStatuses: {}
             },
-            paymentTrends: data.monthlyData || [] // Use monthly data for payment trends
+            paymentTrends: data.monthlyData || [], // Use monthly data for payment trends
+            // Add new stats based on backend data for the new chart
+            totalRegularDocs: data.totalRegularDocs || 0, 
+            totalDfsDocs: data.totalDfsDocs || 0
           });
         } else {
           console.error('Failed to fetch dashboard stats:', response.message);
@@ -89,7 +108,9 @@ const HomePageStaff = () => {
             paymentStatuses: {},
             dfsStatuses: {}
           },
-          paymentTrends: []
+          paymentTrends: [],
+          totalRegularDocs: 0,
+          totalDfsDocs: 0
         });
       } finally {
         setLoading(false);
@@ -98,6 +119,71 @@ const HomePageStaff = () => {
 
     fetchStats();
   }, [user._id]);
+  
+  const getStatusBadgeForStaff = (status) => {
+    if (!status) return <Badge bg="secondary">Unknown</Badge>;
+    const lowerCaseStatus = status.toLowerCase();
+    
+    if (lowerCaseStatus.includes('approved') || lowerCaseStatus.includes('paid')) {
+      return <Badge bg="success">{status}</Badge>;
+    }
+    if (lowerCaseStatus.includes('rejected')) {
+      return <Badge bg="danger">{status}</Badge>;
+    }
+    if (lowerCaseStatus.includes('pending')) {
+      return <Badge bg="warning" text="dark">{status}</Badge>;
+    }
+    if (lowerCaseStatus.includes('processing') || lowerCaseStatus.includes('in-review') || lowerCaseStatus.includes('in review')) {
+      return <Badge bg="info">{status}</Badge>;
+    }
+    if (lowerCaseStatus.includes('sanctioned')) {
+      return <Badge bg="primary">{status}</Badge>;
+    }
+    return <Badge bg="secondary">{status}</Badge>;
+  };
+
+  const renderInfoCard = (tab) => {
+    let title = "RS-WMS Staff Portal";
+    let content = (
+        <p className="text-muted mb-0">
+            This is your central hub for managing client activities, processing documents, and overseeing project workflows. Use the tabs above to navigate between a general overview, detailed analytics, and report generation.
+        </p>
+    );
+
+    if (tab === 'analytics') {
+        title = "Understanding System Analytics";
+        content = (
+            <p className="text-muted mb-0">
+                This section provides a high-level view of system-wide data. Analyze bill and payment statuses across all clients, track monthly activity volumes, and monitor overall performance to identify trends and potential bottlenecks.
+            </p>
+        );
+    } else if (tab === 'reports') {
+        title = "Generating Reports";
+        content = (
+            <p className="text-muted mb-0">
+                Use this section to view and export detailed reports. The payment trends view provides a month-by-month summary of financial activities, helping you track progress and manage resources effectively.
+            </p>
+        );
+    }
+
+    return (
+        <div className="row mt-4">
+            <div className="col-12">
+                <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
+                    <Card.Body className="p-4">
+                        <div className="d-flex align-items-center mb-3">
+                            <div className="rounded-circle p-2 me-3" style={{ backgroundColor: '#667eea' }}>
+                                <FaInfoCircle color="white" size={16} />
+                            </div>
+                            <h6 className="card-title mb-0 text-dark fw-bold">{title}</h6>
+                        </div>
+                        {content}
+                    </Card.Body>
+                </Card>
+            </div>
+        </div>
+    );
+  };
 
   const StatCard = ({ icon, title, value, color, bgColor, subtitle }) => (
     <div className="col-lg-3 col-md-6 mb-4">
@@ -318,9 +404,7 @@ const HomePageStaff = () => {
                                     'Date not available'
                                   )}
                                 </small>
-                                {activity.description && (
-                                  <span className="badge bg-secondary">{activity.description}</span>
-                                )}
+                                {activity.description && getStatusBadgeForStaff(activity.description)}
                               </div>
                               <small className="text-muted">by {activity.user || 'System'}</small>
                             </div>
@@ -342,506 +426,103 @@ const HomePageStaff = () => {
         </>
       )}
 
-      {/* Analytics Tab */}
+      {/* Analytics Tab - MODIFIED */}
       {activeTab === 'analytics' && (
         <div className="row">
-          {/* Bill Status Distribution - Pie Chart */}
-          <div className="col-lg-6 col-xl-4 mb-4">
-            <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
-              <Card.Header className="border-0 bg-white">
-                <h6 className="card-title mb-0 text-dark fw-bold">
-                  <FaChartLine className="me-2 text-primary" />
-                  Bill Status Distribution
-                </h6>
-              </Card.Header>
-              <Card.Body>
-                {(() => {
-                  const approved = stats.statusData?.billStatuses?.approved || stats.statusData?.billStatuses?.Approved || 0;
-                  const pending = stats.statusData?.billStatuses?.pending || stats.statusData?.billStatuses?.Pending || 0;
-                  const rejected = stats.statusData?.billStatuses?.rejected || stats.statusData?.billStatuses?.Rejected || 0;
-                  const processing = stats.statusData?.billStatuses?.processing || stats.statusData?.billStatuses?.Processing || 0;
-                  const totalBills = approved + pending + rejected + processing;
-                  const hasData = totalBills > 0;
-
-                  return (
-                    <>
-                      <div className="d-flex justify-content-center">
-                        <div style={{ width: '200px', height: '200px' }}>
-                          {hasData ? (
-                            <Pie
-                              data={{
-                                labels: ['Approved', 'Pending', 'Rejected', 'Processing'],
-                                datasets: [{
-                                  data: [approved, pending, rejected, processing],
-                                  backgroundColor: [
-                                    '#22c55e', // Green for approved
-                                    '#f59e0b', // Orange for pending
-                                    '#ef4444', // Red for rejected
-                                    '#7e5bef'  // Purple for processing
-                                  ],
-                                  borderColor: [
-                                    '#16a34a',
-                                    '#d97706',
-                                    '#dc2626',
-                                    '#6d28d9'
-                                  ],
-                                  borderWidth: 2,
-                                  hoverBackgroundColor: [
-                                    '#16a34a',
-                                    '#d97706',
-                                    '#dc2626',
-                                    '#6d28d9'
-                                  ]
-                                }]
-                              }}
-                              options={{
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                  legend: {
-                                    position: 'bottom',
-                                    labels: {
-                                      padding: 15,
-                                      usePointStyle: true,
-                                      font: {
-                                        size: 11,
-                                        weight: 'bold'
-                                      }
-                                    }
-                                  },
-                                  tooltip: {
-                                    callbacks: {
-                                      label: function(context) {
-                                        const label = context.label || '';
-                                        const value = context.parsed || 0;
-                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                                        return `${label}: ${value} (${percentage}%)`;
-                                      }
-                                    }
-                                  }
-                                }
-                              }}
-                            />
-                          ) : (
-                            <div className="d-flex flex-column align-items-center justify-content-center h-100 text-center">
-                              <div className="rounded-circle d-flex align-items-center justify-content-center mb-3"
-                                style={{
-                                  width: '60px',
-                                  height: '60px',
-                                  backgroundColor: '#f8f9fa',
-                                  border: '2px dashed #dee2e6'
-                                }}>
-                                <FaChartLine size={25} color="#6c757d" />
-                              </div>
-                              <h6 className="text-muted mb-1" style={{ fontSize: '12px' }}>No Bill Data</h6>
-                              <p className="text-muted small" style={{ fontSize: '10px' }}>Bills will appear here</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </>
-                  );
-                })()}
-              </Card.Body>
-            </Card>
-          </div>
-
-          {/* Bill Status Comparison - Bar Chart */}
-          <div className="col-lg-6 col-xl-4 mb-4">
-            <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
-              <Card.Header className="border-0 bg-white">
-                <h6 className="card-title mb-0 text-dark fw-bold">
-                  <FaChartBar className="me-2 text-success" />
-                  Bill Status Comparison
-                </h6>
-              </Card.Header>
-              <Card.Body>
-                {(() => {
-                  const approved = stats.statusData?.billStatuses?.approved || stats.statusData?.billStatuses?.Approved || 0;
-                  const pending = stats.statusData?.billStatuses?.pending || stats.statusData?.billStatuses?.Pending || 0;
-                  const rejected = stats.statusData?.billStatuses?.rejected || stats.statusData?.billStatuses?.Rejected || 0;
-                  const processing = stats.statusData?.billStatuses?.processing || stats.statusData?.billStatuses?.Processing || 0;
-                  const totalBills = approved + pending + rejected + processing;
-                  const hasData = totalBills > 0;
-
-                  return (
-                    <>
-                      <div className="d-flex justify-content-center">
-                        <div style={{ width: '100%', height: '200px' }}>
-                          {hasData ? (
-                            <Bar
-                              data={{
-                                labels: ['Approved', 'Pending', 'Rejected', 'Processing'],
-                                datasets: [{
-                                  label: 'Bill Count',
-                                  data: [approved, pending, rejected, processing],
-                                  backgroundColor: [
-                                    '#22c55e',
-                                    '#f59e0b',
-                                    '#ef4444',
-                                    '#7e5bef'
-                                  ],
-                                  borderColor: [
-                                    '#16a34a',
-                                    '#d97706',
-                                    '#dc2626',
-                                    '#6d28d9'
-                                  ],
-                                  borderWidth: 1,
-                                  borderRadius: 4,
-                                  borderSkipped: false,
-                                }]
-                              }}
-                              options={{
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                  legend: {
-                                    display: false
-                                  },
-                                  tooltip: {
-                                    callbacks: {
-                                      label: function(context) {
-                                        return `${context.label}: ${context.parsed.y}`;
-                                      }
-                                    }
-                                  }
+            <div className="col-lg-12 mb-4">
+                <Card className="shadow-sm border-0" style={{ borderRadius: '15px' }}>
+                    <Card.Header className="border-0 bg-white"><h6 className="mb-0 fw-bold"><FaChartLine className="me-2 text-primary" />Monthly Activity Trends</h6></Card.Header>
+                    <Card.Body>
+                        <div style={{ height: '300px' }}>
+                            <Line data={{
+                                labels: stats.monthlyData?.map(item => item.month) || [],
+                                datasets: [
+                                {
+                                    label: 'Bills Processed',
+                                    data: stats.monthlyData?.map(item => item.bills || 0) || [],
+                                    borderColor: '#22c55e',
+                                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                                    fill: true,
+                                    tension: 0.4,
                                 },
-                                scales: {
-                                  y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                      stepSize: 1,
-                                      font: {
-                                        size: 10
-                                      }
-                                    },
-                                    grid: {
-                                      display: false
-                                    }
-                                  },
-                                  x: {
-                                    ticks: {
-                                      font: {
-                                        size: 10
-                                      }
-                                    },
-                                    grid: {
-                                      display: false
-                                    }
-                                  }
+                                {
+                                    label: 'Payments Processed',
+                                    data: stats.monthlyData?.map(item => item.payments || 0) || [],
+                                    borderColor: '#7e5bef',
+                                    backgroundColor: 'rgba(126, 91, 239, 0.1)',
+                                    fill: true,
+                                    tension: 0.4,
                                 }
-                              }}
-                            />
-                          ) : (
-                            <div className="d-flex flex-column align-items-center justify-content-center h-100 text-center">
-                              <div className="rounded-circle d-flex align-items-center justify-content-center mb-3"
-                                style={{
-                                  width: '60px',
-                                  height: '60px',
-                                  backgroundColor: '#f8f9fa',
-                                  border: '2px dashed #dee2e6'
-                                }}>
-                                <FaChartBar size={25} color="#6c757d" />
-                              </div>
-                              <h6 className="text-muted mb-1" style={{ fontSize: '12px' }}>No Bill Data</h6>
-                              <p className="text-muted small" style={{ fontSize: '10px' }}>Bills will appear here</p>
-                            </div>
-                          )}
+                                ]
+                            }} options={{ responsive: true, maintainAspectRatio: false }} />
                         </div>
-                      </div>
-                    </>
-                  );
-                })()}
-              </Card.Body>
-            </Card>
-          </div>
-
-          {/* Payment Analytics - Doughnut Chart */}
-          <div className="col-lg-6 col-xl-4 mb-4">
-            <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
-              <Card.Header className="border-0 bg-white">
-                <h6 className="card-title mb-0 text-dark fw-bold">
-                  <FaMoneyBill className="me-2 text-info" />
-                  Payment Analytics
-                </h6>
-              </Card.Header>
-              <Card.Body>
-                {(() => {
-                  const totalPayments = stats.pendingPayments || 0;
-                  const approvedPayments = stats.statusData?.paymentStatuses?.approved || stats.statusData?.paymentStatuses?.Approved || 0;
-                  const hasPaymentData = totalPayments > 0 || approvedPayments > 0;
-
-                  return (
-                    <>
-                      <div className="d-flex justify-content-center">
-                        <div style={{ width: '200px', height: '200px' }}>
-                          {hasPaymentData ? (
-                            <Doughnut
-                              data={{
-                                labels: ['Pending', 'Approved'],
+                    </Card.Body>
+                </Card>
+            </div>
+            <div className="col-md-6 col-xl-3 mb-4">
+                <Card className="shadow-sm border-0 h-100" style={{ borderRadius: '15px' }}>
+                    <Card.Header className="border-0 bg-white"><h6 className="mb-0 fw-bold"><FaFileInvoice className="me-2 text-success" />Bill Status</h6></Card.Header>
+                    <Card.Body className="d-flex justify-content-center align-items-center">
+                        <div style={{ width: '220px', height: '220px' }}>
+                            <Doughnut data={{
+                                labels: Object.keys(stats.statusData?.billStatuses || {}),
                                 datasets: [{
-                                  data: [totalPayments, approvedPayments],
-                                  backgroundColor: [
-                                    '#f59e0b',
-                                    '#10b981'
-                                  ],
-                                  borderColor: [
-                                    '#d97706',
-                                    '#059669'
-                                  ],
-                                  borderWidth: 3,
-                                  hoverBackgroundColor: [
-                                    '#d97706',
-                                    '#059669'
-                                  ],
-                                  cutout: '60%'
+                                    data: Object.values(stats.statusData?.billStatuses || {}),
+                                    backgroundColor: Object.keys(stats.statusData?.billStatuses || {}).map(key => statusColors[key.toLowerCase()] || '#6c757d')
                                 }]
-                              }}
-                              options={{
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                  legend: {
-                                    position: 'bottom',
-                                    labels: {
-                                      padding: 15,
-                                      usePointStyle: true,
-                                      font: {
-                                        size: 11,
-                                        weight: 'bold'
-                                      }
-                                    }
-                                  },
-                                  tooltip: {
-                                    callbacks: {
-                                      label: function(context) {
-                                        const label = context.label || '';
-                                        const value = context.parsed || 0;
-                                        return `${label}: ₹${value.toLocaleString('en-IN')}`;
-                                      }
-                                    }
-                                  }
-                                }
-                              }}
-                            />
-                          ) : (
-                            <div className="d-flex flex-column align-items-center justify-content-center h-100 text-center">
-                              <div className="rounded-circle d-flex align-items-center justify-content-center mb-3"
-                                style={{
-                                  width: '60px',
-                                  height: '60px',
-                                  backgroundColor: '#f8f9fa',
-                                  border: '2px dashed #dee2e6'
-                                }}>
-                                <FaMoneyBill size={25} color="#6c757d" />
-                              </div>
-                              <h6 className="text-muted mb-1" style={{ fontSize: '12px' }}>No Payment Data</h6>
-                              <p className="text-muted small" style={{ fontSize: '10px' }}>Payments will appear here</p>
-                            </div>
-                          )}
+                            }} options={{ responsive: true, maintainAspectRatio: false }} />
                         </div>
-                      </div>
-                      {hasPaymentData && (
-                        <div className="text-center mt-2">
-                          <small className="text-muted">
-                            Approval Rate: {totalPayments + approvedPayments > 0
-                              ? Math.round((approvedPayments / (totalPayments + approvedPayments)) * 100)
-                              : 0}%
-                          </small>
+                    </Card.Body>
+                </Card>
+            </div>
+            <div className="col-md-6 col-xl-3 mb-4">
+                <Card className="shadow-sm border-0 h-100" style={{ borderRadius: '15px' }}>
+                    <Card.Header className="border-0 bg-white"><h6 className="mb-0 fw-bold"><FaMoneyBill className="me-2 text-info" />Payment Status</h6></Card.Header>
+                    <Card.Body className="d-flex justify-content-center align-items-center">
+                        <div style={{ width: '220px', height: '220px' }}>
+                            <Doughnut data={{
+                                labels: Object.keys(stats.statusData?.paymentStatuses || {}),
+                                datasets: [{
+                                    data: Object.values(stats.statusData?.paymentStatuses || {}),
+                                    backgroundColor: Object.keys(stats.statusData?.paymentStatuses || {}).map(key => statusColors[key.toLowerCase()] || '#6c757d')
+                                }]
+                            }} options={{ responsive: true, maintainAspectRatio: false }} />
                         </div>
-                      )}
-                    </>
-                  );
-                })()}
-              </Card.Body>
-            </Card>
-          </div>
-
-          {/* Monthly Trends - Line Chart */}
-          <div className="col-lg-6 col-xl-6 mb-4">
-            <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
-              <Card.Header className="border-0 bg-white">
-                <h6 className="card-title mb-0 text-dark fw-bold">
-                  <FaChartLine className="me-2 text-warning" />
-                  Monthly Trends
-                </h6>
-              </Card.Header>
-              <Card.Body>
-                <div className="d-flex justify-content-center">
-                  <div style={{ width: '100%', height: '250px' }}>
-                    <Line
-                      data={{
-                        labels: stats.monthlyData?.length > 0
-                          ? stats.monthlyData.map(item => item.month).slice(-6)
-                          : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                        datasets: [
-                          {
-                            label: 'Bills Processed',
-                            data: stats.monthlyData?.length > 0
-                              ? stats.monthlyData.map(item => item.bills || 0).slice(-6)
-                              : [12, 19, 15, 25, 22, 30],
-                            borderColor: '#22c55e',
-                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                            tension: 0.4,
-                            fill: true,
-                            pointBackgroundColor: '#22c55e',
-                            pointBorderColor: '#fff',
-                            pointBorderWidth: 2,
-                            pointRadius: 4
-                          },
-                          {
-                            label: 'Payments Processed',
-                            data: stats.monthlyData?.length > 0
-                              ? stats.monthlyData.map(item => item.payments || 0).slice(-6)
-                              : [8, 15, 12, 20, 18, 25],
-                            borderColor: '#7e5bef',
-                            backgroundColor: 'rgba(126, 91, 239, 0.1)',
-                            tension: 0.4,
-                            fill: true,
-                            pointBackgroundColor: '#7e5bef',
-                            pointBorderColor: '#fff',
-                            pointBorderWidth: 2,
-                            pointRadius: 4
-                          }
-                        ]
-                      }}
-                      options={{
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                          legend: {
-                            position: 'top',
-                            labels: {
-                              usePointStyle: true,
-                              padding: 20,
-                              font: {
-                                size: 11,
-                                weight: 'bold'
-                              }
-                            }
-                          },
-                          tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            callbacks: {
-                              label: function(context) {
-                                return `${context.dataset.label}: ${context.parsed.y}`;
-                              }
-                            }
-                          }
-                        },
-                        scales: {
-                          y: {
-                            beginAtZero: true,
-                            ticks: {
-                              stepSize: 5,
-                              font: {
-                                size: 10
-                              }
-                            },
-                            grid: {
-                              color: 'rgba(0,0,0,0.05)'
-                            }
-                          },
-                          x: {
-                            ticks: {
-                              font: {
-                                size: 10
-                              }
-                            },
-                            grid: {
-                              display: false
-                            }
-                          }
-                        },
-                        interaction: {
-                          mode: 'nearest',
-                          axis: 'x',
-                          intersect: false
-                        }
-                      }}
-                    />
-                  </div>
-                </div>
-              </Card.Body>
-            </Card>
-          </div>
-
-          {/* Performance Overview - Radar Chart */}
-          <div className="col-lg-6 col-xl-6 mb-4">
-            <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
-              <Card.Header className="border-0 bg-white">
-                <h6 className="card-title mb-0 text-dark fw-bold">
-                  <FaChartBar className="me-2 text-danger" />
-                  Performance Overview
-                </h6>
-              </Card.Header>
-              <Card.Body>
-                <div className="d-flex justify-content-center">
-                  <div style={{ width: '100%', height: '250px' }}>
-                    <Radar
-                      data={{
-                        labels: ['Bill Processing', 'Payment Handling', 'Client Support', 'Document Management', 'Task Completion', 'Response Time'],
-                        datasets: [{
-                          label: 'Current Performance',
-                          data: [85, 78, 92, 88, 95, 82],
-                          borderColor: '#ef4444',
-                          backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                          borderWidth: 2,
-                          pointBackgroundColor: '#ef4444',
-                          pointBorderColor: '#fff',
-                          pointBorderWidth: 2,
-                          pointRadius: 4
-                        }]
-                      }}
-                      options={{
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                          legend: {
-                            display: false
-                          },
-                          tooltip: {
-                            callbacks: {
-                              label: function(context) {
-                                return `${context.label}: ${context.parsed.r}%`;
-                              }
-                            }
-                          }
-                        },
-                        scales: {
-                          r: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: {
-                              stepSize: 20,
-                              font: {
-                                size: 10
-                              }
-                            },
-                            grid: {
-                              color: 'rgba(0,0,0,0.1)'
-                            },
-                            angleLines: {
-                              color: 'rgba(0,0,0,0.1)'
-                            },
-                            pointLabels: {
-                              font: {
-                                size: 11,
-                                weight: 'bold'
-                              }
-                            }
-                          }
-                        }
-                      }}
-                    />
-                  </div>
-                </div>
-              </Card.Body>
-            </Card>
-          </div>
+                    </Card.Body>
+                </Card>
+            </div>
+            <div className="col-md-6 col-xl-3 mb-4">
+                <Card className="shadow-sm border-0 h-100" style={{ borderRadius: '15px' }}>
+                    <Card.Header className="border-0 bg-white"><h6 className="mb-0 fw-bold"><FaFileAlt className="me-2 text-warning" />DFS Status</h6></Card.Header>
+                    <Card.Body className="d-flex justify-content-center align-items-center">
+                        <div style={{ width: '220px', height: '220px' }}>
+                            <Doughnut data={{
+                                labels: Object.keys(stats.statusData?.dfsStatuses || {}),
+                                datasets: [{
+                                    data: Object.values(stats.statusData?.dfsStatuses || {}),
+                                    backgroundColor: Object.keys(stats.statusData?.dfsStatuses || {}).map(key => statusColors[key.toLowerCase().replace(' ', '-')] || '#6c757d')
+                                }]
+                            }} options={{ responsive: true, maintainAspectRatio: false }} />
+                        </div>
+                    </Card.Body>
+                </Card>
+            </div>
+            <div className="col-md-6 col-xl-3 mb-4">
+                <Card className="shadow-sm border-0 h-100" style={{ borderRadius: '15px' }}>
+                    <Card.Header className="border-0 bg-white"><h6 className="mb-0 fw-bold"><FaTasks className="me-2 text-secondary" />Document Types</h6></Card.Header>
+                    <Card.Body className="d-flex justify-content-center align-items-center">
+                        <div style={{ width: '220px', height: '220px' }}>
+                            <Doughnut data={{
+                                labels: ['Regular', 'DFS'],
+                                datasets: [{
+                                    data: [stats.totalRegularDocs, stats.totalDfsDocs],
+                                    backgroundColor: [statusColors['regular'], statusColors['dfs']]
+                                }]
+                            }} options={{ responsive: true, maintainAspectRatio: false }} />
+                        </div>
+                    </Card.Body>
+                </Card>
+            </div>
         </div>
       )}
 
@@ -875,8 +556,11 @@ const HomePageStaff = () => {
           </div>
         </div>
       )}
+      
+      {renderInfoCard(activeTab)}
     </div>
   );
 };
 
 export default HomePageStaff;
+
