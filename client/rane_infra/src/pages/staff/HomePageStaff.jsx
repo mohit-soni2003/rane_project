@@ -275,6 +275,13 @@ const HomePageStaff = () => {
             </div>
           </div>
 
+          {/* Pending Documents Table */}
+          <div className="row mb-4">
+            <div className="col-12">
+              <PendingDocumentsTableStaff />
+            </div>
+          </div>
+
           {/* Recent Activity */}
           <div className="row">
             <div className="col-12">
@@ -332,12 +339,6 @@ const HomePageStaff = () => {
             </div>
           </div>
 
-          {/* Pending Documents Table */}
-          <div className="row mb-4">
-            <div className="col-12">
-              <PendingDocumentsTableStaff />
-            </div>
-          </div>
         </>
       )}
 

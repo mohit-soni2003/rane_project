@@ -310,7 +310,14 @@ export default function HomePageClient() {
               </div>
             </div>
 
-            {/* Quick Actions - Hidden on Mobile */}
+            {/* Pending Documents Table */}
+            <div className="row mb-4">
+              <div className="col-12">
+                <PendingDocumentsTable />
+              </div>
+            </div>
+            
+            {/* Quick Actions - This section is now below Pending Documents and is hidden on screens smaller than lg */}
             <div className="row mb-4 d-none d-lg-block">
               <div className="col-12">
                 <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
@@ -485,36 +492,11 @@ export default function HomePageClient() {
                 </Card>
               </div>
             </div>
-
-        {/* Mobile Quick Actions Message */}
-            <div className="row mb-4 d-lg-none">
-              <div className="col-12">
-                <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
-                  <Card.Header className="border-0 bg-white" style={{ borderRadius: '15px 15px 0 0' }}>
-                    <h6 className="card-title mb-0 text-dark fw-bold">
-                      <FaMobileAlt className="me-2 text-primary" />
-                      Quick Actions
-                    </h6>
-                  </Card.Header>
-                  <Card.Body className="text-center py-4">
-                    <div className="mb-3">
-                      <FaMobileAlt size={48} className="text-primary mb-3" />
-                    </div>
-                    <h6 className="text-muted mb-2">Access Quick Actions</h6>
-                    <p className="text-muted small mb-0">
-                      Use the quick action button at the bottom to access all features.
-                    </p>
-                  </Card.Body>
-                </Card>
-              </div>
+            
+            <div className="row mb-4 d-none">
+                {/* This empty div with d-none replaces the previous mobile message */}
             </div>
 
-            {/* Pending Documents Table */}
-            <div className="row mb-4">
-              <div className="col-12">
-                <PendingDocumentsTable />
-              </div>
-            </div>
           </>
         )}
 
@@ -1187,45 +1169,3 @@ export default function HomePageClient() {
     </>
   );
 }
-
-
-
-
-
-
-// <Card className="shadow-sm border-light"
-//             style={{ backgroundColor: "var(--client-dashboard-bg-color)" }}>
-//             <Card.Header className="d-flex justify-content-between align-items-center bg-white">
-//               <span className="fw-bold text-dark">
-//                 <FaFileAlt className="me-2 text-primary" /> Notification Updates
-//               </span>
-//               <Button variant="link" size="sm">View All</Button>
-//             </Card.Header>
-//             <Card.Body>
-//               {[{
-//                 title: 'Bill ID #2458 Uploaded',
-//                 desc: 'Bill uploaded and is awaiting approval.',
-//                 icon: <FaFileAlt className="text-primary me-3 mt-1" size={20} />,
-//                 time: '10 minutes ago'
-//               }, {
-//                 title: 'Payment #3892 Approved',
-//                 desc: 'Payment request has been approved and processed.',
-//                 icon: <FaCheckCircle className="text-success me-3 mt-1" size={20} />,
-//                 time: '2 hours ago'
-//               }, {
-//                 title: 'Bill ID #2456 Rejected',
-//                 desc: 'Rejected. Please check comments and resubmit.',
-//                 icon: <FaTimesCircle className="text-danger me-3 mt-1" size={20} />,
-//                 time: '1 day ago'
-//               }].map((item, idx) => (
-//                 <div className="d-flex align-items-start mb-3 p-2 rounded bg-white shadow-sm" key={idx}>
-//                   {item.icon}
-//                   <div>
-//                     <strong>{item.title}</strong>
-//                     <p className="mb-1 text-muted small">{item.desc}</p>
-//                     <small className="text-secondary"><FaClock className="me-1" />{item.time}</small>
-//                   </div>
-//                 </div>
-//               ))}
-//             </Card.Body>
-//           </Card>
