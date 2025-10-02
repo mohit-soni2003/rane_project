@@ -12,6 +12,8 @@ import { useAuthStore } from '../../store/authStore';
 import { clientService } from '../../services/clientService';
 // Assuming a service that can fetch documents by type exists
 import { getDocumentsByUserId } from '../../services/documentService'; 
+import { getBillsByUserId } from '../../services/billServices';
+import { getPaymentsByUserId } from '../../services/paymentService';
 import { useNavigate } from 'react-router-dom';
 import { Pie, Bar, Line, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement } from 'chart.js';
@@ -74,7 +76,13 @@ const ActivityCard = ({ title, items, icon, color }) => (
                   <p className="mb-1 text-dark fw-semibold small">{item.title}</p>
                   <small className="text-muted">{item.description}</small>
                 </div>
-                <Badge bg={item.status === 'approved' ? 'success' : item.status === 'rejected' ? 'danger' : 'warning'}>
+                {/* UPDATED: Badge color logic for more status types */}
+                <Badge bg={
+                    item.status === 'approved' || item.status === 'Paid' ? 'success' 
+                    : item.status === 'rejected' || item.status === 'Overdue' ? 'danger' 
+                    : item.status === 'Sanctioned' ? 'primary'
+                    : 'warning'
+                }>
                   {item.status}
                 </Badge>
               </div>
@@ -99,6 +107,8 @@ export default function HomePageClient() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
+  const [activityData, setActivityData] = useState({ bills: [], payments: [] });
+  const [isActivityLoading, setActivityLoading] = useState(false);
 
   useEffect(() => {
     if (!user?._id) return;
@@ -166,6 +176,34 @@ export default function HomePageClient() {
 
     fetchStats();
   }, [user]);
+
+  useEffect(() => {
+    if (activeTab === 'activity' && user?._id) {
+        const fetchActivityData = async () => {
+            setActivityLoading(true);
+            try {
+                const [bills, payments] = await Promise.all([
+                    getBillsByUserId(user._id),
+                    getPaymentsByUserId(user._id)
+                ]);
+
+                const sortedBills = (Array.isArray(bills) ? bills : []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                const sortedPayments = (Array.isArray(payments) ? payments : []).sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+                
+                setActivityData({
+                    bills: sortedBills.slice(0, 5),
+                    payments: sortedPayments.slice(0, 5)
+                });
+            } catch (error) {
+                console.error("Failed to fetch activity data:", error);
+                setActivityData({ bills: [], payments: [] });
+            } finally {
+                setActivityLoading(false);
+            }
+        };
+        fetchActivityData();
+    }
+  }, [activeTab, user]);
 
   if (loading) {
     return (
