@@ -219,6 +219,51 @@ export default function HomePageClient() {
           borderRadius: 4,
       }]
   };
+  
+  const renderInfoCard = (tab) => {
+    let title = "About RS-WMS";
+    let content = (
+        <p className="text-muted mb-0">
+            RS-WMS stands for <strong>RANE & SONS - WORK MANAGEMENT SYSTEM</strong>, a robust digital platform based in Indore, Madhya Pradesh. It is developed to manage and streamline <strong>construction project workflows</strong>, with a special focus on <strong>railway sector</strong> projects.
+            <br /><br />
+            This system was created by <strong>RANE & SONS PVT. LTD.</strong> to assist with execution, planning, resource management, progress tracking, and overall project supervision.
+        </p>
+    );
+
+    if (tab === 'analytics') {
+        title = "Understanding Your Analytics";
+        content = (
+            <p className="text-muted mb-0">
+                This tab provides a visual breakdown of your financial and document activity. Track your monthly trends, see the status of your bills, and analyze the types of documents you've submitted to gain insights into your operations.
+            </p>
+        );
+    } else if (tab === 'activity') {
+        title = "Tracking Your Recent Activity";
+        content = (
+            <p className="text-muted mb-0">
+                This tab shows a real-time feed of your most recent bill submissions and payment requests. Keep track of your latest financial activities and their current status at a glance.
+            </p>
+        );
+    }
+
+    return (
+        <div className="row mt-4">
+            <div className="col-12">
+                <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
+                    <Card.Body className="p-4">
+                        <div className="d-flex align-items-center mb-3">
+                            <div className="rounded-circle p-2 me-3" style={{ backgroundColor: '#667eea' }}>
+                                <FaInfoCircle color="white" size={16} />
+                            </div>
+                            <h6 className="card-title mb-0 text-dark fw-bold">{title}</h6>
+                        </div>
+                        {content}
+                    </Card.Body>
+                </Card>
+            </div>
+        </div>
+    );
+  };
 
   return (
     <>
@@ -607,54 +652,36 @@ export default function HomePageClient() {
 
         {/* Activity Tab */}
         {activeTab === 'activity' && (
-          <div className="row">
-            <div className="col-lg-6 mb-4">
-              <ActivityCard
-                title="Recent Bills"
-                items={recentBills.map(item => ({
-                  title: item.title || 'Bill Activity',
-                  description: item.description || 'Bill submission activity',
-                  status: item.status || 'pending'
-                }))}
-                icon={<FaFileAlt />}
-                color="#4CAF50"
-              />
+            <div className="row">
+                <div className="col-lg-6 mb-4">
+                <ActivityCard
+                    title="Recent Bills"
+                    items={recentBills.map(item => ({
+                        title: item.title || 'Bill Activity',
+                        description: item.description || 'Bill submission activity',
+                        status: item.status || 'pending'
+                    }))}
+                    icon={<FaFileAlt />}
+                    color="#4CAF50"
+                />
+                </div>
+                <div className="col-lg-6 mb-4">
+                <ActivityCard
+                    title="Payment Requests"
+                    items={recentPayments.map(item => ({
+                        title: item.title || 'Payment Activity',
+                        description: item.description || 'Payment request activity',
+                        status: item.status || 'pending'
+                    }))}
+                    icon={<FaMoneyBill />}
+                    color="#2196F3"
+                />
+                </div>
             </div>
-            <div className="col-lg-6 mb-4">
-              <ActivityCard
-                title="Payment Requests"
-                items={recentPayments.map(item => ({
-                  title: item.title || 'Payment Activity',
-                  description: item.description || 'Payment request activity',
-                  status: item.status || 'pending'
-                }))}
-                icon={<FaMoneyBill />}
-                color="#2196F3"
-              />
-            </div>
-          </div>
         )}
 
-        {/* Company Info */}
-        <div className="row">
-          <div className="col-12">
-            <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
-              <Card.Body className="p-4">
-                <div className="d-flex align-items-center mb-3">
-                  <div className="rounded-circle p-2 me-3" style={{ backgroundColor: '#667eea' }}>
-                    <FaInfoCircle color="white" size={16} />
-                  </div>
-                  <h6 className="card-title mb-0 text-dark fw-bold">About RS-WMS</h6>
-                </div>
-                <p className="text-muted mb-0">
-                  RS-WMS stands for <strong>RANE & SONS - WORK MANAGEMENT SYSTEM</strong>, a robust digital platform based in Indore, Madhya Pradesh. It is developed to manage and streamline <strong>construction project workflows</strong>, with a special focus on <strong>railway sector</strong> projects.
-                  <br /><br />
-                  This system was created by <strong>RANE & SONS PVT. LTD.</strong> to assist with execution, planning, resource management, progress tracking, and overall project supervision.
-                </p>
-              </Card.Body>
-            </Card>
-          </div>
-        </div>
+        {/* UPDATED: Contextual Info Card */}
+        {renderInfoCard(activeTab)}
 
         {/* Mobile Floating Quick Action Button */}
         <div className="d-lg-none">
