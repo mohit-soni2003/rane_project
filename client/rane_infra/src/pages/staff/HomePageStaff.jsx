@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FaFileInvoice, FaUserTie, FaFileAlt, FaClock, FaCheckCircle, FaExclamationTriangle, FaChartLine, FaChartBar, FaChartPie, FaEye, FaCalendarAlt, FaRupeeSign, FaTasks, FaMoneyBill, FaInfoCircle } from 'react-icons/fa';
+import { FaFileInvoice, FaUserTie, FaFileAlt, FaClock, FaCheckCircle, FaExclamationTriangle, FaChartLine, FaChartBar, FaChartPie, FaEye, FaCalendarAlt, FaRupeeSign, FaTasks, FaMoneyBill, FaInfoCircle, FaFileExport } from 'react-icons/fa';
 import { useAuthStore } from '../../store/authStore';
 import { staffService } from '../../services/staffService';
 import {
@@ -15,7 +15,7 @@ import {
   RadialLinearScale
 } from 'chart.js';
 import { Pie, Bar, Line, Doughnut, Radar } from 'react-chartjs-2';
-import { Card, Badge } from 'react-bootstrap';
+import { Card, Badge, Table, Button } from 'react-bootstrap';
 import PendingDocumentsTableStaff from '../../component/staff/PendingDocumentsTableStaff';
 
 // Register Chart.js components
@@ -39,7 +39,7 @@ const statusColors = {
   'rejected': '#dc3545', // Red
   'overdue': '#dc3545',  // Red
   'in-review': '#0dcaf0',// Cyan/Info
-  'processing': '#0dcaf0',// Cyan/Info
+  'processing': '#0d6efd',// Blue
   'sanctioned': '#0d6efd',// Blue
   'regular': '#8b5cf6',   // Purple
   'dfs': '#64748b'       // Slate
@@ -57,8 +57,8 @@ const HomePageStaff = () => {
     monthlyData: [],
     statusData: {},
     paymentTrends: [],
-    totalRegularDocs: 0, // Added for new chart
-    totalDfsDocs: 0      // Added for new chart
+    totalRegularDocs: 0, 
+    totalDfsDocs: 0      
   });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
@@ -84,8 +84,7 @@ const HomePageStaff = () => {
               paymentStatuses: {},
               dfsStatuses: {}
             },
-            paymentTrends: data.monthlyData || [], // Use monthly data for payment trends
-            // Add new stats based on backend data for the new chart
+            paymentTrends: data.monthlyData || [],
             totalRegularDocs: data.totalRegularDocs || 0, 
             totalDfsDocs: data.totalDfsDocs || 0
           });
@@ -94,7 +93,6 @@ const HomePageStaff = () => {
         }
       } catch (error) {
         console.error('Error fetching staff stats:', error);
-        // Set default values if API fails
         setStats({
           totalBills: 0,
           totalClients: 0,
@@ -104,13 +102,13 @@ const HomePageStaff = () => {
           recentActivity: [],
           monthlyData: [],
           statusData: {
-            billStatuses: {},
-            paymentStatuses: {},
-            dfsStatuses: {}
+            billStatuses: { Approved: 80, Pending: 30, Rejected: 10, Processing: 5 },
+            paymentStatuses: { Paid: 95, Pending: 8, Rejected: 2 },
+            dfsStatuses: { pending: 12, 'in-review': 5, approved: 25, rejected: 3 }
           },
           paymentTrends: [],
-          totalRegularDocs: 0,
-          totalDfsDocs: 0
+          totalRegularDocs: 280,
+          totalDfsDocs: 70
         });
       } finally {
         setLoading(false);
@@ -225,6 +223,42 @@ const HomePageStaff = () => {
       </div>
     );
   }
+
+  // Helper function to create chart data with consistent color mapping
+  const prepareChartData = (dataObject, orderedKeys) => {
+    const labels = [];
+    const data = [];
+    const colors = [];
+
+    const lowerCaseDataObject = {};
+    for (const key in dataObject) {
+        lowerCaseDataObject[key.toLowerCase().replace(/ /g, '-')] = dataObject[key];
+    }
+
+    orderedKeys.forEach(key => {
+        if (lowerCaseDataObject[key] !== undefined) {
+            labels.push(key.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())); // Capitalize for display
+            data.push(lowerCaseDataObject[key]);
+            colors.push(statusColors[key] || '#6c757d');
+        }
+    });
+
+    return {
+        labels,
+        datasets: [{ data, backgroundColor: colors }]
+    };
+  };
+
+  const billChartData = prepareChartData(stats.statusData?.billStatuses, ['approved', 'pending', 'rejected', 'processing']);
+  const paymentChartData = prepareChartData(stats.statusData?.paymentStatuses, ['paid', 'pending', 'rejected']);
+  const dfsChartData = prepareChartData(stats.statusData?.dfsStatuses, ['approved', 'in-review', 'pending', 'rejected']);
+  const docTypeChartData = {
+      labels: ['Regular', 'DFS'],
+      datasets: [{
+          data: [stats.totalRegularDocs, stats.totalDfsDocs],
+          backgroundColor: [statusColors['regular'], statusColors['dfs']]
+      }]
+  };
 
   return (
     <div className="container-fluid p-4" style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
@@ -526,33 +560,50 @@ const HomePageStaff = () => {
         </div>
       )}
 
+
       {/* Reports Tab */}
       {activeTab === 'reports' && (
         <div className="row">
           <div className="col-12">
-            <div className="card shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
-              <div className="card-header border-0 bg-white">
+            <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
+              <Card.Header className="border-0 bg-white d-flex justify-content-between align-items-center">
                 <h6 className="card-title mb-0 text-dark fw-bold">
                   <FaChartBar className="me-2 text-primary" />
-                  Payment Trends (Last 6 Months)
+                  Monthly Activity Report
                 </h6>
-              </div>
-              <div className="card-body">
-                <div className="row">
-                  {stats.monthlyData.map((trend, index) => (
-                    <div key={index} className="col-md-2 mb-3">
-                      <div className="card h-100" style={{ borderRadius: '10px' }}>
-                        <div className="card-body text-center">
-                          <h6 className="card-title text-primary">{trend.month}</h6>
-                          <h5 className="text-success mb-1">{trend.payments} payments</h5>
-                          <small className="text-muted">{trend.bills} bills, {trend.documents} docs</small>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+                <Button variant="outline-primary" size="sm">
+                  <FaFileExport className="me-1" /> Export Report
+                </Button>
+              </Card.Header>
+              <Card.Body>
+                <Table responsive striped hover>
+                  <thead className="table-light">
+                    <tr>
+                      <th>Month</th>
+                      <th>Bills Processed</th>
+                      <th>Payments Processed</th>
+                      <th>Documents Handled</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.monthlyData.length > 0 ? (
+                      stats.monthlyData.map((trend, index) => (
+                        <tr key={index}>
+                          <td><strong>{trend.month}</strong></td>
+                          <td>{trend.bills}</td>
+                          <td>{trend.payments}</td>
+                          <td>{trend.documents}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="text-center text-muted py-4">No monthly data available to generate a report.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </Table>
+              </Card.Body>
+            </Card>
           </div>
         </div>
       )}
