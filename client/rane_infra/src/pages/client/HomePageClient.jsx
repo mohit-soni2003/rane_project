@@ -165,7 +165,7 @@ export default function HomePageClient() {
   return (
     <>
       <ClientHeader />
-      <div className="container-fluid p-4" style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
+      <div className="container-fluid p-4" style={{ backgroundColor: '#f8f9fa', minHeight: '100vh', paddingBottom: '100px' }}>
 
         {/* Navigation Tabs */}
         <div className="row mb-4">
@@ -486,7 +486,7 @@ export default function HomePageClient() {
               </div>
             </div>
 
-            {/* Mobile Quick Actions Message */}
+        {/* Mobile Quick Actions Message */}
             <div className="row mb-4 d-lg-none">
               <div className="col-12">
                 <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
@@ -502,7 +502,7 @@ export default function HomePageClient() {
                     </div>
                     <h6 className="text-muted mb-2">Access Quick Actions</h6>
                     <p className="text-muted small mb-0">
-                      For the best mobile experience, use the menu button above to access all features and quick actions.
+                      Use the quick action button at the bottom to access all features.
                     </p>
                   </Card.Body>
                 </Card>
@@ -1060,6 +1060,127 @@ export default function HomePageClient() {
                 </p>
               </Card.Body>
             </Card>
+          </div>
+        </div>
+
+        {/* Mobile Floating Quick Action Button */}
+        <div className="d-lg-none">
+          <div className="position-fixed bottom-0 start-50 translate-middle-x mb-4" style={{ zIndex: 1050 }}>
+            <div className="dropdown">
+              <button
+                className="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center"
+                style={{
+                  width: '60px',
+                  height: '60px',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  border: 'none',
+                  boxShadow: '0 4px 20px rgba(102, 126, 234, 0.4)',
+                  transition: 'all 0.3s ease'
+                }}
+                type="button"
+                id="quickActionsDropdown"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+              >
+                <FaHandshake size={24} color="white" />
+              </button>
+              <ul className="dropdown-menu shadow-lg border-0" aria-labelledby="quickActionsDropdown" style={{ minWidth: '200px' }}>
+                <li>
+                  <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/upload-bill')}>
+                    <FaUpload className="me-3 text-primary" />
+                    <div>
+                      <div className="fw-bold">Upload Bill</div>
+                      <small className="text-muted">Submit new bill</small>
+                    </div>
+                  </button>
+                </li>
+                <li>
+                  <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/my-bill')}>
+                    <FaFileAlt className="me-3 text-success" />
+                    <div>
+                      <div className="fw-bold">My Bills</div>
+                      <small className="text-muted">View all bills</small>
+                    </div>
+                  </button>
+                </li>
+                <li>
+                  <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/payment-request')}>
+                    <FaMoneyBill className="me-3 text-info" />
+                    <div>
+                      <div className="fw-bold">Payment Request</div>
+                      <small className="text-muted">Request payment</small>
+                    </div>
+                  </button>
+                </li>
+                <li>
+                  <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/my-payment-request')}>
+                    <FaDownload className="me-3 text-warning" />
+                    <div>
+                      <div className="fw-bold">My Payments</div>
+                      <small className="text-muted">View payment history</small>
+                    </div>
+                  </button>
+                </li>
+                <li><hr className="dropdown-divider" /></li>
+                <li>
+                  <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/upload-document')}>
+                    <FaUpload className="me-3 text-secondary" />
+                    <div>
+                      <div className="fw-bold">Upload Document</div>
+                      <small className="text-muted">DFS document upload</small>
+                    </div>
+                  </button>
+                </li>
+                <li>
+                  <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/track-dfs/all')}>
+                    <FaEye className="me-3 text-dark" />
+                    <div>
+                      <div className="fw-bold">Track DFS</div>
+                      <small className="text-muted">Track documents</small>
+                    </div>
+                  </button>
+                </li>
+                <li>
+                  <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/transaction')}>
+                    <FaRupeeSign className="me-3 text-primary" />
+                    <div>
+                      <div className="fw-bold">Transactions</div>
+                      <small className="text-muted">View transactions</small>
+                    </div>
+                  </button>
+                </li>
+                <li>
+                  <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/document/category')}>
+                    <FaFileAlt className="me-3 text-success" />
+                    <div>
+                      <div className="fw-bold">My Documents</div>
+                      <small className="text-muted">View documents</small>
+                    </div>
+                  </button>
+                </li>
+                <li><hr className="dropdown-divider" /></li>
+                <li>
+                  <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/setting')}>
+                    <FaCog className="me-3 text-secondary" />
+                    <div>
+                      <div className="fw-bold">Settings</div>
+                      <small className="text-muted">Account settings</small>
+                    </div>
+                  </button>
+                </li>
+                <li>
+                  <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/support')}>
+                    <FaBell className="me-3 text-warning" />
+                    <div>
+                      <div className="fw-bold">Support</div>
+                      <small className="text-muted">Get help</small>
+                    </div>
+                  </button>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>

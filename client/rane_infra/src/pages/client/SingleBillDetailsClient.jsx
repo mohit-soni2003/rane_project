@@ -12,6 +12,7 @@ import {
     Card,
     Badge,
     Button,
+    Table,
 } from 'react-bootstrap';
 import {
     FaFileInvoice,
@@ -26,7 +27,9 @@ import {
     FaWallet,
     FaHashtag,
     FaRupeeSign,
-    FaCalculator
+    FaCalculator,
+    FaCheckCircle,
+    FaClock,
 } from 'react-icons/fa';
 
 export default function SingleBillDetailsClient() {
@@ -47,7 +50,8 @@ export default function SingleBillDetailsClient() {
                 // Fetch transactions for this bill
                 try {
                     const transactionResult = await getBillTransactions(id);
-                    setTransactions(transactionResult);
+                    console.log('Transactions fetched:', transactionResult);
+                    setTransactions(transactionResult || []);
                 } catch (transactionError) {
                     console.warn('Could not fetch transactions:', transactionError.message);
                     setTransactions([]);
@@ -204,29 +208,8 @@ export default function SingleBillDetailsClient() {
                                                             <FaUserTie className="me-2 text-secondary" />
                                                             <small className="text-muted fw-bold">PAID BY</small>
                                                         </div>
-                                                        <div className="d-flex align-items-center">
-                                                            {isPaid && latestTransaction?.userId ? (
-                                                                <>
-                                                                    <div
-                                                                        className="rounded-circle me-2 d-flex align-items-center justify-content-center bg-primary"
-                                                                        style={{ width: '40px', height: '40px' }}
-                                                                    >
-                                                                        <FaUserTie className="text-white" size={16} />
-                                                                    </div>
-                                                                    <div>
-                                                                        <div className="fw-bold small">
-                                                                            {latestTransaction.userId.name || 'Unknown User'}
-                                                                        </div>
-                                                                        <div className="text-muted small">
-                                                                            {latestTransaction.userId.email || 'No email'}
-                                                                        </div>
-                                                                    </div>
-                                                                </>
-                                                            ) : (
-                                                                <div className="text-muted small">
-                                                                    Not Paid Yet
-                                                                </div>
-                                                            )}
+                                                        <div className="text-muted">
+                                                            -
                                                         </div>
                                                     </div>
 
@@ -288,15 +271,138 @@ export default function SingleBillDetailsClient() {
                                                             <small className="text-muted fw-bold">TRANSACTION ID</small>
                                                         </div>
                                                         <div className="bg-light p-2 rounded small font-monospace">
-                                                            {isPaid && latestTransaction?._id
-                                                                ? latestTransaction._id.toString().slice(-12).toUpperCase()
-                                                                : 'Not Available'
-                                                            }
+                                                            null
                                                         </div>
                                                     </div>
                                                 </>
                                             );
                                         })()}
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                        </Row>
+
+                        {/* Transaction Summary Table */}
+                        <Row className="mt-4 d-none d-md-block">
+                            <Col lg={12}>
+                                <Card
+                                    className="shadow-sm"
+                                    style={{
+                                        backgroundColor: 'var(--client-dashboard-bg-color)',
+                                        borderColor: 'var(--client-border-color)',
+                                        color: 'var(--client-text-color)',
+                                    }}
+                                >
+                                    <Card.Header
+                                        style={{
+                                            backgroundColor: 'transparent',
+                                            borderBottom: `1px solid var(--client-border-color)`,
+                                            fontWeight: 600,
+                                            color: 'var(--client-heading-color)',
+                                        }}
+                                    >
+                                        <FaCreditCard className="me-2 text-primary" />
+                                        Transaction Summary ({transactions.length})
+                                    </Card.Header>
+                                    <Card.Body className="p-0">
+                                        {transactions.length > 0 ? (
+                                            <div className="table-responsive">
+                                                <Table bordered hover className="mb-0 align-middle">
+                                                    <thead className="table-light">
+                                                        <tr>
+                                                            <th className="ps-3">#</th>
+                                                            <th>Amount</th>
+                                                            <th>Transaction Status</th>
+                                                            <th>Paid By</th>
+                                                            <th>UPI</th>
+                                                            <th>Bank</th>
+                                                            <th>Transaction ID</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {transactions.map((transaction, index) => (
+                                                            <tr key={transaction._id || index}>
+                                                                <td className="ps-3 fw-bold">{index + 1}</td>
+                                                                <td>
+                                                                    <div className="d-flex align-items-center">
+                                                                        <FaRupeeSign className="me-1 text-success" />
+                                                                        <strong className="text-success">
+                                                                            {transaction.amount?.toLocaleString('en-IN') || '0'}
+                                                                        </strong>
+                                                                    </div>
+                                                                </td>
+                                                                <td>
+                                                                    <Badge
+                                                                        bg={bill?.paymentStatus === 'Paid' ? 'success' : 'warning'}
+                                                                        className="d-flex align-items-center justify-content-center"
+                                                                    >
+                                                                        {bill?.paymentStatus === 'Paid' ? (
+                                                                            <>
+                                                                                <FaCheckCircle className="me-1" size={10} />
+                                                                                Completed
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <FaClock className="me-1" size={10} />
+                                                                                Pending
+                                                                            </>
+                                                                        )}
+                                                                    </Badge>
+                                                                </td>
+                                                                <td>
+                                                                    <span className="text-muted">-</span>
+                                                                </td>
+                                                                <td>
+                                                                    {transaction.upiId ? (
+                                                                        <div className="d-flex align-items-center">
+                                                                            <FaWallet className="me-1 text-info" size={12} />
+                                                                            <span className="small font-monospace">
+                                                                                {transaction.upiId}
+                                                                            </span>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <span className="text-muted small">-</span>
+                                                                    )}
+                                                                </td>
+                                                                <td>
+                                                                    {transaction.bankName ? (
+                                                                        <div className="small">
+                                                                            <div className="d-flex align-items-center mb-1">
+                                                                                <FaMoneyBillWave className="me-1 text-success" size={12} />
+                                                                                <strong>{transaction.bankName}</strong>
+                                                                            </div>
+                                                                            {transaction.accNo && (
+                                                                                <div className="text-muted">
+                                                                                    A/C: ****{transaction.accNo.slice(-4)}
+                                                                                </div>
+                                                                            )}
+                                                                            {transaction.ifscCode && (
+                                                                                <div className="text-muted">
+                                                                                    IFSC: {transaction.ifscCode}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    ) : (
+                                                                        <span className="text-muted small">-</span>
+                                                                    )}
+                                                                </td>
+                                                                <td>
+                                                                    <div className="bg-light p-2 rounded small font-monospace text-center">
+                                                                        null
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </Table>
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-4">
+                                                <FaCreditCard size={48} className="text-muted mb-3" />
+                                                <h6 className="text-muted mb-1">No Transactions Yet</h6>
+                                                <p className="text-muted mb-0">Transaction summary will appear here once payments are made</p>
+                                            </div>
+                                        )}
                                     </Card.Body>
                                 </Card>
                             </Col>
