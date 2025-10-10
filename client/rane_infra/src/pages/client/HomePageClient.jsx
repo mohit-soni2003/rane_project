@@ -412,6 +412,13 @@ export default function HomePageClient() {
               </div>
             </div>
 
+            {/* Pending Documents Table */}
+            <div className="row mb-4">
+              <div className="col-12">
+                <PendingDocumentsTable />
+              </div>
+            </div>
+
             {/* Salary Overview */}
             <div className="row mb-4">
               <div className="col-12">
@@ -451,12 +458,7 @@ export default function HomePageClient() {
               </div>
             </div>
 
-            {/* Pending Documents Table */}
-            <div className="row mb-4">
-              <div className="col-12">
-                <PendingDocumentsTable />
-              </div>
-            </div>
+        
             
             {/* Quick Actions - This section is now below Pending Documents and is hidden on screens smaller than lg */}
             <div className="row mb-4 d-none d-lg-block">

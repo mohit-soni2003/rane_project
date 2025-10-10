@@ -40,6 +40,9 @@ const ClientHeader = () => {
               })} &nbsp; | &nbsp;
               {dateTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
             </small>
+            <small className="opacity-75 d-flex align-items-center" style={{ fontSize: '0.75rem' }}>
+               Last Login: {user.lastlogin ? new Date(user.lastlogin).toLocaleString() : '-'}
+            </small>
           </div>
 
           {/* CENTER SECTION - Title */}
