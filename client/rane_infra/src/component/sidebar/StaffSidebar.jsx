@@ -7,10 +7,12 @@ import {
 import dummyUser from '../../assets/images/dummyUser.jpeg';
 import { useAuthStore } from '../../store/authStore';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import LogoutModal from '../models/LogoutModal';
 
 const StaffSidebar = ({ onCollapse }) => {
   const [openMenu, setOpenMenu] = useState(null);
   const { user } = useAuthStore();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -43,6 +45,10 @@ const StaffSidebar = ({ onCollapse }) => {
     if (onCollapse) {
       onCollapse(newCollapseState);
     }
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
   };
 
   const submenuStyle = (isOpen) => ({
@@ -383,16 +389,21 @@ const StaffSidebar = ({ onCollapse }) => {
         </div>
       </Link>
 
-      {/* Logout */}
-      <div className={`mt-auto d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`} style={sidebarItemStyle} onClick={() => {
+      <div className={`mt-auto d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`} onClick={() => {
         if (isSidebarCollapsed) {
           setIsSidebarCollapsed(false);
           if (onCollapse) onCollapse(false);
-          setTimeout(() => {}, 0);
+          // Delay the logout modal to allow sidebar expansion animation
+          setTimeout(() => setShowLogoutModal(true), 300);
+        } else {
+          handleLogoutClick();
         }
       }}>
-        <FaSignOutAlt className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} /> {!isSidebarCollapsed && 'Logout'}
+        <FaSignOutAlt className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
+        {!isSidebarCollapsed && 'Logout'}
       </div>
+
+      <LogoutModal show={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
 
       {/* Hover Effect Style */}
       <style>{`
