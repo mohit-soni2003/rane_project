@@ -139,6 +139,7 @@ export default function ViewDocumentPage() {
                         className="text-secondary text-decoration-none"
                       >
                         <FaFileAlt size={20} />
+                        <Badge bg="success">open doc</Badge>
                       </a>
                     </td>
                     <td style={{ maxWidth: '200px', whiteSpace: 'normal' }}>{doc.remark || '-'}</td>
