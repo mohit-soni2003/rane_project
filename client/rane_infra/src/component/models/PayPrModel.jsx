@@ -49,7 +49,7 @@ export default function PayPrmodel({ show, onHide, id }) {
     setSuccess(null);
 
     try {
-      const response = await fetch(`${backend_url}/pay-payment`, {
+      const response = await fetch(`${backend_url}/transactionroutes/pay-payment`, {
         method: 'POST',
         credentials: "include", 
         headers: { 'Content-Type': 'application/json' },

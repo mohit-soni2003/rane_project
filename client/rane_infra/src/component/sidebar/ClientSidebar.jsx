@@ -97,14 +97,46 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
     >
 
       {/* Toggle Button */}
-      <div className="d-flex justify-content-end" style={{ marginTop: '5px', marginBottom: '5px' }}>
+      <div className={`d-flex ${isSidebarCollapsed ? 'justify-content-center' : 'justify-content-end'}`} style={{ marginTop: '5px', marginBottom: '5px' }}>
         <button
           onClick={toggleSidebarCollapse}
-          className="btn btn-sm border-0"
-          style={iconStyle}
+          className="btn p-0 d-flex align-items-center justify-content-center"
+          aria-label={isSidebarCollapsed ? 'Show Sidebar' : 'Hide Sidebar'}
           title={isSidebarCollapsed ? 'Show Sidebar' : 'Hide Sidebar'}
+          style={{
+            color: '#ffffff',               // default white icon
+            width: '36px',
+            height: '36px',
+            lineHeight: '0',
+            borderRadius: '8px',
+            border: 'none',
+            backgroundColor: 'transparent',
+            transition: 'color 0.15s ease, background-color 0.15s ease',
+            cursor: 'pointer'
+          }}
+          onMouseEnter={(e) => {
+            const el = e.currentTarget;
+            // make icon dark, lift background for contrast on dark sidebar
+            el.style.color = '#222222';
+            el.style.backgroundColor = 'rgba(255,255,255,0.85)';
+          }}
+          onMouseLeave={(e) => {
+            const el = e.currentTarget;
+            el.style.color = '#ffffff';
+            el.style.backgroundColor = 'transparent';
+          }}
+          onPointerDown={(e) => {
+            const el = e.currentTarget;
+            el.style.color = '#111111';
+            el.style.backgroundColor = 'rgba(255,255,255,0.95)';
+          }}
+          onPointerUp={(e) => {
+            const el = e.currentTarget;
+            el.style.color = '#ffffff';
+            el.style.backgroundColor = 'transparent';
+          }}
         >
-          {isSidebarCollapsed ? <FaBars /> : <FaTimes />}
+          {isSidebarCollapsed ? <FaBars size={18} /> : <FaTimes size={18} />}
         </button>
       </div>
 
@@ -115,14 +147,15 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
             src={user?.profile || dummyUser}
             className="rounded-circle mb-3"
             alt="Profile"
-            style={{ width: "80px", height: "80px", objectFit: "cover" }}
+            style={{ width: "80px", height: "80px", objectFit: "cover", cursor: "pointer" }}
+            onClick={() => navigate('/client')}
           />
           <div className='fs-6 fw-bolder mb-1' >{user.name}</div>
           <div className="fs-6 text-secondary fw-semibold">{user?.cid || "Not Assigned"}</div>
           <hr className="text-light" />
         </div>
       )}      {/* Home */}
-      <div className="d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
+      <div className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`} style={sidebarItemStyle}>
         <Link 
           to="/client" 
           style={{ textDecoration: 'none', color: 'inherit' }}
@@ -135,7 +168,7 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
             }
           }}
         >
-          <FaHome className="me-2" style={iconStyle} />
+          <FaHome className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
           {!isSidebarCollapsed && 'Home'}
         </Link>
       </div>
@@ -152,10 +185,10 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
               toggleDropdown("bill");
             }
           }}
-          className="d-flex justify-content-between align-items-center sidebar-item"
+          className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`}
           style={sidebarItemStyle}
         >
-          <span><FaFileInvoiceDollar className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Bill'}</span>
+          <span><FaFileInvoiceDollar className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} /> {!isSidebarCollapsed && 'Bill'}</span>
           {!isSidebarCollapsed && (openDropdown === "bill" ? <FaChevronUp style={iconStyle} /> : <FaChevronDown style={iconStyle} />)}
         </div>
         {!isSidebarCollapsed && (
@@ -198,10 +231,10 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
               toggleDropdown("payment");
             }
           }}
-          className="d-flex justify-content-between align-items-center sidebar-item"
+          className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`}
           style={sidebarItemStyle}
         >
-          <span><MdPayment className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Payment'}</span>
+          <span><MdPayment className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} /> {!isSidebarCollapsed && 'Payment'}</span>
           {!isSidebarCollapsed && (openDropdown === "payment" ? <FaChevronUp style={iconStyle} /> : <FaChevronDown style={iconStyle} />)}
         </div>
         {!isSidebarCollapsed && (
@@ -243,10 +276,10 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
               toggleDropdown("transaction");
             }
           }}
-          className="d-flex justify-content-between align-items-center sidebar-item"
+          className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`}
           style={sidebarItemStyle}
         >
-          <span><FaHistory className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Transactions'}</span>
+          <span><FaHistory className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} /> {!isSidebarCollapsed && 'Transactions'}</span>
           {!isSidebarCollapsed && (openDropdown === "transaction" ? <FaChevronUp style={iconStyle} /> : <FaChevronDown style={iconStyle} />)}
         </div>
         {!isSidebarCollapsed && (
@@ -279,10 +312,10 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
               toggleDropdown("dfs");
             }
           }}
-          className="d-flex justify-content-between align-items-center sidebar-item"
+          className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`}
           style={sidebarItemStyle}
         >
-          <span><BsCardChecklist className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Forward Files - DFS'}</span>
+          <span><BsCardChecklist className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} /> {!isSidebarCollapsed && 'Forward Files - DFS'}</span>
           {!isSidebarCollapsed && (openDropdown === "dfs" ? <FaChevronUp style={iconStyle} /> : <FaChevronDown style={iconStyle} />)}
         </div>
         {!isSidebarCollapsed && (
@@ -330,10 +363,10 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
               toggleDropdown("document");
             }
           }}
-          className="d-flex justify-content-between align-items-center sidebar-item"
+          className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`}
           style={sidebarItemStyle}
         >
-          <span><FaFileAlt className="me-2" style={iconStyle} /> {!isSidebarCollapsed && 'Document'}</span>
+          <span><FaFileAlt className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} /> {!isSidebarCollapsed && 'Document'}</span>
           {!isSidebarCollapsed && (openDropdown === "document" ? <FaChevronUp style={iconStyle} /> : <FaChevronDown style={iconStyle} />)}
         </div>
         {!isSidebarCollapsed && (
@@ -354,7 +387,7 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
       </div>
 
       {/* Salary */}
-      <div className="d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
+      <div className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`} style={sidebarItemStyle}>
         <Link 
           to="/client/salary" 
           style={{ textDecoration: 'none', color: 'inherit' }}
@@ -366,13 +399,13 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
             }
           }}
         >
-          <FaMoneyBillWave className="me-2" style={iconStyle} />
+          <FaMoneyBillWave className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
           {!isSidebarCollapsed && 'Salary'}
         </Link>
       </div>
 
       {/* Settings */}
-      <div className="d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
+      <div className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`} style={sidebarItemStyle}>
         <Link 
           to="/client/setting" 
           style={{ textDecoration: 'none', color: 'inherit' }}
@@ -384,13 +417,13 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
             }
           }}
         >
-          <FaUserCog className="me-2" style={iconStyle} />
+          <FaUserCog className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
           {!isSidebarCollapsed && 'Setting'}
         </Link>
       </div>
 
       {/* Support */}
-      <div className="d-flex align-items-center sidebar-item" style={sidebarItemStyle}>
+      <div className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`} style={sidebarItemStyle}>
         <Link 
           to="/client/support" 
           style={{ textDecoration: 'none', color: 'inherit' }}
@@ -402,13 +435,13 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
             }
           }}
         >
-          <FaHeadset className="me-2" style={iconStyle} />
+          <FaHeadset className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
           {!isSidebarCollapsed && 'Support'}
         </Link>
       </div>
 
       {/* Logout */}
-      <div className="mt-auto d-flex align-items-center sidebar-item " onClick={() => {
+      <div className={`mt-auto d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`} onClick={() => {
         if (isSidebarCollapsed) {
           setIsSidebarCollapsed(false);
           if (onCollapse) onCollapse(false);
@@ -418,7 +451,7 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
           handleLogoutClick();
         }
       }}>
-        <FaSignOutAlt className="me-2" style={iconStyle} />
+        <FaSignOutAlt className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
         {!isSidebarCollapsed && 'Logout'}
       </div>
 

@@ -138,6 +138,7 @@ export default function MyBillPage() {
                                         <th className="d-none d-sm-table-cell">Work Area</th>
                                         <th className="d-none d-sm-table-cell">LOA No.</th>
                                         <th>Invoice</th>
+                                        <th>Amount</th>
                                         <th>Status</th>
                                         <th>View</th>
                                         <th>More</th>
@@ -151,6 +152,7 @@ export default function MyBillPage() {
                                             <td className="d-none d-sm-table-cell">{bill.workArea}</td>
                                             <td className="d-none d-sm-table-cell">{bill.loaNo}</td>
                                             <td>{bill.invoiceNo}</td>
+                                            <td>₹{bill.amount ? bill.amount.toLocaleString('en-IN') : 'N/A'}</td>
                                             <td>{getStatusBadge(bill.paymentStatus)}</td>
                                             <td className="text-center">
                                                 <a
@@ -185,7 +187,12 @@ export default function MyBillPage() {
                                 Showing 1 to {filteredBills.length} of {bills.length} entries
                             </small>
                             <div className="mt-2 mt-md-0">
-                                <Button size="sm" variant="outline-primary" className="me-2 mobile-btn-sm">
+                                <Button 
+                                    size="sm" 
+                                    variant="outline-primary" 
+                                    className="me-2 mobile-btn-sm"
+                                    onClick={() => navigate('/client/upload-bill')}
+                                >
                                     <FaPlus className="me-1" /> Upload Bill
                                 </Button>
                                 <Button size="sm" variant="outline-dark" className="mobile-btn-sm">

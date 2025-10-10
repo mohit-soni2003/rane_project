@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Card, Table, Badge, Button, Spinner, Row, Col } from 'react-bootstrap';
-import { FaFileAlt, FaEye, FaClock, FaCheckCircle, FaTimesCircle, FaUsers } from 'react-icons/fa';
+import { FaFileAlt, FaEye, FaClock, FaCheckCircle, FaTimesCircle, FaUsers, FaSync } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { staffService } from '../../services/staffService';
@@ -11,95 +11,177 @@ const PendingDocumentsTableStaff = () => {
   const [allPendingItems, setAllPendingItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Cache for performance
+  const [cache, setCache] = useState(new Map());
+  const [lastFetchTime, setLastFetchTime] = useState(0);
+  const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes cache for staff data
+
+  const refreshData = useCallback(async () => {
+    if (!user?._id) return;
+
+    try {
+      setRefreshing(true);
+      setError(null);
+      
+      // Clear cache
+      const cacheKey = `staff-pending-${user._id}`;
+      setCache(prev => {
+        const newCache = new Map(prev);
+        newCache.delete(cacheKey);
+        return newCache;
+      });
+
+      await fetchAllPendingData();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [user?._id]);
+
+  const fetchAllPendingData = useCallback(async () => {
+    if (!user?._id) return;
+
+    const cacheKey = `staff-pending-${user._id}`;
+    const now = Date.now();
+
+    // Check cache first
+    if (cache.has(cacheKey) && (now - lastFetchTime) < CACHE_DURATION) {
+      const cachedData = cache.get(cacheKey);
+      setAllPendingItems(cachedData || []);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('Fetching staff pending data...');
+
+      // **PERFORMANCE OPTIMIZATION**: Use Promise.all for parallel API calls
+      const [billsResponse, paymentsResponse, dfsResponse] = await Promise.all([
+        // Fetch bills with timeout
+        Promise.race([
+          staffService.getMyBills(),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout: Bills')), 12000)
+          )
+        ]).catch(err => {
+          console.error('Error fetching bills:', err);
+          return { success: false, bills: [], error: err.message };
+        }),
+
+        // Fetch payments with timeout
+        Promise.race([
+          staffService.getMyPayments(),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout: Payments')), 12000)
+          )
+        ]).catch(err => {
+          console.error('Error fetching payments:', err);
+          return { success: false, payments: [], error: err.message };
+        }),
+
+        // Fetch DFS with timeout
+        Promise.race([
+          staffService.getMyDfsRequests(),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout: DFS')), 12000)
+          )
+        ]).catch(err => {
+          console.error('Error fetching DFS:', err);
+          return { success: false, dfsRequests: [], error: err.message };
+        })
+      ]);
+
+      console.log('API Responses:', { billsResponse, paymentsResponse, dfsResponse });
+      const allItems = [];
+
+      // Process bills
+      if (billsResponse.success && Array.isArray(billsResponse.bills)) {
+        const pendingBills = billsResponse.bills.filter(bill => 
+          bill.status === 'pending' || bill.status === 'submitted' || bill.paymentStatus === 'pending'
+        );
+        const billItems = pendingBills.map(bill => ({
+          ...bill,
+          source: 'bills',
+          type: 'Bill',
+          clientInfo: bill.clientInfo || bill.user || bill.uploadedBy || { name: 'Unknown Client' },
+          dateField: bill.uploadDate || bill.submittedAt || bill.createdAt,
+          title: bill.billCode || bill.loaNo || bill.billNumber || 'Bill Request',
+          category: 'Bill Submission'
+        }));
+        allItems.push(...billItems);
+        console.log(`Loaded ${billItems.length} pending bills`);
+      } else {
+        console.log('No bills data or failed to fetch bills:', billsResponse);
+      }
+
+      // Process payments
+      if (paymentsResponse.success && Array.isArray(paymentsResponse.payments)) {
+        const pendingPayments = paymentsResponse.payments.filter(payment => 
+          payment.status === 'pending' || payment.status === 'submitted'
+        );
+        const paymentItems = pendingPayments.map(payment => ({
+          ...payment,
+          source: 'payments',
+          type: 'Payment',
+          clientInfo: payment.clientInfo || payment.user || payment.requestedBy || { name: 'Unknown Client' },
+          dateField: payment.requestDate || payment.createdAt,
+          title: payment.description || payment.paymentCode || `₹${payment.amount || '0'} Payment`,
+          category: 'Payment Request'
+        }));
+        allItems.push(...paymentItems);
+        console.log(`Loaded ${paymentItems.length} pending payments`);
+      } else {
+        console.log('No payments data or failed to fetch payments:', paymentsResponse);
+      }
+
+      // Process DFS
+      if (dfsResponse.success && Array.isArray(dfsResponse.dfsRequests)) {
+        const pendingDfs = dfsResponse.dfsRequests.filter(dfs => 
+          dfs.status === 'pending' || dfs.status === 'in-review'
+        );
+        const dfsItems = pendingDfs.map(dfs => ({
+          ...dfs,
+          source: 'dfs',
+          type: 'DFS',
+          clientInfo: dfs.uploadedBy || dfs.currentOwner || { name: 'Unknown User' },
+          dateField: dfs.createdAt,
+          title: dfs.fileTitle || 'DFS Request',
+          category: 'Document Forwarding'
+        }));
+        allItems.push(...dfsItems);
+        console.log(`Loaded ${dfsItems.length} pending DFS requests`);
+      } else {
+        console.log('No DFS data or failed to fetch DFS:', dfsResponse);
+      }
+
+      // Sort by date (newest first)
+      allItems.sort((a, b) => new Date(b.dateField) - new Date(a.dateField));
+
+      console.log(`Total pending items found: ${allItems.length}`, allItems);
+
+      // Cache the results
+      setCache(prev => new Map(prev).set(cacheKey, allItems));
+      setLastFetchTime(now);
+
+      setAllPendingItems(allItems);
+    } catch (err) {
+      console.error('Error in fetchAllPendingData:', err);
+      setError(err.message || 'Failed to load pending data');
+    } finally {
+      setLoading(false);
+    }
+  }, [user?._id, cache, lastFetchTime, CACHE_DURATION]);
 
   useEffect(() => {
-    const fetchAllPendingData = async () => {
-      if (!user?._id) return;
-
-      try {
-        setLoading(true);
-        const allItems = [];
-
-        // Fetch staff's own bills that are pending
-        try {
-          const billsResponse = await staffService.getMyBills();
-          if (billsResponse.success && Array.isArray(billsResponse.bills)) {
-            const pendingBills = billsResponse.bills.filter(bill => 
-              bill.status === 'pending' || bill.status === 'submitted'
-            );
-            const billItems = pendingBills.map(bill => ({
-              ...bill,
-              source: 'bills',
-              type: 'Bill',
-              clientInfo: bill.clientInfo || bill.uploadedBy || {},
-              dateField: bill.uploadDate || bill.createdAt,
-              title: bill.billCode || bill.billNumber || 'Bill Request',
-              category: 'Bill Submission'
-            }));
-            allItems.push(...billItems);
-          }
-        } catch (err) {
-          console.error('Error fetching bills:', err);
-        }
-
-        // Fetch staff's own payment requests
-        try {
-          const paymentsResponse = await staffService.getMyPayments();
-          if (paymentsResponse.success && Array.isArray(paymentsResponse.payments)) {
-            const pendingPayments = paymentsResponse.payments.filter(payment => 
-              payment.status === 'pending' || payment.status === 'submitted'
-            );
-            const paymentItems = pendingPayments.map(payment => ({
-              ...payment,
-              source: 'payments',
-              type: 'Payment',
-              clientInfo: payment.clientInfo || payment.requestedBy || {},
-              dateField: payment.requestDate || payment.createdAt,
-              title: payment.description || payment.paymentCode || 'Payment Request',
-              category: 'Payment Request'
-            }));
-            allItems.push(...paymentItems);
-          }
-        } catch (err) {
-          console.error('Error fetching payments:', err);
-        }
-
-        // Fetch staff's own DFS requests
-        try {
-          const dfsResponse = await staffService.getMyDfsRequests();
-          if (dfsResponse.success && Array.isArray(dfsResponse.dfsRequests)) {
-            const pendingDfs = dfsResponse.dfsRequests.filter(dfs => 
-              dfs.status === 'pending' || dfs.status === 'in-review'
-            );
-            const dfsItems = pendingDfs.map(dfs => ({
-              ...dfs,
-              source: 'dfs',
-              type: 'DFS',
-              clientInfo: dfs.uploadedBy || {},
-              dateField: dfs.createdAt,
-              title: dfs.fileTitle || 'DFS Request',
-              category: 'Document Forwarding'
-            }));
-            allItems.push(...dfsItems);
-          }
-        } catch (err) {
-          console.error('Error fetching DFS:', err);
-        }
-
-        // Sort by date (newest first)
-        allItems.sort((a, b) => new Date(b.dateField) - new Date(a.dateField));
-        setAllPendingItems(allItems);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchAllPendingData();
-  }, [user]);
+  }, [fetchAllPendingData]);
 
-  const handleItemClick = (item) => {
+  const handleItemClick = useCallback((item) => {
     if (item.source === 'bills') {
       navigate('/staff/bill');
     } else if (item.source === 'payments') {
@@ -107,9 +189,9 @@ const PendingDocumentsTableStaff = () => {
     } else if (item.source === 'dfs') {
       navigate('/staff/dfs-request');
     }
-  };
+  }, [navigate]);
 
-  const handleApprove = async (item) => {
+  const handleApprove = useCallback(async (item) => {
     try {
       // Staff members might not have approval permissions for their own items
       // This would typically be handled by admins or higher authority
@@ -118,9 +200,9 @@ const PendingDocumentsTableStaff = () => {
     } catch (err) {
       console.error('Error approving item:', err);
     }
-  };
+  }, []);
 
-  const handleReject = async (item) => {
+  const handleReject = useCallback(async (item) => {
     try {
       // Staff members might not have rejection permissions for their own items
       console.log('Staff rejection not implemented - redirect to appropriate workflow');
@@ -128,9 +210,9 @@ const PendingDocumentsTableStaff = () => {
     } catch (err) {
       console.error('Error rejecting item:', err);
     }
-  };
+  }, []);
 
-  const getStatusBadge = (status, source) => {
+  const getStatusBadge = useCallback((status, source) => {
     const statusLower = (status || 'pending').toLowerCase();
     switch (statusLower) {
       case 'approved':
@@ -143,9 +225,9 @@ const PendingDocumentsTableStaff = () => {
       default:
         return <Badge bg="warning" text="dark">Pending</Badge>;
     }
-  };
+  }, []);
 
-  const getSourceBadge = (source) => {
+  const getSourceBadge = useCallback((source) => {
     switch (source) {
       case 'bills':
         return <Badge bg="primary">Bills</Badge>;
@@ -156,14 +238,15 @@ const PendingDocumentsTableStaff = () => {
       default:
         return <Badge bg="secondary">{source}</Badge>;
     }
-  };
+  }, []);
 
-  if (loading) {
+  if (loading && !refreshing) {
     return (
       <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
         <Card.Body className="text-center py-4">
           <Spinner animation="border" variant="primary" size="sm" />
-          <p className="text-muted mt-2 mb-0">Loading pending items...</p>
+          <p className="text-muted mt-2 mb-2">Loading pending items...</p>
+          <small className="text-muted">Fetching bills, payments, and DFS requests</small>
         </Card.Body>
       </Card>
     );
@@ -173,7 +256,16 @@ const PendingDocumentsTableStaff = () => {
     return (
       <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
         <Card.Body className="text-center py-4">
-          <p className="text-danger mb-0">Error loading data: {error}</p>
+          <p className="text-danger mb-3">Error loading data: {error}</p>
+          <Button 
+            variant="outline-primary" 
+            size="sm" 
+            onClick={refreshData}
+            disabled={refreshing}
+          >
+            <FaSync className={`me-1 ${refreshing ? 'fa-spin' : ''}`} />
+            {refreshing ? 'Retrying...' : 'Retry'}
+          </Button>
         </Card.Body>
       </Card>
     );
@@ -207,7 +299,17 @@ const PendingDocumentsTableStaff = () => {
               My Pending Submissions ({allPendingItems.length})
             </h6>
           </Col>
-          <Col xs="auto">
+          <Col xs="auto" className="d-flex gap-2">
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={refreshData}
+              disabled={refreshing || loading}
+              title="Refresh data"
+            >
+              <FaSync className={`me-1 ${refreshing ? 'fa-spin' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
             <Badge bg="warning" text="dark" className="fs-6">
               {allPendingItems.length} pending
             </Badge>
@@ -232,7 +334,7 @@ const PendingDocumentsTableStaff = () => {
             <tbody>
               {allPendingItems.slice(0, 15).map((item, index) => (
                 <tr
-                  key={`${item.source}-${item._id}`}
+                  key={`${item.source}-${item._id || index}`}
                   style={{ cursor: 'pointer' }}
                   onClick={() => handleItemClick(item)}
                   className="table-row-hover"

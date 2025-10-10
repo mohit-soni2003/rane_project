@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { FaCalendarAlt, FaBell } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const ClientHeader = () => {
   const { user } = useAuthStore();
   const [dateTime, setDateTime] = useState(new Date());
+  const navigate = useNavigate();
 
   // Live clock
   useEffect(() => {
@@ -38,6 +40,9 @@ const ClientHeader = () => {
               })} &nbsp; | &nbsp;
               {dateTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
             </small>
+            <small className="opacity-75 d-flex align-items-center" style={{ fontSize: '0.75rem' }}>
+               Last Login: {user.lastlogin ? new Date(user.lastlogin).toLocaleString() : '-'}
+            </small>
           </div>
 
           {/* CENTER SECTION - Title */}
@@ -66,7 +71,20 @@ const ClientHeader = () => {
                   width: '32px',
                   height: '32px',
                   objectFit: 'cover',
-                  border: '2px solid var(--client-profile-border)'
+                  border: '2px solid var(--client-profile-border)',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+                onClick={() => navigate('/client')}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'scale(1.1)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                  e.target.style.borderColor = 'var(--client-primary-color, #007bff)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'scale(1)';
+                  e.target.style.boxShadow = 'none';
+                  e.target.style.borderColor = 'var(--client-profile-border)';
                 }}
               />
             </div>

@@ -139,20 +139,23 @@ export default function ViewDocumentPage() {
                         className="text-secondary text-decoration-none"
                       >
                         <FaFileAlt size={20} />
+                        <Badge bg="success">open doc</Badge>
                       </a>
                     </td>
                     <td style={{ maxWidth: '200px', whiteSpace: 'normal' }}>{doc.remark || '-'}</td>
                     <td>{getStatusBadge(doc.status)}</td>
-                    <td className="d-flex align-items-center">
-                      <img
-                        src={doc.uploadedBy.profile}
-                        alt={doc.uploadedBy.name}
-                        className="rounded-circle me-2"
-                        style={{ width: "32px", height: "32px", objectFit: "cover" }}
-                      />
-                      <small className=" text-truncate" style={{ maxWidth: "120px" }}>
-                        {doc.uploadedBy.name}
-                      </small>
+                    <td>
+                      <div className="d-flex align-items-center">
+                        <img
+                          src={doc.uploadedBy.profile}
+                          alt={doc.uploadedBy.name}
+                          className="rounded-circle me-2"
+                          style={{ width: "32px", height: "32px", objectFit: "cover" }}
+                        />
+                        <small className=" text-truncate" style={{ maxWidth: "120px" }}>
+                          {doc.uploadedBy.name}
+                        </small>
+                      </div>
                     </td>
                     <td className="text-center">
                       {doc.status === 'pending' ? (

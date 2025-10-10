@@ -117,7 +117,7 @@ export default function PaymentRequestPage() {
                         {/* Row 1: Payment Type & Tender */}
                         <Row className="mb-3">
                             <Col md={6}>
-                                <Form.Label className="fw-semibold text-brown">Select Payment Type</Form.Label>
+                                <Form.Label className="fw-semibold text-brown">Payment Type</Form.Label>
                                 <div className="d-flex gap-3">
                                     <Form.Check
                                         inline
@@ -127,15 +127,6 @@ export default function PaymentRequestPage() {
                                         id="ip"
                                         checked={paymentType === 'IP'}
                                         onChange={() => setPaymentType('IP')}
-                                    />
-                                    <Form.Check
-                                        inline
-                                        type="radio"
-                                        label="IPR"
-                                        name="paymentType"
-                                        id="ipr"
-                                        checked={paymentType === 'IPR'}
-                                        onChange={() => setPaymentType('IPR')}
                                     />
                                 </div>
                             </Col>
@@ -262,7 +253,7 @@ export default function PaymentRequestPage() {
                         <div className="d-flex justify-content-end gap-2">
                             <Button variant="outline-secondary">Cancel</Button>
                             <Button type="submit" disabled={submitting} className="btn-brown px-4">
-                                {submitting ? <Spinner size="sm" animation="border" /> : 'Submit Bill'}
+                                {submitting ? <Spinner size="sm" animation="border" /> : 'Request Payment'}
                             </Button>
                         </div>
                     </Form>
