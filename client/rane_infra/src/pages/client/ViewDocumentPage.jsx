@@ -176,7 +176,7 @@ export default function ViewDocumentPage() {
                           </Button>
                         </div>
                       ) : (
-                        <span className="text-muted">—</span>
+                        <span className="text-muted">{Date(doc.timestamp).toLocaleString()}</span>
                       )}
                     </td>
                   </tr>
@@ -232,8 +232,20 @@ export default function ViewDocumentPage() {
 
             {/* Signature Block */}
             <p className="fst-italic fw-semibold">I ACKNOWLEDGE</p>
-            <p className="mb-1"><strong>NAME:</strong> {user.name}</p>
-            <p className="mb-4"><strong>CID:</strong> RS-CTO</p>
+            <p className="mb-1"><strong>NAME:</strong> <input
+                    type="text"
+                    className="form-control"
+                    id="signerName"
+                    defaultValue={user.name}
+                    placeholder="Enter your full legal name"
+                    /></p>
+            <p className="mb-1"><strong>Legal ID:</strong> <input
+                    type="text"
+                    className="form-control"
+                    id="signerName"
+                    placeholder="Enter your full legal ID"
+                    /></p>
+            <p className="mb-4"><strong>CID:</strong> {user.cid}</p>
           </div>
 
           {/* Timestamp */}

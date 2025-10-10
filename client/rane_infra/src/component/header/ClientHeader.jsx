@@ -95,12 +95,12 @@ const ClientHeader = () => {
                 fontWeight: '500',
                 maxWidth: '100px',
                 textAlign: 'center',
-                overflow: 'hidden',
+                // overflow: 'hidden',
                 whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis'
+                // textOverflow: 'ellipsis'
               }}
             >
-              {user?.name || 'User'}
+              Client ID: {user?.cid || 'User'}
             </small>
           </div>
 
