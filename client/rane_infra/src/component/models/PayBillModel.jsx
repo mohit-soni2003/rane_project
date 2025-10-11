@@ -76,7 +76,7 @@ export default function PayBillModal({ show, onHide, billId }) {
             const response = await axios.post(`${backend_url}/pay-bill`, {
                 billId,
                 bankName,
-                accNo,
+                accNo, 
                 ifscCode,
                 amount,
             });

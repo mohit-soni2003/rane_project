@@ -9,7 +9,7 @@ const verifyToken = require("../middleware/verifyToken")
 const router = express.Router();
 
 // Pay Bill Route 
-router.post("/pay-bill", verifyToken , async (req, res) => {
+router.post("/pay-bill", verifyToken , async (req, res) => { 
     // console.log("Received payment request:-------------");
     try {
         const { billId, bankName, accNo, ifscCode, amount } = req.body;
@@ -42,7 +42,7 @@ router.post("/pay-bill", verifyToken , async (req, res) => {
             bankName,
             accNo,
             ifscCode,
-            paidBy:log_userId
+            paidBy:userId
         });
         console.log("--------------------------------"+ transaction)
 
@@ -87,7 +87,7 @@ router.post("/pay-payment", verifyToken , async (req, res) => {
             userId,
             amount, // Assuming `amount` exists in Payment model
             upiId:upi,
-            paidBy:log_userId
+            paidBy:userId
         });
         await transaction.save();
 
