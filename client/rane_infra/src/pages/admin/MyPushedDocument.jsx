@@ -3,7 +3,7 @@ import { Table, Container, Row, Col } from 'react-bootstrap';
 import { getMyUploadedDocuments } from '../../services/documentService';
 import dummyuser from "../../assets/images/dummyUser.jpeg";
 import AdminHeader from '../../component/header/AdminHeader';
-import { FaRegFileAlt } from "react-icons/fa";
+import { FaRegFileAlt, FaTrash } from "react-icons/fa";
 
 
 const statusMap = {
@@ -31,6 +31,22 @@ export default function MyPushedDocument() {
         };
         fetchDocs();
     }, []);
+
+    const handleDelete = async (docId) => {
+        if (window.confirm('Are you sure you want to delete this document?')) {
+            try {
+                // Placeholder for delete functionality - implement when backend is ready
+                alert('Delete functionality not implemented yet. Document ID: ' + docId);
+                // After implementing delete service, call it here and refresh documents
+                // await deleteDocument(docId);
+                // const res = await getMyUploadedDocuments();
+                // setDocuments(res);
+            } catch (err) {
+                console.error('Failed to delete document:', err);
+                alert('Error deleting document: ' + err.message);
+            }
+        }
+    };
 
     return (
         <>
@@ -105,6 +121,7 @@ export default function MyPushedDocument() {
                                 <th>Status</th>
                                 <th>Status Change Date</th>
                                 <th>Remark</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -183,13 +200,22 @@ export default function MyPushedDocument() {
                                         <td title={doc.remark || 'No remark'}>
                                             {doc.remark}
                                         </td>
+                                        <td>
+                                            <button
+                                                className="btn btn-sm btn-outline-danger"
+                                                onClick={() => handleDelete(doc._id)}
+                                                title="Delete Document"
+                                            >
+                                                <FaTrash />
+                                            </button>
+                                        </td>
                                     </tr>
                                 );
                             })}
 
                             {documents.length === 0 && (
                                 <tr>
-                                    <td className="text-center py-3" colSpan="10">
+                                    <td className="text-center py-3" colSpan="11">
                                         No documents uploaded yet.
                                     </td>
                                 </tr>

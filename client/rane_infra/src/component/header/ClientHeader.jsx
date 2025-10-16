@@ -98,6 +98,8 @@ const ClientHeader = () => {
                 // overflow: 'hidden',
                 whiteSpace: 'nowrap',
                 // textOverflow: 'ellipsis'
+                whiteSpace: 'normal',
+                wordWrap: 'break-word'
               }}
             >
               Client ID: {user?.cid || 'User'}
