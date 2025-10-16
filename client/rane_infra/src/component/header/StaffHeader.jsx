@@ -1,44 +1,72 @@
 import React from 'react';
-import { FaBell } from 'react-icons/fa';
+import { FaCalendarAlt, FaBell } from 'react-icons/fa';
 import { useAuthStore } from '../../store/authStore';
 
 const StaffHeader = () => {
   const { user } = useAuthStore();
 
   return (
-    <div
-      className="d-md-flex d-none justify-content-between align-items-center px-3 py-2 border-bottom"
-      style={{ backgroundColor: 'var(--staff-component-bg-color)' }}
-    >
-      {/* Greeting */}
-      <div className="fw-medium fs-6">
-        Good Evening, <span className="fw-semibold">{user?.name || 'Staff'}</span>! 👋 Welcome back.
-      </div>
-
-      {/* Right Side */}
-      <div className="d-flex align-items-center gap-3">
-        {/* Notification Bell */}
-        <div className="position-relative">
-          <FaBell size={18} className="text-dark" />
-          <span
-            className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"
-            style={{ width: '8px', height: '8px' }}
-          ></span>
-        </div>
-
-        {/* Company Logo and Name */}
-        <div className="d-flex align-items-center gap-2">
-          <div
-            className="bg-primary text-white fw-bold rounded d-flex justify-content-center align-items-center"
-            style={{ width: '30px', height: '30px' }}
-          >
-            IE
-          </div>
-          <div
-            className="text-uppercase fw-semibold small"
-            style={{ fontSize: '0.8rem' }}
-          >
-            Indore Engineering Works
+    <div className="row mb-4">
+      <div className="col-12">
+        <div className="card shadow-sm border-0" style={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: '15px',
+          color: 'white'
+        }}>
+          <div className="card-body p-4">
+            <div className="d-flex justify-content-between align-items-center">
+              <div>
+                <h2 className="mb-2">Hi , {user.name}! </h2>
+                <p className="mb-0 opacity-75">Here's your comprehensive dashboard overview</p>
+                <small className="opacity-75 d-flex align-items-center" style={{ fontSize: '0.75rem' }}>
+                  Last Login: {user.lastlogin ? new Date(user.lastlogin).toLocaleString() : '-'}
+                </small>
+              </div>
+              <div className="d-flex flex-column align-items-center">
+                <div className="d-flex align-items-center gap-3 mb-1">
+                  <FaBell style={{ fontSize: '1.2rem', cursor: 'pointer' }} />
+                  <img
+                    src={user?.profile || '/assets/images/dummyUser.jpeg'}
+                    alt="Profile"
+                    className="rounded-circle"
+                    style={{
+                      width: '42px',
+                      height: '42px',
+                      objectFit: 'cover',
+                      border: '2px solid var(--client-profile-border)',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onClick={() => navigate('/client')}
+                    onMouseEnter={(e) => {
+                      e.target.style.transform = 'scale(1.1)';
+                      e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                      e.target.style.borderColor = 'var(--client-primary-color, #007bff)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.transform = 'scale(1)';
+                      e.target.style.boxShadow = 'none';
+                      e.target.style.borderColor = 'var(--client-profile-border)';
+                    }}
+                  />
+                </div>
+                <small
+                  title={user?.name || 'User'}
+                  style={{
+                    fontSize: '0.7rem',
+                    fontWeight: '500',
+                    maxWidth: '100px',
+                    textAlign: 'center',
+                    // overflow: 'hidden',
+                    // textOverflow: 'ellipsis'
+                    whiteSpace: 'normal',
+                    wordWrap: 'break-word'
+                  }}
+                >
+                  Client ID: {user?.cid || 'User'}
+                </small>
+              </div>
+            </div>
           </div>
         </div>
       </div>

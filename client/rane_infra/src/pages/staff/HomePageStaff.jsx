@@ -17,6 +17,7 @@ import {
 import { Pie, Bar, Line, Doughnut, Radar } from 'react-chartjs-2';
 import { Card, Badge, Table, Button } from 'react-bootstrap';
 import PendingDocumentsTableStaff from '../../component/staff/PendingDocumentsTableStaff';
+import StaffHeader from '../../component/header/StaffHeader';
 
 // Register Chart.js components
 ChartJS.register(
@@ -263,36 +264,7 @@ const HomePageStaff = () => {
   return (
     <div className="container-fluid p-4" style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
       {/* Welcome Header */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="card shadow-sm border-0" style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            borderRadius: '15px',
-            color: 'white'
-          }}>
-            <div className="card-body p-4">
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h2 className="mb-2">Welcome back, {user.name}! 👋</h2>
-                  <p className="mb-0 opacity-75">Here's your comprehensive dashboard overview</p>
-                </div>
-                <div className="text-end">
-                  <h6 className="mb-1">Staff ID: {user?.cid || "Not Assigned"}</h6>
-                  <small className="opacity-75">
-                    <FaCalendarAlt className="me-1" />
-                    {new Date().toLocaleDateString('en-IN', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </small>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <StaffHeader></StaffHeader>
 
       {/* Navigation Tabs */}
       <div className="row mb-4">

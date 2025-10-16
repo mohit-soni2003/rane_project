@@ -9,6 +9,7 @@ import {
   FaCheckCircle, FaTimesCircle
 } from 'react-icons/fa';
 import AdminHeader from '../../component/header/AdminHeader';
+import StaffHeader from "../../component/header/StaffHeader";
 import { getAllPayments } from '../../services/paymentService';
 import dummyuser from "../../assets/images/dummyUser.jpeg"
 import { useNavigate } from 'react-router-dom';
@@ -44,6 +45,17 @@ export default function PaymentRequestListAdmin() {
     fetchPayments();
   }, []);
 
+  const getHeaderComponent = () => {
+    switch (user?.role) {
+      case 'admin':
+        return <AdminHeader />;
+      case 'staff':
+        return <StaffHeader />;
+      default:
+        return <AdminHeader />; // fallback
+    }
+  };
+
   // Filter payments based on search term
   const filteredPayments = payments.filter((p) => {
     const term = searchTerm.toLowerCase();
@@ -66,7 +78,7 @@ export default function PaymentRequestListAdmin() {
 
   return (
     <>
-      <AdminHeader />
+      {getHeaderComponent()}
       <Container
         fluid
         style={{ backgroundColor: 'var(--admin-dashboard-bg-color)', minHeight: '100vh' }}

@@ -3,17 +3,31 @@ import { Form, Button, Row, Col, Card, Spinner } from 'react-bootstrap';
 import { FaFileAlt, FaCloudUploadAlt, FaRegFileAlt, FaBuilding } from 'react-icons/fa';
 import { uploadDocument } from '../../services/dfsService';
 
-import ClientHeader from '../../component/header/ClientHeader';
 import { CLOUDINARY_URL, UPLOAD_PRESET } from '../../store/keyStore';
 import { backend_url } from '../../store/keyStore';
+import ClientHeader from "../../component/header/ClientHeader";
+import StaffHeader from "../../component/header/StaffHeader";
+import { useAuthStore } from '../../store/authStore';
 
 export default function UploadDocumentPage() {
+    const { user } = useAuthStore();
     const [fileTitle, setFileTitle] = useState('');
     const [description, setDescription] = useState('');
     const [file, setFile] = useState(null);
     const [documentType, setDocumentType] = useState('');
     const [department, setDepartment] = useState('');
     const [loading, setLoading] = useState(false); 
+
+    const getHeaderComponent = () => {
+        switch (user?.role) {
+          case 'client':
+            return <ClientHeader />;
+          case 'staff':
+            return <StaffHeader />;
+          default:
+            return <ClientHeader />;
+        }
+      };
 
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
@@ -81,7 +95,7 @@ export default function UploadDocumentPage() {
 
     return (
         <>
-            <ClientHeader />
+            {getHeaderComponent()}
             <div className="container-fluid w-100 p-0 my-3">
                 <Card className="p-3 border-0 w-100" style={{ backgroundColor: 'var(--client-component-bg-color)' }}>
                     <h4 className="mb-4 mt-2" style={{ color: 'var(--client-heading-color)' }}>

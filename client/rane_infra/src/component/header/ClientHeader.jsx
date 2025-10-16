@@ -96,7 +96,6 @@ const ClientHeader = () => {
                 maxWidth: '100px',
                 textAlign: 'center',
                 // overflow: 'hidden',
-                whiteSpace: 'nowrap',
                 // textOverflow: 'ellipsis'
                 whiteSpace: 'normal',
                 wordWrap: 'break-word'

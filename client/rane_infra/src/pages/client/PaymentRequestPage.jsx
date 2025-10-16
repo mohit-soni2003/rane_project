@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Container, Row, Col, Form, Button, Card, Spinner } from 'react-bootstrap';
 import { FaRupeeSign, FaUpload, FaUniversity, FaQrcode, FaFileInvoiceDollar, FaCheck, FaTimes } from 'react-icons/fa';
 import ClientHeader from '../../component/header/ClientHeader';
+import StaffHeader from "../../component/header/StaffHeader";
 import { postPaymentRequest } from '../../services/paymentService'; // adjust the path as needed
 import { CLOUDINARY_URL_IMAGE } from '../../store/keyStore';
 import { CLOUD_NAME } from '../../store/keyStore';
@@ -28,6 +29,17 @@ export default function PaymentRequestPage() {
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
     };
+
+    const getHeaderComponent = () => {
+    switch (user?.role) {
+      case 'client':
+        return <ClientHeader />;
+      case 'staff':
+        return <StaffHeader />;
+      default:
+        return <ClientHeader />; // fallback
+    }
+  };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -100,7 +112,7 @@ export default function PaymentRequestPage() {
 
     return (
         <>
-            <ClientHeader />
+            {getHeaderComponent()}
             <Container fluid className="p-4 my-3 w-100" style={{ backgroundColor: '#fff6f3', minHeight: '100vh' }}>
                 <Row className="mb-3">
                     <Col>

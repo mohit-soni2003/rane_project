@@ -151,7 +151,6 @@ export default function AllDocuments() {
   return (
     <>
       {getHeaderComponent()}
-      <SafeKeyGuard>
       <Container fluid className="py-4 px-0">
         <Card className="p-4 shadow border-0" style={{ backgroundColor: "var(--client-component-bg-color)" }}>
           <div className="d-flex justify-content-between align-items-center mb-4">
@@ -323,7 +322,7 @@ export default function AllDocuments() {
           )}
         </Card>
       </Container>
-      </SafeKeyGuard>
     </>
   );
 }
+

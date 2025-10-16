@@ -9,7 +9,8 @@ import {
   FaEllipsisV, FaRupeeSign
 } from 'react-icons/fa';
 
-import AdminHeader from '../../component/header/AdminHeader';
+import AdminHeader from "../../component/header/AdminHeader";
+import StaffHeader from "../../component/header/StaffHeader";
 import { getAllBills } from '../../services/billServices';
 import { useNavigate } from 'react-router-dom';
 import PayBillModal from '../../component/models/PayBillModel';
@@ -25,6 +26,17 @@ export default function AllBillPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("desc"); // default newest first
   const {user} = useAuthStore();
+
+  const getHeaderComponent = () => {
+    switch (user?.role) {
+      case 'admin':
+        return <AdminHeader />;
+      case 'staff':
+        return <StaffHeader />;
+      default:
+        return <AdminHeader />; // fallback
+    }
+  };
 
   const navigate = useNavigate();
 
@@ -70,7 +82,7 @@ export default function AllBillPage() {
 
   return (
     <>
-      <AdminHeader />
+      {getHeaderComponent()}
       <Container
         fluid
         className="py-4"

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { getMyRequests, deleteDfsFile } from "../../services/dfsService";
 import AdminHeader from "../../component/header/AdminHeader";
+import ClientHeader from "../../component/header/ClientHeader";
+import StaffHeader from "../../component/header/StaffHeader";
 import { Container, Table, Spinner, Button } from "react-bootstrap";
 import { FaEye, FaEllipsisV, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -27,6 +29,19 @@ export default function DfsRequest() {
       alert("❌ " + error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getHeaderComponent = () => {
+    switch (user?.role) {
+      case 'admin':
+        return <AdminHeader />;
+      case 'client':
+        return <ClientHeader />;
+      case 'staff':
+        return <StaffHeader />;
+      default:
+        return <AdminHeader />; // fallback
     }
   };
 
@@ -60,7 +75,7 @@ export default function DfsRequest() {
 
   return (
     <>
-      <AdminHeader />
+      {getHeaderComponent()}
       <Container
         fluid
         className="py-4"
@@ -96,7 +111,7 @@ export default function DfsRequest() {
                   <th>Created At</th>
                   <th>View</th>
                   <th>More</th>
-                  <th>Delete</th>
+                  {user?.role === 'admin' && <th>Delete</th>}
                 </tr>
               </thead>
               <tbody>
@@ -158,14 +173,16 @@ export default function DfsRequest() {
                       </Button>
                     </td>
                     <td className="text-center">
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        title="Delete Document"
-                        onClick={() => handleDeleteClick(doc)}
-                      >
-                        <FaTrash />
-                      </Button>
+                      {user?.role === 'admin' && (
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          title="Delete Document"
+                          onClick={() => handleDeleteClick(doc)}
+                        >
+                          <FaTrash />
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 ))}

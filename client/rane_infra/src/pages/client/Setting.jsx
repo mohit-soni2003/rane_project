@@ -5,7 +5,9 @@ import {
   FaBuilding, FaIdCard, FaUniversity, FaKey,
   FaUpload, FaFilePdf, FaEye, FaEyeSlash
 } from 'react-icons/fa';
-import ClientHeader from '../../component/header/ClientHeader';
+import AdminHeader from "../../component/header/AdminHeader";
+import ClientHeader from "../../component/header/ClientHeader";
+import StaffHeader from "../../component/header/StaffHeader";
 import dummyUser from "../../assets/images/dummyUser.jpeg";
 import { updateUser, changePassword, updateIdProof } from '../../services/userServices';
 import { CLOUDINARY_URL_IMAGE, CLOUDINARY_URL } from '../../store/keyStore';
@@ -22,6 +24,19 @@ export default function SettingPage() {
   const [profileFile, setProfileFile] = useState(null);
 
   const { user } = useAuthStore();
+
+  const getHeaderComponent = () => {
+    switch (user?.role) {
+      case 'admin':
+        return <AdminHeader />;
+      case 'client':
+        return <ClientHeader />;
+      case 'staff':
+        return <StaffHeader />;
+      default:
+        return <AdminHeader />; // fallback
+    }
+  };
 
   const [formData, setFormData] = useState({
     id: user._id,
@@ -173,7 +188,7 @@ const handleDocUpload = async (type, file) => {
 
   return (
     <>
-      <ClientHeader />
+      {getHeaderComponent()}
       <div className="container-fluid mt-4 mb-5 p-4" style={{
         backgroundColor: 'var(--client-component-bg-color)',
         color: 'var(--client-text-color)',

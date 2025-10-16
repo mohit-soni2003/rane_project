@@ -18,6 +18,7 @@ import {
   FaFileInvoice,
 } from 'react-icons/fa';
 import ClientHeader from '../../component/header/ClientHeader';
+import StaffHeader from "../../component/header/StaffHeader";
 import { getPaymentsByUserId } from '../../services/paymentService';
 import { useAuthStore } from '../../store/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -51,6 +52,17 @@ export default function MyPaymentRequestPage() {
 
   const navigate = useNavigate();
 
+  const getHeaderComponent = () => {
+    switch (user?.role) {
+      case 'client':
+        return <ClientHeader />;
+      case 'staff':
+        return <StaffHeader />;
+      default:
+        return <ClientHeader />; // fallback
+    }
+  };
+
   useEffect(() => {
     const fetchPayments = async () => {
       try {
@@ -81,7 +93,7 @@ export default function MyPaymentRequestPage() {
 
   return (
     <>
-      <ClientHeader />
+      {getHeaderComponent()}
       <Container fluid className="py-0 px-0 my-md-3">
         <Card
           className="p-3 shadow border-0"

@@ -15,6 +15,7 @@ import { MdOutlinePendingActions, MdOutlineCheckCircle } from 'react-icons/md';
 import { getBaseSalary, getMonthlySalary } from '../../services/salaryServices';
 import { useAuthStore } from '../../store/authStore';
 import ClientHeader from '../../component/header/ClientHeader';
+import StaffHeader from "../../component/header/StaffHeader";
 
 export default function SalaryPage() {
     const { user } = useAuthStore();
@@ -22,6 +23,17 @@ export default function SalaryPage() {
     const [monthlySalary, setMonthlySalary] = useState(null);
     const [loading, setLoading] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+
+    const getHeaderComponent = () => {
+    switch (user?.role) {
+      case 'client':
+        return <ClientHeader />;
+      case 'staff':
+        return <StaffHeader />;
+      default:
+        return <ClientHeader />; // fallback
+    }
+  };
 
     const fetchSalaryData = async (month) => {
         setLoading(true);
@@ -68,7 +80,7 @@ export default function SalaryPage() {
 
     return (
         <>
-            <ClientHeader />
+            {getHeaderComponent()}
             <Container fluid className="py-4 mt-3" style={{ backgroundColor: 'var(--client-component-bg-color)' }}>
                 <Card className="p-4 shadow-sm border-0 mb-4" style={{ backgroundColor: 'var(--client-dashboard-bg-color)' }}>
                     <Row className="align-items-center">
