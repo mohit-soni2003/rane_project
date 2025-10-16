@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { FaBars } from 'react-icons/fa';
+import { FaBars, FaBell } from 'react-icons/fa';
 import { Outlet } from 'react-router-dom';
 import StaffSidebar from '../component/sidebar/StaffSidebar';
+import { useAuthStore } from '../store/authStore';
 
 const StaffLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const { user } = useAuthStore();
 
   const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
 
@@ -42,14 +44,88 @@ const StaffLayout = () => {
       )}
 
       {/* Mobile Topbar */}
-      <div className="d-md-none p-2 bg-light border-bottom">
+      <div
+        className="d-md-none px-3 py-2  d-flex justify-content-between align-items-center"
+        style={{
+          backgroundColor: "var(--client-dashboard-bg-color)",
+          color: "var(--client-text-color)",
+        }}
+      >
+        {/* Left: Sidebar Toggle */}
         <button
-          className="btn"
-          style={{ fontWeight: 'bold' }}
+          className="btn p-0 m-0 d-flex align-items-center justify-content-center"
           onClick={toggleSidebar}
+          aria-label="Toggle sidebar menu"
+          aria-expanded={isSidebarOpen}
+          style={{
+            color: "#ffffff",
+            fontWeight: "normal",
+            fontSize: "1.2rem",
+            border: "1px solid rgba(0,0,0,0.10)",
+            borderRadius: "8px",
+            width: "36px",
+            height: "36px",
+            lineHeight: "0",
+            backgroundColor: "rgba(0,0,0,0.06)",
+            transition: "color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease",
+            cursor: "pointer"
+          }}
+          onMouseEnter={(e) => {
+            const el = e.currentTarget;
+            el.style.color = "rgba(255, 255, 255, 0.6)";
+            el.style.backgroundColor = "rgba(0,0,0,0.10)";
+            el.style.borderColor = "rgba(0,0,0,0.18)";
+          }}
+          onMouseLeave={(e) => {
+            const el = e.currentTarget;
+            el.style.color = "#ffffff";
+            el.style.backgroundColor = "rgba(0,0,0,0.06)";
+            el.style.borderColor = "rgba(0,0,0,0.10)";
+          }}
+          onPointerDown={(e) => {
+            const el = e.currentTarget;
+            el.style.color = "rgba(255, 255, 255, 0.4)";
+            el.style.backgroundColor = "rgba(0,0,0,0.12)";
+            el.style.borderColor = "rgba(0,0,0,0.22)";
+          }}
+          onPointerUp={(e) => {
+            const el = e.currentTarget;
+            el.style.color = "#ffffff";
+            el.style.backgroundColor = "rgba(0,0,0,0.06)";
+            el.style.borderColor = "rgba(0,0,0,0.10)";
+          }}
+          onPointerCancel={(e) => {
+            const el = e.currentTarget;
+            el.style.color = "#ffffff";
+            el.style.backgroundColor = "rgba(0,0,0,0.06)";
+            el.style.borderColor = "rgba(0,0,0,0.10)";
+          }}
         >
-          <FaBars />
+          <FaBars size={20} />
         </button>
+
+        {/* Center: Title */}
+        <span className="fw-semibold text-uppercase small">RS-WMS</span>
+
+        {/* Right: Bell + Profile */}
+        <div className="d-flex align-items-center gap-3">
+          {/* Notification Bell */}
+          <div className="position-relative">
+            <FaBell size={20} style={{ color: "var(--client-text-color)" }} />
+            <span
+              className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"
+              style={{ width: "10px", height: "10px" }}
+            ></span>
+          </div>
+
+          {/* Profile Image */}
+          <img
+            src={user?.profile || '/assets/images/dummyUser.jpeg'}
+            alt="Profile"
+            className="rounded-circle"
+            style={{ width: "32px", height: "32px", objectFit: "cover" }}
+          />
+        </div>
       </div>
 
       {/* Page Content */}

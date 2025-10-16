@@ -6,7 +6,7 @@ const StaffHeader = () => {
   const { user } = useAuthStore();
 
   return (
-    <div className="row mb-4">
+    <div className="row mb-4 d-none d-md-block">
       <div className="col-12">
         <div className="card shadow-sm border-0" style={{
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',

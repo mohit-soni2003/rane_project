@@ -15,7 +15,7 @@ const ClientHeader = () => {
   }, []);
 
   return (
-    <div className="w-100 mb-2">
+    <div className="w-100 mb-2 d-none d-md-block">
       <div
         className="card shadow-sm border-0"
         style={{
