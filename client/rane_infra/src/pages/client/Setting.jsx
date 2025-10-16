@@ -44,6 +44,11 @@ export default function SettingPage() {
     confirmPassword: "",
   });
 
+  const [safePasswords, setSafePasswords] = useState({
+    oldSafeKey: "",
+    newSafeKey: "",
+  });
+
   const [documents, setDocuments] = useState({
     aadhar: { number: user?.idproof?.aadhar?.number || "", link: user?.idproof?.aadhar?.link || "" },
     pan: { number: user?.idproof?.pan?.number || "", link: user?.idproof?.pan?.link || "" },
@@ -482,6 +487,51 @@ const handleDocUpload = async (type, file) => {
               >
                 Update Password
               </button>
+
+              {/* Safe Password Section - Admin Only */}
+              {user.role === 'admin' && (
+                <>
+                  <hr className="my-4" />
+                  <h6 className="mb-3 fw-semibold text-danger"><FaKey className="me-2" /> Safe Password</h6>
+                  
+                  {/* Old Safe Key */}
+                  <div className="mb-3">
+                    <label className="form-label">Old Safe Key</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      value={safePasswords.oldSafeKey}
+                      onChange={(e) =>
+                        setSafePasswords({ ...safePasswords, oldSafeKey: e.target.value })
+                      }
+                      placeholder="Enter current safe key"
+                    />
+                  </div>
+
+                  {/* New Safe Key */}
+                  <div className="mb-3">
+                    <label className="form-label">New Safe Key</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      value={safePasswords.newSafeKey}
+                      onChange={(e) =>
+                        setSafePasswords({ ...safePasswords, newSafeKey: e.target.value })
+                      }
+                      placeholder="Enter new safe key"
+                    />
+                  </div>
+
+                  {/* Update Safe Key Button */}
+                  <button
+                    className="btn mt-2"
+                    style={{ backgroundColor: 'var(--client-btn-bg)', color: 'var(--client-btn-text)' }}
+                    onClick={() => alert('Safe key update functionality will be implemented later')}
+                  >
+                    Update Safe Key
+                  </button>
+                </>
+              )}
 
             </div>
           </div>
