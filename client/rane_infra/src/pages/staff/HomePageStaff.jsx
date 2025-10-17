@@ -58,8 +58,8 @@ const HomePageStaff = () => {
     monthlyData: [],
     statusData: {},
     paymentTrends: [],
-    totalRegularDocs: 0, 
-    totalDfsDocs: 0      
+    totalRegularDocs: 0,
+    totalDfsDocs: 0
   });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
@@ -86,7 +86,7 @@ const HomePageStaff = () => {
               dfsStatuses: {}
             },
             paymentTrends: data.monthlyData || [],
-            totalRegularDocs: data.totalRegularDocs || 0, 
+            totalRegularDocs: data.totalRegularDocs || 0,
             totalDfsDocs: data.totalDfsDocs || 0
           });
         } else {
@@ -118,11 +118,11 @@ const HomePageStaff = () => {
 
     fetchStats();
   }, [user._id]);
-  
+
   const getStatusBadgeForStaff = (status) => {
     if (!status) return <Badge bg="secondary">Unknown</Badge>;
     const lowerCaseStatus = status.toLowerCase();
-    
+
     if (lowerCaseStatus.includes('approved') || lowerCaseStatus.includes('paid')) {
       return <Badge bg="success">{status}</Badge>;
     }
@@ -144,43 +144,43 @@ const HomePageStaff = () => {
   const renderInfoCard = (tab) => {
     let title = "RS-WMS Staff Portal";
     let content = (
-        <p className="text-muted mb-0">
-            This is your central hub for managing client activities, processing documents, and overseeing project workflows. Use the tabs above to navigate between a general overview, detailed analytics, and report generation.
-        </p>
+      <p className="text-muted mb-0">
+        This is your central hub for managing client activities, processing documents, and overseeing project workflows. Use the tabs above to navigate between a general overview, detailed analytics, and report generation.
+      </p>
     );
 
     if (tab === 'analytics') {
-        title = "Understanding System Analytics";
-        content = (
-            <p className="text-muted mb-0">
-                This section provides a high-level view of system-wide data. Analyze bill and payment statuses across all clients, track monthly activity volumes, and monitor overall performance to identify trends and potential bottlenecks.
-            </p>
-        );
+      title = "Understanding System Analytics";
+      content = (
+        <p className="text-muted mb-0">
+          This section provides a high-level view of system-wide data. Analyze bill and payment statuses across all clients, track monthly activity volumes, and monitor overall performance to identify trends and potential bottlenecks.
+        </p>
+      );
     } else if (tab === 'reports') {
-        title = "Generating Reports";
-        content = (
-            <p className="text-muted mb-0">
-                Use this section to view and export detailed reports. The payment trends view provides a month-by-month summary of financial activities, helping you track progress and manage resources effectively.
-            </p>
-        );
+      title = "Generating Reports";
+      content = (
+        <p className="text-muted mb-0">
+          Use this section to view and export detailed reports. The payment trends view provides a month-by-month summary of financial activities, helping you track progress and manage resources effectively.
+        </p>
+      );
     }
 
     return (
-        <div className="row mt-4">
-            <div className="col-12">
-                <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
-                    <Card.Body className="p-4">
-                        <div className="d-flex align-items-center mb-3">
-                            <div className="rounded-circle p-2 me-3" style={{ backgroundColor: '#667eea' }}>
-                                <FaInfoCircle color="white" size={16} />
-                            </div>
-                            <h6 className="card-title mb-0 text-dark fw-bold">{title}</h6>
-                        </div>
-                        {content}
-                    </Card.Body>
-                </Card>
-            </div>
+      <div className="row mt-4">
+        <div className="col-12">
+          <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
+            <Card.Body className="p-4">
+              <div className="d-flex align-items-center mb-3">
+                <div className="rounded-circle p-2 me-3" style={{ backgroundColor: '#667eea' }}>
+                  <FaInfoCircle color="white" size={16} />
+                </div>
+                <h6 className="card-title mb-0 text-dark fw-bold">{title}</h6>
+              </div>
+              {content}
+            </Card.Body>
+          </Card>
         </div>
+      </div>
     );
   };
 
@@ -191,8 +191,8 @@ const HomePageStaff = () => {
         borderRadius: '15px',
         transition: 'transform 0.2s ease-in-out'
       }}
-      onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-      onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
       >
         <div className="card-body d-flex flex-column justify-content-center align-items-center p-4">
           <div className="rounded-circle d-flex justify-content-center align-items-center mb-3"
@@ -233,20 +233,20 @@ const HomePageStaff = () => {
 
     const lowerCaseDataObject = {};
     for (const key in dataObject) {
-        lowerCaseDataObject[key.toLowerCase().replace(/ /g, '-')] = dataObject[key];
+      lowerCaseDataObject[key.toLowerCase().replace(/ /g, '-')] = dataObject[key];
     }
 
     orderedKeys.forEach(key => {
-        if (lowerCaseDataObject[key] !== undefined) {
-            labels.push(key.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())); // Capitalize for display
-            data.push(lowerCaseDataObject[key]);
-            colors.push(statusColors[key] || '#6c757d');
-        }
+      if (lowerCaseDataObject[key] !== undefined) {
+        labels.push(key.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())); // Capitalize for display
+        data.push(lowerCaseDataObject[key]);
+        colors.push(statusColors[key] || '#6c757d');
+      }
     });
 
     return {
-        labels,
-        datasets: [{ data, backgroundColor: colors }]
+      labels,
+      datasets: [{ data, backgroundColor: colors }]
     };
   };
 
@@ -254,11 +254,11 @@ const HomePageStaff = () => {
   const paymentChartData = prepareChartData(stats.statusData?.paymentStatuses, ['paid', 'pending', 'rejected']);
   const dfsChartData = prepareChartData(stats.statusData?.dfsStatuses, ['approved', 'in-review', 'pending', 'rejected']);
   const docTypeChartData = {
-      labels: ['Regular', 'DFS'],
-      datasets: [{
-          data: [stats.totalRegularDocs, stats.totalDfsDocs],
-          backgroundColor: [statusColors['regular'], statusColors['dfs']]
-      }]
+    labels: ['Regular', 'DFS'],
+    datasets: [{
+      data: [stats.totalRegularDocs, stats.totalDfsDocs],
+      backgroundColor: [statusColors['regular'], statusColors['dfs']]
+    }]
   };
 
   return (
@@ -374,216 +374,225 @@ const HomePageStaff = () => {
             </div>
           </div>
 
-          {/* Recent Activity */}
-          <div className="row">
-            <div className="col-12">
-              <div className="card shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
-                <div className="card-header border-0 bg-white" style={{ borderRadius: '15px 15px 0 0' }}>
-                  <h6 className="card-title mb-0 text-dark fw-bold">
-                    <FaClock className="me-2 text-primary" />
-                    Recent Activity
-                  </h6>
-                </div>
-                <div className="card-body">
-                  {stats.recentActivity.length > 0 ? (
-                    <div className="list-group list-group-flush">
-                      {stats.recentActivity.map((activity, index) => (
-                        <div key={index} className="list-group-item border-0 px-0 py-3">
-                          <div className="d-flex align-items-center">
-                            <div className={`rounded-circle p-3 me-3 ${
-                              activity.type === 'bill' ? 'bg-success' :
-                              activity.type === 'payment' ? 'bg-warning' : 'bg-info'
-                            }`}>
-                              {activity.type === 'bill' && <FaFileInvoice className="text-white" />}
-                              {activity.type === 'payment' && <FaRupeeSign className="text-white" />}
-                              {activity.type === 'dfs' && <FaFileAlt className="text-white" />}
-                            </div>
-                            <div className="flex-grow-1">
-                              <p className="mb-1 text-dark fw-semibold">{activity.title || 'Activity'}</p>
-                              <div className="d-flex justify-content-between align-items-center">
-                                <small className="text-muted">
-                                  {activity.time ? (
-                                    <>
-                                      {new Date(activity.time).toLocaleDateString('en-IN')} at {new Date(activity.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                                    </>
-                                  ) : (
-                                    'Date not available'
-                                  )}
-                                </small>
-                                {activity.description && getStatusBadgeForStaff(activity.description)}
-                              </div>
-                              <small className="text-muted">by {activity.user || 'System'}</small>
-                            </div>
-                          </div>
+          {/* Recent Activity (last 7 days) */}
+              {(() => {
+                const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+                const filteredActivities = (stats.recentActivity || [])
+                  .filter(activity => {
+                    if (!activity.time) return false;
+                    const t = new Date(activity.time).getTime();
+                    return !isNaN(t) && t >= sevenDaysAgo;
+                  })
+                  .sort((a, b) => new Date(b.time) - new Date(a.time)); // newest first
+    
+                return (
+                  <div className="row">
+                    <div className="col-12">
+                      <div className="card shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
+                        <div className="card-header border-0 bg-white" style={{ borderRadius: '15px 15px 0 0' }}>
+                          <h6 className="card-title mb-0 text-dark fw-bold">
+                            <FaClock className="me-2 text-primary" />
+                            Recent Activity (Last 7 days)
+                          </h6>
                         </div>
-                      ))}
+                        <div className="card-body">
+                          {filteredActivities.length > 0 ? (
+                            <div className="list-group list-group-flush">
+                              {filteredActivities.slice(0, 5).map((activity, index) => (
+                                <div key={index} className="list-group-item border-0 px-0 py-3">
+                                  <div className="d-flex align-items-center">
+                                    <div className={`rounded-circle p-3 me-3 ${activity.type === 'bill' ? 'bg-success' :
+                                      activity.type === 'payment' ? 'bg-warning' : 'bg-info'
+                                      }`}>
+                                      {activity.type === 'bill' && <FaFileInvoice className="text-white" />}
+                                      {activity.type === 'payment' && <FaRupeeSign className="text-white" />}
+                                      {activity.type === 'dfs' && <FaFileAlt className="text-white" />}
+                                    </div>
+                                    <div className="flex-grow-1">
+                                      <p className="mb-1 text-dark fw-semibold">{activity.title || 'Activity'}</p>
+                                      <div className="d-flex justify-content-between align-items-center">
+                                        <small className="text-muted">
+                                          {activity.time ? (
+                                            <>
+                                              {new Date(activity.time).toLocaleDateString('en-IN')} at {new Date(activity.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                                            </>
+                                          ) : (
+                                            'Date not available'
+                                          )}
+                                        </small>
+                                        {activity.description && getStatusBadgeForStaff(activity.description)}
+                                      </div>
+                                      <small className="text-muted">by {activity.user || 'System'}</small>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-5">
+                              <FaClock size={48} className="text-muted mb-3" />
+                              <p className="text-muted mb-0">No recent activity in the last 7 days</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="text-center py-5">
-                      <FaClock size={48} className="text-muted mb-3" />
-                      <p className="text-muted mb-0">No recent activity</p>
+                  </div>
+                );
+              })()}
+            </>
+          )}
+              {activeTab === 'analytics' && (
+            <div className="row">
+              <div className="col-lg-12 mb-4">
+                <Card className="shadow-sm border-0" style={{ borderRadius: '15px' }}>
+                  <Card.Header className="border-0 bg-white"><h6 className="mb-0 fw-bold"><FaChartLine className="me-2 text-primary" />Monthly Activity Trends</h6></Card.Header>
+                  <Card.Body>
+                    <div style={{ height: '300px' }}>
+                      <Line data={{
+                        labels: stats.monthlyData?.map(item => item.month) || [],
+                        datasets: [
+                          {
+                            label: 'Bills Processed',
+                            data: stats.monthlyData?.map(item => item.bills || 0) || [],
+                            borderColor: '#22c55e',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                          },
+                          {
+                            label: 'Payments Processed',
+                            data: stats.monthlyData?.map(item => item.payments || 0) || [],
+                            borderColor: '#7e5bef',
+                            backgroundColor: 'rgba(126, 91, 239, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                          }
+                        ]
+                      }} options={{ responsive: true, maintainAspectRatio: false }} />
                     </div>
-                  )}
-                </div>
+                  </Card.Body>
+                </Card>
+              </div>
+              <div className="col-md-6 col-xl-3 mb-4">
+                <Card className="shadow-sm border-0 h-100" style={{ borderRadius: '15px' }}>
+                  <Card.Header className="border-0 bg-white"><h6 className="mb-0 fw-bold"><FaFileInvoice className="me-2 text-success" />Bill Status</h6></Card.Header>
+                  <Card.Body className="d-flex justify-content-center align-items-center">
+                    <div style={{ width: '220px', height: '220px' }}>
+                      <Doughnut data={{
+                        labels: Object.keys(stats.statusData?.billStatuses || {}),
+                        datasets: [{
+                          data: Object.values(stats.statusData?.billStatuses || {}),
+                          backgroundColor: Object.keys(stats.statusData?.billStatuses || {}).map(key => statusColors[key.toLowerCase()] || '#6c757d')
+                        }]
+                      }} options={{ responsive: true, maintainAspectRatio: false }} />
+                    </div>
+                  </Card.Body>
+                </Card>
+              </div>
+              <div className="col-md-6 col-xl-3 mb-4">
+                <Card className="shadow-sm border-0 h-100" style={{ borderRadius: '15px' }}>
+                  <Card.Header className="border-0 bg-white"><h6 className="mb-0 fw-bold"><FaMoneyBill className="me-2 text-info" />Payment Status</h6></Card.Header>
+                  <Card.Body className="d-flex justify-content-center align-items-center">
+                    <div style={{ width: '220px', height: '220px' }}>
+                      <Doughnut data={{
+                        labels: Object.keys(stats.statusData?.paymentStatuses || {}),
+                        datasets: [{
+                          data: Object.values(stats.statusData?.paymentStatuses || {}),
+                          backgroundColor: Object.keys(stats.statusData?.paymentStatuses || {}).map(key => statusColors[key.toLowerCase()] || '#6c757d')
+                        }]
+                      }} options={{ responsive: true, maintainAspectRatio: false }} />
+                    </div>
+                  </Card.Body>
+                </Card>
+              </div>
+              <div className="col-md-6 col-xl-3 mb-4">
+                <Card className="shadow-sm border-0 h-100" style={{ borderRadius: '15px' }}>
+                  <Card.Header className="border-0 bg-white"><h6 className="mb-0 fw-bold"><FaFileAlt className="me-2 text-warning" />DFS Status</h6></Card.Header>
+                  <Card.Body className="d-flex justify-content-center align-items-center">
+                    <div style={{ width: '220px', height: '220px' }}>
+                      <Doughnut data={{
+                        labels: Object.keys(stats.statusData?.dfsStatuses || {}),
+                        datasets: [{
+                          data: Object.values(stats.statusData?.dfsStatuses || {}),
+                          backgroundColor: Object.keys(stats.statusData?.dfsStatuses || {}).map(key => statusColors[key.toLowerCase().replace(' ', '-')] || '#6c757d')
+                        }]
+                      }} options={{ responsive: true, maintainAspectRatio: false }} />
+                    </div>
+                  </Card.Body>
+                </Card>
+              </div>
+              <div className="col-md-6 col-xl-3 mb-4">
+                <Card className="shadow-sm border-0 h-100" style={{ borderRadius: '15px' }}>
+                  <Card.Header className="border-0 bg-white"><h6 className="mb-0 fw-bold"><FaTasks className="me-2 text-secondary" />Document Types</h6></Card.Header>
+                  <Card.Body className="d-flex justify-content-center align-items-center">
+                    <div style={{ width: '220px', height: '220px' }}>
+                      <Doughnut data={{
+                        labels: ['Regular', 'DFS'],
+                        datasets: [{
+                          data: [stats.totalRegularDocs, stats.totalDfsDocs],
+                          backgroundColor: [statusColors['regular'], statusColors['dfs']]
+                        }]
+                      }} options={{ responsive: true, maintainAspectRatio: false }} />
+                    </div>
+                  </Card.Body>
+                </Card>
               </div>
             </div>
-          </div>
-
-        </>
-      )}
-
-      {/* Analytics Tab - MODIFIED */}
-      {activeTab === 'analytics' && (
-        <div className="row">
-            <div className="col-lg-12 mb-4">
-                <Card className="shadow-sm border-0" style={{ borderRadius: '15px' }}>
-                    <Card.Header className="border-0 bg-white"><h6 className="mb-0 fw-bold"><FaChartLine className="me-2 text-primary" />Monthly Activity Trends</h6></Card.Header>
-                    <Card.Body>
-                        <div style={{ height: '300px' }}>
-                            <Line data={{
-                                labels: stats.monthlyData?.map(item => item.month) || [],
-                                datasets: [
-                                {
-                                    label: 'Bills Processed',
-                                    data: stats.monthlyData?.map(item => item.bills || 0) || [],
-                                    borderColor: '#22c55e',
-                                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                                    fill: true,
-                                    tension: 0.4,
-                                },
-                                {
-                                    label: 'Payments Processed',
-                                    data: stats.monthlyData?.map(item => item.payments || 0) || [],
-                                    borderColor: '#7e5bef',
-                                    backgroundColor: 'rgba(126, 91, 239, 0.1)',
-                                    fill: true,
-                                    tension: 0.4,
-                                }
-                                ]
-                            }} options={{ responsive: true, maintainAspectRatio: false }} />
-                        </div>
-                    </Card.Body>
-                </Card>
-            </div>
-            <div className="col-md-6 col-xl-3 mb-4">
-                <Card className="shadow-sm border-0 h-100" style={{ borderRadius: '15px' }}>
-                    <Card.Header className="border-0 bg-white"><h6 className="mb-0 fw-bold"><FaFileInvoice className="me-2 text-success" />Bill Status</h6></Card.Header>
-                    <Card.Body className="d-flex justify-content-center align-items-center">
-                        <div style={{ width: '220px', height: '220px' }}>
-                            <Doughnut data={{
-                                labels: Object.keys(stats.statusData?.billStatuses || {}),
-                                datasets: [{
-                                    data: Object.values(stats.statusData?.billStatuses || {}),
-                                    backgroundColor: Object.keys(stats.statusData?.billStatuses || {}).map(key => statusColors[key.toLowerCase()] || '#6c757d')
-                                }]
-                            }} options={{ responsive: true, maintainAspectRatio: false }} />
-                        </div>
-                    </Card.Body>
-                </Card>
-            </div>
-            <div className="col-md-6 col-xl-3 mb-4">
-                <Card className="shadow-sm border-0 h-100" style={{ borderRadius: '15px' }}>
-                    <Card.Header className="border-0 bg-white"><h6 className="mb-0 fw-bold"><FaMoneyBill className="me-2 text-info" />Payment Status</h6></Card.Header>
-                    <Card.Body className="d-flex justify-content-center align-items-center">
-                        <div style={{ width: '220px', height: '220px' }}>
-                            <Doughnut data={{
-                                labels: Object.keys(stats.statusData?.paymentStatuses || {}),
-                                datasets: [{
-                                    data: Object.values(stats.statusData?.paymentStatuses || {}),
-                                    backgroundColor: Object.keys(stats.statusData?.paymentStatuses || {}).map(key => statusColors[key.toLowerCase()] || '#6c757d')
-                                }]
-                            }} options={{ responsive: true, maintainAspectRatio: false }} />
-                        </div>
-                    </Card.Body>
-                </Card>
-            </div>
-            <div className="col-md-6 col-xl-3 mb-4">
-                <Card className="shadow-sm border-0 h-100" style={{ borderRadius: '15px' }}>
-                    <Card.Header className="border-0 bg-white"><h6 className="mb-0 fw-bold"><FaFileAlt className="me-2 text-warning" />DFS Status</h6></Card.Header>
-                    <Card.Body className="d-flex justify-content-center align-items-center">
-                        <div style={{ width: '220px', height: '220px' }}>
-                            <Doughnut data={{
-                                labels: Object.keys(stats.statusData?.dfsStatuses || {}),
-                                datasets: [{
-                                    data: Object.values(stats.statusData?.dfsStatuses || {}),
-                                    backgroundColor: Object.keys(stats.statusData?.dfsStatuses || {}).map(key => statusColors[key.toLowerCase().replace(' ', '-')] || '#6c757d')
-                                }]
-                            }} options={{ responsive: true, maintainAspectRatio: false }} />
-                        </div>
-                    </Card.Body>
-                </Card>
-            </div>
-            <div className="col-md-6 col-xl-3 mb-4">
-                <Card className="shadow-sm border-0 h-100" style={{ borderRadius: '15px' }}>
-                    <Card.Header className="border-0 bg-white"><h6 className="mb-0 fw-bold"><FaTasks className="me-2 text-secondary" />Document Types</h6></Card.Header>
-                    <Card.Body className="d-flex justify-content-center align-items-center">
-                        <div style={{ width: '220px', height: '220px' }}>
-                            <Doughnut data={{
-                                labels: ['Regular', 'DFS'],
-                                datasets: [{
-                                    data: [stats.totalRegularDocs, stats.totalDfsDocs],
-                                    backgroundColor: [statusColors['regular'], statusColors['dfs']]
-                                }]
-                            }} options={{ responsive: true, maintainAspectRatio: false }} />
-                        </div>
-                    </Card.Body>
-                </Card>
-            </div>
-        </div>
-      )}
+          )}
 
 
-      {/* Reports Tab */}
-      {activeTab === 'reports' && (
-        <div className="row">
-          <div className="col-12">
-            <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
-              <Card.Header className="border-0 bg-white d-flex justify-content-between align-items-center">
-                <h6 className="card-title mb-0 text-dark fw-bold">
-                  <FaChartBar className="me-2 text-primary" />
-                  Monthly Activity Report
-                </h6>
-                <Button variant="outline-primary" size="sm">
-                  <FaFileExport className="me-1" /> Export Report
-                </Button>
-              </Card.Header>
-              <Card.Body>
-                <Table responsive striped hover>
-                  <thead className="table-light">
-                    <tr>
-                      <th>Month</th>
-                      <th>Bills Processed</th>
-                      <th>Payments Processed</th>
-                      <th>Documents Handled</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stats.monthlyData.length > 0 ? (
-                      stats.monthlyData.map((trend, index) => (
-                        <tr key={index}>
-                          <td><strong>{trend.month}</strong></td>
-                          <td>{trend.bills}</td>
-                          <td>{trend.payments}</td>
-                          <td>{trend.documents}</td>
+          {/* Reports Tab */}
+          {activeTab === 'reports' && (
+            <div className="row">
+              <div className="col-12">
+                <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
+                  <Card.Header className="border-0 bg-white d-flex justify-content-between align-items-center">
+                    <h6 className="card-title mb-0 text-dark fw-bold">
+                      <FaChartBar className="me-2 text-primary" />
+                      Monthly Activity Report
+                    </h6>
+                    <Button variant="outline-primary" size="sm">
+                      <FaFileExport className="me-1" /> Export Report
+                    </Button>
+                  </Card.Header>
+                  <Card.Body>
+                    <Table responsive striped hover>
+                      <thead className="table-light">
+                        <tr>
+                          <th>Month</th>
+                          <th>Bills Processed</th>
+                          <th>Payments Processed</th>
+                          <th>Documents Handled</th>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="4" className="text-center text-muted py-4">No monthly data available to generate a report.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </Table>
-              </Card.Body>
-            </Card>
-          </div>
+                      </thead>
+                      <tbody>
+                        {stats.monthlyData.length > 0 ? (
+                          stats.monthlyData.map((trend, index) => (
+                            <tr key={index}>
+                              <td><strong>{trend.month}</strong></td>
+                              <td>{trend.bills}</td>
+                              <td>{trend.payments}</td>
+                              <td>{trend.documents}</td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="4" className="text-center text-muted py-4">No monthly data available to generate a report.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </Table>
+                  </Card.Body>
+                </Card>
+              </div>
+            </div>
+          )}
+
+          {renderInfoCard(activeTab)}
         </div>
-      )}
-      
-      {renderInfoCard(activeTab)}
-    </div>
-  );
+      );
 };
 
-export default HomePageStaff;
+      export default HomePageStaff;
 
