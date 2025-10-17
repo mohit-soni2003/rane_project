@@ -105,3 +105,27 @@ export const getMyUploadedDocuments = async () => {
     throw error;
   }
 };
+
+// Fetch ALL documents in the system (admin endpoint)
+export const getAllDocuments = async () => {
+  try {
+    const response = await fetch(`${backend_url}/all-documents`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // ✅ Needed to send cookies
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to fetch all documents.');
+    }
+
+    return data.documents;
+  } catch (error) {
+    console.error('Error in getAllDocuments:', error);
+    throw error;
+  }
+};
