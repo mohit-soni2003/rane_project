@@ -16,7 +16,7 @@ export default function PaymentRequestPage() {
     const [paymentType, setPaymentType] = useState('IP');
     const [paymentMode, setPaymentMode] = useState('Bank');
     const [file, setFile] = useState(null);
-    const [tender, setTender] = useState('tender1');
+    const [tender, setTender] = useState('RTM-2024-25-69');
     const [amount, setAmount] = useState('');
     const [description, setDescription] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -77,7 +77,7 @@ export default function PaymentRequestPage() {
             setFile(null);
             setAmount('');
             setDescription('');
-            setTender('tender1');
+            setTender('RTM-2024-25-69');
             setPaymentType('IP');
             setPaymentMode('Bank');
 
@@ -146,6 +146,9 @@ export default function PaymentRequestPage() {
                                 <Form.Label className="fw-semibold text-brown">Select Tender</Form.Label>
                                 <Form.Select required value={tender} onChange={(e) => setTender(e.target.value)}>
                                     <option value="RTM-2024-25-69">RTM-2024-25-69</option>
+                                    <option value="RTM-2024-25-70">RTM-2024-25-70</option>
+                                    <option value="RTM-2024-25-71">RTM-2024-25-71</option>
+                                    <option value="RTM-2024-25-72">RTM-2024-25-72</option>
                                 </Form.Select>
 
                             </Col>
