@@ -32,18 +32,18 @@ ChartJS.register(
   RadialLinearScale
 );
 
-// Define a common color scheme for statuses
+// Define a common color scheme for statuses using actual colors for Chart.js compatibility
 const statusColors = {
-  'approved': '#198754', // Green
-  'paid': '#198754',     // Green
-  'pending': '#ffc107',   // Yellow
-  'rejected': '#dc3545', // Red
-  'overdue': '#dc3545',  // Red
-  'in-review': '#0dcaf0',// Cyan/Info
-  'processing': '#0d6efd',// Blue
-  'sanctioned': '#0d6efd',// Blue
-  'regular': '#8b5cf6',   // Purple
-  'dfs': '#64748b'       // Slate
+  'approved': '#198754',
+  'paid': '#198754',
+  'pending': '#ffc107',
+  'rejected': '#dc3545',
+  'overdue': '#dc3545',
+  'in-review': '#0dcaf0',
+  'processing': '#0d6efd',
+  'sanctioned': '#0d6efd',
+  'regular': '#8b5cf6',
+  'dfs': '#64748b'
 };
 
 const HomePageStaff = () => {
@@ -168,10 +168,10 @@ const HomePageStaff = () => {
     return (
       <div className="row mt-4">
         <div className="col-12">
-          <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
+          <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: 'var(--staff-card-bg)' }}>
             <Card.Body className="p-4">
               <div className="d-flex align-items-center mb-3">
-                <div className="rounded-circle p-2 me-3" style={{ backgroundColor: '#667eea' }}>
+                <div className="rounded-circle p-2 me-3" style={{ backgroundColor: 'var(--staff-info-icon-bg)' }}>
                   <FaInfoCircle color="white" size={16} />
                 </div>
                 <h6 className="card-title mb-0 text-dark fw-bold">{title}</h6>
@@ -262,7 +262,7 @@ const HomePageStaff = () => {
   };
 
   return (
-    <div className="container-fluid p-4" style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
+    <div className="container-fluid p-4" style={{ backgroundColor: 'var(--staff-dashboard-bg)', minHeight: '100vh' }}>
       {/* Welcome Header */}
       <StaffHeader></StaffHeader>
 
@@ -305,32 +305,32 @@ const HomePageStaff = () => {
               icon={<FaFileInvoice />}
               title="Total Bills"
               value={stats.totalBills}
-              color="#4CAF50"
-              bgColor="#f8fff8"
+              color="var(--staff-stat-card-color-1)"
+              bgColor="var(--staff-stat-card-bg-1)"
               subtitle="All bills in system"
             />
             <StatCard
               icon={<FaUserTie />}
               title="Total Clients"
               value={stats.totalClients}
-              color="#2196F3"
-              bgColor="#f0f8ff"
+              color="var(--staff-stat-card-color-2)"
+              bgColor="var(--staff-stat-card-bg-2)"
               subtitle="Registered clients"
             />
             <StatCard
               icon={<FaClock />}
               title="Pending Payments"
               value={stats.pendingPayments}
-              color="#FF9800"
-              bgColor="#fff8f0"
+              color="var(--staff-stat-card-color-3)"
+              bgColor="var(--staff-stat-card-bg-3)"
               subtitle="Awaiting processing"
             />
             <StatCard
               icon={<FaFileAlt />}
               title="Total Documents"
               value={stats.totalDocuments}
-              color="#9C27B0"
-              bgColor="#faf0ff"
+              color="var(--staff-stat-card-color-4)"
+              bgColor="var(--staff-stat-card-bg-4)"
               subtitle="Uploaded documents"
             />
           </div>
@@ -338,7 +338,7 @@ const HomePageStaff = () => {
           {/* Additional Stats */}
           <div className="row mb-4">
             <div className="col-md-6">
-              <div className="card shadow-sm border-0 h-100" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
+              <div className="card shadow-sm border-0 h-100" style={{ borderRadius: '15px', backgroundColor: 'var(--staff-card-bg)' }}>
                 <div className="card-body p-4">
                   <div className="d-flex align-items-center mb-3">
                     <FaExclamationTriangle className="text-warning me-3" size={24} />
@@ -352,7 +352,7 @@ const HomePageStaff = () => {
               </div>
             </div>
             <div className="col-md-6">
-              <div className="card shadow-sm border-0 h-100" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
+              <div className="card shadow-sm border-0 h-100" style={{ borderRadius: '15px', backgroundColor: 'var(--staff-card-bg)' }}>
                 <div className="card-body p-4">
                   <div className="d-flex align-items-center mb-3">
                     <FaTasks className="text-success me-3" size={24} />
@@ -388,7 +388,7 @@ const HomePageStaff = () => {
                 return (
                   <div className="row">
                     <div className="col-12">
-                      <div className="card shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
+                      <div className="card shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: 'var(--staff-card-bg)' }}>
                         <div className="card-header border-0 bg-white" style={{ borderRadius: '15px 15px 0 0' }}>
                           <h6 className="card-title mb-0 text-dark fw-bold">
                             <FaClock className="me-2 text-primary" />
@@ -527,13 +527,18 @@ const HomePageStaff = () => {
                   <Card.Header className="border-0 bg-white"><h6 className="mb-0 fw-bold"><FaTasks className="me-2 text-secondary" />Document Types</h6></Card.Header>
                   <Card.Body className="d-flex justify-content-center align-items-center">
                     <div style={{ width: '220px', height: '220px' }}>
-                      <Doughnut data={{
-                        labels: ['Regular', 'DFS'],
+                      <Bar data={{
+                        labels: stats?.documentTypes?.map(d => d.type) || [],
                         datasets: [{
-                          data: [stats.totalRegularDocs, stats.totalDfsDocs],
-                          backgroundColor: [statusColors['regular'], statusColors['dfs']]
+                          label: 'Document Count',
+                          data: stats?.documentTypes?.map(d => d.count) || [],
+                          backgroundColor: [
+                            '#3b82f6', '#10b981', '#f97316', '#8b5cf6', '#ec4899', 
+                            '#64748b', '#f43f5e', '#d946ef', '#0ea5e9', '#84cc16'
+                          ],
+                          borderRadius: 4,
                         }]
-                      }} options={{ responsive: true, maintainAspectRatio: false }} />
+                      }} options={{ responsive: true, maintainAspectRatio: false, indexAxis: 'y' }} />
                     </div>
                   </Card.Body>
                 </Card>
@@ -546,7 +551,7 @@ const HomePageStaff = () => {
           {activeTab === 'reports' && (
             <div className="row">
               <div className="col-12">
-                <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
+                <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: 'var(--staff-card-bg)' }}>
                   <Card.Header className="border-0 bg-white d-flex justify-content-between align-items-center">
                     <h6 className="card-title mb-0 text-dark fw-bold">
                       <FaChartBar className="me-2 text-primary" />

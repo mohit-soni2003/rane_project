@@ -246,7 +246,7 @@ const PendingDocumentsTableStaff = () => {
                     <div
                       className="rounded-circle d-inline-flex align-items-center justify-content-center"
                       style={{
-                        backgroundColor: '#fcebea',
+                        backgroundColor: 'var(--staff-serial-number-bg)',
                         width: '30px',
                         height: '30px',
                         fontSize: '0.9rem'
@@ -298,10 +298,7 @@ const PendingDocumentsTableStaff = () => {
                     }
                   </td>
                   <td>
-                    {item.source === 'bill'
-                      ? 'N/A'
-                      : (item.amount ? `₹${item.amount}` : 'N/A')
-                    }
+                    {item.amount ? `₹${item.amount}` : 'N/A'}
                   </td>
                   <td>
                     {item.source === 'bill'

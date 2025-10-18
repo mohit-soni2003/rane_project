@@ -129,12 +129,12 @@ export default function SalaryPage() {
                         <Card className="mb-4 p-4 shadow-sm border-0" style={{ backgroundColor: 'var(--client-dashboard-bg-color)' }}>
                             <h5 className="mb-4" style={{ color: 'var(--client-heading-color)' }}>Salary Breakdown</h5>
                             <Row className="g-4">
-                                <Col md={4}><Card body style={{ backgroundColor: '#fff' }}>💰 Base Salary: ₹{baseSalary?.amount}</Card></Col>
-                                <Col md={4}><Card body style={{ backgroundColor: '#fff' }}>🎁 Bonus: +₹{monthlySalary?.bonus}</Card></Col>
-                                <Col md={4}><Card body style={{ backgroundColor: '#fff' }}>🏥 Allowances: +₹{totalAllowances}</Card></Col>
+                                <Col md={4}><Card body style={{ backgroundColor: 'var(--admin-card-bg)' }}>💰 Base Salary: ₹{baseSalary?.amount}</Card></Col>
+                                <Col md={4}><Card body style={{ backgroundColor: 'var(--admin-card-bg)' }}>🎁 Bonus: +₹{monthlySalary?.bonus}</Card></Col>
+                                <Col md={4}><Card body style={{ backgroundColor: 'var(--admin-card-bg)' }}>🏥 Allowances: +₹{totalAllowances}</Card></Col>
 
                                 <Col md={4}>
-                                    <Card body style={{ backgroundColor: '#fff' }}>
+                                    <Card body style={{ backgroundColor: 'var(--admin-card-bg)' }}>
                                         ⏱ Overtime: +₹{totalOvertime}
                                         <ListGroup size="sm" className="mt-2">
                                             {monthlySalary?.overtime?.map((o, i) => (
@@ -145,7 +145,7 @@ export default function SalaryPage() {
                                 </Col>
 
                                 <Col md={4}>
-                                    <Card body style={{ backgroundColor: '#fff' }}>
+                                    <Card body style={{ backgroundColor: 'var(--admin-card-bg)' }}>
                                         📅 Leave Cuts: -₹{totalLeaves}
                                         <ListGroup size="sm" className="mt-2">
                                             {monthlySalary?.leaveCuts?.map((l, i) => (
@@ -156,7 +156,7 @@ export default function SalaryPage() {
                                 </Col>
 
                                 <Col md={4}>
-                                    <Card body style={{ backgroundColor: '#fff' }}>
+                                    <Card body style={{ backgroundColor: 'var(--admin-card-bg)' }}>
                                         💳 Advance Pay: -₹{totalAdvance}
                                         <ListGroup size="sm" className="mt-2">
                                             {monthlySalary?.advancePay?.map((a, i) => (

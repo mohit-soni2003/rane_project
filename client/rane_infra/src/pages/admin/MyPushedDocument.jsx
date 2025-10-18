@@ -137,7 +137,7 @@ export default function MyPushedDocument() {
                                             <div
                                                 className="rounded-circle d-inline-flex align-items-center justify-content-center"
                                                 style={{
-                                                    backgroundColor: '#fcebea',
+                                                    backgroundColor: 'var(--staff-serial-number-bg)',
                                                     width: '30px',
                                                     height: '30px',
                                                     fontSize: '0.9rem'

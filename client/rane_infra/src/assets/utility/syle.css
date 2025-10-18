@@ -21,4 +21,93 @@
     --user-dashboard-gradient1:  #ffffee ; 
     --user-dashboard-gradient2:  #ffeade ; 
 
+    /* Admin Theme Colors */
+    --admin-dashboard-bg-color: #f4f6f9;
+    --admin-component-bg-color: #ffffff;
+    --admin-border-color: #e0e0e0;
+    --admin-text-color: #2c3e50;
+    --admin-heading-color: #1f3a93;
+    --admin-muted-color: #7f8c8d;
+    --admin-sidebar-bg: #1f3a93;
+    --admin-sidebar-hover-bg: #162c6a;
+    --admin-sidebar-text: #ffffff;
+    --admin-sidebar-icon: #d6e4f0;
+    --admin-sidebar-active-bg: #1abc9c;
+    --admin-sidebar-active-text: #ffffff;
+    --admin-btn-primary-bg: #1abc9c;
+    --admin-btn-primary-hover: #16a085;
+    --admin-btn-primary-text: #ffffff;
+    --admin-btn-secondary-bg: #5d6d7e;
+    --admin-btn-secondary-hover: #4a5a6a;
+    --admin-btn-secondary-text: #ffffff;
+    --admin-btn-danger-bg: #e74c3c;
+    --admin-btn-danger-hover: #c0392b;
+    --admin-btn-danger-text: #ffffff;
+    --admin-btn-success-bg: #27ae60;
+    --admin-btn-success-hover: #1e8449;
+    --admin-btn-success-text: #ffffff;
+    --admin-btn-warning-bg: #f39c12;
+    --admin-btn-warning-hover: #e67e22;
+    --admin-btn-warning-text: #ffffff;
+    --admin-success-color: #27ae60;
+    --admin-warning-color: #f39c12;
+    --admin-danger-color: #e74c3c;
+    --admin-info-color: #3498db;
+    --admin-card-bg: #ffffff;
+    --admin-card-shadow: rgba(0, 0, 0, 0.05);
+    --admin-card-border: #e0e0e0;
+    --admin-input-bg: #ffffff;
+    --admin-input-border: #dcdcdc;
+    --admin-input-text: #2c3e50;
+    --admin-input-placeholder: #95a5a6;
+    --admin-scrollbar-thumb: #a6b1c0;
+    --admin-scrollbar-track: #f0f3f7;
+
+    /* Client Theme Colors */
+    --client-dashboard-bg-color: #ffffff;
+    --client-component-bg-color: #fff6f3;
+    --user-sidebar-color: #263544;
+    --client-text-color: #5e3b2c;
+    --client-heading-color: #3d2316;
+    --client-muted-color: #b48b7a;
+    --client-border-color: #e8d9d3;
+    --client-btn-bg: #8b5e3c;
+    --client-btn-hover: #74492f;
+    --client-btn-text: #ffffff;
+    --client-header-gradient-start: #3b82f6;
+    --client-header-gradient-end: #1d4ed8;
+    --client-header-shadow: rgba(0, 0, 0, 0.12);
+    --client-profile-border: rgba(255, 255, 255, 0.85);
+    --client-header-text: #ffffff;
+    --primary-orange: #f59e0b;
+    --primary-orange-hover: #d97706;
+
+    /* Staff Theme Colors */
+    --staff-dashboard-bg: #f8f9fa;
+    --staff-card-bg: #ffffff;
+    --staff-info-icon-bg: #667eea;
+    --staff-stat-card-color-1: #4CAF50;
+    --staff-stat-card-color-2: #2196F3;
+    --staff-stat-card-color-3: #FF9800;
+    --staff-stat-card-color-4: #9C27B0;
+    --staff-stat-card-bg-1: #f8fff8;
+    --staff-stat-card-bg-2: #f0f8ff;
+    --staff-stat-card-bg-3: #fff8f0;
+    --staff-stat-card-bg-4: #faf0ff;
+    --staff-chart-color-1: #22c55e;
+    --staff-chart-color-2: #7e5bef;
+    --staff-serial-number-bg: #fcebea;
+
+    /* Status Colors */
+    --status-approved: #198754;
+    --status-paid: #198754;
+    --status-pending: #ffc107;
+    --status-rejected: #dc3545;
+    --status-overdue: #dc3545;
+    --status-in-review: #0dcaf0;
+    --status-processing: #0d6efd;
+    --status-sanctioned: #0d6efd;
+    --status-regular: #8b5cf6;
+    --status-dfs: #64748b;
+
 }

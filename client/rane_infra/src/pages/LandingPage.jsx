@@ -133,7 +133,7 @@ export default function LandingPage() {
             </section>
 
             {/* ---------- EXPERTISE ---------- */}
-            <section className="py-5" style={{ backgroundColor: "#f8f9fa" }}>
+            <section className="py-5" style={{ backgroundColor: "var(--staff-dashboard-bg)" }}>
                 <Container>
                     <Row className="align-items-center gy-4 flex-md-row-reverse">
                         <Col md={6}>
@@ -208,7 +208,7 @@ export default function LandingPage() {
             </section>
 
             {/* ---------- DEPARTMENTS ---------- */}
-            <section style={{ backgroundColor: "#f3f4f6", padding: "60px 0" }}>
+            <section style={{ backgroundColor: "var(--client-component-bg-color)", padding: "60px 0" }}>
                 <div className="container text-center">
                     <h2 className="fw-bold mb-5" style={{ color: "#1f2937" }}>
                         Our Departments
@@ -334,7 +334,7 @@ export default function LandingPage() {
             {/* ---------- DOCUMENTS ---------- */}
             <section
                 className="py-5 documents"
-                style={{ backgroundColor: "#f3f4f6" }}
+                style={{ backgroundColor: "var(--client-component-bg-color)" }}
                 id="documents"
             >
                 <div className="container">
@@ -352,12 +352,12 @@ export default function LandingPage() {
                                     className="shadow-sm rounded bg-white p-3 h-100 d-flex flex-column justify-content-between"
                                     style={{ transition: "all 0.3s ease", cursor: "pointer" }}
                                     onMouseEnter={(e) => {
-                                        e.currentTarget.style.backgroundColor = "#fff7f2";
+                                        e.currentTarget.style.backgroundColor = "var(--client-component-bg-color)";
                                         e.currentTarget.style.transform = "translateY(-5px)";
                                         e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.15)";
                                     }}
                                     onMouseLeave={(e) => {
-                                        e.currentTarget.style.backgroundColor = "#fff";
+                                        e.currentTarget.style.backgroundColor = "var(--staff-card-bg)";
                                         e.currentTarget.style.transform = "translateY(0)";
                                         e.currentTarget.style.boxShadow = "0 4px 10px rgba(0,0,0,0.05)";
                                     }}

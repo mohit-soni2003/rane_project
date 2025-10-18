@@ -1,9 +1,24 @@
+/* =============================================================================
+   COLOR CENTRALIZATION NOTICE
+   =============================================================================
+   All color variables have been centralized in src/assets/utility/syle.css
+   for better maintainability and consistency across the application.
+
+   The variables defined below are now available from the centralized location.
+   Future updates should reference variables from syle.css using:
+   var(--variable-name)
+
+   Existing definitions are kept for backward compatibility but should be
+   migrated to use the centralized variables over time.
+   ============================================================================= */
+
 .sidebar-item:hover {
   background-color: #343a40;
   color: #3b88d5 !important;
 }
 
 :root {
+  /* Client Theme Variables - Now centralized in syle.css */
   --client-dashboard-bg-color: #ffffff;
   --client-component-bg-color: #fff6f3;
   --user-sidebar-color: #263544;
@@ -16,13 +31,14 @@
   --client-btn-text: #ffffff;
 
    /* Color code for landing page  */
-  --primary-orange: #f97316;  
+  --primary-orange: #f97316;
   --primary-orange-hover: #ea580c;
 
 
 }
 
 :root {
+  /* Client Header Variables - Now centralized in syle.css */
   --client-header-gradient-start: #3b82f6; /* blue-500 */
   --client-header-gradient-end: #1d4ed8;   /* blue-700 */
   --client-header-shadow: rgba(0, 0, 0, 0.12);
@@ -30,13 +46,14 @@
   --client-header-text: #ffffff;
 
   /* Landing page */
-  --primary-orange: #f59e0b;  
+  --primary-orange: #f59e0b;
   --primary-orange-hover: #d97706;
 }
 
 
 
 :root {
+  /* Admin Theme Variables - Now centralized in syle.css */
   /* General Layout */
   --admin-dashboard-bg-color: #f4f6f9;
   --admin-component-bg-color: #ffffff;
@@ -94,6 +111,65 @@
   --admin-scrollbar-track: #f0f3f7;
 }
 
+/* =============================================================================
+   ADDITIONAL UTILITY CLASSES FOR THEME SUPPORT
+   =============================================================================
+   These classes can be used to apply centralized colors dynamically
+   ============================================================================= */
+
+/* Theme-aware background colors */
+.theme-admin-bg { background-color: var(--admin-dashboard-bg-color); }
+.theme-client-bg { background-color: var(--client-dashboard-bg-color); }
+.theme-staff-bg { background-color: var(--staff-dashboard-bg); }
+
+/* Theme-aware text colors */
+.theme-admin-text { color: var(--admin-text-color); }
+.theme-client-text { color: var(--client-text-color); }
+.theme-admin-heading { color: var(--admin-heading-color); }
+.theme-client-heading { color: var(--client-heading-color); }
+
+/* Status color utilities */
+.status-approved { color: var(--status-approved); }
+.status-pending { color: var(--status-pending); }
+.status-rejected { color: var(--status-rejected); }
+.status-in-review { color: var(--status-in-review); }
+
+/* Button color utilities */
+.btn-admin-primary {
+  background-color: var(--admin-btn-primary-bg);
+  border-color: var(--admin-btn-primary-bg);
+  color: var(--admin-btn-primary-text);
+}
+.btn-admin-primary:hover {
+  background-color: var(--admin-btn-primary-hover);
+  border-color: var(--admin-btn-primary-hover);
+}
+
+.btn-client-primary {
+  background-color: var(--client-btn-bg);
+  border-color: var(--client-btn-bg);
+  color: var(--client-btn-text);
+}
+.btn-client-primary:hover {
+  background-color: var(--client-btn-hover);
+  border-color: var(--client-btn-hover);
+}
+
+/* Card styling utilities */
+.card-admin {
+  background-color: var(--admin-card-bg);
+  border: 1px solid var(--admin-card-border);
+  box-shadow: var(--admin-card-shadow);
+}
+
+.card-client {
+  background-color: var(--client-component-bg-color);
+  border: 1px solid var(--client-border-color);
+}
+
+/* =============================================================================
+   RESPONSIVE UTILITIES (Existing)
+   ============================================================================= */
 
 /* for small button on mobile  */
 @media (max-width: 576px) {
