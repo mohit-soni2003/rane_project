@@ -293,7 +293,7 @@ const PendingDocumentsTableStaff = () => {
                     {item.source === 'bill'
                       ? (item.firmName || 'N/A')
                       : item.source === 'payment'
-                      ? (item.expenseNo || 'N/A')
+                      ? (item.refMode || 'Reference Mode')
                       : (item.documentType || 'N/A')
                     }
                   </td>
