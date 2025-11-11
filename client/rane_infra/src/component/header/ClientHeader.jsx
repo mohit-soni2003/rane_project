@@ -10,7 +10,7 @@ const ClientHeader = () => {
 
   // Live clock
   useEffect(() => {
-    const timer = setInterval(() => setDateTime(new Date()), 60000); // update every minute
+    const timer = setInterval(() => setDateTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
@@ -19,19 +19,31 @@ const ClientHeader = () => {
       <div
         className="card shadow-sm border-0"
         style={{
-          background: 'linear-gradient(135deg, var(--client-header-gradient-start), var(--client-header-gradient-end))',
+          background: 'var(--card)',
           borderRadius: '12px',
-          color: 'var(--client-header-text)',
-          boxShadow: `0 3px 8px var(--client-header-shadow)`
+          color: 'var(--card-foreground)',
+          border: '1px solid var(--border)',
+          boxShadow: '0 3px 8px var(--muted-foreground)',
         }}
       >
         <div className="card-body px-4 py-3 d-flex align-items-center justify-content-between">
 
           {/* LEFT SECTION - E-OFFICE + Date */}
           <div className="d-flex flex-column">
-            <h6 className="fst-italic mb-1" style={{ fontSize: '0.75rem' }}>E - OFFICE</h6>
-            <small className="opacity-75 d-flex align-items-center" style={{ fontSize: '0.75rem' }}>
-              <FaCalendarAlt className="me-1" />
+            <h6
+              className="fst-italic mb-1"
+              style={{ fontSize: '0.75rem', color: 'var(--primary)' }}
+            >
+              E - OFFICE
+            </h6>
+            <small
+              className="d-flex align-items-center"
+              style={{
+                fontSize: '0.75rem',
+                color: 'var(--muted-foreground)',
+              }}
+            >
+              <FaCalendarAlt className="me-1" style={{ color: 'var(--accent)' }} />
               {dateTime.toLocaleDateString('en-IN', {
                 weekday: 'long',
                 year: 'numeric',
@@ -40,9 +52,8 @@ const ClientHeader = () => {
               })} &nbsp; | &nbsp;
               {dateTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
             </small>
-            <small className="opacity-75 d-flex align-items-center" style={{ fontSize: '0.75rem' }}>
-               Last Login: {user.lastlogin ? new Date(user.lastlogin).toLocaleString() : '-'}
-            </small>
+
+           
           </div>
 
           {/* CENTER SECTION - Title */}
@@ -52,7 +63,8 @@ const ClientHeader = () => {
               style={{
                 fontSize: '1.1rem',
                 letterSpacing: '0.4px',
-                fontWeight: '800'
+                fontWeight: '800',
+                color: 'var(--primary)',
               }}
             >
               RANE & SONS - WORK MANAGEMENT SYSTEM
@@ -62,7 +74,17 @@ const ClientHeader = () => {
           {/* RIGHT SECTION - Bell + Profile + Name */}
           <div className="d-flex flex-column align-items-center">
             <div className="d-flex align-items-center gap-3 mb-1">
-              <FaBell style={{ fontSize: '1.2rem', cursor: 'pointer' }} />
+              <FaBell
+                style={{
+                  fontSize: '1.2rem',
+                  cursor: 'pointer',
+                  color: 'var(--accent)',
+                  transition: 'color 0.3s ease',
+                }}
+                onMouseEnter={(e) => (e.target.style.color = 'var(--primary)')}
+                onMouseLeave={(e) => (e.target.style.color = 'var(--accent)')}
+              />
+
               <img
                 src={user?.profile || '/assets/images/dummyUser.jpeg'}
                 alt="Profile"
@@ -71,41 +93,39 @@ const ClientHeader = () => {
                   width: '32px',
                   height: '32px',
                   objectFit: 'cover',
-                  border: '2px solid var(--client-profile-border)',
+                  border: '2px solid var(--primary)',
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
                 }}
                 onClick={() => navigate('/client')}
                 onMouseEnter={(e) => {
                   e.target.style.transform = 'scale(1.1)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                  e.target.style.borderColor = 'var(--client-primary-color, #007bff)';
+                  e.target.style.boxShadow = '0 4px 12px var(--muted-foreground)';
+                  e.target.style.borderColor = 'var(--accent)';
                 }}
                 onMouseLeave={(e) => {
                   e.target.style.transform = 'scale(1)';
                   e.target.style.boxShadow = 'none';
-                  e.target.style.borderColor = 'var(--client-profile-border)';
+                  e.target.style.borderColor = 'var(--primary)';
                 }}
               />
             </div>
+
             <small
               title={user?.name || 'User'}
               style={{
                 fontSize: '0.7rem',
                 fontWeight: '500',
+                color: 'var(--secondary-foreground)',
                 maxWidth: '100px',
                 textAlign: 'center',
-                // overflow: 'hidden',
-                // textOverflow: 'ellipsis'
                 whiteSpace: 'normal',
-                wordWrap: 'break-word'
+                wordWrap: 'break-word',
               }}
             >
               Client ID: {user?.cid || 'User'}
             </small>
           </div>
-
-
         </div>
       </div>
     </div>

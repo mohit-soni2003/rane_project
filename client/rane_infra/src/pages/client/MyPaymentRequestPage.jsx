@@ -97,7 +97,10 @@ export default function MyPaymentRequestPage() {
       <Container fluid className="py-0 px-0 my-md-3">
         <Card
           className="p-3 shadow border-0"
-          style={{ backgroundColor: 'var(--client-component-bg-color)' }}
+          style={{
+            backgroundColor: 'var(--card)',
+            color: 'var(--card-foreground)',
+          }}
         >
           {/* Filters */}
           <Row className="align-items-center mb-3 gy-2">
@@ -106,8 +109,19 @@ export default function MyPaymentRequestPage() {
             </Col>
             <Col xs={12} md={6}>
               <div className="d-flex flex-wrap gap-2 justify-content-md-end">
-                <InputGroup style={{ flex: '1 1 auto', maxWidth: '250px' }} className="mobile-input-sm">
-                  <InputGroup.Text className="mobile-input-sm">
+                {/* Search Input */}
+                <InputGroup
+                  style={{ flex: '1 1 auto', maxWidth: '250px' }}
+                  className="mobile-input-sm"
+                >
+                  <InputGroup.Text
+                    className="mobile-input-sm"
+                    style={{
+                      backgroundColor: 'var(--muted)',
+                      color: 'var(--muted-foreground)',
+                      borderColor: 'var(--border)',
+                    }}
+                  >
                     <FaSearch />
                   </InputGroup.Text>
                   <FormControl
@@ -115,14 +129,25 @@ export default function MyPaymentRequestPage() {
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                     className="mobile-input-sm"
+                    style={{
+                      backgroundColor: 'var(--input)',
+                      borderColor: 'var(--border)',
+                      color: 'var(--foreground)',
+                    }}
                   />
                 </InputGroup>
 
+                {/* Filters */}
                 <FormControl
                   as="select"
                   className="w-auto mobile-input-sm"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
+                  style={{
+                    backgroundColor: 'var(--input)',
+                    color: 'var(--foreground)',
+                    borderColor: 'var(--border)',
+                  }}
                 >
                   <option value="all">All Status</option>
                   <option value="Paid">Paid</option>
@@ -137,12 +162,31 @@ export default function MyPaymentRequestPage() {
                   className="w-auto mobile-input-sm"
                   value={sortOrder}
                   onChange={(e) => setSortOrder(e.target.value)}
+                  style={{
+                    backgroundColor: 'var(--input)',
+                    color: 'var(--foreground)',
+                    borderColor: 'var(--border)',
+                  }}
                 >
                   <option value="asc">▲ Ascending</option>
                   <option value="desc">▼ Descending</option>
                 </FormControl>
 
-                <Button variant="primary" size="sm" className="mobile-btn-sm">
+                <Button
+                  size="sm"
+                  className="mobile-btn-sm"
+                  style={{
+                    backgroundColor: 'var(--primary)',
+                    color: 'var(--primary-foreground)',
+                    border: 'none',
+                  }}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.backgroundColor = 'var(--primary-hover)')
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.backgroundColor = 'var(--primary)')
+                  }
+                >
                   Apply
                 </Button>
               </div>
@@ -152,7 +196,7 @@ export default function MyPaymentRequestPage() {
           {/* Table */}
           {loading ? (
             <div className="text-center my-5">
-              <Spinner animation="border" variant="primary" />
+              <Spinner animation="border" style={{ color: 'var(--primary)' }} />
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
@@ -160,9 +204,18 @@ export default function MyPaymentRequestPage() {
                 bordered
                 hover
                 className="mb-3 align-middle"
-                style={{ minWidth: '750px' }}
+                style={{
+                  minWidth: '750px',
+                  backgroundColor: 'var(--card)',
+                  borderColor: 'var(--divider)',
+                }}
               >
-                <thead className="table-light sticky-top">
+                <thead
+                  style={{
+                    backgroundColor: 'var(--muted)',
+                    color: 'var(--muted-foreground)',
+                  }}
+                >
                   <tr>
                     <th>S.No.</th>
                     <th>Tender</th>
@@ -177,7 +230,20 @@ export default function MyPaymentRequestPage() {
                 <tbody>
                   {filteredPayments.map((payment, idx) => (
                     <tr key={payment._id || idx}>
-                      <td>{idx + 1}</td>
+                      <td>
+                        <div
+                          className="d-inline-flex justify-content-center align-items-center rounded-circle"
+                          style={{
+                            width: '28px',
+                            height: '28px',
+                            backgroundColor: 'var(--secondary)',
+                            color: 'var(--secondary-foreground)',
+                            fontWeight: '600',
+                          }}
+                        >
+                          {idx + 1}
+                        </div>
+                      </td>
                       <td className="text-truncate" style={{ maxWidth: '150px' }}>
                         {payment.tender}
                       </td>
@@ -191,7 +257,9 @@ export default function MyPaymentRequestPage() {
                             href={payment.image}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-secondary text-decoration-none"
+                            style={{
+                              color: 'var(--accent)',
+                            }}
                           >
                             <FaFileInvoice size={18} />
                           </a>
@@ -216,10 +284,36 @@ export default function MyPaymentRequestPage() {
                 Showing 1 to {filteredPayments.length} of {payments.length} entries
               </div>
               <div className="d-flex gap-2 flex-nowrap">
-                <Button variant="outline-primary" size="sm" className="text-truncate mobile-btn-sm">
+                <Button
+                  size="sm"
+                  style={{
+                    border: '1px solid var(--primary)',
+                    color: 'var(--primary)',
+                    backgroundColor: 'transparent',
+                  }}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.backgroundColor = 'var(--primary-hover)')
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.backgroundColor = 'transparent')
+                  }
+                >
                   <FaPlus className="me-1" /> New Payment Request
                 </Button>
-                <Button variant="outline-dark" size="sm" className="text-truncate mobile-btn-sm">
+                <Button
+                  size="sm"
+                  style={{
+                    border: '1px solid var(--foreground)',
+                    color: 'var(--foreground)',
+                    backgroundColor: 'transparent',
+                  }}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.backgroundColor = 'var(--secondary-hover)')
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.backgroundColor = 'transparent')
+                  }
+                >
                   <FaFileExport className="me-1" /> Export Payments
                 </Button>
               </div>
@@ -227,6 +321,7 @@ export default function MyPaymentRequestPage() {
           )}
         </Card>
       </Container>
+
     </>
   );
 }
