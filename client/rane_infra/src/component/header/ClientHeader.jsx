@@ -19,7 +19,7 @@ const ClientHeader = () => {
       <div
         className="card shadow-sm border-0"
         style={{
-          background: 'var(--card)',
+          background: 'var(--background)',
           borderRadius: '12px',
           color: 'var(--card-foreground)',
           border: '1px solid var(--border)',

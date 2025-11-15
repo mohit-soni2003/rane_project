@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   FaHome, FaFileInvoiceDollar, FaHistory, FaFileAlt,
   FaUserCog, FaHeadset, FaSignOutAlt, FaChevronDown, FaChevronUp, FaArrowAltCircleRight, FaMoneyBillWave,
-  FaBars, FaTimes
+  FaBars, FaTimes,FaFileSignature
 } from 'react-icons/fa';
 import { BsCardChecklist } from 'react-icons/bs';
 import { MdPayment } from 'react-icons/md';
@@ -340,7 +340,11 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
         </div>
         {!isSidebarCollapsed && (
           <div style={submenuStyle(openDropdown === "payment")}>
-            <div className="py-1 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" style={iconStyle} />
+            <div className="py-1 sidebar-item"
+              onMouseEnter={handleHoverIn}
+              onMouseLeave={handleHoverOut}
+              style={sidebarItemStyle}>
+              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
               <Link to="/client/payment-request" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
                 onClick={() => {
                   if (isSidebarCollapsed) {
@@ -351,7 +355,11 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
                 Payment Request
               </Link>
             </div>
-            <div className="py-1 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" style={iconStyle} />
+            <div className="py-1 sidebar-item"
+              onMouseEnter={handleHoverIn}
+              onMouseLeave={handleHoverOut}
+              style={sidebarItemStyle}>
+              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
               <Link to="/client/my-payment-request" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
                 onClick={() => {
                   if (isSidebarCollapsed) {
@@ -399,7 +407,11 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
         </div>
         {!isSidebarCollapsed && (
           <div style={submenuStyle(openDropdown === "transaction")}>
-            <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" style={iconStyle} />
+            <div className="py-1 ps-3 sidebar-item"
+              onMouseEnter={handleHoverIn}
+              onMouseLeave={handleHoverOut}
+              style={sidebarItemStyle}>
+              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
               <Link to="/client/transaction" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
                 onClick={() => {
                   if (isSidebarCollapsed) {
@@ -410,17 +422,95 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
                 Bill/IP/IPR
               </Link>
             </div>
-            <div
-              className="py-1 ps-3 sidebar-item"
-              style={{ ...sidebarItemStyle, color: 'var(--sidebar-foreground)' }}
-            >
-              <FaArrowAltCircleRight className="me-2" style={iconStyle} />Overview
-            </div>
+            {/* //ode for overview  */}
 
           </div>
         )}
       </div>
 
+      {/* E-aggreement */}
+      <div className="">
+        <div
+          onClick={() => {
+            if (isSidebarCollapsed) {
+              setIsSidebarCollapsed(false);
+              if (onCollapse) onCollapse(false);
+              setTimeout(() => toggleDropdown("e-agreement"), 300);
+            } else {
+              toggleDropdown("e-agreement");
+            }
+          }}
+          className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`}
+          style={sidebarItemStyle}
+          onMouseEnter={handleHoverIn}
+          onMouseLeave={handleHoverOut}
+        >
+          <div className="d-flex align-items-center w-100"
+            style={{ justifyContent: isSidebarCollapsed ? 'center' : 'space-between' }}>
+            <div className="d-flex align-items-center" style={{ color: 'var(--sidebar-foreground)' }}>
+              <FaFileSignature className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
+              {!isSidebarCollapsed && <span>E-Agreement</span>}
+            </div>
+
+            {!isSidebarCollapsed && (
+              openDropdown === "e-agreement"
+                ? <FaChevronUp style={ArrowIconStyle} />
+                : <FaChevronDown style={ArrowIconStyle} />
+            )}
+          </div>
+
+        </div>
+
+        {!isSidebarCollapsed && (
+          <div style={submenuStyle(openDropdown === "e-agreement")}>
+            {/* sub-Item  */}
+            <div className="py-1 ps-3 sidebar-item"
+              style={sidebarItemStyle}
+              onMouseEnter={handleHoverIn}
+              onMouseLeave={handleHoverOut}
+            >
+              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
+              <Link to="/client/agreement" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
+                onClick={() => {
+                  if (isSidebarCollapsed) {
+                    setIsSidebarCollapsed(false);
+                    if (onCollapse) onCollapse(false);
+                  }
+                }}>
+                Overview
+              </Link>
+            </div>
+            {/* sub-item  */}
+            <div className="py-1 ps-3 sidebar-item"
+              style={sidebarItemStyle}
+              onMouseEnter={handleHoverIn}
+              onMouseLeave={handleHoverOut}
+            >
+              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
+              <Link to="/client/track-dfs/all" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
+                onClick={() => {
+                  if (isSidebarCollapsed) {
+                    setIsSidebarCollapsed(false);
+                    if (onCollapse) onCollapse(false);
+                  }
+                }}>
+                Closed Agreement
+              </Link>
+            </div>
+            {/* sub-item  */}
+            <div className="py-1 ps-3 sidebar-item"
+              style={sidebarItemStyle}
+              onMouseEnter={handleHoverIn}
+              onMouseLeave={handleHoverOut}
+            >
+              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
+              <Link to="/client/dfsrequest" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}>
+                Agreement for action
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
       {/* DFS */}
       <div className="">
         <div
@@ -455,7 +545,12 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
         </div>
         {!isSidebarCollapsed && (
           <div style={submenuStyle(openDropdown === "dfs")}>
-            <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" style={iconStyle} />
+            <div className="py-1 ps-3 sidebar-item"
+              style={sidebarItemStyle}
+              onMouseEnter={handleHoverIn}
+              onMouseLeave={handleHoverOut}
+            >
+              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
               <Link to="/client/upload-document" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
                 onClick={() => {
                   if (isSidebarCollapsed) {
@@ -466,7 +561,12 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
                 Upload Document
               </Link>
             </div>
-            <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" style={iconStyle} />
+            <div className="py-1 ps-3 sidebar-item"
+              style={sidebarItemStyle}
+              onMouseEnter={handleHoverIn}
+              onMouseLeave={handleHoverOut}
+            >
+              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
               <Link to="/client/track-dfs/all" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
                 onClick={() => {
                   if (isSidebarCollapsed) {
@@ -477,7 +577,12 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
                 Track Document
               </Link>
             </div>
-            <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" />
+            <div className="py-1 ps-3 sidebar-item"
+              style={sidebarItemStyle}
+              onMouseEnter={handleHoverIn}
+              onMouseLeave={handleHoverOut}
+            >
+              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
               <Link to="/client/dfsrequest" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}>
                 Document for review
               </Link>
@@ -520,7 +625,11 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
         </div>
         {!isSidebarCollapsed && (
           <div style={submenuStyle(openDropdown === "document")}>
-            <div className="py-1 ps-3 sidebar-item" style={sidebarItemStyle}><FaArrowAltCircleRight className="me-2" style={iconStyle} />
+            <div className="py-1 ps-3 sidebar-item"
+              onMouseEnter={handleHoverIn}
+              onMouseLeave={handleHoverOut}
+              style={sidebarItemStyle}>
+              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
               <Link to="/client/document/category" style={{ textDecoration: 'none', color: "var(--sidebar-foreground)" }}
                 onClick={() => {
                   if (isSidebarCollapsed) {

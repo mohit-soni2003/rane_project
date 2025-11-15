@@ -39,6 +39,7 @@ import TrackMyAllDocument from "./pages/client/TrackMyAllDocument.jsx";
 import DocumentForReview from "./pages/client/DocumentForReview.jsx"; //used to review when document assign to client by admin and staff
 import TransactionPage from "./pages/client/TransactionPage.jsx";
 import SalaryPage from "./pages/admin/SalaryPage.jsx";
+import AgreementPage from "./pages/client/AgreementPage.jsx";
 
 import AdminLayout from "./Layout/AdminLayout";
 import HomePageAdmin from "./pages/admin/HomePageAdmin.jsx";
@@ -169,6 +170,7 @@ function App() {
           <Route path="track-dfs/all" element={<TrackMyAllDocument />} />
           <Route path="dfsrequest/:id" element={<DocumentForReview />} />
           <Route path="under-dev" element={<UnderDevPage />} />
+          <Route path="agreement" element={<AgreementPage />} />
         </Route>
 
         {/* ---------Admin Route ---------- */}
