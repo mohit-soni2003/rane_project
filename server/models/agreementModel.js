@@ -16,7 +16,7 @@ const agreementSchema = new mongoose.Schema(
     },
 
     description: {
-      type: String,
+      type: String, 
       trim: true,
     },
 

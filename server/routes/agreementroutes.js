@@ -45,6 +45,65 @@ router.post("/create", verifyToken, async (req, res) => {
     }
 });
 
+/**
+ * @route   GET /agreement/:id
+ * @desc    Get details of a single agreement by ID
+ * @access  Private (admin/staff can view any, client only their own)
+ */
+router.get("/view/:id", verifyToken, async (req, res) => {
+    console.log("Get Agreement by ID route hit...");
+
+    try {
+        const agreementId = req.params.id;
+
+        // Find logged in user
+        const user = await User.findById(req.userId);
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: "User not found.",
+            });
+        }
+
+        // Fetch the agreement
+        const agreement = await Agreement.findById(agreementId)
+            .populate("uploadedBy", "name email role profile")
+            .populate("client", "name email role profile");
+
+        if (!agreement) {
+            return res.status(404).json({
+                success: false,
+                message: "Agreement not found.",
+            });
+        }
+
+        // If user is a client → check ownership
+        if (user.role === "client" && agreement.client._id.toString() !== user._id.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: "Access denied. You are not assigned this agreement.",
+            });
+        }
+
+        // Admin & staff → full access
+        // Client → allowed if agreement belongs to them
+
+        res.status(200).json({
+            success: true,
+            agreement,
+        });
+
+    } catch (error) {
+        console.error("Error fetching agreement by ID:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error.",
+        });
+    }
+});
+
+
 
 /**
  * @route   GET /agreement/all

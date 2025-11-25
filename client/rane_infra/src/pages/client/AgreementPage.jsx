@@ -1,8 +1,86 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FiSearch, FiFilter, FiClock, FiChevronDown } from "react-icons/fi";
 import ClientHeader from "../../component/header/ClientHeader";
+import { getClientAgreements } from "../../services/agreement";
+import { useNavigate } from "react-router-dom";
+import AgreementSignModal from "../../assets/cards/models/AgreementSignModal";
+
+// -------------------------------------------------
+//this is the agreement overview section 
+// -------------------------------------------------
 
 export default function AgreementPage() {
+
+    const [agreements, setAgreements] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState("");
+    const [showSignModal, setShowSignModal] = useState(false);
+    const [currentSignAgreement,setCurrentSignAgreement] = useState();
+
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const load = async () => {
+            try {
+                setLoading(true);
+                const data = await getClientAgreements();
+                setAgreements(data.agreements || []);
+            } catch (err) {
+                console.error("Failed to load agreements:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        load();
+    }, []);
+
+
+    const filteredAgreements = agreements.filter(a =>
+        a.title.toLowerCase().includes(search.toLowerCase()) ||
+        a.agreementId.toLowerCase().includes(search.toLowerCase())
+    );
+
+
+    const formatDate = (date) => {
+        if (!date) return "—";
+        return new Date(date).toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+        });
+    };
+
+    const daysLeft = (expiry) => {
+        if (!expiry) return "—";
+        const diff = (new Date(expiry) - new Date()) / (1000 * 60 * 60 * 24);
+        return Math.ceil(diff) + " days left";
+    };
+    const statusStyles = {
+        pending: {
+            background: "#FFF4CC",
+            color: "#B58A00",
+        },
+        viewed: {
+            background: "#E6F0FF",
+            color: "#2A64D6",
+        },
+        signed: {
+            background: "#D6F5D6",
+            color: "#1C7C1C",
+        },
+        rejected: {
+            background: "#FFE4E4",
+            color: "#D64545",
+        },
+        expired: {
+            background: "#EAEAEA",
+            color: "#666",
+        },
+    };
+
+
     return (
         <>
             <ClientHeader />
@@ -57,11 +135,11 @@ export default function AgreementPage() {
                                     type="text"
                                     className="form-control shadow-none border-0"
                                     placeholder="Search: agreementId / title"
-                                    style={{
-                                        background: "var(--input)",
-                                        color: "var(--foreground)",
-                                    }}
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    style={{ background: "var(--input)", color: "var(--foreground)" }}
                                 />
+
                             </div>
 
 
@@ -172,9 +250,9 @@ export default function AgreementPage() {
                         boxShadow: "0 2px 4px var(--shadow-color)",
                     }}
                 >
-                    <table className="table align-middle mb-0">
+                    <table className="table align-middle mb-0" style={{ borderCollapse: "separate", borderSpacing: "0 10px" }}>
                         <thead>
-                            <tr style={{ color: "var(--text-muted)" }}>
+                            <tr style={{ color: "var(--text-muted)", fontSize: "14px" }}>
                                 <th style={{ width: "60px" }}>#</th>
                                 <th>Title</th>
                                 <th>Uploaded By</th>
@@ -186,9 +264,10 @@ export default function AgreementPage() {
                         </thead>
 
                         <tbody>
-                            {sampleAgreements.map((item, idx) => (
-                                <tr key={idx}>
-                                    {/* Circular Serial Number */}
+                            {filteredAgreements.map((item, idx) => (
+                                <tr key={idx} style={{ background: "var(--card)", borderRadius: "10px" }}>
+
+                                    {/* Serial Number Circle */}
                                     <td>
                                         <div
                                             className="d-flex justify-content-center align-items-center"
@@ -198,82 +277,92 @@ export default function AgreementPage() {
                                                 borderRadius: "50%",
                                                 background: "var(--muted)",
                                                 color: "var(--text-strong)",
-                                                fontWeight: "600",
-                                                fontSize: "14px",
+                                                fontWeight: 600,
                                             }}
                                         >
                                             {idx + 1}
                                         </div>
                                     </td>
 
+                                    {/* Title */}
                                     <td>
-                                        <div className="fw-semibold" style={{ color: "var(--text-strong)" }}>
+                                        <div className="fw-semibold" style={{ color: "var(--text-strong)", fontSize: "15px" }}>
                                             {item.title}
                                         </div>
                                         <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                                            {item.id}
+                                            {item.agreementId}
                                         </div>
                                     </td>
 
+                                    {/* Uploaded By */}
                                     <td>
-                                        <div className="fw-semibold">{item.uploadedBy}</div>
+                                        <div className="fw-semibold" style={{ fontSize: "14px" }}>
+                                            {item.uploadedBy.name}
+                                        </div>
                                         <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>Staff</div>
                                     </td>
 
-                                    <td>{item.uploaded}</td>
-
-                                    <td>
-                                        <span
-                                            className="badge"
-                                            style={{
-                                                background: "var(--muted)",
-                                                color: "var(--text-muted)",
-                                                fontSize: "12px",
-                                            }}
-                                        >
-                                            {item.expiry} left
-                                        </span>
+                                    {/* Uploaded Date */}
+                                    <td style={{ fontSize: "14px", color: "var(--text-muted)" }}>
+                                        {formatDate(item.uploadedAt)}
                                     </td>
 
+                                    {/* Expiry */}
+                                    <td style={{ fontSize: "14px", color: "var(--text-muted)" }}>
+                                        {daysLeft(item.expiryDate)}
+                                    </td>
+
+                                    {/* Status Badge */}
                                     <td>
                                         <span
                                             className="badge px-3 py-2"
                                             style={{
-                                                background: item.statusBg,
-                                                color: item.statusColor,
-                                                borderRadius: "8px",
+                                                background: statusStyles[item.status]?.background,
+                                                color: statusStyles[item.status]?.color,
+                                                borderRadius: "6px",
                                                 fontSize: "12px",
+                                                textTransform: "capitalize",
                                             }}
                                         >
                                             {item.status}
                                         </span>
                                     </td>
 
+
+                                    {/* Actions */}
                                     <td>
-                                        <div
-                                            className="d-flex justify-content-end gap-2"
-                                            style={{ whiteSpace: "nowrap" }}
-                                        >
+                                        <div className="d-flex justify-content-end gap-2" style={{ whiteSpace: "nowrap" }}>
+
+                                            {/* View Btn */}
                                             <button
                                                 className="btn btn-sm"
                                                 style={{
                                                     background: "var(--secondary)",
                                                     color: "var(--secondary-foreground)",
                                                     borderRadius: "6px",
-                                                    minWidth: "70px",
+                                                    padding: "6px 14px",
+                                                    fontSize: "13px",
                                                 }}
+
+                                                onClick={() => window.open(`/client/agreement/view/${item._id}`, "_blank")}
                                             >
                                                 View
                                             </button>
 
-                                            {(item.status === "Pending" || item.status === "Viewed") && (
+                                            {/* Sign Button */}
+                                            {(item.status === "pending" || item.status === "viewed") && (
                                                 <button
                                                     className="btn btn-sm"
                                                     style={{
                                                         background: "var(--primary)",
                                                         color: "var(--primary-foreground)",
                                                         borderRadius: "6px",
-                                                        minWidth: "70px",
+                                                        padding: "6px 14px",
+                                                        fontSize: "13px",
+                                                    }}
+                                                    onClick={() => {
+                                                        setShowSignModal(true)
+                                                        setCurrentSignAgreement(item)
                                                     }}
                                                 >
                                                     Sign
@@ -286,11 +375,12 @@ export default function AgreementPage() {
                         </tbody>
                     </table>
 
+
                 </div>
 
                 {/* ------------------------- MOBILE CARD LIST ------------------------- */}
-                <div className="d-block d-md-none">
-                    {sampleAgreements.map((item, idx) => (
+                {/* <div className="d-block d-md-none">
+                    {filteredAgreements.map.map((item, idx) => (
                         <div
                             key={idx}
                             className="p-3 mb-3"
@@ -359,52 +449,18 @@ export default function AgreementPage() {
                             </div>
                         </div>
                     ))}
-                </div>
+                </div> */}
             </div>
+
+            {/* SIGN MODAL */}
+            <AgreementSignModal
+                show={showSignModal}
+                onHide={() => setShowSignModal(false)
+                }
+                agreement = {currentSignAgreement} 
+            />
         </>
     );
 }
 
-// SAMPLE MOCK DATA
-const sampleAgreements = [
-    {
-        title: "Master Service Agreement",
-        id: "AGR-0007",
-        uploadedBy: "Sarah Chen",
-        uploaded: "2025-11-02",
-        expiry: "3 days",
-        status: "Pending",
-        statusBg: "var(--warning)",
-        statusColor: "var(--warning-foreground)",
-    },
-    {
-        title: "Data Processing Addendum",
-        id: "AGR-0008",
-        uploadedBy: "Michael Patel",
-        uploaded: "2025-11-01",
-        expiry: "8 days",
-        status: "Viewed",
-        statusBg: "var(--muted)",
-        statusColor: "var(--text-muted)",
-    },
-    {
-        title: "SOW – Q4 Implementation",
-        id: "AGR-0009",
-        uploadedBy: "Priya Nair",
-        uploaded: "2025-10-20",
-        expiry: "Expired",
-        status: "Expired",
-        statusBg: "var(--destructive)",
-        statusColor: "var(--destructive-foreground)",
-    },
-    {
-        title: "Security & Compliance Policy",
-        id: "AGR-0010",
-        uploadedBy: "Daniel Ross",
-        uploaded: "2025-10-18",
-        expiry: "11 days",
-        status: "Signed",
-        statusBg: "var(--success)",
-        statusColor: "var(--success-foreground)",
-    },
-];
+

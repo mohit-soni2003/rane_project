@@ -40,6 +40,9 @@ import DocumentForReview from "./pages/client/DocumentForReview.jsx"; //used to 
 import TransactionPage from "./pages/client/TransactionPage.jsx";
 import SalaryPage from "./pages/admin/SalaryPage.jsx";
 import AgreementPage from "./pages/client/AgreementPage.jsx";
+import AgreementForAction from "./pages/client/AgreementForAction.jsx";
+import ClosedAgreement from "./pages/client/ClosedAgreement.jsx";
+import AgreementView from "./pages/client/AgreementView.jsx";
 
 import AdminLayout from "./Layout/AdminLayout";
 import HomePageAdmin from "./pages/admin/HomePageAdmin.jsx";
@@ -171,7 +174,11 @@ function App() {
           <Route path="dfsrequest/:id" element={<DocumentForReview />} />
           <Route path="under-dev" element={<UnderDevPage />} />
           <Route path="agreement" element={<AgreementPage />} />
-        </Route>
+          <Route path="agreement/action" element={<AgreementForAction />} />
+          <Route path="agreement/closed" element={<ClosedAgreement />} />
+          <Route path="agreement/view/:id" element={<AgreementView />} />
+
+        </Route> 
 
         {/* ---------Admin Route ---------- */}
         <Route

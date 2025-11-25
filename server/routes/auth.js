@@ -1,108 +1,109 @@
 const express = require("express")
-const User= require("../models/usermodel")
-const generateTokenAndSetCookie =require("../utils/generateTokenAndSetCookie")
-const {sendVerificationEmail , sendWelcomeEmail , sendPasswordResetEmail,sendResetSuccessEmail} = require("../mailtrap/email")
+const User = require("../models/usermodel")
+const generateTokenAndSetCookie = require("../utils/generateTokenAndSetCookie")
+const { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail, sendResetSuccessEmail } = require("../mailtrap/email")
 const verifyToken = require("../middleware/verifyToken")
 const crypto = require("crypto")
-const {FRONTEND_ORIGIN_URL} = require("../keys")
+const { FRONTEND_ORIGIN_URL } = require("../keys")
+const { sendWhatsAppMessage } = require("../utils/whatsappMessageSender")
 
 
 const router = express.Router();
 
 router.post("/signup", async (req, res) => {
-    console.log("Signup post request received...");
-    
-    const { email, name, password, usertype, clientType, cid, phoneNo, address, firmName, gstno, idproof, idProofType, upi, bankName, ifscCode, accountNo } = req.body;
-    if (!email || !name || !password) {
-        return res.status(400).json({ error: "Please enter all required fields" });
-    }
+	console.log("Signup post request received...");
 
-    try {
-        let user = await User.findOne({ email });
+	const { email, name, password, usertype, clientType, cid, phoneNo, address, firmName, gstno, idproof, idProofType, upi, bankName, ifscCode, accountNo } = req.body;
+	if (!email || !name || !password) {
+		return res.status(400).json({ error: "Please enter all required fields" });
+	}
 
-        if (user) {
-            if (user.isverified) {
-                return res.status(400).json({ error: "User already exists with the same email" });
-            } else {
-                // User exists but is not verified, update token and resend email
-                user.VerificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+	try {
+		let user = await User.findOne({ email });
+
+		if (user) {
+			if (user.isverified) {
+				return res.status(400).json({ error: "User already exists with the same email" });
+			} else {
+				// User exists but is not verified, update token and resend email
+				user.VerificationToken = Math.floor(100000 + Math.random() * 900000).toString();
 				user.name = name;
-				user.password= password;
+				user.password = password;
 
-                user.VerificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hrs
-                await user.save();
-                await sendVerificationEmail(user.email, user.VerificationToken);
-                return res.status(200).json({ success: true, message: "Verification email resent." });
-            }
-        }
+				user.VerificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hrs
+				await user.save();
+				await sendVerificationEmail(user.email, user.VerificationToken);
+				return res.status(200).json({ success: true, message: "Verification email resent." });
+			}
+		}
 
-        // Create a new user
-        const VerificationToken = Math.floor(100000 + Math.random() * 900000).toString();
-        user = new User({
-            email,
-            password,
-            name,
-            usertype,
-            clientType,
-            cid: cid || "N/A",
-            phoneNo,
-            address,
-            firmName,
-            gstno,
-            idproof,
-            idProofType,
-            upi,
-            bankName,
-            ifscCode,
-            accountNo,
-            isverified: false,
-            VerificationToken,
-            VerificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hrs
-        });
+		// Create a new user
+		const VerificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+		user = new User({
+			email,
+			password,
+			name,
+			usertype,
+			clientType,
+			cid: cid || "N/A",
+			phoneNo,
+			address,
+			firmName,
+			gstno,
+			idproof,
+			idProofType,
+			upi,
+			bankName,
+			ifscCode,
+			accountNo,
+			isverified: false,
+			VerificationToken,
+			VerificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hrs
+		});
 
-        await user.save();
-        await sendVerificationEmail(user.email, VerificationToken);
+		await user.save();
+		await sendVerificationEmail(user.email, VerificationToken);
 
-        // Generate JWT token
-        generateTokenAndSetCookie(res, user._id);
+		// Generate JWT token
+		generateTokenAndSetCookie(res, user._id);
 
-        res.status(201).json({
-            success: true,
-            message: "User created successfully. Please verify your email.",
-            user: {
-                ...user._doc,
-                password: undefined, // Do not send the password back
-            },
-        });
-    } catch (error) {
-        console.error("Signup Error:", error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
+		res.status(201).json({
+			success: true,
+			message: "User created successfully. Please verify your email.",
+			user: {
+				...user._doc,
+				password: undefined, // Do not send the password back
+			},
+		});
+	} catch (error) {
+		console.error("Signup Error:", error);
+		res.status(500).json({ error: "Internal Server Error" });
+	}
 });
 
 
-router.post("/verify-email",async(req,res)=>{
+router.post("/verify-email", async (req, res) => {
 	console.log("Verify email route hitted..")
-    const { code } = req.body;
+	const { code } = req.body;
 	try {
-        console.log(code)
-		const user = await User.findOne({ 
-            VerificationToken: code,
+		console.log(code)
+		const user = await User.findOne({
+			VerificationToken: code,
 			// verificationTokenExpiresAt: { $gt: Date.now() },
 		});
-//         const allUsers = await User.find({});
-// console.log(allUsers);
-        console.log(user)
+		//         const allUsers = await User.find({});
+		// console.log(allUsers);
+		console.log(user)
 		if (!user) {
 			return res.json({ success: false, error: "Invalid or expired verification code" });
 		}
 
-		user.isverified= true;
+		user.isverified = true;
 		user.VerificationToken = undefined;
 		user.VerificationTokenExpiresAt = undefined;
 		await user.save();
 
-		await sendWelcomeEmail( user.name ,user.email, user.password , );
+		await sendWelcomeEmail(user.name, user.email, user.password,);
 
 		res.status(200).json({
 			success: true,
@@ -118,24 +119,35 @@ router.post("/verify-email",async(req,res)=>{
 		res.status(500).json({ success: false, error: "Server error" });
 	}
 })
-router.post("/signin",async (req, res) => {
-	console.log("Signin Route Hitted/.")
-    const { email, password } = req.body;
+router.post("/signin", async (req, res) => {
+	console.log("Signin Route Hitted/.");
+	const { email, password } = req.body;
 	try {
 		const user = await User.findOne({ email });
 		if (!user) {
 			return res.json({ success: false, error: "Invalid credentials" });
 		}
-		const isPasswordValid = password==user.password;
+
+		const isPasswordValid = password == user.password;
 		if (!isPasswordValid) {
-			return res.json({ success: false, error : "Invalid credentials" });
+			return res.json({ success: false, error: "Invalid credentials" });
 		}
 
+		// Generate token and set cookie
 		generateTokenAndSetCookie(res, user._id);
 
+		// Update last login 
 		user.lastlogin = new Date();
 		await user.save();
 
+		// Send WhatsApp message but ignore errors
+		
+			const dateTime = new Date().toLocaleString();
+			const message = `Hello ${user.name}, you just logged in to RSWMS work management system successfully on ${dateTime}.`;
+			// await sendWhatsAppMessage("919589571577", message);
+
+		
+		// Respond to client
 		res.status(200).json({
 			success: true,
 			message: "Logged in successfully",
@@ -149,8 +161,9 @@ router.post("/signin",async (req, res) => {
 		res.status(400).json({ success: false, message: error.message });
 	}
 });
-router.post("/forgot-password",async(req,res) =>{
-    const { email } = req.body;
+
+router.post("/forgot-password", async (req, res) => {
+	const { email } = req.body;
 	try {
 		const user = await User.findOne({ email });
 
@@ -176,8 +189,8 @@ router.post("/forgot-password",async(req,res) =>{
 		res.status(400).json({ success: false, message: error.message });
 	}
 })
-router.post("/reset-password/:token",async(req,res)=>{
-    try {
+router.post("/reset-password/:token", async (req, res) => {
+	try {
 		const { token } = req.params;
 		const { password } = req.body;
 
@@ -206,13 +219,13 @@ router.post("/reset-password/:token",async(req,res)=>{
 	}
 })
 
-router.get("/check-auth",verifyToken,async(req,res)=>{
+router.get("/check-auth", verifyToken, async (req, res) => {
 	console.log("check auth routed hitted...")
 
-    try {
+	try {
 		const user = await User.findById(req.userId).select("-password");
 		if (!user) {
-			return res.status(400).json({ success: false, error:"User not found" });
+			return res.status(400).json({ success: false, error: "User not found" });
 		}
 
 		res.status(200).json({ success: true, user });
@@ -223,60 +236,60 @@ router.get("/check-auth",verifyToken,async(req,res)=>{
 })
 
 
-router.post("/logout", async(req, res) => {
-	 res.clearCookie("testToken", {
+router.post("/logout", async (req, res) => {
+	res.clearCookie("testToken", {
 		httpOnly: true,
 		secure: true,
 		sameSite: "None",
-		path: "/",  
+		path: "/",
 	});
-	
-	
-    res.clearCookie("token", {
-		httpOnly: true,
-        secure: true,
-        sameSite: "None",
-		path: "/",  // Important for clearing
-    });
 
-    res.status(200).json({ success: true, message: "Logged out successfully"  });
+
+	res.clearCookie("token", {
+		httpOnly: true,
+		secure: true,
+		sameSite: "None",
+		path: "/",  // Important for clearing
+	});
+
+	res.status(200).json({ success: true, message: "Logged out successfully" });
 });
 
 
 
 router.post("/change-password", verifyToken, async (req, res) => {
-    console.log("Change password route hit...");
+	console.log("Change password route hit...");
 
-    try {
-        const { currentPassword, newPassword } = req.body;
+	try {
+		const { currentPassword, newPassword } = req.body;
 
-        if (!currentPassword || !newPassword) {
-            return res.status(400).json({ success: false, message: "Please provide both current and new password" });
-        }
+		if (!currentPassword || !newPassword) {
+			return res.status(400).json({ success: false, message: "Please provide both current and new password" });
+		}
 
-        const user = await User.findById(req.userId);
+		const user = await User.findById(req.userId);
 		console.log("chagePassord : " + req.userId + " This is req.userId")
 
-        if (!user) {
-            return res.status(404).json({ success: false, message: "User not found" });
-        }
+		if (!user) {
+			return res.status(404).json({ success: false, message: "User not found" });
+		}
 
-        // Validate current password
-        if (user.password !== currentPassword) {
-            return res.status(400).json({ success: false, message: "Current password is incorrect" });
-        }
+		// Validate current password
+		if (user.password !== currentPassword) {
+			return res.status(400).json({ success: false, message: "Current password is incorrect" });
+		}
 
-        // Update the password
-        user.password = newPassword;
-        await user.save();
+		// Update the password
+		user.password = newPassword;
+		await user.save();
 
-        res.status(200).json({ success: true, message: "Password changed successfully" });
+		res.status(200).json({ success: true, message: "Password changed successfully" });
 
-    } catch (error) {
-        console.log("Error in change-password", error);
-        res.status(500).json({ success: false, message: "Server error" });
-    }
+	} catch (error) {
+		console.log("Error in change-password", error);
+		res.status(500).json({ success: false, message: "Server error" });
+	}
 });
 
 
-module.exports=router
+module.exports = router
