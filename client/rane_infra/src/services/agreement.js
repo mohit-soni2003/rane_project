@@ -78,3 +78,30 @@ export const signAgreement = async (id, name) => {
     throw error;
   }
 };
+
+
+// Reject agreement by ID
+export const rejectAgreement = async (id, reason) => {
+  try {
+    const res = await fetch(`${backend_url}/agreement/${id}/reject`, {
+      method: "PATCH",
+      credentials: "include", // include JWT cookies
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ reason }), // sending the reason
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to reject agreement");
+    }
+
+    return data; 
+    // { success: true, message: "...", agreement: {...} }
+  } catch (error) {
+    console.error("Error rejecting agreement:", error);
+    throw error;
+  }
+};

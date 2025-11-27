@@ -4,7 +4,7 @@ import ClientHeader from "../../component/header/ClientHeader";
 import { getClientAgreements } from "../../services/agreement";
 import { useNavigate } from "react-router-dom";
 import AgreementSignModal from "../../assets/cards/models/AgreementSignModal";
-
+import AgreementRejectModal from "../../assets/cards/models/AgreementRejectModal";
 // -------------------------------------------------
 //this is the agreement overview section 
 // -------------------------------------------------
@@ -15,25 +15,46 @@ export default function AgreementPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [showSignModal, setShowSignModal] = useState(false);
-    const [currentSignAgreement,setCurrentSignAgreement] = useState();
+    const [showRejectModal, setRejectModal] = useState(false);
+    const [currentSignAgreement, setCurrentSignAgreement] = useState();
+    const [summary, setSummary] = useState({
+        pending: 0,
+        viewed: 0,
+        signed: 0,
+        expired: 0
+    });
 
 
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const load = async () => {
-            try {
-                setLoading(true);
-                const data = await getClientAgreements();
-                setAgreements(data.agreements || []);
-            } catch (err) {
-                console.error("Failed to load agreements:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
+    const load = async () => {
+        try {
+            setLoading(true);
+            const data = await getClientAgreements();
+            const list = data.agreements || [];
 
-        load();
+            setAgreements(list);
+
+            // Calculate summary dynamically
+            const counts = {
+                pending: list.filter(a => a.status === "pending").length,
+                viewed: list.filter(a => a.status === "viewed").length,
+                signed: list.filter(a => a.status === "signed").length,
+                expired: list.filter(a => a.status === "expired").length,
+            };
+
+            setSummary(counts);
+
+        } catch (err) {
+            console.error("Failed to load agreements:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+    useEffect(() => {
+        load();        // now works ✔
     }, []);
 
 
@@ -178,11 +199,12 @@ export default function AgreementPage() {
                 {/* Summary Cards */}
                 <div className="row gy-4 mb-4">
                     {[
-                        { label: "Pending Agreements", value: 12 },
-                        { label: "Viewed not signed", value: 5 },
-                        { label: "Signed Agreements", value: 38 },
-                        { label: "Expired Agreements", value: 3 },
+                        { label: "Pending Agreements", value: summary.pending },
+                        { label: "Viewed Not Signed", value: summary.viewed },
+                        { label: "Signed Agreements", value: summary.signed },
+                        { label: "Expired Agreements", value: summary.expired },
                     ].map((item, idx) => (
+
                         <div className="col-6 col-md-3" key={idx}>
                             <div
                                 className="p-4 h-100"
@@ -351,22 +373,40 @@ export default function AgreementPage() {
 
                                             {/* Sign Button */}
                                             {(item.status === "pending" || item.status === "viewed") && (
-                                                <button
-                                                    className="btn btn-sm"
-                                                    style={{
-                                                        background: "var(--primary)",
-                                                        color: "var(--primary-foreground)",
-                                                        borderRadius: "6px",
-                                                        padding: "6px 14px",
-                                                        fontSize: "13px",
-                                                    }}
-                                                    onClick={() => {
-                                                        setShowSignModal(true)
-                                                        setCurrentSignAgreement(item)
-                                                    }}
-                                                >
-                                                    Sign
-                                                </button>
+                                                <>
+                                                    <button
+                                                        className="btn btn-sm"
+                                                        style={{
+
+                                                            background: "var(--primary)",
+                                                            color: "var(--primary-foreground)",
+                                                            borderRadius: "6px",
+                                                            padding: "6px 14px",
+                                                            fontSize: "13px",
+                                                        }}
+                                                        onClick={() => {
+                                                            setShowSignModal(true)
+                                                            setCurrentSignAgreement(item)
+                                                        }}>
+                                                        Sign
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-sm"
+                                                        style={{
+
+                                                            background: "var(--primary)",
+                                                            color: "var(--primary-foreground)",
+                                                            borderRadius: "6px",
+                                                            padding: "6px 14px",
+                                                            fontSize: "13px",
+                                                        }}
+                                                        onClick={() => {
+                                                            setRejectModal(true)
+                                                            setCurrentSignAgreement(item)
+                                                        }}>
+                                                        Reject
+                                                    </button>
+                                                </>
                                             )}
                                         </div>
                                     </td>
@@ -457,8 +497,17 @@ export default function AgreementPage() {
                 show={showSignModal}
                 onHide={() => setShowSignModal(false)
                 }
-                agreement = {currentSignAgreement} 
+                agreement={currentSignAgreement}
             />
+
+            <AgreementRejectModal
+                show={showRejectModal}
+                onHide={() => setRejectModal(false)}
+                agreement={currentSignAgreement}
+                onRejectSuccess={() => load()}   // 🔄 refresh page
+            />
+
+
         </>
     );
 }

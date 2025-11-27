@@ -48,28 +48,56 @@ export default function AgreementView() {
                         </small>
                     </div>
 
-                    <div className="d-flex flex-column flex-sm-row gap-2 w-100 w-lg-auto">
-                        <a
-                            href={agreement.fileUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="btn btn-outline-primary w-100 w-sm-auto"
-                            style={{
-                                borderColor: "var(--primary)",
-                                color: "var(--primary)",
-                            }}
-                        >
-                            Download PDF
-                        </a>
+                    {/* ACTION BUTTONS */}
+                    <div className="d-flex flex-column flex-sm-row gap-2">
+                        {agreement.status === "signed" && (
+                            <>
+                                <button
+                                    className="btn text-white"
+                                    style={{
+                                        backgroundColor: "var(--primary)",
+                                        padding: "6px 14px",
+                                        width: "auto"        // 🔥 makes button small instead of full width
+                                    }}
+                                >
+                                    Request Extension
+                                </button>   
+                            </>
+                        )}
 
-                        <button
-                            className="btn text-white w-100 w-sm-auto"
-                            style={{ backgroundColor: "var(--primary)" }}
-                        >
-                            Request Extension
-                        </button>
+
+                        {/* SHOW ONLY IF NOT signed OR rejected */}
+                        {agreement.status !== "signed" && agreement.status !== "rejected" && (
+                            <>
+                                <button
+                                    className="btn text-white"
+                                    style={{
+                                        backgroundColor: "var(--success-foreground)",
+                                        padding: "6px 14px",
+                                        width: "auto"
+                                    }}
+                                    onClick={() => setShowSignModal(true)}
+                                >
+                                    Accept Agreement
+                                </button>
+
+                                <button
+                                    className="btn"
+                                    style={{
+                                        backgroundColor: "var(--destructive)",
+                                        color: "var(--destructive-foreground)",
+                                        padding: "6px 14px",
+                                        width: "auto"
+                                    }}
+                                    onClick={() => setShowRejectModal(true)}
+                                >
+                                    Reject
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
+
 
                 {/* LAYOUT */}
                 <div className="row g-4">
@@ -133,24 +161,70 @@ export default function AgreementView() {
                             <h5 className="fw-semibold mb-3">Timeline</h5>
 
                             <div className="d-flex align-items-center justify-content-between flex-wrap">
+
                                 <div className="d-flex align-items-center flex-grow-1">
+
+                                    {/* UPLOADED → always green */}
                                     {timelineDot("var(--success-foreground)")}
-                                    {timelineLine("var(--success-foreground)")}
-                                    {timelineDot("var(--success-foreground)")}
-                                    {timelineLine("var(--success-foreground)")}
-                                    {timelineDot("var(--success-foreground)")}
-                                    {timelineLine("var(--destructive)")}
-                                    {timelineDot("var(--destructive)")}
+                                    {timelineLine(agreement.status !== "uploaded" ? "var(--success-foreground)" : "var(--border)")}
+
+                                    {/* VIEWED */}
+                                    {timelineDot(
+                                        agreement.status === "viewed" ||
+                                            agreement.status === "signed" ||
+                                            agreement.status === "rejected" ||
+                                            agreement.status === "expired"
+                                            ? "var(--success-foreground)"
+                                            : "var(--border)"
+                                    )}
+                                    {timelineLine(
+                                        agreement.status === "signed" ||
+                                            agreement.status === "rejected" ||
+                                            agreement.status === "expired"
+                                            ? "var(--success-foreground)"
+                                            : "var(--border)"
+                                    )}
+
+                                    {/* SIGNED */}
+                                    {timelineDot(
+                                        agreement.status === "signed"
+                                            ? "var(--success-foreground)"
+                                            : agreement.status === "rejected"
+                                                ? "var(--destructive)"
+                                                : "var(--border)"
+                                    )}
+
+                                    {/* LAST LINE COLOR */}
+                                    {timelineLine(
+                                        agreement.status === "expired"
+                                            ? "var(--destructive)"
+                                            : agreement.status === "rejected"
+                                                ? "var(--destructive)"
+                                                : "var(--border)"
+                                    )}
+
+                                    {/* FINAL DOT */}
+                                    {timelineDot(
+                                        agreement.status === "expired"
+                                            ? "var(--destructive)"
+                                            : agreement.status === "rejected"
+                                                ? "var(--destructive)"
+                                                : "var(--border)"
+                                    )}
                                 </div>
                             </div>
 
+                            {/* TIMELINE LABELS */}
                             <div className="d-flex justify-content-between small mt-2 text-muted">
                                 <span>Uploaded</span>
                                 <span>Viewed</span>
                                 <span>Signed</span>
-                                <span>Expired</span>
+                                <span>
+                                    {agreement.status === "rejected" ? "Rejected" : "Expired"}
+                                </span>
                             </div>
                         </div>
+
 
                         {/* NOTES */}
                         <div className="p-4 rounded shadow-sm mt-4 mb-4" style={{ background: "var(--card)" }}>
@@ -227,7 +301,7 @@ export default function AgreementView() {
                 </div>
             </div>
 
-            
+
         </>
     );
 }
