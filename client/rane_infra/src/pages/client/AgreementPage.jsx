@@ -259,7 +259,7 @@ export default function AgreementPage() {
                             </div>
                         </div>
                     ))}
-                </div>
+                </div> 
 
 
                 {/* ------------------------- DESKTOP TABLE ------------------------- */}

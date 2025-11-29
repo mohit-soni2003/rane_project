@@ -105,3 +105,32 @@ export const rejectAgreement = async (id, reason) => {
     throw error;
   }
 };
+
+
+// Get agreements that require action (Pending + Viewed)
+export const getClientActionAgreements = async () => {
+  try {
+    // Backend supports multiple statuses: ?status=Pending,Viewed
+    const query = "?status=pending,viewed";
+
+    const res = await fetch(`${backend_url}/agreement/client${query}`, {
+      method: "GET",
+      credentials: "include", // send JWT cookies
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to fetch actionable agreements");
+    }
+
+    return data; 
+    // { success, count, agreements: [...] }
+  } catch (error) {
+    console.error("Error fetching actionable agreements:", error);
+    throw error;
+  }
+};

@@ -151,36 +151,35 @@ router.get("/all", verifyToken, async (req, res) => {
  */
 
 router.get("/client", verifyToken, async (req, res) => {
-    console.log("Client Agreements route hit...");
+  try {
+    const { status } = req.query;
 
-    try {
-        const { status } = req.query;
+    const filter = { client: req.userId };
 
-        // ✅ Filter agreements for the current client
-        const filter = { client: req.userId };
-
-        // ✅ Add status filter if query parameter exists
-        if (status) {
-            filter.status = status;
-        }
-
-        const agreements = await Agreement.find(filter)
-            .populate("uploadedBy", "name email") // optional: show who uploaded it
-            .sort({ createdAt: -1 });
-
-        if (!agreements.length) {
-            return res.status(404).json({ success: false, message: "No agreements found." });
-        }
-
-        res.status(200).json({
-            success: true,
-            count: agreements.length,
-            agreements,
-        });
-    } catch (error) {
-        console.error("Error fetching client agreements:", error);
-        res.status(500).json({ success: false, message: "Internal server error." });
+    // Handle multiple statuses
+    if (status) {
+      const statusArray = status.split(","); 
+      filter.status = { $in: statusArray };
     }
+
+    const agreements = await Agreement.find(filter)
+      .populate("uploadedBy", "name email")
+      .sort({ createdAt: -1 });
+
+    if (!agreements.length) {
+      return res.status(404).json({ success: false, message: "No agreements found." });
+    }
+
+    res.status(200).json({
+      success: true,
+      count: agreements.length,
+      agreements,
+    });
+
+  } catch (error) {
+    console.error("Error fetching client agreements:", error);
+    res.status(500).json({ success: false, message: "Internal server error." });
+  }
 });
 
 /**
