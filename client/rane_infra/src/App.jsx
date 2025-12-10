@@ -24,6 +24,7 @@ import ClientSidebar from "./component/sidebar/ClientSidebar";
 import AdminSidebar from "./component/sidebar/AdminSidebar";
 import StaffSidebar from "./component/sidebar/StaffSidebar";
 import HomePageClient from "./pages/client/HomePageClient";
+import ClientDashboard from "./pages/client/ClientDashboard.jsx";
 import ClientLayout from "./Layout/ClientLayout";
 import UploadBillPage from "./pages/client/UploadBillPage";
 import MyBillPage from "./pages/client/MyBillPage";
@@ -157,6 +158,7 @@ function App() {
         >
           <Route index element={<HomePageClient />} />
           <Route path="home" element={<HomePageClient />} />
+          <Route path="home2" element={<ClientDashboard />} />
           <Route path="upload-bill" element={<UploadBillPage />} />
           <Route path="my-bill" element={<MyBillPage />} />
           <Route path="bill/:id" element={<SingleBillDetailsClient />} />

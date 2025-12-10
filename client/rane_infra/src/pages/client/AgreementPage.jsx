@@ -259,7 +259,7 @@ export default function AgreementPage() {
                             </div>
                         </div>
                     ))}
-                </div> 
+                </div>
 
 
                 {/* ------------------------- DESKTOP TABLE ------------------------- */}
@@ -498,6 +498,8 @@ export default function AgreementPage() {
                 onHide={() => setShowSignModal(false)
                 }
                 agreement={currentSignAgreement}
+                onSignSuccess={() => load()}   // 🔄 refresh page
+
             />
 
             <AgreementRejectModal

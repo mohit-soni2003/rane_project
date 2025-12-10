@@ -22,7 +22,7 @@ const ClientLayout = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
+  useEffect(() => { 
     setIsSidebarCollapsed(false);
   }, []);
 

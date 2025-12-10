@@ -61,7 +61,7 @@ export default function AgreementView() {
                                     }}
                                 >
                                     Request Extension
-                                </button>   
+                                </button>
                             </>
                         )}
 
@@ -112,16 +112,28 @@ export default function AgreementView() {
                             <h6 className="fw-bold">{agreement.title}</h6>
                             <p className="mt-2 text-break">{agreement.description}</p>
 
-                            <a
-                                href={agreement.fileUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-break"
-                                style={{ color: "var(--link)" }}
+                            {/* Bootstrap Button */}
+                            <button
+                                className="btn mt-3"
+                                style={{
+                                    backgroundColor: "var(--primary)",
+                                    color: "var(--primary-foreground)",
+                                    border: "1px solid var(--primary)",
+                                    padding: "3px 10px",
+                                    fontWeight: "500"
+                                }}
+                                onMouseEnter={(e) =>
+                                    (e.target.style.backgroundColor = "var(--primary-hover)")
+                                }
+                                onMouseLeave={(e) =>
+                                    (e.target.style.backgroundColor = "var(--primary)")
+                                }
+                                onClick={() => window.open(agreement.fileUrl, "_blank")}
                             >
-                                {agreement.fileUrl}
-                            </a>
+                                📄 View Agreement
+                            </button>
                         </div>
+
 
                         {/* STATUS */}
                         <div className="p-4 rounded shadow-sm mt-4" style={{ background: "var(--card)" }}>

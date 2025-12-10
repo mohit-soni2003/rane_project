@@ -22,7 +22,7 @@ const notificationSchema = new mongoose.Schema({
     recipient: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true, // Admin user who should receive this notification
+        required: true, // Admin OR  user who should receive this notification
     },
     sender: {
         type: mongoose.Schema.Types.ObjectId,
@@ -35,7 +35,7 @@ const notificationSchema = new mongoose.Schema({
     },
     relatedModel: {
         type: String,
-        enum: ['Bill', 'Payment', 'FileForward', 'User'],
+        enum: ["User", "Bill", "Payment", "Document", "FileForward", "Notification", "MonthlySalary", "BaseSalary", "Agreement"],
         default: null,
     },
     isRead: {

@@ -120,18 +120,6 @@ router.delete("/:id", verifyToken, async (req, res) => {
     }
 });
 
-// Create notification helper function
-const createNotification = async (notificationData) => {
-    try {
-        const notification = new Notification(notificationData);
-        await notification.save();
-        return notification;
-    } catch (error) {
-        console.error("Error creating notification:", error);
-        throw error;
-    }
-};
-
 // Export the helper function for use in other routes
 module.exports = router;
-module.exports.createNotification = createNotification;
+

@@ -54,15 +54,15 @@ export const getClientAgreements = async (status = "") => {
 
 
 // Sign agreement by ID
-export const signAgreement = async (id, name) => {
+export const signAgreement = async (id, name, password) => {
   try {
     const res = await fetch(`${backend_url}/agreement/${id}/sign`, {
       method: "PATCH",
-      credentials: "include", // send cookies (JWT)
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, password }), // ⬅️ MUST include password
     });
 
     const data = await res.json();
@@ -71,13 +71,13 @@ export const signAgreement = async (id, name) => {
       throw new Error(data.message || "Failed to sign agreement");
     }
 
-    return data; 
-    // { success: true, message: "...", agreement: {...} }
+    return data;
   } catch (error) {
     console.error("Error signing agreement:", error);
     throw error;
   }
 };
+
 
 
 // Reject agreement by ID

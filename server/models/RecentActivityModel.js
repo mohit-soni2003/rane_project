@@ -4,7 +4,7 @@ const recentActivitySchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true, // user who performed the action
+    required: true,
   },
   actionType: {
     type: String,
@@ -22,26 +22,33 @@ const recentActivitySchema = new mongoose.Schema({
       "status_changed",
       "system_action",
       "other",
+      "agreement_signed",
     ],
     default: "other",
   },
   description: {
     type: String,
-    required: true, // short readable info like "Uploaded Bill #123"
+    required: true,
   },
   relatedModel: {
     type: String,
-    enum: ["User", "Bill", "Payment", "Document", "FileForward", "Notification", "MonthlySalary", "BaseSalary"],
+    enum: ["User", "Bill", "Payment", "Document", "FileForward", "Notification", "MonthlySalary", "BaseSalary","Agreement"],
     default: null,
   },
   relatedId: {
     type: mongoose.Schema.Types.ObjectId,
-    default: null, // optional reference to related record
+    default: null,
   },
   metadata: {
-    type: mongoose.Schema.Types.Mixed, // store extra data (flexible)
+    type: mongoose.Schema.Types.Mixed,
     default: {},
   },
+
+  actionUrl: {
+    type: String,
+    default: null,
+  },
+
   createdAt: {
     type: Date,
     default: Date.now,

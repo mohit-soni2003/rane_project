@@ -3,8 +3,9 @@ import React, { useEffect, useState } from "react";
 import { Modal, Button, Form, Alert } from "react-bootstrap";
 import { signAgreement } from "../../../services/agreement";
 
-export default function AgreementSignModal({ show, onHide, agreement }) {
+export default function AgreementSignModal({ show, onHide, agreement, onSignSuccess }) {
     const [name, setName] = useState("");
+    const [password, setPassword] = useState(""); // 🔥 NEW PASSWORD STATE
     const [currentDateTime, setCurrentDateTime] = useState("");
 
     // Auto-fill current date & time
@@ -19,10 +20,18 @@ export default function AgreementSignModal({ show, onHide, agreement }) {
             return;
         }
 
+        if (!password.trim()) {
+            alert("Please enter your password to verify identity");
+            return;
+        }
+
         try {
-            const response = await signAgreement(agreement?._id, name);
+            const response = await signAgreement(agreement?._id, name, password);
             console.log("SIGNED:", response);
+            setName("");
+            setPassword("");
             onHide();
+            if (onSignSuccess) onSignSuccess();
         } catch (err) {
             alert(err.message);
         }
@@ -57,18 +66,10 @@ export default function AgreementSignModal({ show, onHide, agreement }) {
                         Agreement Summary
                     </h5>
 
-                    <p>
-                        <strong>Title:</strong> {agreement?.title}
-                    </p>
-                    <p>
-                        <strong>Agreement ID:</strong> {agreement?.agreementId}
-                    </p>
-                    <p>
-                        <strong>Uploaded By:</strong> {agreement?.uploadedBy?.name}
-                    </p>
-                    <p>
-                        <strong>Description:</strong> {agreement?.description}
-                    </p>
+                    <p><strong>Title:</strong> {agreement?.title}</p>
+                    <p><strong>Agreement ID:</strong> {agreement?.agreementId}</p>
+                    <p><strong>Uploaded By:</strong> {agreement?.uploadedBy?.name}</p>
+                    <p><strong>Description:</strong> {agreement?.description}</p>
 
                     <p>
                         <strong>File:</strong>{" "}
@@ -101,7 +102,7 @@ export default function AgreementSignModal({ show, onHide, agreement }) {
                         {/* NAME */}
                         <Form.Group className="mb-3">
                             <Form.Label style={{ color: "var(--text-strong)" }}>
-                                Your Full Name (Signature)
+                                Full Name (Signature)
                             </Form.Label>
                             <Form.Control
                                 style={{
@@ -112,6 +113,23 @@ export default function AgreementSignModal({ show, onHide, agreement }) {
                                 placeholder="Enter your full name"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
+                            />
+                        </Form.Group>
+
+                        {/* PASSWORD FIELD — 🔥 ADDED */}
+                        <Form.Group className="mb-3">
+                            <Form.Label style={{ color: "var(--text-strong)" }}>
+                                Account Password (Required for verification)
+                            </Form.Label>
+                            <Form.Control
+                                style={{
+                                    background: "var(--input)",
+                                    border: "1px solid var(--border)",
+                                }}
+                                type="password"
+                                placeholder="Enter your account password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                             />
                         </Form.Group>
 
@@ -144,9 +162,7 @@ export default function AgreementSignModal({ show, onHide, agreement }) {
                         }}
                     >
                         <strong>Final Confirmation:</strong>
-                        By signing this agreement, you confirm that you have read,
-                        understood, and agree to all terms mentioned in the attached
-                        agreement document.
+                        By signing this agreement, you confirm that you have read and agree to the terms.
                         <br />
                         Your digital signature will be recorded with the above timestamp.
                     </Alert>

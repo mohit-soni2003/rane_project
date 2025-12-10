@@ -2,6 +2,10 @@ const express = require("express");
 const Agreement = require("../models/agreementModel");
 const verifyToken = require("../middleware/verifyToken");
 const User = require("../models/usermodel")
+const RecentActivityModel = require("../models/RecentActivityModel")
+const Notification = require("../models/notificationModel")
+const {createNotification} = require("../utils/createNotification")
+
 
 
 const router = express.Router();
@@ -17,28 +21,54 @@ router.post("/create", verifyToken, async (req, res) => {
     try {
         const { title, description, client, fileUrl, expiryDate } = req.body;
 
-        // ✅ Basic validation
+        // Basic validation
         if (!title || !client || !fileUrl) {
-            return res.status(400).json({ success: false, message: "Title, client, and fileUrl are required." });
+            return res.status(400).json({
+                success: false,
+                message: "Title, client, and fileUrl are required."
+            });
         }
 
-        // ✅ Create new agreement
+        // Create new agreement
         const newAgreement = new Agreement({
             title,
             description,
             client,
             fileUrl,
-            uploadedBy: req.userId, // from verifyToken middleware
+            uploadedBy: req.userId,
             expiryDate,
         });
 
         await newAgreement.save();
 
-        res.status(201).json({
+        /*
+         * ------------------------------------------------------------
+         * CREATE NOTIFICATION HERE
+         * ------------------------------------------------------------
+         */
+
+        await createNotification({
+            title: "New Agreement Created",
+            message: `An agreement titled "${title}" has been created.`,
+            type: "dfs",       // OR "system", "user", etc.
+            priority: "medium",
+            recipient: client, // client receives the notification
+            sender: req.userId,
+            relatedId: newAgreement._id,
+            relatedModel: "Agreement",
+            actionUrl: `/client/agreement/view${newAgreement._id}`,
+            metadata: {
+                agreementTitle: title,
+                uploadedBy: req.userId
+            }
+        });
+
+        return res.status(201).json({
             success: true,
-            message: "Agreement created successfully.",
+            message: "Agreement created & notification sent.",
             agreement: newAgreement,
         });
+
     } catch (error) {
         console.error("Error creating agreement:", error);
         res.status(500).json({ success: false, message: "Internal server error." });
@@ -151,35 +181,35 @@ router.get("/all", verifyToken, async (req, res) => {
  */
 
 router.get("/client", verifyToken, async (req, res) => {
-  try {
-    const { status } = req.query;
+    try {
+        const { status } = req.query;
 
-    const filter = { client: req.userId };
+        const filter = { client: req.userId };
 
-    // Handle multiple statuses
-    if (status) {
-      const statusArray = status.split(","); 
-      filter.status = { $in: statusArray };
+        // Handle multiple statuses
+        if (status) {
+            const statusArray = status.split(",");
+            filter.status = { $in: statusArray };
+        }
+
+        const agreements = await Agreement.find(filter)
+            .populate("uploadedBy", "name email")
+            .sort({ createdAt: -1 });
+
+        if (!agreements.length) {
+            return res.status(404).json({ success: false, message: "No agreements found." });
+        }
+
+        res.status(200).json({
+            success: true,
+            count: agreements.length,
+            agreements,
+        });
+
+    } catch (error) {
+        console.error("Error fetching client agreements:", error);
+        res.status(500).json({ success: false, message: "Internal server error." });
     }
-
-    const agreements = await Agreement.find(filter)
-      .populate("uploadedBy", "name email")
-      .sort({ createdAt: -1 });
-
-    if (!agreements.length) {
-      return res.status(404).json({ success: false, message: "No agreements found." });
-    }
-
-    res.status(200).json({
-      success: true,
-      count: agreements.length,
-      agreements,
-    });
-
-  } catch (error) {
-    console.error("Error fetching client agreements:", error);
-    res.status(500).json({ success: false, message: "Internal server error." });
-  }
 });
 
 /**
@@ -335,22 +365,32 @@ router.patch("/:id/view", verifyToken, async (req, res) => {
 router.patch("/:id/sign", verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name } = req.body;
+        const { name, password } = req.body;
 
-        if (!name) {
-            return res.status(400).json({ success: false, message: "Name is required." });
+        if (!name || !password) {
+            return res.status(400).json({ success: false, message: "Name and Password is required." });
         }
 
-        // Extract IP address from request headers
+        // Extract IP address
         const ip =
-            req.headers["x-forwarded-for"]?.split(",")[0] || // for proxies
-            req.socket.remoteAddress || // direct connection
+            req.headers["x-forwarded-for"]?.split(",")[0] ||
+            req.socket.remoteAddress ||
             "unknown";
 
         const agreement = await Agreement.findOne({ _id: id, client: req.userId });
         if (!agreement)
-            return res.status(404).json({ success: false, message: "Agreement not found or not assigned to this client." });
+            return res.status(404).json({
+                success: false,
+                message: "Agreement not found or not assigned to this client."
+            });
 
+        const user = await User.findOne({ _id: req.userId });
+        if (password != user.password) {
+            return res.status(400).json({ success: false, message: "Password is incorrect." });
+
+        }
+
+        // Update signature
         agreement.clientSignature = {
             name,
             date: new Date(),
@@ -361,14 +401,32 @@ router.patch("/:id/sign", verifyToken, async (req, res) => {
 
         await agreement.save();
 
+        // ⭐ ADD RECENT ACTIVITY LOG
+        try {
+            await RecentActivityModel.create({
+                user: req.userId,
+                actionType: "agreement_signed",
+                description: `You signed the agreement: ${agreement.title || "Agreement"}.`,
+                relatedId: agreement._id,
+                relatedModel: "Agreement",
+                actionUrl: `/client/agreement/view/${agreement._id}`,
+            });
+        } catch (activityErr) {
+            console.error("Error creating recent activity (agreement_signed):", activityErr);
+        }
+
         res.status(200).json({
             success: true,
             message: "Agreement signed successfully.",
             agreement,
         });
+
     } catch (error) {
         console.error("Error signing agreement:", error);
-        res.status(500).json({ success: false, message: "Internal server error." });
+        res.status(500).json({
+            success: false,
+            message: "Internal server error."
+        });
     }
 });
 
