@@ -56,7 +56,7 @@ router.post("/create", verifyToken, async (req, res) => {
             sender: req.userId,
             relatedId: newAgreement._id,
             relatedModel: "Agreement",
-            actionUrl: `/client/agreement/view${newAgreement._id}`,
+            actionUrl: `/client/agreement/view/${newAgreement._id}`,
             metadata: {
                 agreementTitle: title,
                 uploadedBy: req.userId

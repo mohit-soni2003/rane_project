@@ -11,7 +11,7 @@ const Document = require("../models/documentmodel");
 const mongoose = require("mongoose");
 
 //This is used to fetch recent activities where userID is provided in params
-router.get("/:userId", async (req, res) => {
+router.get("/recent-activity/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
 
@@ -40,5 +40,7 @@ router.get("/:userId", async (req, res) => {
     });
   }
 });
+
+
 
 module.exports = router;

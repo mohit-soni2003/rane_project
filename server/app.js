@@ -59,7 +59,7 @@ app.use(require("./routes/documentroutes"))
 app.use("/dfs",require("./routes/fsforwardingroutes"))
 app.use("/salary",require("./routes/salaryroutes"))
 app.use("/agreement",require("./routes/agreementroutes"))
-app.use("/recent-activity",require("./routes/generalroutes")) //contains recent activit/notification
+app.use(require("./routes/generalroutes")) //contains recent activit/notification
 app.use("/dashboard",require("./routes/dashboardroutes")) // give all detais relaed to dashboard
 app.use("/notification",require("./routes/notificationRoutes"))
 // Start the server
