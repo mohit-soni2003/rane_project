@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Table, Form, InputGroup, Image, Spinner, Button } from 'react-bootstrap';
 import { BsSearch } from 'react-icons/bs';
 import AdminHeader from '../../component/header/AdminHeader';
+import StaffHeader from "../../component/header/StaffHeader";
 import { getAllClients } from '../../services/userServices'; // Adjust path as needed
 import dummyUser from "../../assets/images/dummyUser.jpeg";
 import { useNavigate } from 'react-router-dom';
@@ -28,6 +29,17 @@ export default function ClientsListAdminPage() {
     fetchClients();
   }, []);
 
+  const getHeaderComponent = () => {
+    switch (user?.role) {
+      case 'admin':
+        return <AdminHeader />;
+      case 'staff':
+        return <StaffHeader />;
+      default:
+        return <AdminHeader />; // fallback
+    }
+  };
+
   // Search by Name, Email, CID, or Phone Number
   const filteredClients = clients.filter(client => {
     const term = searchTerm.toLowerCase();
@@ -41,7 +53,7 @@ export default function ClientsListAdminPage() {
 
   return (
     <>
-      <AdminHeader />
+      {getHeaderComponent()}
       <Container className="my-4">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h4 className="mb-0">All Clients</h4>

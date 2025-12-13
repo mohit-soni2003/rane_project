@@ -1,0 +1,59 @@
+:root {
+    /* Base Layout */
+    --background: #fef7f3de;
+    --foreground: #3a2e2a;
+    --border: #eee6dd;
+    --input: #fffbf8;
+
+    /* Brand & Primary Colors */
+    --primary: #6b3e2b;
+    --primary-foreground: #ffffff;
+    --primary-hover: #5e3726; /* darker shade for hover */
+
+    /* Secondary UI */
+    --secondary: #f6ede6;
+    --secondary-foreground: #5a463f;
+    --secondary-hover: #e6d9cf; /* soft hover effect */
+
+    /* Accent (used for icons, highlights, links) */
+    --accent: #b95a52;
+    --accent-foreground: #ffffff;
+    --accent-hover: #a24f48;
+
+    /* Status Colors */
+    --success: #dff3e6;
+    --success-foreground: #225b31;
+    --warning: #f1d3ce;
+    --warning-foreground: #4a1f18;
+    --destructive: #c94a3a;
+    --destructive-foreground: #ffffff;
+
+    /* Muted / Neutral */
+    --muted: #faf5f2;
+    --muted-foreground: #8b7b74;
+
+    /* Card / Containers */
+    --card: #fffbf9;
+    --card-foreground: #3a2e2a;
+
+    /* Sidebar / Navbar */
+    --sidebar: #fff7f2;
+    --sidebar-foreground: #3a2e2a;
+    --sidebar-primary: #6b3e2b;
+    --sidebar-primary-foreground: #ffffff;
+
+    /* Shadows and Dividers */
+    --shadow-color: rgba(0, 0, 0, 0.08);
+    --divider: rgba(0, 0, 0, 0.06);
+
+    /* Text variations */
+    --text-muted: #7a6a64;
+    --text-strong: #2b1f1a;
+    --link: var(--accent);
+    --link-hover: var(--accent-hover);
+
+    /* Special / System */
+    --red: #ff0000;
+}
+
+

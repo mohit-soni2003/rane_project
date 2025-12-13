@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Container, Row, Col, Table, Button, Form,
-  InputGroup, Pagination
+  InputGroup, Dropdown, Pagination, Badge, Collapse, Card
 } from 'react-bootstrap';
 import {
   FaSearch, FaFilter, FaEllipsisV, FaEye,
@@ -9,7 +9,9 @@ import {
   FaCheckCircle, FaTimesCircle
 } from 'react-icons/fa';
 import AdminHeader from '../../component/header/AdminHeader';
+import StaffHeader from "../../component/header/StaffHeader";
 import { getAllPayments } from '../../services/paymentService';
+import { getTransactionsByPaymentId } from '../../services/transactionService';
 import dummyuser from "../../assets/images/dummyUser.jpeg"
 import { useNavigate } from 'react-router-dom';
 import PayPrmodel from '../../component/models/PayPrModel';
@@ -31,6 +33,8 @@ export default function PaymentRequestListAdmin() {
   const [showPayModal, setShowPayModal] = useState(false);
   const [selectedPaymentId, setSelectedPaymentId] = useState(null);
   const {user} = useAuthStore()
+  const [expandedPaymentId, setExpandedPaymentId] = useState(null);
+  const [transactionData, setTransactionData] = useState({});
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -43,6 +47,41 @@ export default function PaymentRequestListAdmin() {
     };
     fetchPayments();
   }, []);
+
+  const getHeaderComponent = () => {
+    switch (user?.role) {
+      case 'admin':
+        return <AdminHeader />;
+      case 'staff':
+        return <StaffHeader />;
+      default:
+        return <AdminHeader />; // fallback
+    }
+  };
+
+  const toggleTrail = async (paymentId) => {
+    if (expandedPaymentId === paymentId) {
+      setExpandedPaymentId(null);
+    } else {
+      setExpandedPaymentId(paymentId);
+      // Fetch transaction data if not already loaded
+      if (!transactionData[paymentId]) {
+        try {
+          const transactions = await getTransactionsByPaymentId(paymentId);
+          setTransactionData(prev => ({
+            ...prev,
+            [paymentId]: transactions
+          }));
+        } catch (error) {
+          console.error('Error fetching transactions:', error);
+          setTransactionData(prev => ({
+            ...prev,
+            [paymentId]: []
+          }));
+        }
+      }
+    }
+  };
 
   // Filter payments based on search term
   const filteredPayments = payments.filter((p) => {
@@ -66,7 +105,7 @@ export default function PaymentRequestListAdmin() {
 
   return (
     <>
-      <AdminHeader />
+      {getHeaderComponent()}
       <Container
         fluid
         style={{ backgroundColor: 'var(--admin-dashboard-bg-color)', minHeight: '100vh' }}
@@ -144,6 +183,7 @@ export default function PaymentRequestListAdmin() {
                 <th>Status</th>
                 <th>Request Date</th>
                 <th>Reference Mode</th>
+                <th>Trail</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -162,74 +202,136 @@ export default function PaymentRequestListAdmin() {
                 const payDisabled = status === 'Rejected';
 
                 return (
-                  <tr key={i} style={{ backgroundColor: bgColor }}>
-                    <td>
-                      <div
-                        className="rounded-circle d-inline-flex align-items-center justify-content-center"
-                        style={{
-                          backgroundColor: '#fcebea',
-                          width: '30px',
-                          height: '30px',
-                          fontSize: '0.9rem'
-                        }}
-                      >
-                        {i + 1}
-                      </div>
-                    </td>
-                    <td>
-                      <img
-                        src={d.user?.profile || dummyuser}
-                        alt=""
-                        style={{ width: '35px', height: '35px', objectFit: 'cover', borderRadius: '50%' }}
-                      />
-                    </td>
-                    <td>{d.user?.name || '—'}</td>
-                    <td>{d.tender || '—'}</td>
-                    <td>{d.amount ? `₹${d.amount}` : '—'}</td>
-                    <td>{d.expenseNo || '—'}</td>
-                    <td>
-                      <span
-                        className="badge"
-                        style={{
-                          backgroundColor: statusMap[status]?.color,
-                          color: statusMap[status]?.textColor
-                        }}
-                      >
-                        {icon} {status}
-                      </span>
-                    </td>
-                    <td>{d.submittedAt?.slice(0, 10) || '—'}</td>
-                    <td>{d.refMode || '—'}</td>
-                    <td>
-                      <div className="d-flex align-items-center gap-2">
-                        <Button
-                          variant="outline-secondary"
-                          size="sm"
-                          href={d.image}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <FaFileInvoice />
-                        </Button>
-                        <Button
-                          size="sm"
-                          disabled={payDisabled}
+                  <React.Fragment key={i}>
+                    <tr style={{ backgroundColor: bgColor }}>
+                      <td>
+                        <div
+                          className="rounded-circle d-inline-flex align-items-center justify-content-center"
                           style={{
-                            backgroundColor: payDisabled ? 'var(--admin-btn-secondary-bg)' : 'var(--admin-btn-success-bg)',
-                            color: 'var(--admin-btn-success-text)',
-                            border: 'none'
-                          }}
-                          onClick={() => {
-                            setSelectedPaymentId(d._id);
-                            setShowPayModal(true);
+                            backgroundColor: 'var(--staff-serial-number-bg)',
+                            width: '30px',
+                            height: '30px',
+                            fontSize: '0.9rem'
                           }}
                         >
-                          <FaRupeeSign className="me-1" /> Pay
+                          {i + 1}
+                        </div>
+                      </td>
+                      <td>
+                        <img
+                          src={d.user?.profile || dummyuser}
+                          alt=""
+                          style={{ width: '35px', height: '35px', objectFit: 'cover', borderRadius: '50%' }}
+                        />
+                      </td>
+                      <td>{d.user?.name || '—'}</td>
+                      <td>{d.tender || '—'}</td>
+                      <td>{d.amount ? `₹${d.amount}` : '—'}</td>
+                      <td>{d.expenseNo || '—'}</td>
+                      <td>
+                        <span
+                          className="badge"
+                          style={{
+                            backgroundColor: statusMap[status]?.color,
+                            color: statusMap[status]?.textColor
+                          }}
+                        >
+                          {icon} {status}
+                        </span>
+                      </td>
+                      <td>{d.submittedAt?.slice(0, 10) || '—'}</td>
+                      <td>{d.refMode || '—'}</td>
+                      <td>
+                        <Button
+                          variant="outline-info"
+                          size="sm"
+                          onClick={() => toggleTrail(d._id)}
+                        >
+                          {expandedPaymentId === d._id ? 'Hide Trail' : 'View Trail'}
                         </Button>
-                        <FaEllipsisV onClick={() => navigate(`/${user.role}/payment-request/${d._id}`)} />
-                      </div>
-                    </td>
-                  </tr>
+                      </td>
+                      <td>
+                        <div className="d-flex align-items-center gap-2">
+                          <Button
+                            variant="outline-secondary"
+                            size="sm"
+                            href={d.image}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <FaFileInvoice />
+                          </Button>
+                          <Button
+                            size="sm"
+                            disabled={payDisabled}
+                            style={{
+                              backgroundColor: payDisabled ? 'var(--admin-btn-secondary-bg)' : 'var(--admin-btn-success-bg)',
+                              color: 'var(--admin-btn-success-text)',
+                              border: 'none'
+                            }}
+                            onClick={() => {
+                              setSelectedPaymentId(d._id);
+                              setShowPayModal(true);
+                            }}
+                          >
+                            <FaRupeeSign className="me-1" /> Pay
+                          </Button>
+                          <FaEllipsisV onClick={() => navigate(`/${user.role}/payment-request/${d._id}`)} />
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colSpan={11} style={{ padding: 0, border: 'none' }}>
+                        <Collapse in={expandedPaymentId === d._id}>
+                          <div>
+                            <Card className="m-0 border-0 border-top">
+                              <Card.Header className="bg-light py-2">
+                                <h6 className="mb-0">Transaction Details for Payment Request</h6>
+                              </Card.Header>
+                              <Card.Body className="p-0">
+                                {transactionData[d._id] && transactionData[d._id].length > 0 ? (
+                                  <Table striped bordered hover responsive size="sm" className="mb-0">
+                                    <thead className="table-light">
+                                      <tr>
+                                        <th>#</th>
+                                        <th>Amount</th>
+                                        <th>Bank</th>
+                                        <th>Account No</th>
+                                        <th>IFSC</th>
+                                        <th>UPI</th>
+                                        <th>Transaction Date</th>
+                                        <th>Send To</th>
+                                        <th>Done By</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {transactionData[d._id].map((txn, idx) => (
+                                        <tr key={txn._id}>
+                                          <td>{idx + 1}</td>
+                                            <td>₹{txn.amount}</td>
+                                            <td>{txn.bankName || '—'}</td>
+                                            <td>{txn.accNo || '—'}</td>
+                                            <td>{txn.ifscCode || '—'}</td>
+                                            <td>{txn.upiId || '—'}</td>
+                                            <td>{new Date(txn.transactionDate).toLocaleString()}</td>
+                                            <td>{txn.userId?.name || '—'}</td>
+                                            <td>{txn.created_by || '—'}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </Table>
+                                ) : (
+                                  <div className="p-3 text-center text-muted">
+                                    No transactions found for this payment request.
+                                  </div>
+                                )}
+                              </Card.Body>
+                            </Card>
+                          </div>
+                        </Collapse>
+                      </td>
+                    </tr>
+                  </React.Fragment>
                 );
               })}
             </tbody>

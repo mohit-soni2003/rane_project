@@ -5,7 +5,9 @@ import {
   FaBuilding, FaIdCard, FaUniversity, FaKey,
   FaUpload, FaFilePdf, FaEye, FaEyeSlash
 } from 'react-icons/fa';
-import ClientHeader from '../../component/header/ClientHeader';
+import AdminHeader from "../../component/header/AdminHeader";
+import ClientHeader from "../../component/header/ClientHeader";
+import StaffHeader from "../../component/header/StaffHeader";
 import dummyUser from "../../assets/images/dummyUser.jpeg";
 import { updateUser, changePassword, updateIdProof } from '../../services/userServices';
 import { CLOUDINARY_URL_IMAGE, CLOUDINARY_URL } from '../../store/keyStore';
@@ -22,6 +24,19 @@ export default function SettingPage() {
   const [profileFile, setProfileFile] = useState(null);
 
   const { user } = useAuthStore();
+
+  const getHeaderComponent = () => {
+    switch (user?.role) {
+      case 'admin':
+        return <AdminHeader />;
+      case 'client':
+        return <ClientHeader />;
+      case 'staff':
+        return <StaffHeader />;
+      default:
+        return <AdminHeader />; // fallback
+    }
+  };
 
   const [formData, setFormData] = useState({
     id: user._id,
@@ -42,6 +57,11 @@ export default function SettingPage() {
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
+  });
+
+  const [safePasswords, setSafePasswords] = useState({
+    oldSafeKey: "",
+    newSafeKey: "",
   });
 
   const [documents, setDocuments] = useState({
@@ -168,7 +188,7 @@ const handleDocUpload = async (type, file) => {
 
   return (
     <>
-      <ClientHeader />
+      {getHeaderComponent()}
       <div className="container-fluid mt-4 mb-5 p-4" style={{
         backgroundColor: 'var(--client-component-bg-color)',
         color: 'var(--client-text-color)',
@@ -482,6 +502,51 @@ const handleDocUpload = async (type, file) => {
               >
                 Update Password
               </button>
+
+              {/* Safe Password Section - Admin Only */}
+              {user.role === 'admin' && (
+                <>
+                  <hr className="my-4" />
+                  <h6 className="mb-3 fw-semibold text-danger"><FaKey className="me-2" /> Safe Password</h6>
+                  
+                  {/* Old Safe Key */}
+                  <div className="mb-3">
+                    <label className="form-label">Old Safe Key</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      value={safePasswords.oldSafeKey}
+                      onChange={(e) =>
+                        setSafePasswords({ ...safePasswords, oldSafeKey: e.target.value })
+                      }
+                      placeholder="Enter current safe key"
+                    />
+                  </div>
+
+                  {/* New Safe Key */}
+                  <div className="mb-3">
+                    <label className="form-label">New Safe Key</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      value={safePasswords.newSafeKey}
+                      onChange={(e) =>
+                        setSafePasswords({ ...safePasswords, newSafeKey: e.target.value })
+                      }
+                      placeholder="Enter new safe key"
+                    />
+                  </div>
+
+                  {/* Update Safe Key Button */}
+                  <button
+                    className="btn mt-2"
+                    style={{ backgroundColor: 'var(--client-btn-bg)', color: 'var(--client-btn-text)' }}
+                    onClick={() => alert('Safe key update functionality will be implemented later')}
+                  >
+                    Update Safe Key
+                  </button>
+                </>
+              )}
 
             </div>
           </div>

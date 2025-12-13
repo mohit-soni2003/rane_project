@@ -102,7 +102,7 @@ const PendingDocumentsTable = () => {
           
           const dfsArray = Array.isArray(dfsResult) ? dfsResult : [];
           const pendingDfsDocs = dfsArray.filter(doc =>
-            doc.status === 'pending' || doc.status === 'in-review'
+            doc.status === 'in-review'
           );
           return pendingDfsDocs.map(doc => ({ ...doc, source: 'dfs' }));
         } catch (err) {

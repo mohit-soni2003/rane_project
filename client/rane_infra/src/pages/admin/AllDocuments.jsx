@@ -17,6 +17,7 @@ import StaffHeader from "../../component/header/StaffHeader";
 import { backend_url } from "../../store/keyStore";
 import { useAuthStore } from "../../store/authStore";
 import moment from "moment";
+import SafeKeyGuard from '../../component/models/SafeKeyGuard';
 
 export default function AllDocuments() {
   const { user } = useAuthStore();
@@ -324,3 +325,4 @@ export default function AllDocuments() {
     </>
   );
 }
+

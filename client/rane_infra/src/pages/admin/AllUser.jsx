@@ -12,6 +12,7 @@ import {
 import AdminHeader from "../../component/header/AdminHeader";
 import { backend_url } from "../../store/keyStore";
 import DeleteUserModal from "../../assets/cards/models/DeleteUserModal";
+import SafeKeyGuard from '../../component/models/SafeKeyGuard';
 
 export default function AllUser() {
   const [users, setUsers] = useState([]);
@@ -68,6 +69,7 @@ export default function AllUser() {
   return (
     <>
       <AdminHeader />
+      <SafeKeyGuard>
       <DeleteUserModal
         show={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
@@ -210,6 +212,7 @@ export default function AllUser() {
           )}
         </Card>
       </Container>
+      </SafeKeyGuard>
     </>
   );
 }

@@ -4,6 +4,7 @@ import { backend_url } from '../../store/keyStore';
 import AdminHeader from '../../component/header/AdminHeader';
 import { FaTrash } from 'react-icons/fa';
 import DeleteConfirmationModal from '../../component/models/DeleteConfirmationModal';
+import SafeKeyGuard from '../../component/models/SafeKeyGuard';
 
 const AllDFSRequests = () => {
   const [files, setFiles] = useState([]);
@@ -67,6 +68,7 @@ const AllDFSRequests = () => {
   return (
     <>
     <AdminHeader></AdminHeader>
+    <SafeKeyGuard>
     <div className="p-4">
       <h3>All Files and Communication Trail</h3>
       <Table striped bordered hover responsive>
@@ -161,6 +163,7 @@ const AllDFSRequests = () => {
         itemType="DFS Document"
       />
     </div>
+    </SafeKeyGuard>
     </>
   );
 };

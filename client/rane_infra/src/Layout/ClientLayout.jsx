@@ -10,162 +10,119 @@ const ClientLayout = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  const {user} = useAuthStore();
+  const { user } = useAuthStore();
 
-  // Function to be passed to ClientSidebar to sync sidebar collapse state
   const handleSidebarCollapse = (isCollapsed) => {
     setIsSidebarCollapsed(isCollapsed);
   };
 
-  // Ensure immediate state synchronization
-  useEffect(() => {
-    // Force a re-render to ensure layout adjusts immediately
-    const timer = setTimeout(() => {}, 0);
-    return () => clearTimeout(timer);
-  }, [isSidebarCollapsed]);
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Ensure sidebar state is properly initialized
-  useEffect(() => {
-    // Reset collapsed state on component mount if needed
+  useEffect(() => { 
     setIsSidebarCollapsed(false);
   }, []);
 
-
   return (
-    <>
+    <div style={{ backgroundColor: 'var(--background)', minHeight: '100vh' }}>
       {/* Sidebar on Desktop */}
-      <div style={{ backgroundColor: "var(--client-dashboard-bg-color)", height: "100vh" }}>
+      <div className="d-none d-md-block position-fixed">
+        <ClientSidebar key="desktop-sidebar" isOpen={true} onCollapse={handleSidebarCollapse} />
+      </div>
 
+      {/* Sidebar on Mobile */}
+      {isSidebarOpen && (
+        <>
+          <ClientSidebar key="mobile-sidebar" isOpen={true} toggleSidebar={toggleSidebar} />
+          <div
+            className="position-fixed top-0 start-0 w-100 h-100"
+            style={{ backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 1040 }}
+            onClick={toggleSidebar}
+          />
+        </>
+      )}
 
-        <div className="d-none d-md-block position-fixed">
-          <ClientSidebar 
-            key="desktop-sidebar" 
-            isOpen={true} 
-            onCollapse={handleSidebarCollapse} 
+      {/* Topbar (Mobile only) */}
+      <div
+        className="d-md-none px-3 py-2 d-flex justify-content-between align-items-center"
+        style={{
+          backgroundColor: 'var(--sidebar)',
+          color: 'var(--sidebar-foreground)',
+          borderBottom: '1px solid var(--border)',
+        }}
+      >
+        {/* Left: Sidebar Toggle */}
+        <button
+          className="btn p-0 m-0 d-flex align-items-center justify-content-center"
+          onClick={toggleSidebar}
+          aria-label="Toggle sidebar menu"
+          aria-expanded={isSidebarOpen}
+          style={{
+            color: 'var(--sidebar-foreground)',
+            fontSize: '1.2rem',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            width: '36px',
+            height: '36px',
+            backgroundColor: 'var(--secondary)',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--muted)')}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--secondary)')}
+        >
+          <FaBars size={20} />
+        </button>
+
+        {/* Center: Title */}
+        <span className="fw-semibold text-uppercase small" style={{ color: 'var(--foreground)' }}>
+          RS-WMS
+        </span>
+
+        {/* Right: Bell + Profile */}
+        <div className="d-flex align-items-center gap-3">
+          <div className="position-relative">
+            <FaBell size={20} style={{ color: 'var(--foreground)' }} />
+            <span
+              className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"
+              style={{ width: '10px', height: '10px' }}
+            ></span>
+          </div>
+
+          <img
+            src={user?.profile || '/assets/images/dummyUser.jpeg'}
+            alt="Profile"
+            className="rounded-circle"
+            style={{
+              width: '32px',
+              height: '32px',
+              objectFit: 'cover',
+              border: '2px solid var(--border)',
+            }}
           />
         </div>
+      </div>
 
-        {/* Sidebar on Mobile */}
-        {isSidebarOpen && (
-          <>
-            <ClientSidebar 
-              key="mobile-sidebar" 
-              isOpen={true} 
-              toggleSidebar={toggleSidebar} 
-            />
-            <div
-              className="position-fixed top-0 start-0 w-100 h-100"
-              style={{ backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 1040 }}
-              onClick={toggleSidebar}
-            />
-          </>
-        )}
-
-        {/* Topbar on Small Screens only visible on mobile phones*/}
-        <div
-          className="d-md-none px-3 py-2  d-flex justify-content-between align-items-center"
-          style={{
-            backgroundColor: "var(--client-dashboard-bg-color)",
-            color: "var(--client-text-color)",
-          }}
-        >
-          {/* Left: Sidebar Toggle */}
-          <button
-            className="btn p-0 m-0 d-flex align-items-center justify-content-center"
-            onClick={toggleSidebar}
-            aria-label="Toggle sidebar menu"
-            aria-expanded={isSidebarOpen}
-            style={{
-              color: "#ffffff",
-              fontWeight: "normal",
-              fontSize: "1.2rem",
-              border: "1px solid rgba(0,0,0,0.10)",
-              borderRadius: "8px",
-              width: "36px",
-              height: "36px",
-              lineHeight: "0",
-              backgroundColor: "rgba(0,0,0,0.06)",
-              transition: "color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease",
-              cursor: "pointer"
-            }}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget;
-              el.style.color = "rgba(255, 255, 255, 0.6)";
-              el.style.backgroundColor = "rgba(0,0,0,0.10)";
-              el.style.borderColor = "rgba(0,0,0,0.18)";
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget;
-              el.style.color = "#ffffff";
-              el.style.backgroundColor = "rgba(0,0,0,0.06)";
-              el.style.borderColor = "rgba(0,0,0,0.10)";
-            }}
-            onPointerDown={(e) => {
-              const el = e.currentTarget;
-              el.style.color = "rgba(255, 255, 255, 0.4)";
-              el.style.backgroundColor = "rgba(0,0,0,0.12)";
-              el.style.borderColor = "rgba(0,0,0,0.22)";
-            }}
-            onPointerUp={(e) => {
-              const el = e.currentTarget;
-              el.style.color = "#ffffff";
-              el.style.backgroundColor = "rgba(0,0,0,0.06)";
-              el.style.borderColor = "rgba(0,0,0,0.10)";
-            }}
-            onPointerCancel={(e) => {
-              const el = e.currentTarget;
-              el.style.color = "#ffffff";
-              el.style.backgroundColor = "rgba(0,0,0,0.06)";
-              el.style.borderColor = "rgba(0,0,0,0.10)";
-            }}
-          >
-            <FaBars size={20} />
-          </button>
-
-          {/* Center: Title */}
-          <span className="fw-semibold text-uppercase small">RS-WMS</span>
-
-          {/* Right: Bell + Profile */}
-          <div className="d-flex align-items-center gap-3">
-            {/* Notification Bell */}
-            <div className="position-relative">
-              <FaBell size={20} style={{ color: "var(--client-text-color)" }} />
-              <span
-                className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"
-                style={{ width: "10px", height: "10px" }}
-              ></span>
-            </div>
-
-            {/* Profile Image */}
-            <img
-              src={user?.profile || '/assets/images/dummyUser.jpeg'}
-              alt="Profile"
-              className="rounded-circle"
-              style={{ width: "32px", height: "32px", objectFit: "cover" }}
-            />
-          </div>
-        </div>
-
-
-        {/* Page Content */}
-        <div className="p-0 p-md-3" style={{ 
+      {/* Main Page Content */}
+      <div
+        className="p-0 p-md-3"
+        style={{
           marginLeft: windowWidth >= 768 ? (isSidebarCollapsed ? '60px' : '260px') : '0px',
           transition: 'margin-left 0.3s ease, width 0.3s ease',
           minHeight: '100vh',
           position: 'relative',
           zIndex: 1,
           width: windowWidth >= 768 ? `calc(100% - ${isSidebarCollapsed ? '60px' : '260px'})` : '100%',
-          overflowX: 'hidden'
-        }}>
-          <Outlet />
-        </div>
+          backgroundColor: 'var(--card)',
+          color: 'var(--card-foreground)',
+          overflowX: 'hidden',
+        }}
+      >
+        <Outlet />
       </div>
-    </>
+    </div>
   );
 };
 

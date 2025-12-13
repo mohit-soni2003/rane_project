@@ -131,26 +131,34 @@ export default function UploadBillPage() {
   return (
     <>
       <ClientHeader />
-      <Container fluid className="my-3 px-0">
-        <Card className="p-4 shadow-sm w-100" style={{ background: 'var(--client-component-bg-color)', borderRadius: '5px' }}>
-          <h5 className="mb-1 text-brown fw-semibold">
-            <FaFileAlt className="me-2 text-brown" />
+      <Container fluid className="my-3 px-0" style={{ backgroundColor: "var(--background)" }}>
+        <Card
+          className="p-4 shadow-sm w-100"
+          style={{
+            backgroundColor: "var(--card)",
+            color: "var(--card-foreground)",
+            borderRadius: "8px",
+            boxShadow: "0 2px 6px var(--shadow-color)",
+            border:"none"
+          }}
+        >
+          <h5 className="mb-1 fw-semibold" style={{ color: "var(--primary)" }}>
+            <FaFileAlt className="me-2" style={{ color: "var(--primary)" }} />
             Upload Your Bill
           </h5>
-          <p className="text-muted mb-4">Complete the form below to submit your bill for processing.</p>
+          <p className="mb-4" style={{ color: "var(--muted-foreground)" }}>
+            Complete the form below to submit your bill for processing.
+          </p>
 
-          {message.text && (
-            <Alert variant={message.type}>
-              {message.text}
-            </Alert>
-          )}
+          {message.text && <Alert variant={message.type}>{message.text}</Alert>}
 
           <Form onSubmit={handleSubmit}>
+            {/* Firm Name & Work Area */}
             <Row className="mb-3">
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label className="fw-semibold text-brown">
-                    <FaBuilding className="me-2" />
+                  <Form.Label className="fw-semibold" style={{ color: "var(--foreground)" }}>
+                    <FaBuilding className="me-2" style={{ color: "var(--primary)" }} />
                     Firm Name
                   </Form.Label>
                   <Form.Control
@@ -166,8 +174,8 @@ export default function UploadBillPage() {
 
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label className="fw-semibold text-brown">
-                    <FaMapMarkedAlt className="me-2" />
+                  <Form.Label className="fw-semibold" style={{ color: "var(--foreground)" }}>
+                    <FaMapMarkedAlt className="me-2" style={{ color: "var(--primary)" }} />
                     Work Area
                   </Form.Label>
                   <Form.Control
@@ -182,16 +190,18 @@ export default function UploadBillPage() {
               </Col>
             </Row>
 
+            {/* LOA & Invoice No */}
             <Row className="mb-3">
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label className="fw-semibold text-brown">
-                    <FaFileAlt className="me-2" />
+                  <Form.Label className="fw-semibold" style={{ color: "var(--foreground)" }}>
+                    <FaFileAlt className="me-2" style={{ color: "var(--primary)" }} />
                     LOA
                   </Form.Label>
                   {loadingLoa ? (
                     <div className="d-flex align-items-center">
-                      <Spinner animation="border" size="sm" className="me-2" /> Loading LOAs...
+                      <Spinner animation="border" size="sm" className="me-2" style={{ color: "var(--primary)" }} /> Loading
+                      LOAs...
                     </div>
                   ) : (
                     <Form.Select
@@ -200,6 +210,11 @@ export default function UploadBillPage() {
                       onChange={handleChange}
                       className="custom-input"
                       required
+                      style={{
+                        backgroundColor: "var(--input)",
+                        color: "var(--foreground)",
+                        borderColor: "var(--border)",
+                      }}
                     >
                       {loaOptions.length > 0 ? (
                         loaOptions.map((loa) => (
@@ -217,8 +232,8 @@ export default function UploadBillPage() {
 
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label className="fw-semibold text-brown">
-                    <FaFileInvoice className="me-2" />
+                  <Form.Label className="fw-semibold" style={{ color: "var(--foreground)" }}>
+                    <FaFileInvoice className="me-2" style={{ color: "var(--primary)" }} />
                     Invoice No.
                   </Form.Label>
                   <Form.Control
@@ -233,11 +248,12 @@ export default function UploadBillPage() {
               </Col>
             </Row>
 
+            {/* Amount */}
             <Row className="mb-3">
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label className="fw-semibold text-brown">
-                    <FaRupeeSign className="me-2" />
+                  <Form.Label className="fw-semibold" style={{ color: "var(--foreground)" }}>
+                    <FaRupeeSign className="me-2" style={{ color: "var(--primary)" }} />
                     Amount
                   </Form.Label>
                   <Form.Control
@@ -253,10 +269,13 @@ export default function UploadBillPage() {
               </Col>
             </Row>
 
+            {/* Description */}
             <Row className="mb-3">
               <Col md={12}>
                 <Form.Group>
-                  <Form.Label className="fw-semibold text-brown">Work Description</Form.Label>
+                  <Form.Label className="fw-semibold" style={{ color: "var(--foreground)" }}>
+                    Work Description
+                  </Form.Label>
                   <Form.Control
                     as="textarea"
                     rows={3}
@@ -270,24 +289,27 @@ export default function UploadBillPage() {
               </Col>
             </Row>
 
+            {/* File Upload */}
             <Row className="mb-4">
               <Col md={12}>
                 <Form.Group>
-                  <Form.Label className="fw-semibold text-brown">Upload Bill Document</Form.Label>
+                  <Form.Label className="fw-semibold" style={{ color: "var(--foreground)" }}>
+                    Upload Bill Document
+                  </Form.Label>
                   <div
                     className="border rounded d-flex align-items-center justify-content-center p-4 mb-2"
                     onClick={() => fileInputRef.current.click()}
                     style={{
-                      cursor: 'pointer',
-                      background: '#fff6f3',
-                      borderStyle: 'dashed',
-                      borderColor: '#efc4b7',
-                      textAlign: 'center',
-                      color: '#8c4b32',
+                      cursor: "pointer",
+                      background: "var(--secondary)",
+                      borderStyle: "dashed",
+                      borderColor: "var(--border)",
+                      textAlign: "center",
+                      color: "var(--secondary-foreground)",
                     }}
                   >
-                    <FaFileUpload className="me-2" />
-                    {file ? file.name : 'Click to upload PDF, JPG, or PNG (max 10MB)'}
+                    <FaFileUpload className="me-2" style={{ color: "var(--accent)" }} />
+                    {file ? file.name : "Click to upload PDF, JPG, or PNG (max 10MB)"}
                   </div>
                   <Form.Control
                     type="file"
@@ -300,47 +322,62 @@ export default function UploadBillPage() {
               </Col>
             </Row>
 
+            {/* Buttons */}
             <div className="d-flex justify-content-end">
-              <Button variant="outline-brown" className="me-2" onClick={handleClear}>
+              <Button
+                variant="outline"
+                className="me-2"
+                style={{
+                  borderColor: "var(--primary)",
+                  color: "var(--primary)",
+                  backgroundColor: "transparent",
+                }}
+                onClick={handleClear}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "var(--primary)";
+                  e.currentTarget.style.color = "var(--primary-foreground)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                  e.currentTarget.style.color = "var(--primary)";
+                }}
+              >
                 Clear
               </Button>
-              <Button type="submit" disabled={submitting} className="btn-brown px-4">
-                {submitting ? <Spinner size="sm" animation="border" /> : 'Submit Bill'}
+
+              <Button
+                type="submit"
+                disabled={submitting}
+                style={{
+                  backgroundColor: "var(--primary)",
+                  color: "var(--primary-foreground)",
+                  border: "none",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--primary-hover)")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--primary)")}
+                className="px-4"
+              >
+                {submitting ? <Spinner size="sm" animation="border" /> : "Submit Bill"}
               </Button>
             </div>
           </Form>
         </Card>
       </Container>
 
+      {/* Inline Styles for Inputs */}
       <style jsx="true">{`
-        .text-brown {
-          color: #8c4b32;
-        }
-        .custom-input {
-          border-radius: 8px;
-          border-color: #f0d5cb;
-        }
-        .custom-input:focus {
-          border-color: #c2704f;
-          box-shadow: 0 0 0 0.15rem rgba(194, 112, 79, 0.25);
-        }
-        .btn-brown {
-          background-color: #8c4b32;
-          color: white;
-          border: none;
-        }
-        .btn-brown:hover {
-          background-color: #6f3e28;
-        }
-        .btn-outline-brown {
-          border: 1px solid #8c4b32;
-          color: #8c4b32;
-        }
-        .btn-outline-brown:hover {
-          background-color: #8c4b32;
-          color: white;
-        }
-      `}</style>
+      .custom-input {
+        border-radius: 8px;
+        border-color: var(--border);
+        background-color: var(--input);
+        color: var(--foreground);
+      }
+      .custom-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 0.15rem rgba(107, 62, 43, 0.25);
+      }
+    `}</style>
     </>
   );
+
 }

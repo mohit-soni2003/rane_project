@@ -38,6 +38,9 @@ export default function ViewDocumentPage() {
     }
   }, [docType, user._id]);
 
+  const formatDate = (date) =>
+  date ? new Date(date).toLocaleDateString() : '-';
+
   const handleOpenModal = (doc) => {
     setSelectedDoc(doc);
     setAcceptTime(new Date().toLocaleString());
@@ -176,7 +179,7 @@ export default function ViewDocumentPage() {
                           </Button>
                         </div>
                       ) : (
-                        <span className="text-muted">{Date(doc.timestamp).toLocaleString()}</span>
+                        <span className="text-muted">{formatDate(doc.uploadDate )}</span>
                       )}
                     </td>
                   </tr>

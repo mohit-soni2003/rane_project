@@ -24,6 +24,7 @@ import ClientSidebar from "./component/sidebar/ClientSidebar";
 import AdminSidebar from "./component/sidebar/AdminSidebar";
 import StaffSidebar from "./component/sidebar/StaffSidebar";
 import HomePageClient from "./pages/client/HomePageClient";
+import ClientDashboard from "./pages/client/ClientDashboard.jsx";
 import ClientLayout from "./Layout/ClientLayout";
 import UploadBillPage from "./pages/client/UploadBillPage";
 import MyBillPage from "./pages/client/MyBillPage";
@@ -39,6 +40,10 @@ import TrackMyAllDocument from "./pages/client/TrackMyAllDocument.jsx";
 import DocumentForReview from "./pages/client/DocumentForReview.jsx"; //used to review when document assign to client by admin and staff
 import TransactionPage from "./pages/client/TransactionPage.jsx";
 import SalaryPage from "./pages/admin/SalaryPage.jsx";
+import AgreementPage from "./pages/client/AgreementPage.jsx";
+import AgreementForAction from "./pages/client/AgreementForAction.jsx";
+import ClosedAgreement from "./pages/client/ClosedAgreement.jsx";
+import AgreementView from "./pages/client/AgreementView.jsx";
 
 import AdminLayout from "./Layout/AdminLayout";
 import HomePageAdmin from "./pages/admin/HomePageAdmin.jsx";
@@ -153,6 +158,7 @@ function App() {
         >
           <Route index element={<HomePageClient />} />
           <Route path="home" element={<HomePageClient />} />
+          <Route path="home2" element={<ClientDashboard />} />
           <Route path="upload-bill" element={<UploadBillPage />} />
           <Route path="my-bill" element={<MyBillPage />} />
           <Route path="bill/:id" element={<SingleBillDetailsClient />} />
@@ -169,7 +175,12 @@ function App() {
           <Route path="track-dfs/all" element={<TrackMyAllDocument />} />
           <Route path="dfsrequest/:id" element={<DocumentForReview />} />
           <Route path="under-dev" element={<UnderDevPage />} />
-        </Route>
+          <Route path="agreement" element={<AgreementPage />} />
+          <Route path="agreement/action" element={<AgreementForAction />} />
+          <Route path="agreement/closed" element={<ClosedAgreement />} />
+          <Route path="agreement/view/:id" element={<AgreementView />} />
+
+        </Route> 
 
         {/* ---------Admin Route ---------- */}
         <Route

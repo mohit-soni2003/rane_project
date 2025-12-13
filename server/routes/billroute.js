@@ -2,24 +2,16 @@ const express = require("express")
 const User = require("../models/usermodel")
 const Bill = require("../models/billmodel")
 const Document = require("../models/documentmodel")
+const RecentActivity  = require("../models/RecentActivityModel")
 const { createNotification } = require("./notificationRoutes")
 
 
 const router = express.Router();
 
+
 router.post("/post-bill", async (req, res) => {
-  // console.log("Post bill route hitted....")
   try {
     const { firmName, workArea, loaNo, pdfurl, user, invoiceNo, workDescription, amount } = req.body;
-    // Log the fields
-    // console.log("Received Data:");
-    // console.log("Firm Name:", firmName);
-    // console.log("Work Area:", workArea);
-    // console.log("LOA No:", loaNo);
-    // console.log("PDF URL:", pdfurl);
-    // console.log("User ID:", user);
-    // console.log("Invoice No:", invoiceNo);
-    // console.log("Work Description:", workDescription);
 
     // Validate required fields
     if (!firmName || !workArea || !loaNo || !pdfurl || !user || !amount) {
@@ -43,45 +35,71 @@ router.post("/post-bill", async (req, res) => {
       user,
       amount
     });
+
     // Save the bill to the database
     const savedBill = await newBill.save();
 
-    // Create notification for admins
+    // ⭐ CREATE RECENT ACTIVITY ENTRY
     try {
-        const admins = await User.find({ role: 'admin' });
-        for (const admin of admins) {
-            await createNotification({
-                title: 'New Bill Submitted',
-                message: `${existingUser.name} submitted a bill for ₹${amount} (${firmName})`,
-                type: 'bill',
-                priority: 'medium',
-                recipient: admin._id,
-                sender: existingUser._id,
-                relatedId: savedBill._id,
-                relatedModel: 'Bill',
-                actionUrl: `/admin/bill/${savedBill._id}`,
-                metadata: {
-                    firmName,
-                    amount,
-                    workArea,
-                    submittedAt: savedBill.submittedAt
-                }
-            });
+      await RecentActivity.create({
+        user: existingUser._id,
+        actionType: "bill_submitted",
+        description: `Submitted a bill for ₹${amount} (${firmName})`,
+        relatedModel: "Bill",
+        relatedId: savedBill._id,
+        actionUrl: `/client/bill/${savedBill._id}`,
+        metadata: {
+          firmName,
+          workArea, 
+          loaNo,
+          amount,
+          invoiceNo
         }
-    } catch (notificationError) {
-        console.error('Error creating bill notification:', notificationError);
-        // Don't fail the bill creation if notification fails
+      });
+    } catch (activityErr) {
+      console.error("Error creating recent activity:", activityErr);
     }
 
+    // ⭐ Create notifications for admins
+    // try {
+    //   const admins = await User.find({ role: 'admin' });
+
+    //   for (const admin of admins) {
+    //     await createNotification({
+    //       title: 'New Bill Submitted',
+    //       message: `${existingUser.name} submitted a bill for ₹${amount} (${firmName})`,
+    //       type: 'bill',
+    //       priority: 'medium',
+    //       recipient: admin._id,
+    //       sender: existingUser._id,
+    //       relatedId: savedBill._id,
+    //       relatedModel: 'Bill',
+    //       actionUrl: `/admin/bill/${savedBill._id}`,
+    //       metadata: {
+    //         firmName,
+    //         amount,
+    //         workArea,
+    //         submittedAt: savedBill.submittedAt
+    //       }
+    //     });
+    //   }
+    // } catch (notificationError) {
+    //   console.error('Error creating bill notification:', notificationError);
+    //   // Do not stop bill creation
+    // }
+
     res.status(201).json({ message: "Bill created successfully", bill: savedBill });
+
   } catch (error) {
     // Handle duplicate LOA number
     if (error.code === 11000) {
       return res.status(409).json({ message: "Duplicate loaNo detected" });
     }
+
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
+
 // all bills on particual id 
 router.get('/mybill/:id', async (req, res) => {
   // console.log("Show my bill route hit");

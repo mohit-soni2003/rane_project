@@ -17,6 +17,9 @@ import {
 import { FaSearch, FaFileAlt, FaPlus, FaFileExport } from 'react-icons/fa';
 import { getMyUploadedFiles } from '../../services/dfsService';
 import ClientHeader from '../../component/header/ClientHeader';
+import StaffHeader from "../../component/header/StaffHeader";
+import { useAuthStore } from '../../store/authStore';
+
 
 const getStatusBadge = (status) => {
   switch (status) {
@@ -40,6 +43,7 @@ export default function TrackMyAllDocument() {
   const [searchText, setSearchText] = useState('');
   const [sortOrder, setSortOrder] = useState('desc');
   const [error, setError] = useState(null);
+  const { user } = useAuthStore();
 
   useEffect(() => {
     const fetchFiles = async () => {
@@ -54,6 +58,17 @@ export default function TrackMyAllDocument() {
     };
     fetchFiles();
   }, []);
+
+  const getHeaderComponent = () => {
+    switch (user?.role) {
+      case 'client':
+        return <ClientHeader />;
+      case 'staff':
+        return <StaffHeader />;
+      default:
+        return <ClientHeader />; // fallback
+    }
+  };
 
   const toggleCollapse = (fileId) => {
     setExpandedFileId(expandedFileId === fileId ? null : fileId);
@@ -73,7 +88,7 @@ export default function TrackMyAllDocument() {
 
   return (
     <>
-      <ClientHeader />
+      {getHeaderComponent()}
       <Container fluid className="py-4 px-0">
         <Card className="p-4 shadow-sm" style={{ backgroundColor: 'var(--client-component-bg-color)' }}>
           <Row className="align-items-center mb-3">

@@ -208,8 +208,8 @@ export default function PushDocumentAdminPage() {
                     <div
                       className="px-4 py-2 rounded"
                       style={{
-                        backgroundColor: '#fcd8cd',
-                        color: '#6c4f42',
+                        backgroundColor: 'var(--client-component-bg-color)',
+                        color: 'var(--client-text-color)',
                         fontWeight: 500,
                         display: 'inline-block',
                       }}
@@ -231,7 +231,7 @@ export default function PushDocumentAdminPage() {
               <Button variant="secondary" className="me-2" disabled={loading}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading} style={{ backgroundColor: '#7c3f2c', borderColor: '#7c3f2c' }}>
+              <Button type="submit" disabled={loading} className="btn-admin-primary">
                 {loading ? (
                   <>
                     <Spinner size="sm" animation="border" className="me-2" />
