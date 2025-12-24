@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Container, Row, Col } from 'react-bootstrap';
+import { Table, Container, Row, Col,Button } from 'react-bootstrap';
 import { getMyUploadedDocuments } from '../../services/documentService';
 import dummyuser from "../../assets/images/dummyUser.jpeg";
 import AdminHeader from '../../component/header/AdminHeader';
-import { FaRegFileAlt, FaTrash } from "react-icons/fa";
+import { FaRegFileAlt, FaTrash, FaSearch,FaUser } from "react-icons/fa";
 
 
 const statusMap = {
@@ -53,28 +53,60 @@ export default function MyPushedDocument() {
             <AdminHeader></AdminHeader>
             <Container
                 fluid
-                style={{ backgroundColor: 'var(--admin-dashboard-bg-color)', minHeight: '100vh' }}
-                className="py-4 px-4 my-2"
+                style={{ backgroundColor: 'var(--background)', minHeight: '100vh', borderRadius: "15px" }}
+                className="py-4 px-4 my-3"
             >
                 <Row className="mb-4 align-items-center">
 
                     {/* Search and Filters */}
-                    <Col md="auto" className="d-flex gap-2">
-                        {/* Search input */}
-                        <input
-                            type="text"
-                            placeholder="🔍 Search by code or name"
-                            className="form-control"
-                            style={{ minWidth: "220px" }}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+                    <Col md="auto" className="d-flex align-items-center gap-2">
 
-                        {/* Filter by Status */}
+                        {/* Search */}
+                        <div
+                            className="d-flex align-items-center"
+                            style={{
+                                backgroundColor: 'var(--card)',
+                                border: '1px solid var(--border)',
+                                borderRadius: '999px',
+                                padding: '6px 12px',
+                                boxShadow: '0 4px 12px var(--shadow-color)',
+                                minWidth: '240px'
+                            }}
+                        >
+                            <FaSearch
+                                style={{
+                                    color: 'var(--text-muted)',
+                                    fontSize: '0.9rem',
+                                    marginRight: '8px'
+                                }}
+                            />
+                            <input
+                                type="text"
+                                placeholder="Search by code or name"
+                                className="form-control border-0 p-0 shadow-none"
+                                style={{
+                                    backgroundColor: 'transparent',
+                                    fontSize: '0.85rem'
+                                }}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+
+                        {/* Status Filter */}
                         <select
                             className="form-select"
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
+                            style={{
+                                backgroundColor: 'var(--card)',
+                                border: '1px solid var(--border)',
+                                borderRadius: '999px',
+                                padding: '6px 14px',
+                                fontSize: '0.85rem',
+                                boxShadow: '0 4px 12px var(--shadow-color)',
+                                minWidth: '150px'
+                            }}
                         >
                             <option value="">All Status</option>
                             <option value="pending">Pending</option>
@@ -82,11 +114,20 @@ export default function MyPushedDocument() {
                             <option value="rejected">Rejected</option>
                         </select>
 
-                        {/* Filter by Doc Type */}
+                        {/* Document Type Filter */}
                         <select
                             className="form-select"
                             value={docTypeFilter}
                             onChange={(e) => setDocTypeFilter(e.target.value)}
+                            style={{
+                                backgroundColor: 'var(--card)',
+                                border: '1px solid var(--border)',
+                                borderRadius: '999px',
+                                padding: '6px 14px',
+                                fontSize: '0.85rem',
+                                boxShadow: '0 4px 12px var(--shadow-color)',
+                                minWidth: '170px'
+                            }}
                         >
                             <option value="">All Doc Types</option>
                             <option value="aadhaar">Aadhaar</option>
@@ -95,133 +136,185 @@ export default function MyPushedDocument() {
                             <option value="driving">Driving License</option>
                             <option value="passport">Passport</option>
                         </select>
+
                     </Col>
+
                 </Row>
 
 
                 <div className="table-responsive">
                     <Table
-                        responsive
                         hover
-                        className="shadow-sm"
+                        responsive
+                        className="shadow-sm small"
                         style={{
-                            backgroundColor: 'var(--admin-component-bg-color)',
-                            border: '1px solid var(--admin-border-color)'
+                            backgroundColor: 'var(--card)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '18px',
+                            minWidth: '1200px',
+                            whiteSpace: 'nowrap'
                         }}
                     >
-                        <thead style={{ backgroundColor: '#e7edf3' }}>
-                            <tr className="text-muted small text-uppercase">
+                        <thead
+                            style={{
+                                backgroundColor: 'var(--card)',
+                                color: 'var(--text-strong)'
+                            }}
+                        >
+                            <tr className="small text-uppercase">
                                 <th>S.No</th>
                                 <th>Doc Type</th>
                                 <th>Doc Code</th>
                                 <th>Uploaded For</th>
                                 <th>Date of Issue</th>
                                 <th>Upload Date</th>
-                                <th>Document Link</th>
+                                <th>Document</th>
                                 <th>Status</th>
-                                <th>Status Change Date</th>
-                                <th>Remark</th>
+                                <th>Status Change</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
+
                         <tbody>
-                            {documents.map((doc, index) => {
-                                const status = doc.status || 'pending';
-                                const bgColor = index % 2 === 0
-                                    ? 'var(--admin-dashboard-bg-color)'
-                                    : 'var(--admin-component-bg-color)';
+                            {documents.length > 0 ? (
+                                documents.map((doc, index) => {
+                                    const status = doc.status || 'pending';
 
-                                return (
-                                    <tr key={doc._id} style={{ backgroundColor: bgColor }}>
-                                        <td>
-                                            <div
-                                                className="rounded-circle d-inline-flex align-items-center justify-content-center"
-                                                style={{
-                                                    backgroundColor: 'var(--staff-serial-number-bg)',
-                                                    width: '30px',
-                                                    height: '30px',
-                                                    fontSize: '0.9rem'
-                                                }}
-                                            >
-                                                {index + 1}
-                                            </div>
-                                        </td>
-                                        <td>{doc.docType || '—'}</td>
-                                        <td>{doc.documentCode || '—'}</td>
-                                        <td>
-                                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                                <img
-                                                    src={doc.userId?.profile || dummyuser}
-                                                    alt="profile"
+                                    return (
+                                        <tr key={doc._id}>
+                                            {/* S.No */}
+                                            <td>
+                                                <div
+                                                    className="rounded-circle d-inline-flex align-items-center justify-content-center"
                                                     style={{
-                                                        width: "28px",
-                                                        height: "28px",
-                                                        borderRadius: "50%",
-                                                        objectFit: "cover"
+                                                        backgroundColor: 'var(--muted)',
+                                                        color: 'var(--text-strong)',
+                                                        width: '30px',
+                                                        height: '30px',
+                                                        fontSize: '0.85rem'
                                                     }}
-                                                />
-                                                <span>{doc.userId?.name || "—"}</span>
-                                            </div>
-                                        </td>
-
-
-                                        <td>{doc.dateOfIssue ? new Date(doc.dateOfIssue).toLocaleDateString() : '—'}</td>
-                                        <td>{doc.uploadDate ? new Date(doc.uploadDate).toLocaleDateString() : '—'}</td>
-                                        <td>
-                                            {doc.documentLink ? (
-                                                <a
-                                                    href={doc.documentLink}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="flex items-center justify-center"
-                                                    title="View Document"
-                                                    style={{textDecoration:"none"}}
                                                 >
-                                                    <FaRegFileAlt className="" size={22} />
-                                                </a>
-                                            ) : (
-                                                '—'
-                                            )}
-                                        </td>
+                                                    {index + 1}
+                                                </div>
+                                            </td>
 
+                                            <td>{doc.docType || '—'}</td>
+                                            <td>{doc.documentCode || '—'}</td>
 
-                                        <td>
-                                            <span
-                                                className="badge"
-                                                style={{
-                                                    backgroundColor: statusMap[status]?.color,
-                                                    color: statusMap[status]?.textColor
-                                                }}
-                                            >
-                                                {status}
-                                            </span>
-                                        </td>
-                                        <td>{doc.statusUpdatedAt ? new Date(doc.statusUpdatedAt).toLocaleString() : '—'}</td>
-                                        <td title={doc.remark || 'No remark'}>
-                                            {doc.remark}
-                                        </td>
-                                        <td>
-                                            <button
-                                                className="btn btn-sm btn-outline-danger"
-                                                onClick={() => handleDelete(doc._id)}
-                                                title="Delete Document"
-                                            >
-                                                <FaTrash />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
+                                            {/* Uploaded For */}
+                                            <td>
+                                                <div className="d-flex align-items-center gap-2">
+                                                    {doc.userId?.profile ? (
+                                                        <img
+                                                            src={doc.userId.profile}
+                                                            alt={doc.userId.name}
+                                                            style={{
+                                                                width: '28px',
+                                                                height: '28px',
+                                                                borderRadius: '50%',
+                                                                objectFit: 'cover',
+                                                                border: '1px solid var(--border)'
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div
+                                                            className="d-flex align-items-center justify-content-center"
+                                                            style={{
+                                                                width: '28px',
+                                                                height: '28px',
+                                                                borderRadius: '50%',
+                                                                backgroundColor: 'var(--muted)',
+                                                                color: 'var(--text-muted)',
+                                                                fontSize: '0.8rem'
+                                                            }}
+                                                        >
+                                                            <FaUser />
+                                                        </div>
+                                                    )}
+                                                    <span>{doc.userId?.name || '—'}</span>
+                                                </div>
+                                            </td>
 
-                            {documents.length === 0 && (
+                                            <td>
+                                                {doc.dateOfIssue
+                                                    ? new Date(doc.dateOfIssue).toLocaleDateString()
+                                                    : '—'}
+                                            </td>
+
+                                            <td>
+                                                {doc.uploadDate
+                                                    ? new Date(doc.uploadDate).toLocaleDateString()
+                                                    : '—'}
+                                            </td>
+
+                                            {/* Document Link */}
+                                            <td>
+                                                {doc.documentLink ? (
+                                                    <Button
+                                                        variant="outline-secondary"
+                                                        size="sm"
+                                                        href={doc.documentLink}
+                                                        target="_blank"
+                                                        title="View Document"
+                                                        style={{
+                                                            borderColor: 'var(--border)',
+                                                            color: 'var(--secondary-foreground)'
+                                                        }}
+                                                    >
+                                                        <FaRegFileAlt />
+                                                    </Button>
+                                                ) : (
+                                                    '—'
+                                                )}
+                                            </td>
+
+                                            {/* Status */}
+                                            <td>
+                                                <span
+                                                    className="badge"
+                                                    style={{
+                                                        backgroundColor: statusMap[status]?.color,
+                                                        color: statusMap[status]?.textColor
+                                                    }}
+                                                >
+                                                    {status}
+                                                </span>
+                                            </td>
+
+                                            <td>
+                                                {doc.statusUpdatedAt
+                                                    ? new Date(doc.statusUpdatedAt).toLocaleString()
+                                                    : '—'}
+                                            </td>
+
+                                            {/* Action */}
+                                            <td>
+                                                <Button
+                                                    variant="outline-danger"
+                                                    size="sm"
+                                                    title="Delete Document"
+                                                    onClick={() => handleDelete(doc._id)}
+                                                >
+                                                    <FaTrash />
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            ) : (
                                 <tr>
-                                    <td className="text-center py-3" colSpan="11">
+                                    <td
+                                        colSpan="10"
+                                        className="text-center py-3"
+                                        style={{ color: 'var(--text-muted)' }}
+                                    >
                                         No documents uploaded yet.
                                     </td>
                                 </tr>
                             )}
                         </tbody>
                     </Table>
+
                 </div>
             </Container>
         </>

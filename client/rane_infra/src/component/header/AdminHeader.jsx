@@ -1,307 +1,199 @@
-import React, { useState, useEffect } from 'react';
-import { FaBell, FaCheck, FaTrash, FaEye } from 'react-icons/fa';
+import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
-import {
-  getNotifications,
-  getUnreadNotificationCount,
-  markNotificationAsRead,
-  markAllNotificationsAsRead,
-  deleteNotification
-} from '../../services/notificationService';
-import { Dropdown, Badge, Button, Spinner } from 'react-bootstrap';
-
+import { FaCalendarAlt, FaBell } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { getUserNotifications } from '../../services/generalService';
+import NotificationModal from '../models/NotificationModel';
 const AdminHeader = () => {
   const { user } = useAuthStore();
-  const [notifications, setNotifications] = useState([]);
+  const [dateTime, setDateTime] = useState(new Date());
+  const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [showAll, setShowAll] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false); // modal to show notification 
+  const navigate = useNavigate();
+  
 
-  // Fetch unread count on component mount
+
+
+  // Live clock
   useEffect(() => {
-    fetchUnreadCount();
-
-    // Set up polling for new notifications every 30 seconds
-    const interval = setInterval(fetchUnreadCount, 30000);
-    return () => clearInterval(interval);
+    const timer = setInterval(() => setDateTime(new Date()), 60000);
+    return () => clearInterval(timer);
   }, []);
 
-  const fetchUnreadCount = async () => {
-    try {
-      const count = await getUnreadNotificationCount();
-      setUnreadCount(count);
-    } catch (error) {
-      console.error('Error fetching unread count:', error);
+  // Fetch notifications on mount
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
+  const loadNotifications = async () => {
+    const response = await getUserNotifications({
+      page: 1,
+      limit: 20,
+      unreadOnly: false
+    });
+
+    if (response) {
+      setNotifications(response.notifications || []);
+      setUnreadCount(response.unreadCount || 0);
+      console.log(notifications)
+      console.log("---- ----- ----- This is Sample data ------- ------ -------")
+      // console.log(unreadCount) 
     }
   };
 
-  const fetchNotifications = async (showUnreadOnly = true) => {
-    if (loading) return;
 
-    setLoading(true);
-    try {
-      const data = await getNotifications(1, showAll ? 50 : 10, showUnreadOnly && !showAll);
-      setNotifications(data.notifications || []);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleNotificationClick = async (notification) => {
-    if (!notification.isRead) {
-      try {
-        await markNotificationAsRead(notification._id);
-        setUnreadCount(prev => Math.max(0, prev - 1));
-        // Update local state
-        setNotifications(prev =>
-          prev.map(n =>
-            n._id === notification._id ? { ...n, isRead: true } : n
-          )
-        );
-      } catch (error) {
-        console.error('Error marking notification as read:', error);
-      }
-    }
-
-    // Navigate to the action URL if available
-    if (notification.actionUrl) {
-      window.location.href = notification.actionUrl;
-    }
-  };
-
-  const handleMarkAllAsRead = async () => {
-    try {
-      await markAllNotificationsAsRead();
-      setUnreadCount(0);
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-    } catch (error) {
-      console.error('Error marking all as read:', error);
-    }
-  };
-
-  const handleDeleteNotification = async (notificationId, e) => {
-    e.stopPropagation();
-    try {
-      await deleteNotification(notificationId);
-      setNotifications(prev => prev.filter(n => n._id !== notificationId));
-      // Update unread count if the deleted notification was unread
-      const deletedNotification = notifications.find(n => n._id === notificationId);
-      if (deletedNotification && !deletedNotification.isRead) {
-        setUnreadCount(prev => Math.max(0, prev - 1));
-      }
-    } catch (error) {
-      console.error('Error deleting notification:', error);
-    }
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'urgent': return 'danger';
-      case 'high': return 'warning';
-      case 'medium': return 'info';
-      case 'low': return 'secondary';
-      default: return 'secondary';
-    }
-  };
-
-  const formatTimeAgo = (date) => {
-    const now = new Date();
-    const notificationDate = new Date(date);
-    const diffInMinutes = Math.floor((now - notificationDate) / (1000 * 60));
-
-    if (diffInMinutes < 1) return 'Just now';
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
-    return `${Math.floor(diffInMinutes / 1440)}d ago`;
-  };
 
   return (
-    <div
-      className="d-md-flex d-none justify-content-between align-items-center px-3 py-2 border-bottom"
-      style={{
-        backgroundColor: 'var(--admin-component-bg-color)',
-        color: 'var(--admin-text-color)',
-        borderBottom: '1px solid var(--admin-border-color)',
-      }}
-    >
-      {/* Greeting */}
-      <div className="fw-medium fs-6">
-        Good Evening,{' '}
-        <span className="fw-semibold">{user?.name || 'Admin'}</span>! 👋 Welcome back.
-      </div>
+    <>
+      <div className="w-100 mb-2 d-none d-md-block">
+        <div
+          className="card shadow-sm border-0"
+          style={{
+            background: 'var(--background)',
+            borderRadius: '12px',
+            color: 'var(--card-foreground)',
+            border: '1px solid var(--border)',
+            boxShadow: '0 3px 8px var(--muted-foreground)',
+          }}
+        >
+          <div className="card-body px-4 py-3 d-flex align-items-center justify-content-between">
 
-      {/* Right side */}
-      <div className="d-flex align-items-center gap-3">
-        {/* Notification Dropdown */}
-        <Dropdown onToggle={(isOpen) => isOpen && fetchNotifications()}>
-          <Dropdown.Toggle
-            variant="link"
-            className="p-0 position-relative"
-            style={{ color: 'var(--admin-text-color)' }}
-          >
-            <FaBell size={18} />
-            {unreadCount > 0 && (
-              <Badge
-                bg="danger"
-                className="position-absolute top-0 start-100 translate-middle rounded-circle"
-                style={{ fontSize: '0.7rem', minWidth: '18px', height: '18px' }}
+            {/* LEFT SECTION - E-OFFICE + Date */}
+            <div className="d-flex flex-column">
+              <h6
+                className="fst-italic mb-1"
+                style={{ fontSize: '0.75rem', color: 'var(--primary)' }}
               >
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </Badge>
-            )}
-          </Dropdown.Toggle>
-
-          <Dropdown.Menu
-            align="end"
-            className="mt-2"
-            style={{
-              width: '400px',
-              maxHeight: '500px',
-              overflowY: 'auto',
-              backgroundColor: 'var(--admin-component-bg-color)',
-              border: '1px solid var(--admin-border-color)'
-            }}
-          >
-            <div className="d-flex justify-content-between align-items-center p-3 border-bottom">
-              <h6 className="mb-0 fw-bold" style={{ color: 'var(--admin-heading-color)' }}>
-                Notifications
+                E - OFFICE
               </h6>
-              <div className="d-flex gap-2">
-                {unreadCount > 0 && (
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="p-0 text-decoration-none"
-                    onClick={handleMarkAllAsRead}
-                    style={{ color: 'var(--admin-btn-primary-bg)' }}
-                  >
-                    <FaCheck className="me-1" />
-                    Mark all read
-                  </Button>
-                )}
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="p-0 text-decoration-none"
-                  onClick={() => setShowAll(!showAll)}
-                  style={{ color: 'var(--admin-text-color)' }}
-                >
-                  {showAll ? 'Show recent' : 'Show all'}
-                </Button>
-              </div>
+              <small
+                className="d-flex align-items-center"
+                style={{
+                  fontSize: '0.75rem',
+                  color: 'var(--muted-foreground)',
+                }}
+              >
+                <FaCalendarAlt className="me-1" style={{ color: 'var(--accent)' }} />
+                {dateTime.toLocaleDateString('en-IN', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })} &nbsp; | &nbsp;
+                {dateTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+              </small>
+
+
             </div>
 
-            <div className="p-0">
-              {loading ? (
-                <div className="text-center py-4">
-                  <Spinner animation="border" variant="primary" size="sm" />
-                  <div className="small text-muted mt-2">Loading...</div>
-                </div>
-              ) : notifications.length > 0 ? (
-                notifications.map((notification) => (
-                  <Dropdown.Item
-                    key={notification._id}
-                    className={`px-3 py-3 border-bottom ${!notification.isRead ? 'bg-light' : ''}`}
+            {/* CENTER SECTION - Title */}
+            <div className="text-center flex-grow-1">
+              <h5
+                className="fw-bold text-uppercase mb-0"
+                style={{
+                  fontSize: '1.1rem',
+                  letterSpacing: '0.4px',
+                  fontWeight: '800',
+                  color: 'var(--primary)',
+                }}
+              >
+                RANE & SONS - WORK MANAGEMENT SYSTEM
+              </h5>
+            </div>
+
+            {/* RIGHT SECTION - Bell + Profile + Name */}
+            <div className="d-flex flex-column align-items-center">
+              <div className="d-flex align-items-center gap-3 mb-1">
+
+                {/* Bell Icon with Unread Count */}
+                <div className="position-relative" style={{ cursor: "pointer" }}>
+                  <FaBell
                     style={{
-                      backgroundColor: !notification.isRead ? 'rgba(26, 188, 156, 0.1)' : 'transparent',
-                      cursor: 'pointer'
+                      fontSize: '1.4rem',
+                      cursor: 'pointer',
+                      color: 'var(--accent)',
+                      transition: 'color 0.3s ease',
                     }}
-                    onClick={() => handleNotificationClick(notification)}
-                  >
-                    <div className="d-flex justify-content-between align-items-start">
-                      <div className="flex-grow-1">
-                        <div className="d-flex align-items-center gap-2 mb-1">
-                          <Badge bg={getPriorityColor(notification.priority)} className="text-white">
-                            {notification.type.toUpperCase()}
-                          </Badge>
-                          <small className="text-muted">
-                            {formatTimeAgo(notification.createdAt)}
-                          </small>
-                        </div>
-                        <div className="fw-semibold small mb-1" style={{ color: 'var(--admin-text-color)' }}>
-                          {notification.title}
-                        </div>
-                        <div className="small text-muted mb-2">
-                          {notification.message}
-                        </div>
-                        {notification.sender && (
-                          <div className="small text-muted">
-                            From: {notification.sender.name}
-                          </div>
-                        )}
-                      </div>
-                      <div className="d-flex gap-1">
-                        {!notification.isRead && (
-                          <div
-                            className="rounded-circle bg-primary"
-                            style={{ width: '8px', height: '8px', marginTop: '6px' }}
-                          ></div>
-                        )}
-                        <Button
-                          variant="link"
-                          size="sm"
-                          className="p-0 text-danger"
-                          onClick={(e) => handleDeleteNotification(notification._id, e)}
-                        >
-                          <FaTrash size={12} />
-                        </Button>
-                      </div>
-                    </div>
-                  </Dropdown.Item>
-                ))
-              ) : (
-                <div className="text-center py-4 text-muted">
-                  <FaBell size={32} className="mb-2 opacity-50" />
-                  <div>No notifications</div>
+                    onMouseEnter={(e) => (e.target.style.color = 'var(--primary)')}
+                    onMouseLeave={(e) => (e.target.style.color = 'var(--accent)')}
+                    onClick={() => setShowNotificationModal(true)}
+                  />
+
+                  {/* 🔴 Unread Count Badge */}
+                  {unreadCount > 0 && (
+                    <span
+                      className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                      style={{
+                        fontSize: "0.6rem",
+                        padding: "2px 6px",
+                        borderRadius: "50%",
+                      }}
+                    >
+                      {unreadCount}
+                    </span>
+                  )}
                 </div>
-              )}
+
+                {/* Profile Image */}
+                <img
+                  src={user?.profile || '/assets/images/dummyUser.jpeg'}
+                  alt="Profile"
+                  className="rounded-circle"
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    objectFit: 'cover',
+                    border: '2px solid var(--primary)',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                  }}
+                  onClick={() => navigate('/admin')}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'scale(1.1)';
+                    e.target.style.boxShadow = '0 4px 12px var(--muted-foreground)';
+                    e.target.style.borderColor = 'var(--accent)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'scale(1)';
+                    e.target.style.boxShadow = 'none';
+                    e.target.style.borderColor = 'var(--primary)';
+                  }}
+                />
+              </div>
+
+              {/* Client ID */}
+              <small
+                title={user?.name || 'User'}
+                style={{
+                  fontSize: '0.7rem',
+                  fontWeight: '500',
+                  color: 'var(--secondary-foreground)',
+                  maxWidth: '100px',
+                  textAlign: 'center',
+                  whiteSpace: 'normal',
+                  wordWrap: 'break-word',
+                }}
+              >
+                {/* Client ID: {user?.cid || 'User'} */}
+              </small>
             </div>
 
-            {notifications.length > 0 && (
-              <div className="p-2 border-top text-center">
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="text-decoration-none"
-                  onClick={() => window.location.href = '/admin/notifications'}
-                  style={{ color: 'var(--admin-btn-primary-bg)' }}
-                >
-                  <FaEye className="me-1" />
-                  View All Notifications
-                </Button>
-              </div>
-            )}
-          </Dropdown.Menu>
-        </Dropdown>
-
-        {/* Company Logo and Name */}
-        <div className="d-flex align-items-center gap-2">
-          <div
-            className="fw-bold rounded d-flex justify-content-center align-items-center"
-            style={{
-              width: '30px',
-              height: '30px',
-              backgroundColor: 'var(--admin-btn-bg)',
-              color: 'var(--admin-btn-text-color)',
-            }}
-          >
-            RS
-          </div>
-          <div
-            className="text-uppercase fw-semibold small"
-            style={{
-              fontSize: '0.8rem',
-              color: 'var(--admin-muted-color)',
-            }}
-          >
-            Rane and Sons
           </div>
         </div>
       </div>
-    </div>
+      <NotificationModal
+        show={showNotificationModal}
+        onHide={() => setShowNotificationModal(false)}
+        notifications={notifications}
+        navigate={navigate}
+      />
+
+
+    </>
   );
 };
 
 export default AdminHeader;
+

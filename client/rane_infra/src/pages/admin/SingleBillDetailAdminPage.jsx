@@ -4,6 +4,7 @@ import AdminHeader from '../../component/header/AdminHeader';
 import { getBillById } from '../../services/billServices';
 import { getTransactionsByBillId } from '../../services/transactionService';
 import { Container, Row, Col, Card, Image, Spinner, Table } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 
 export default function SingleBillDetailAdminPage() {
     const { id } = useParams();
@@ -11,6 +12,8 @@ export default function SingleBillDetailAdminPage() {
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState('');
+
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchBillAndTransactions = async () => {
@@ -72,25 +75,121 @@ export default function SingleBillDetailAdminPage() {
     return (
         <>
             <AdminHeader />
-            <Container className="py-4">
-                <h4 className="mb-4">Bill Detail</h4>
-
+            <Container
+                fluid
+                className="py-4 my-3"
+                style={{ backgroundColor: 'var(--background)', minHeight: '100vh', borderRadius: "20px" }}
+            >
                 {/* Bill Info */}
-                <Card className="mb-4">
-                    <Card.Header className="fw-semibold">Bill Information</Card.Header>
+                <Card
+                    className="mb-4 shadow-sm border-0"
+                    style={{
+                        background: "var(--card)",
+                        color: "var(--card-foreground)",
+                        borderRadius: "12px",
+                    }}
+                >
+                    {/* Header */}
+                    <Card.Header
+                        className="d-flex align-items-center gap-2 fw-semibold"
+                        style={{
+                            background: "var(--secondary)",
+                            color: "var(--secondary-foreground)",
+                            borderBottom: "1px solid var(--border)",
+                        }}
+                    >
+                        <i className="bi bi-receipt fs-5" style={{ color: "var(--accent)" }} />
+                        Bill Information
+                    </Card.Header>
+
+                    {/* Body */}
                     <Card.Body>
-                        <Row>
-                            <Col md={6}><strong>Firm Name:</strong> {firmName || '—'}</Col>
-                            <Col md={6}><strong>Work Area:</strong> {workArea || '—'}</Col>
-                            <Col md={6}><strong>LOA No:</strong> {loaNo || '—'}</Col>
-                            <Col md={6}><strong>Invoice No:</strong> {invoiceNo || '—'}</Col>
-                            <Col md={6}><strong>Amount:</strong> ₹{amount || '—'}</Col>
-                            <Col md={6}><strong>Status:</strong> {paymentStatus || '—'}</Col>
-                            <Col md={6}><strong>Submitted At:</strong> {new Date(submittedAt).toLocaleDateString()}</Col>
-                            <Col md={6}><strong>Payment Date:</strong> {paymentDate ? new Date(paymentDate).toLocaleDateString() : '—'}</Col>
-                            <Col md={12}><strong>Work Description:</strong> {workDescription || '—'}</Col>
+                        <Row className="gy-3">
+                            {/* Left Column */}
+                            <Col md={6}>
+                                <small className="text-muted">Firm Name</small>
+                                <div className="fw-semibold">{firmName || "—"}</div>
+                            </Col>
+
+                            <Col md={6}>
+                                <small className="text-muted">Work Area</small>
+                                <div className="fw-semibold">{workArea || "—"}</div>
+                            </Col>
+
+                            <Col md={6}>
+                                <small className="text-muted">LOA No</small>
+                                <div className="fw-semibold">{loaNo || "—"}</div>
+                            </Col>
+
+                            <Col md={6}>
+                                <small className="text-muted">Invoice No</small>
+                                <div className="fw-semibold">{invoiceNo || "—"}</div>
+                            </Col>
+
+                            <Col md={6}>
+                                <small className="text-muted">Amount</small>
+                                <div
+                                    className="fw-bold fs-5"
+                                    style={{ color: "var(--destructive)" }}
+                                >
+                                    ₹{amount || "—"}
+                                </div>
+                            </Col>
+
+                            <Col md={6}>
+                                <small className="text-muted">Status : </small>
+                                <div
+                                    className=" py-1  fw-semibold "
+                                    style={{
+                                        color: "var(--warning-foreground)",
+                                    }}
+                                >
+                                    {paymentStatus || "—"}
+                                </div>
+                            </Col>
+
+                            <Col md={6}>
+                                <small className="text-muted">Submitted At</small>
+                                <div className="fw-semibold">
+                                    {submittedAt
+                                        ? new Date(submittedAt).toLocaleDateString()
+                                        : "—"}
+                                </div>
+                            </Col>
+
+                            <Col md={6}>
+                                <small className="text-muted">Payment Date</small>
+                                <div className="fw-semibold">
+                                    {paymentDate
+                                        ? new Date(paymentDate).toLocaleDateString()
+                                        : "—"}
+                                </div>
+                            </Col>
+
+                            <Col md={12}>
+                                <small className="text-muted">Work Description</small>
+                                <div
+                                    className="mt-1"
+                                    style={{ color: "var(--text-muted)" }}
+                                >
+                                    {workDescription || "—"}
+                                </div>
+                            </Col>
+
+                            {/* Action */}
                             <Col md={12} className="mt-3">
-                                <a href={pdfurl} target="_blank" rel="noopener noreferrer" className="btn btn-outline-primary btn-sm">
+                                <a
+                                    href={pdfurl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn btn-sm d-inline-flex align-items-center gap-2"
+                                    style={{
+                                        background: "var(--primary)",
+                                        color: "var(--primary-foreground)",
+                                        borderRadius: "8px",
+                                    }}
+                                >
+                                    <i className="bi bi-file-earmark-pdf" />
                                     View PDF
                                 </a>
                             </Col>
@@ -101,100 +200,287 @@ export default function SingleBillDetailAdminPage() {
 
 
                 {/* Transaction Info */}
-                <Card className='mb-4'>
-                    <Card.Header className="fw-semibold">Transaction Details</Card.Header>
+                <Card
+                    className="mb-4 shadow-sm border-0"
+                    style={{
+                        background: "var(--card)",
+                        color: "var(--card-foreground)",
+                        borderRadius: "12px",
+                    }}
+                >
+                    {/* Header */}
+                    <Card.Header
+                        className="d-flex align-items-center gap-2 fw-semibold"
+                        style={{
+                            background: "var(--secondary)",
+                            color: "var(--secondary-foreground)",
+                            borderBottom: "1px solid var(--border)",
+                        }}
+                    >
+                        <i className="bi bi-credit-card-2-front fs-5" style={{ color: "var(--accent)" }} />
+                        Transaction Details
+                    </Card.Header>
+
+                    {/* Body */}
                     <Card.Body>
                         {transactions.length === 0 ? (
-                            <p>No transactions found for this bill.</p>
+                            <div
+                                className="text-center py-4"
+                                style={{ color: "var(--muted-foreground)" }}
+                            >
+                                <i className="bi bi-info-circle fs-4 mb-2 d-block" />
+                                No transactions found for this bill.
+                            </div>
                         ) : (
-                            <Table striped bordered hover responsive>
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Amount</th>
-                                        <th>Bank</th>
-                                        <th>Account No</th>
-                                        <th>IFSC</th>
-                                        <th>UPI</th>
-                                        <th>Transaction Date</th>
-                                        <th>Send to</th>
-                                        <th>Done By </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {transactions.map((txn, idx) => (
-                                        <tr key={txn._id}>
-                                            <td>{idx + 1}</td>
-                                            <td>₹{txn.amount}</td>
-                                            <td>{txn.bankName || '—'}</td>
-                                            <td>{txn.accNo || '—'}</td>
-                                            <td>{txn.ifscCode || '—'}</td>
-                                            <td>{txn.upiId || '—'}</td>
-                                            <td>{new Date(txn.transactionDate).toLocaleString()}</td>
-                                            <td>{txn.userId?.name || '—'}</td>
-                                            <td>{txn.created_by || '—'}</td>
+                            <div className="table-responsive">
+                                <Table
+                                    hover
+                                    className="align-middle mb-0"
+                                    style={{
+                                        borderColor: "var(--border)",
+                                    }}
+                                >
+                                    <thead
+                                        style={{
+                                            background: "var(--muted)",
+                                            color: "var(--text-strong)",
+                                        }}
+                                    >
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Amount</th>
+                                            <th>Bank</th>
+                                            <th>Account No</th>
+                                            <th>IFSC</th>
+                                            <th>UPI</th>
+                                            <th>Transaction Date</th>
+                                            <th>Sent To</th>
+                                            <th>Done By</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </Table>
+                                    </thead>
+
+                                    <tbody>
+                                        {transactions.map((txn, idx) => (
+                                            <tr key={txn._id}>
+                                                <td>{idx + 1}</td>
+
+                                                <td className="fw-semibold" style={{ color: "var(--success-foreground)" }}>
+                                                    ₹{txn.amount}
+                                                </td>
+
+                                                <td>{txn.bankName || "—"}</td>
+                                                <td>{txn.accNo || "—"}</td>
+                                                <td>{txn.ifscCode || "—"}</td>
+                                                <td>{txn.upiId || "—"}</td>
+
+                                                <td>
+                                                    {txn.transactionDate
+                                                        ? new Date(txn.transactionDate).toLocaleString()
+                                                        : "—"}
+                                                </td>
+
+                                                <td className="fw-semibold">
+                                                    {txn.userId?.name || "—"}
+                                                </td>
+
+                                                <td>{txn.created_by || "—"}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </Table>
+                            </div>
                         )}
                     </Card.Body>
                 </Card>
 
+
                 {/* Summary Card */}
 
-                <Card className='mb-4'>
-                    <Card.Header className="fw-semibold">Summary</Card.Header>
+                <Card
+                    className="mb-4 shadow-sm border-0"
+                    style={{
+                        background: "var(--card)",
+                        color: "var(--card-foreground)",
+                        borderRadius: "12px",
+                    }}
+                >
+                    {/* Header */}
+                    <Card.Header
+                        className="d-flex align-items-center gap-2 fw-semibold"
+                        style={{
+                            background: "var(--secondary)",
+                            color: "var(--secondary-foreground)",
+                            borderBottom: "1px solid var(--border)",
+                        }}
+                    >
+                        <i className="bi bi-bar-chart-fill fs-5" style={{ color: "var(--accent)" }} />
+                        Summary
+                    </Card.Header>
+
+                    {/* Body */}
                     <Card.Body>
-                        <Row>
-                            <Col md={4}><strong>Total Amount Requested:</strong> ₹{amount || 0}</Col>
+                        <Row className="gy-3 text-center">
+                            {/* Total Requested */}
                             <Col md={4}>
-                                <strong>Total Amount Paid:</strong> ₹
-                                {transactions.reduce((total, txn) => total + (txn.amount || 0), 0)}
+                                <small className="text-muted">Total Amount Requested</small>
+                                <div
+                                    className="fw-bold fs-5 mt-1"
+                                    style={{ color: "var(--text-strong)" }}
+                                >
+                                    ₹{amount || 0}
+                                </div>
                             </Col>
+
+                            {/* Total Paid */}
                             <Col md={4}>
-                                <strong>Amount Remaining:</strong> ₹
-                                {Math.max(
-                                    (Number(amount) || 0) -
-                                    transactions.reduce((total, txn) => total + (txn.amount || 0), 0),
-                                    0
-                                )}
+                                <small className="text-muted">Total Amount Paid</small>
+                                <div
+                                    className="fw-bold fs-5 mt-1"
+                                    style={{ color: "var(--success-foreground)" }}
+                                >
+                                    ₹
+                                    {transactions.reduce(
+                                        (total, txn) => total + (txn.amount || 0),
+                                        0
+                                    )}
+                                </div>
+                            </Col>
+
+                            {/* Remaining */}
+                            <Col md={4}>
+                                <small className="text-muted">Amount Remaining</small>
+                                <div
+                                    className="fw-bold fs-5 mt-1"
+                                    style={{ color: "var(--destructive)" }}
+                                >
+                                    ₹
+                                    {Math.max(
+                                        (Number(amount) || 0) -
+                                        transactions.reduce(
+                                            (total, txn) => total + (txn.amount || 0),
+                                            0
+                                        ),
+                                        0
+                                    )}
+                                </div>
                             </Col>
                         </Row>
                     </Card.Body>
                 </Card>
+
                 {/* User Info */}
-                <Card className="mb-4">
-                    <Card.Header className="fw-semibold">User Information</Card.Header>
+                <Card
+                    className="mb-4 shadow-sm border-0"
+                    style={{
+                        background: "var(--card)",
+                        color: "var(--card-foreground)",
+                        borderRadius: "12px",
+                    }}
+                >
+                    {/* Header */}
+                    <Card.Header
+                        className="d-flex align-items-center gap-2 fw-semibold"
+                        style={{
+                            background: "var(--secondary)",
+                            color: "var(--secondary-foreground)",
+                            borderBottom: "1px solid var(--border)",
+                        }}
+                    >
+                        <i className="bi bi-person-badge fs-5" style={{ color: "var(--accent)" }} />
+                        User Information
+                    </Card.Header>
+
+                    {/* Body */}
                     <Card.Body>
-                        <Row>
-                            <Col md={3}>
+                        <Row className="gy-4 align-items-start">
+                            {/* Profile */}
+                            <Col
+                                md={3}
+                                className="text-center"
+                            >
                                 <Image
-                                    src={user?.profile || 'https://via.placeholder.com/150'}
+                                    src={user?.profile || "https://via.placeholder.com/150"}
                                     roundedCircle
                                     width={120}
                                     height={120}
                                     alt="User Profile"
+                                    style={{
+                                        border: "3px solid var(--secondary)",
+                                        background: "var(--muted)",
+                                    }}
+                                    onClick={() => { navigate(`/admin/client-detail/${user._id}`) }}
                                 />
+                                <div
+                                    className="mt-2 fw-semibold"
+                                    style={{ color: "var(--text-strong)" }}
+                                >
+                                    {user?.name || "—"}
+                                </div>
                             </Col>
+
+                            {/* Details */}
                             <Col md={9}>
-                                <Row>
-                                    <Col md={6}><strong>Name:</strong> {user.name || '—'}</Col>
-                                    <Col md={6}><strong>Email:</strong> {user.email || '—'}</Col>
-                                    <Col md={6}><strong>Phone:</strong> {user.phoneNo || '—'}</Col>
-                                    <Col md={6}><strong>Client ID (CID):</strong> {user.cid || '—'}</Col>
-                                    <Col md={6}><strong>Firm Name:</strong> {user.firmName || '—'}</Col>
-                                    <Col md={6}><strong>Address:</strong> {user.address || '—'}</Col>
-                                    <Col md={6}><strong>Bank Name:</strong> {user.bankName || '—'}</Col>
-                                    <Col md={6}><strong>Account No:</strong> {user.accountNo || '—'}</Col>
-                                    <Col md={6}><strong>IFSC Code:</strong> {user.ifscCode || '—'}</Col>
-                                    <Col md={6}><strong>UPI:</strong> {user.upi || '—'}</Col>
-                                    <Col md={6}><strong>GST No:</strong> {user.gstno || '—'}</Col>
+                                <Row className="gy-3">
+                                    <Col md={6}>
+                                        <small className="text-muted">Email</small>
+                                        <div className="fw-semibold">{user?.email || "—"}</div>
+                                    </Col>
+
+                                    <Col md={6}>
+                                        <small className="text-muted">Client ID (CID)</small>
+                                        <div className="fw-semibold">{user?.cid || "—"}</div>
+                                    </Col>
+
+                                    <Col md={6}>
+                                        <small className="text-muted">Phone</small>
+                                        <div className="fw-semibold">{user?.phoneNo || "—"}</div>
+                                    </Col>
+
+                                    <Col md={6}>
+                                        <small className="text-muted">Firm Name</small>
+                                        <div className="fw-semibold">{user?.firmName || "—"}</div>
+                                    </Col>
+
+                                    <Col md={12}>
+                                        <small className="text-muted">Address</small>
+                                        <div
+                                            className="fw-semibold"
+                                            style={{ color: "var(--text-muted)" }}
+                                        >
+                                            {user?.address || "—"}
+                                        </div>
+                                    </Col>
+
+                                    <Col md={6}>
+                                        <small className="text-muted">Bank Name</small>
+                                        <div className="fw-semibold">{user?.bankName || "—"}</div>
+                                    </Col>
+
+                                    <Col md={6}>
+                                        <small className="text-muted">Account No</small>
+                                        <div className="fw-semibold">{user?.accountNo || "—"}</div>
+                                    </Col>
+
+                                    <Col md={6}>
+                                        <small className="text-muted">IFSC Code</small>
+                                        <div className="fw-semibold">{user?.ifscCode || "—"}</div>
+                                    </Col>
+
+                                    <Col md={6}>
+                                        <small className="text-muted">UPI</small>
+                                        <div className="fw-semibold">{user?.upi || "—"}</div>
+                                    </Col>
+
+                                    <Col md={6}>
+                                        <small className="text-muted">GST No</small>
+                                        <div className="fw-semibold">{user?.gstno || "—"}</div>
+                                    </Col>
                                 </Row>
                             </Col>
                         </Row>
                     </Card.Body>
                 </Card>
+
             </Container>
         </>
     );

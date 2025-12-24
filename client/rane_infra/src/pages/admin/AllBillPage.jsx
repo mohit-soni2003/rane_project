@@ -6,8 +6,9 @@ import {
 import {
   FaFileInvoice, FaSearch, FaCheckCircle,
   FaTimesCircle, FaExclamationTriangle,
-  FaEllipsisV, FaRupeeSign
+  FaEllipsisV, FaRupeeSign, FaSortAmountDownAlt, FaFilter,FaUser
 } from 'react-icons/fa';
+
 
 import AdminHeader from "../../component/header/AdminHeader";
 import StaffHeader from "../../component/header/StaffHeader";
@@ -25,7 +26,7 @@ export default function AllBillPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("desc"); // default newest first
-  const {user} = useAuthStore();
+  const { user } = useAuthStore();
 
   const getHeaderComponent = () => {
     switch (user?.role) {
@@ -85,48 +86,73 @@ export default function AllBillPage() {
       {getHeaderComponent()}
       <Container
         fluid
-        className="py-4"
-        style={{ backgroundColor: 'var(--admin-dashboard-bg-color)', minHeight: '100vh' }}
+        className="py-4 my-3"
+        style={{ backgroundColor: 'var(--background)', minHeight: '100vh', borderRadius: "20px" }}
       >
         {/* Search & Sort */}
         <Row className="mb-3 align-items-center">
           <Col md={6}>
-            <InputGroup>
+            <InputGroup
+              style={{
+                borderRadius: '999px',
+                overflow: 'hidden',
+                boxShadow: '0 4px 12px var(--shadow-color)'
+              }}
+            >
               <InputGroup.Text
                 style={{
-                  backgroundColor: 'var(--admin-component-bg-color)',
-                  color: 'var(--admin-muted-color)',
-                  borderColor: 'var(--admin-border-color)'
+                  backgroundColor: 'var(--card)',
+                  color: 'var(--accent)',
+                  border: '1px solid var(--border)',
+                  borderRight: 'none',
+                  paddingLeft: '16px'
                 }}
               >
                 <FaSearch />
               </InputGroup.Text>
+
               <Form.Control
                 placeholder="Search by CID, Firm Name, Uploaded By, Status, Date..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 style={{
-                  backgroundColor: 'var(--admin-input-bg)',
-                  borderColor: 'var(--admin-input-border)',
-                  color: 'var(--admin-input-text)'
+                  backgroundColor: 'var(--input)',
+                  border: '1px solid var(--border)',
+                  borderLeft: 'none',
+                  color: 'var(--foreground)',
+                  padding: '10px 14px',
+                  fontSize: '0.9rem'
                 }}
               />
             </InputGroup>
           </Col>
-          <Col md={6} className="text-end">
+
+          <Col md={6} className="d-flex justify-content-end gap-2">
+
+            {/* Sort Button */}
             <Button
-              variant="outline-primary"
               onClick={handleSortToggle}
               style={{
-                backgroundColor: 'var(--admin-component-bg-color)',
-                borderColor: 'var(--admin-border-color)',
-                color: 'var(--admin-input-text)'
+                backgroundColor: 'var(--card)',
+                border: '1px solid var(--border)',
+                color: 'var(--primary)',
+                borderRadius: '999px',
+                padding: '8px 16px',
+                fontSize: '0.85rem',
+                boxShadow: '0 4px 10px var(--shadow-color)'
               }}
             >
-              Sort by Date {sortOrder === "asc" ? "↑" : "↓"}
+              <FaSortAmountDownAlt className="me-2" />
+              Date
+              <span style={{ marginLeft: '6px', fontSize: '0.75rem' }}>
+                {sortOrder === "asc" ? "↑" : "↓"}
+              </span>
             </Button>
+
           </Col>
+
         </Row>
+
 
         {/* Table */}
         {loading ? (
@@ -134,116 +160,211 @@ export default function AllBillPage() {
             <Spinner animation="border" variant="primary" />
           </div>
         ) : (
-          <Table
-            responsive
-            hover
-            className="shadow-sm"
-            style={{
-              backgroundColor: 'var(--admin-component-bg-color)',
-              border: '1px solid var(--admin-border-color)'
-            }}
-          >
-            <thead style={{ backgroundColor: '#e7edf3' }}>
-              <tr className="text-muted small text-uppercase">
-                <th>S.No</th>
-                <th>CID</th>
-                <th>Uploaded By</th>
-                <th>Firm Name</th>
-                <th>Work Area</th>
-                <th>Payment Status</th>
-                <th>Upload Date</th>
-                <th>Bill File</th>
-                <th>Action</th>
-                <th>More</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredBills.length > 0 ? (
-                filteredBills.map((bill, i) => {
-                  const status = bill.paymentStatus || 'Pending';
-                  const statusIcon =
-                    status === 'Paid' ? <FaCheckCircle className="me-1" /> :
-                      status === 'Reject' ? <FaTimesCircle className="me-1" /> :
-                        status === 'Sanctioned' || status === 'Overdue' || status === 'Pending'
-                          ? <FaExclamationTriangle className="me-1" /> : null;
+          <div className="table-responsive">
 
-                  const statusColor =
-                    status === 'Paid' ? 'var(--admin-success-color)' :
-                      status === 'Reject' ? 'var(--admin-danger-color)' :
-                        'var(--admin-warning-color)';
+            <Table
+              hover
+              className="shadow-sm small"
+              style={{
+                backgroundColor: 'var(--card)',
+                border: '0px solid var(--border)',
+                borderRadius: '18px',
+                minWidth: '1200px',        // 🔥 increase width
+                whiteSpace: 'nowrap'      // 🔥 prevents wrapping
+              }}
+            >
 
-                  const isPayDisabled = status === 'Rejected';
 
-                  return (
-                    <tr key={bill._id}>
-                      <td>
-                        <div
-                          className="rounded-circle d-inline-flex align-items-center justify-content-center"
-                          style={{
-                            backgroundColor: 'var(--staff-serial-number-bg)',
-                            width: '30px',
-                            height: '30px',
-                            fontSize: '0.9rem'
-                          }}
-                        >
-                          {i + 1}
-                        </div>
-                      </td>
-                      <td>{bill.user?.cid || 'N/A'}</td>
-                      <td>{bill.user?.name || 'N/A'}</td>
-                      <td>{bill.firmName}</td>
-                      <td>{bill.workArea}</td>
-                      <td>
-                        <span className="badge text-white" style={{ backgroundColor: statusColor }}>
-                          {statusIcon} {status}
-                        </span>
-                      </td>
-                      <td>{new Date(bill.submittedAt).toLocaleDateString()}</td>
-                      <td>
-                        <Button
-                          variant="outline-secondary"
-                          size="sm"
-                          href={bill.pdfurl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <FaFileInvoice />
-                        </Button>
-                      </td>
-                      <td>
-                        <Button
-                          size="sm"
-                          disabled={isPayDisabled}
-                          style={{
-                            backgroundColor: isPayDisabled
-                              ? 'var(--admin-btn-secondary-bg)'
-                              : 'var(--admin-btn-success-bg)',
-                            color: 'var(--admin-btn-success-text)',
-                            border: 'none'
-                          }}
-                          onClick={() => {
-                            setSelectedBillId(bill._id);
-                            setShowPayModal(true);
-                          }}
-                        >
-                          <FaRupeeSign className="me-1" /> Pay
-                        </Button>
-                      </td>
-                      <td>
-                        <FaEllipsisV onClick={() => { navigate(`/${user.role}/bill/${bill._id}`) }} />
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan="11" className="text-center py-3 text-muted">
-                    No results found
-                  </td>
+              <thead
+                style={{
+                  backgroundColor: 'var(--card)',
+                  color: 'var(--text-strong)',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+
+                <tr className="small text-uppercase">
+                  <th>S.No</th>
+                  <th>CID</th>
+                  <th>Uploaded By</th>
+                  <th>Firm Name</th>
+                  <th>Work Area</th>
+                  <th>Payment Status</th>
+                  <th>Upload Date</th>
+                  <th>Actions</th>
                 </tr>
-              )}
-            </tbody>
-          </Table>
+              </thead>
+
+
+
+              <tbody>
+                {filteredBills.length > 0 ? (
+                  filteredBills.map((bill, i) => {
+                    const status = bill.paymentStatus || 'Pending';
+
+                    const statusIcon =
+                      status === 'Paid' ? <FaCheckCircle className="me-1" /> :
+                        status === 'Reject' ? <FaTimesCircle className="me-1" /> :
+                          <FaExclamationTriangle className="me-1" />;
+
+                    const statusColor =
+                      status === 'Paid'
+                        ? 'var(--success)'
+                        : status === 'Reject'
+                          ? 'var(--destructive)'
+                          : 'var(--warning)';
+
+                    const statusTextColor =
+                      status === 'Paid'
+                        ? 'var(--success-foreground)'
+                        : status === 'Reject'
+                          ? 'var(--destructive-foreground)'
+                          : 'var(--warning-foreground)';
+
+                    const isPayDisabled = status === 'Rejected';
+
+                    return (
+                      <tr key={bill._id}>
+                        <td>
+                          <div
+                            className="rounded-circle d-inline-flex align-items-center justify-content-center"
+                            style={{
+                              backgroundColor: 'var(--muted)',
+                              color: 'var(--text-strong)',
+                              width: '30px',
+                              height: '30px',
+                              fontSize: '0.9rem'
+                            }}
+                          >
+                            {i + 1}
+                          </div>
+                        </td>
+
+                        <td >{bill.user?.cid || 'N/A'}</td>
+                        {/* username with profile photo icon  */}
+                        <td>
+                          <div className="d-flex align-items-center gap-2">
+                            {bill.user?.profile ? (
+                              <img
+                                src={bill.user.profile}
+                                alt={bill.user.name}
+                                style={{
+                                  width: '28px',
+                                  height: '28px',
+                                  borderRadius: '50%',
+                                  objectFit: 'cover',
+                                  border: '1px solid var(--border)'
+                                }}
+                              />
+                            ) : (
+                              <div
+                                className="d-flex align-items-center justify-content-center"
+                                style={{
+                                  width: '28px',
+                                  height: '28px',
+                                  borderRadius: '50%',
+                                  backgroundColor: 'var(--muted)',
+                                  color: 'var(--text-muted)',
+                                  fontSize: '0.8rem'
+                                }}
+                              >
+                                <FaUser />
+                              </div>
+                            )}
+
+                            <span>{bill.user?.name || 'N/A'}</span>
+                          </div>
+                        </td>
+
+                        <td>{bill.firmName}</td>
+                        <td>{bill.workArea}</td>
+
+                        <td>
+                          <span
+                            className="badge"
+                            style={{
+                              backgroundColor: statusColor,
+                              color: statusTextColor
+                            }}
+                          >
+                            {statusIcon} {status}
+                          </span>
+                        </td>
+
+                        <td>{new Date(bill.submittedAt).toLocaleDateString()}</td>
+                        {/* more file pay btn  */}
+                        <td>
+                          <div className="d-flex align-items-center gap-2">
+
+                            {/* View Bill */}
+                            <Button
+                              variant="outline-secondary"
+                              size="sm"
+                              href={bill.pdfurl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="View Bill"
+                              style={{
+                                borderColor: 'var(--border)',
+                                color: 'var(--secondary-foreground)'
+                              }}
+                            >
+                              <FaFileInvoice />
+                            </Button>
+
+                            {/* Pay */}
+                            <Button
+                              size="sm"
+                              disabled={isPayDisabled}
+                              style={{
+                                backgroundColor: isPayDisabled
+                                  ? 'var(--muted)'
+                                  : 'var(--primary)',
+                                color: isPayDisabled
+                                  ? 'var(--muted-foreground)'
+                                  : 'var(--primary-foreground)',
+                                border: 'none'
+                              }}
+                              onClick={() => {
+                                setSelectedBillId(bill._id);
+                                setShowPayModal(true);
+                              }}
+                            >
+                              <FaRupeeSign className="me-1" /> Pay
+                            </Button>
+
+                            {/* More */}
+                            <FaEllipsisV
+                              title="More options"
+                              style={{
+                                cursor: 'pointer',
+                                color: 'var(--text-muted)',
+                                fontSize: '0.9rem'
+                              }}
+                              onClick={() =>
+                                navigate(`/${user.role}/bill/${bill._id}`)
+                              }
+                            />
+                          </div>
+                        </td>
+
+
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan="11" className="text-center py-3" style={{ color: 'var(--text-muted)' }}>
+                      No results found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+              {/* your table content */}
+            </Table>
+          </div>
+
+
         )}
 
         {/* Pagination Footer */}

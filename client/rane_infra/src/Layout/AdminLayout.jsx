@@ -26,7 +26,7 @@ const AdminLayout = () => {
   return (
     <>
       {/* Sidebar on Desktop */}
-      <div style={{ backgroundColor: "var(--client-dashboard-bg-color)", height: "100vh" }}>
+      <div style={{ backgroundColor: "white", height: "100vh" }}>
 
 
         <div className="d-none d-md-block position-fixed">

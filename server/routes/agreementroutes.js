@@ -17,63 +17,99 @@ const router = express.Router();
  * @pending only access to admin . staff is pending for sanitization.
  */
 router.post("/create", verifyToken, async (req, res) => {
-    console.log("Create Agreement route hit...");
-    try {
-        const { title, description, client, fileUrl, expiryDate } = req.body;
+  console.log("Create Agreement route hit...");
 
-        // Basic validation
-        if (!title || !client || !fileUrl) {
-            return res.status(400).json({
-                success: false,
-                message: "Title, client, and fileUrl are required."
-            });
-        }
+  try {
+    const { title, description, clientId, fileUrl, expiryDate } = req.body;
 
-        // Create new agreement
-        const newAgreement = new Agreement({
-            title,
-            description,
-            client,
-            fileUrl,
-            uploadedBy: req.userId,
-            expiryDate,
-        });
-
-        await newAgreement.save();
-
-        /*
-         * ------------------------------------------------------------
-         * CREATE NOTIFICATION HERE
-         * ------------------------------------------------------------
-         */
-
-        await createNotification({
-            title: "New Agreement Created",
-            message: `An agreement titled "${title}" has been created.`,
-            type: "dfs",       // OR "system", "user", etc.
-            priority: "medium",
-            recipient: client, // client receives the notification
-            sender: req.userId,
-            relatedId: newAgreement._id,
-            relatedModel: "Agreement",
-            actionUrl: `/client/agreement/view/${newAgreement._id}`,
-            metadata: {
-                agreementTitle: title,
-                uploadedBy: req.userId
-            }
-        });
-
-        return res.status(201).json({
-            success: true,
-            message: "Agreement created & notification sent.",
-            agreement: newAgreement,
-        });
-
-    } catch (error) {
-        console.error("Error creating agreement:", error);
-        res.status(500).json({ success: false, message: "Internal server error." });
+    /* ----------------------------------
+       BASIC VALIDATION
+    ---------------------------------- */
+    if (!title || !clientId || !fileUrl) {
+      return res.status(400).json({
+        success: false,
+        message: "Title, Client ID, and File URL are required.",
+      });
     }
+
+    /* ----------------------------------
+       FIND CLIENT
+    ---------------------------------- */
+    const clientUser = await User.findOne({ cid: clientId });
+
+    if (!clientUser) {
+      return res.status(404).json({
+        success: false,
+        message: "Client not found.",
+      });
+    }
+
+    /* ----------------------------------
+       OPTIONAL: EXPIRY DATE VALIDATION
+    ---------------------------------- */
+    let parsedExpiryDate = null;
+    if (expiryDate) {
+      parsedExpiryDate = new Date(expiryDate);
+      if (isNaN(parsedExpiryDate.getTime())) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid expiry date.",
+        });
+      }
+    }
+
+    /* ----------------------------------
+       CREATE AGREEMENT
+    ---------------------------------- */
+    const newAgreement = new Agreement({
+      title,
+      description,
+      client: clientUser._id,   // store ObjectId
+      fileUrl,
+      uploadedBy: req.userId,
+      expiryDate: parsedExpiryDate,
+    });
+
+    await newAgreement.save();
+
+    /* ----------------------------------
+       CREATE NOTIFICATION
+    ---------------------------------- */
+    await createNotification({
+      title: "New Agreement Assigned",
+      message: `A new agreement "${title}" has been assigned to you.`,
+      type: "agreement",
+      priority: "medium",
+      recipient: clientUser._id,
+      sender: req.userId,
+      relatedId: newAgreement._id,
+      relatedModel: "Agreement",
+      actionUrl: `/client/agreement/view/${newAgreement._id}`,
+      metadata: {
+        agreementTitle: title,
+        uploadedBy: req.userId,
+      },
+    });
+
+    /* ----------------------------------
+       SUCCESS RESPONSE
+    ---------------------------------- */
+    return res.status(201).json({
+      success: true,
+      message: "Agreement created successfully.",
+      agreement: newAgreement,
+    });
+
+  } catch (error) {
+    console.error("Error creating agreement:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
 });
+
 
 /**
  * @route   GET /agreement/:id

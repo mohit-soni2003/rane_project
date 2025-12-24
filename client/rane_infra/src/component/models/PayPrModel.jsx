@@ -51,7 +51,7 @@ export default function PayPrmodel({ show, onHide, id }) {
     try {
       const response = await fetch(`${backend_url}/transactionroutes/pay-payment`, {
         method: 'POST',
-        credentials: "include", 
+        credentials: "include",
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ paymentId: id, upi: upiId, amount }),
 
@@ -75,97 +75,163 @@ export default function PayPrmodel({ show, onHide, id }) {
   const amountRemaining = amountRequested - totalPaid;
 
   return (
-    <Modal show={show} onHide={onHide} size="lg" centered scrollable>
-      <Modal.Header closeButton>
-        <Modal.Title>Make a Payment</Modal.Title>
+    <Modal
+      show={show}
+      onHide={onHide}
+      size="lg"
+      centered
+      scrollable
+      backdrop="static"
+    >
+      {/* Header */}
+      <Modal.Header
+        closeButton
+        style={{
+          background: "var(--secondary)",
+          borderBottom: "1px solid var(--border)",
+        }}
+      >
+        <Modal.Title
+          className="fw-semibold d-flex align-items-center gap-2"
+          style={{ color: "var(--secondary-foreground)" }}
+        >
+          <i className="bi bi-send-check" style={{ color: "var(--accent)" }} />
+          Make a Payment
+        </Modal.Title>
       </Modal.Header>
 
-      <Modal.Body>
+      <Modal.Body style={{ background: "var(--background)" }}>
         {error && <Alert variant="danger">{error}</Alert>}
         {success && <Alert variant="success">{success}</Alert>}
 
-        {/* Summary Card */}
-        <Card className="mb-4">
-          <Card.Header className="fw-bold">Payment Summary</Card.Header>
+        {/* Summary */}
+        <Card className="mb-4 shadow-sm border-0" style={{ borderRadius: "12px" }}>
+          <Card.Header
+            className="fw-semibold d-flex align-items-center gap-2"
+            style={{
+              background: "var(--secondary)",
+              color: "var(--secondary-foreground)",
+            }}
+          >
+            <i className="bi bi-clipboard-data" style={{ color: "var(--accent)" }} />
+            Payment Summary
+          </Card.Header>
+
           <Card.Body>
-            <Row>
+            <Row className="text-center gy-2">
               <Col md={4}>
-                <div className="text-muted small">Amount Requested</div>
-                <div className="fs-5 fw-semibold text-dark">₹{amountRequested}</div>
+                <small className="text-muted">Amount Requested</small>
+                <div className="fw-bold fs-5">₹{amountRequested}</div>
               </Col>
+
               <Col md={4}>
-                <div className="text-muted small">Total Paid</div>
-                <div className="fs-5 fw-semibold text-success">₹{totalPaid}</div>
+                <small className="text-muted">Total Paid</small>
+                <div
+                  className="fw-bold fs-5"
+                  style={{ color: "var(--success-foreground)" }}
+                >
+                  ₹{totalPaid}
+                </div>
               </Col>
+
               <Col md={4}>
-                <div className="text-muted small">Amount Remaining</div>
-                <div className="fs-5 fw-semibold text-danger">₹{amountRemaining}</div>
+                <small className="text-muted">Amount Remaining</small>
+                <div
+                  className="fw-bold fs-5"
+                  style={{ color: "var(--destructive)" }}
+                >
+                  ₹{amountRemaining}
+                </div>
               </Col>
             </Row>
           </Card.Body>
         </Card>
 
-        {/* Payment Form Card */}
-        <Card className="mb-4">
-          <Card.Header className="fw-bold">Send Payment</Card.Header>
+        {/* Payment Form */}
+        <Card className="mb-4 shadow-sm border-0" style={{ borderRadius: "12px" }}>
+          <Card.Header
+            className="fw-semibold d-flex align-items-center gap-2"
+            style={{
+              background: "var(--secondary)",
+              color: "var(--secondary-foreground)",
+            }}
+          >
+            <i className="bi bi-cash-coin" style={{ color: "var(--accent)" }} />
+            Send Payment
+          </Card.Header>
+
           <Card.Body>
             <Form onSubmit={handlePayment}>
-              <Row>
+              <Row className="gy-3">
                 <Col md={6}>
-                  <Form.Group controlId="amount">
-                    <Form.Label>Amount</Form.Label>
-                    <Form.Control
-                      type="number"
-                      min="1"
-                      max={amountRemaining}
-                      placeholder="Enter amount"
-                      value={amount}
-                      onChange={(e) => setAmount(Number(e.target.value))}
-                      required
-                      disabled={submitting}
-                    />
-                  </Form.Group>
+                  <Form.Label>Amount (₹)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    min="1"
+                    max={amountRemaining}
+                    placeholder="Enter amount"
+                    value={amount}
+                    onChange={(e) => setAmount(Number(e.target.value))}
+                    required
+                    disabled={submitting}
+                  />
                 </Col>
+
                 <Col md={6}>
-                  <Form.Group controlId="upiId">
-                    <Form.Label>UPI ID</Form.Label>
-                    <Form.Control
-                      type="text"
-                      placeholder="Enter UPI ID"
-                      value={upiId}
-                      onChange={(e) => setUpiId(e.target.value)}
-                      required
-                      disabled={submitting}
-                    />
-                  </Form.Group>
+                  <Form.Label>UPI ID</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Enter UPI ID"
+                    value={upiId}
+                    onChange={(e) => setUpiId(e.target.value)}
+                    required
+                    disabled={submitting}
+                  />
                 </Col>
               </Row>
+
               <div className="mt-4 text-end">
                 <Button
                   type="submit"
                   disabled={submitting || !amount || !upiId}
+                  style={{
+                    background: "var(--primary)",
+                    border: "none",
+                  }}
                 >
-                  {submitting ? 'Processing...' : 'Pay Now'}
+                  {submitting ? <Spinner size="sm" /> : "Pay Now"}
                 </Button>
               </div>
             </Form>
           </Card.Body>
         </Card>
 
-        {/* Transactions Card */}
-        <Card>
-          <Card.Header className="fw-bold">Transaction History</Card.Header>
+        {/* Transactions */}
+        <Card className="shadow-sm border-0" style={{ borderRadius: "12px" }}>
+          <Card.Header
+            className="fw-semibold d-flex align-items-center gap-2"
+            style={{
+              background: "var(--secondary)",
+              color: "var(--secondary-foreground)",
+            }}
+          >
+            <i className="bi bi-clock-history" style={{ color: "var(--accent)" }} />
+            Transaction History
+          </Card.Header>
+
           <Card.Body>
             {loading ? (
               <div className="text-center py-3">
-                <Spinner animation="border" variant="primary" />
-                <div>Loading transactions...</div>
+                <Spinner animation="border" />
+                <div className="text-muted mt-1">Loading transactions...</div>
               </div>
             ) : transactions.length === 0 ? (
-              <div className="text-muted">No previous transactions.</div>
+              <div className="text-muted text-center py-2">
+                No previous transactions.
+              </div>
             ) : (
-              <Table striped bordered hover responsive className="mt-2 mb-0">
-                <thead>
+              <Table hover responsive className="mb-0 align-middle">
+                <thead style={{ background: "var(--muted)" }}>
                   <tr>
                     <th>Txn ID</th>
                     <th>UPI ID</th>
@@ -175,9 +241,14 @@ export default function PayPrmodel({ show, onHide, id }) {
                 <tbody>
                   {transactions.map((txn) => (
                     <tr key={txn._id}>
-                      <td>{txn._id}</td>
+                      <td className="text-muted">{txn._id}</td>
                       <td>{txn.upiId}</td>
-                      <td>₹{txn.amount}</td>
+                      <td
+                        className="fw-semibold"
+                        style={{ color: "var(--success-foreground)" }}
+                      >
+                        ₹{txn.amount}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -187,11 +258,23 @@ export default function PayPrmodel({ show, onHide, id }) {
         </Card>
       </Modal.Body>
 
-      <Modal.Footer>
-        <Button variant="secondary" onClick={onHide} disabled={submitting}>
+      {/* Footer */}
+      <Modal.Footer
+        style={{
+          background: "var(--secondary)",
+          borderTop: "1px solid var(--border)",
+        }}
+      >
+        <Button
+          variant="outline-secondary"
+          onClick={onHide}
+          disabled={submitting}
+        >
           Close
         </Button>
       </Modal.Footer>
     </Modal>
   );
+
+
 }

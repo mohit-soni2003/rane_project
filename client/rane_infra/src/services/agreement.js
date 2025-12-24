@@ -134,3 +134,33 @@ export const getClientActionAgreements = async () => {
     throw error;
   }
 };
+
+
+/**
+ * Create a new agreement (Admin / Staff)
+ * POST /agreements/create
+ */
+export const createAgreement = async (payload) => {
+  try {
+    const res = await fetch(`${backend_url}/agreement/create`, {
+      method: "POST",
+      credentials: "include", // JWT cookie
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    console.log(payload)
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to create agreement");
+    }
+
+    return data;
+    // { success, message, agreement }
+  } catch (error) {
+    console.error("Error creating agreement:", error);
+    throw error;
+  }
+};

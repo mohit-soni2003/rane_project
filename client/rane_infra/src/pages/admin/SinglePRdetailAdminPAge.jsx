@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import AdminHeader from '../../component/header/AdminHeader';
 import { getPaymentRequestById } from '../../services/paymentService';
 import { getTransactionsByPaymentId } from '../../services/transactionService';
@@ -8,6 +8,7 @@ import { Container, Row, Col, Card, Spinner, Table, Form, Button, Image } from '
 
 export default function SinglePRdetailAdminPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [paymentData, setPaymentData] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -91,7 +92,7 @@ export default function SinglePRdetailAdminPage() {
   const {
     reason,
     amount,
-    createdAt,
+    submittedAt,
     status,
     sanctionedAmount,
     note,
@@ -105,198 +106,434 @@ export default function SinglePRdetailAdminPage() {
   return (
     <>
       <AdminHeader />
-      <Container className="py-4">
-        <h4 className="mb-4">Payment Request Details</h4>
+      <Container fluid className="py-4 my-3"
+        style={{
+          minHeight: '100vh',
+          background: 'var(--background)',
+          borderRadius:"13px"
+        }}>
 
-        {/* Payment Info */}
-        <Card className="mb-4">
-          <Card.Header className="fw-semibold">Request Information</Card.Header>
+        {/* Header */}
+
+
+        {/* Request Info */}
+        {/* Payment / Request Information */}
+        <Card
+          className="mb-4 shadow-sm border-0"
+          style={{
+            background: "var(--card)",
+            color: "var(--card-foreground)",
+            borderRadius: "12px",
+          }}
+        >
+          {/* Header */}
+          <Card.Header
+            className="d-flex align-items-center gap-2 fw-semibold"
+            style={{
+              background: "var(--secondary)",
+              color: "var(--secondary-foreground)",
+              borderBottom: "1px solid var(--border)",
+            }}
+          >
+            <i className="bi bi-receipt fs-5" style={{ color: "var(--accent)" }} />
+            Request Information
+          </Card.Header>
+
+          {/* Body */}
           <Card.Body>
-            <Row className="mb-2">
-              <Col md={6}><strong>Expense No:</strong> {expenseNo}</Col>
-              <Col md={6}><strong>Ref Mode:</strong> {refMode}</Col>
-            </Row>
-
-            <Row className="mb-2">
-              <Col md={6}><strong>Request Type:</strong> {paymentData.paymentType || '—'}</Col>
-              <Col md={6}><strong>Client Payment Preference:</strong> {paymentData.paymentMOde || '—'}</Col>
-            </Row>
-
-            <Row className="mb-2">
-              <Col md={6}><strong>Status:</strong> {paymentData.status || '—'}</Col>
-              <Col md={6}><strong>Requested Amount:</strong> ₹{paymentData.amount || 0}</Col>
-            </Row>
-
-            <Row className="mb-2">
+            <Row className="gy-3">
               <Col md={6}>
-                <strong>Request Date:</strong>{' '}
-                {paymentData.submittedAt ? new Date(paymentData.submittedAt).toLocaleString() : '—'}
+                <small className="text-muted">Expense No</small>
+                <div className="fw-semibold">{expenseNo || "—"}</div>
               </Col>
-              <Col md={6}>
-                <strong>Sanction Date:</strong>{' '}
-                {paymentData.paymentDate ? new Date(paymentData.paymentDate).toLocaleString() : '—'}
-              </Col>
-            </Row>
 
-            <Row className="mb-3">
               <Col md={6}>
-                <strong>Attachment:</strong>{' '}
-                {paymentData.image ? (
-                  <a href={paymentData.image} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary ms-2">
-                    View Image
-                  </a>
-                ) : (
-                  '—'
-                )}
+                <small className="text-muted">Reference Mode</small>
+                <div className="fw-semibold">{refMode || "—"}</div>
               </Col>
-            </Row>
 
-            <Row className="mb-3">
-              <Col md={12}>
-                <strong>Reason:</strong>
-                <div className="mt-1" style={{ whiteSpace: 'pre-wrap' }}>
-                  {paymentData.description || '—'}
+              <Col md={6}>
+                <small className="text-muted">Request Type</small>
+                <div className="fw-semibold">{paymentData.paymentType || "—"}</div>
+              </Col>
+
+              <Col md={6}>
+                <small className="text-muted">Client Payment Preference</small>
+                <div className="fw-semibold">{paymentData.paymentMOde || "—"}</div>
+              </Col>
+
+              <Col md={6}>
+                <small className="text-muted">Status</small>
+                <div className="fw-semibold">{paymentData.status || "—"}</div>
+              </Col>
+
+              <Col md={6}>
+                <small className="text-muted">Requested Amount</small>
+                <div className="fw-bold" style={{ color: "var(--destructive)" }}>
+                  ₹{amount || 0}
                 </div>
               </Col>
-            </Row>
 
-            <Row>
+              <Col md={6}>
+                <small className="text-muted">Request Date</small>
+                <div className="fw-semibold">
+                  {submittedAt ? new Date(submittedAt).toLocaleString() : "—"}
+                </div>
+              </Col>
+
+              <Col md={6}>
+                <small className="text-muted">Sanction Date</small>
+                <div className="fw-semibold">
+                  {sanctionDate ? new Date(sanctionDate).toLocaleString() : "—"}
+                </div>
+              </Col>
+
+              <Col md={12} className="mt-3">
+                <a
+                  href={paymentData.image}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-sm d-inline-flex align-items-center gap-2"
+                  style={{
+                    background: "var(--primary)",
+                    color: "var(--primary-foreground)",
+                    borderRadius: "8px",
+                  }}
+                >
+                  <i className="bi bi-file-earmark-pdf" />
+                  View PDF
+                </a>
+              </Col>
+
               <Col md={12}>
-                <strong>Remark (by admin):</strong>
-                <div className="mt-1" style={{ whiteSpace: 'pre-wrap' }}>
-                  {remark || '—'}
+                <small className="text-muted">Reason</small>
+                <div className="mt-1" style={{ color: "var(--text-muted)", whiteSpace: "pre-wrap" }}>
+                  {reason || "—"}
+                </div>
+              </Col>
+
+              <Col md={12}>
+                <small className="text-muted">Remark (by admin)</small>
+                <div className="mt-1" style={{ color: "var(--text-muted)", whiteSpace: "pre-wrap" }}>
+                  {remark || "—"}
                 </div>
               </Col>
             </Row>
           </Card.Body>
         </Card>
 
-        {/* Update Section */}
-        <Card className="mb-4">
-          <Card.Header className="fw-semibold">Update Information</Card.Header>
+
+        {/* Update / Payment Info */}
+        <Card
+          className="mb-4 shadow-sm border-0"
+          style={{
+            background: "var(--card)",
+            color: "var(--card-foreground)",
+            borderRadius: "12px",
+          }}
+        >
+          {/* Header */}
+          <Card.Header
+            className="d-flex align-items-center gap-2 fw-semibold"
+            style={{
+              background: "var(--secondary)",
+              color: "var(--secondary-foreground)",
+              borderBottom: "1px solid var(--border)",
+            }}
+          >
+            <i className="bi bi-pencil-square fs-5" style={{ color: "var(--accent)" }} />
+            Update Information
+          </Card.Header>
+
+          {/* Body */}
           <Card.Body>
             <Form>
-              <Row className="mb-3">
+              <Row className="gy-3">
                 <Col md={6}>
-                  <Form.Label><strong>Reference Mode:</strong></Form.Label>
-                  <Form.Control type="text" value={refMode} onChange={(e) => setRefMode(e.target.value)} />
+                  <Form.Label className="text-muted">Reference Mode</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={refMode}
+                    onChange={(e) => setRefMode(e.target.value)}
+                  />
                 </Col>
+
                 <Col md={6}>
-                  <Form.Label><strong>Expense No:</strong></Form.Label>
-                  <Form.Control type="text" value={expenseNo} onChange={(e) => setExpenseNo(e.target.value)} />
+                  <Form.Label className="text-muted">Expense No</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={expenseNo}
+                    onChange={(e) => setExpenseNo(e.target.value)}
+                  />
                 </Col>
               </Row>
-              <Form.Group className="mb-3">
-                <Form.Label><strong>Remark:</strong></Form.Label>
-                <Form.Control type="text" value={remark} onChange={(e) => setRemark(e.target.value)} />
+
+              <Form.Group className="mt-3">
+                <Form.Label className="text-muted">Remark</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={remark}
+                  onChange={(e) => setRemark(e.target.value)}
+                />
               </Form.Group>
 
-              <div className="mb-2"><strong>Status:</strong></div>
-              {['Pending', 'Overdue', 'Paid', 'Sanctioned', 'Rejected'].map((status) => (
+              <div className="mt-3 fw-semibold text-muted">Status</div>
+              {['Pending', 'Overdue', 'Paid', 'Sanctioned', 'Rejected'].map((s) => (
                 <Form.Check
-                  key={status}
+                  key={s}
                   type="radio"
-                  label={status}
+                  label={s}
                   name="paymentStatus"
-                  value={status}
+                  value={s}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  checked={selectedStatus === status}
+                  checked={selectedStatus === s}
                   className="mb-2"
                 />
               ))}
 
-              <Button variant="success" className="mt-3 w-100" onClick={updatePaymentStatus}>
+              <Button
+                variant="success"
+                className="mt-3"
+                onClick={updatePaymentStatus}
+              >
                 Update Payment Info
               </Button>
             </Form>
           </Card.Body>
         </Card>
 
-        {/* Transactions */}
-        <Card className="mb-4">
-          <Card.Header className="fw-semibold">Transaction Details</Card.Header>
+        {/* Transactions Card */}
+        <Card
+          className="mb-4 shadow-sm border-0"
+          style={{
+            background: "var(--card)",
+            color: "var(--card-foreground)",
+            borderRadius: "12px",
+          }}
+        >
+          {/* Header */}
+          <Card.Header
+            className="d-flex align-items-center gap-2 fw-semibold"
+            style={{
+              background: "var(--secondary)",
+              color: "var(--secondary-foreground)",
+              borderBottom: "1px solid var(--border)",
+            }}
+          >
+            <i className="bi bi-credit-card-2-front fs-5" style={{ color: "var(--accent)" }} />
+            Transaction Details
+          </Card.Header>
+
+          {/* Body */}
           <Card.Body>
             {transactions.length === 0 ? (
-              <p>No transactions found for this request.</p>
+              <div
+                className="text-center py-4"
+                style={{ color: "var(--muted-foreground)" }}
+              >
+                <i className="bi bi-info-circle fs-4 mb-2 d-block" />
+                No transactions found for this request.
+              </div>
             ) : (
-              <Table striped bordered hover responsive>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Amount</th>
-                    <th>Bank</th>
-                    <th>Account No</th>
-                    <th>IFSC</th>
-                    <th>UPI</th>
-                    <th>Transaction Date</th>
-                    <th>Send To</th>
-                    <th>Done By</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.map((txn, idx) => (
-                    <tr key={txn._id}>
-                      <td>{idx + 1}</td>
-                      <td>₹{txn.amount}</td>
-                      <td>{txn.bankName || '—'}</td>
-                      <td>{txn.accNo || '—'}</td>
-                      <td>{txn.ifscCode || '—'}</td>
-                      <td>{txn.upiId || '—'}</td>
-                      <td>{new Date(txn.transactionDate).toLocaleString()}</td>
-                      <td>{txn.userId?.name || '—'}</td>
-                      <td>{txn.created_by || '—'}</td>
+              <div className="table-responsive">
+                <Table hover className="align-middle mb-0" style={{ borderColor: "var(--border)" }}>
+                  <thead style={{ background: "var(--muted)", color: "var(--text-strong)" }}>
+                    <tr>
+                      <th>#</th>
+                      <th>Amount</th>
+                      <th>Bank</th>
+                      <th>Account No</th>
+                      <th>IFSC</th>
+                      <th>UPI</th>
+                      <th>Transaction Date</th>
+                      <th>Sent To</th>
+                      <th>Done By</th>
                     </tr>
-                  ))}
-                </tbody>
-              </Table>
+                  </thead>
+                  <tbody>
+                    {transactions.map((txn, idx) => (
+                      <tr key={txn._id}>
+                        <td>{idx + 1}</td>
+                        <td className="fw-semibold" style={{ color: "var(--success-foreground)" }}>
+                          ₹{txn.amount}
+                        </td>
+                        <td>{txn.bankName || "—"}</td>
+                        <td>{txn.accNo || "—"}</td>
+                        <td>{txn.ifscCode || "—"}</td>
+                        <td>{txn.upiId || "—"}</td>
+                        <td>{txn.transactionDate ? new Date(txn.transactionDate).toLocaleString() : "—"}</td>
+                        <td className="fw-semibold">{txn.userId?.name || "—"}</td>
+                        <td>{txn.created_by || "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
             )}
           </Card.Body>
         </Card>
 
-        {/* Summary */}
-        <Card className="mb-4">
-          <Card.Header className="fw-semibold">Summary</Card.Header>
+        {/* Summary Card */}
+        <Card
+          className="mb-4 shadow-sm border-0"
+          style={{
+            background: "var(--card)",
+            color: "var(--card-foreground)",
+            borderRadius: "12px",
+          }}
+        >
+          {/* Header */}
+          <Card.Header
+            className="d-flex align-items-center gap-2 fw-semibold"
+            style={{
+              background: "var(--secondary)",
+              color: "var(--secondary-foreground)",
+              borderBottom: "1px solid var(--border)",
+            }}
+          >
+            <i className="bi bi-bar-chart-fill fs-5" style={{ color: "var(--accent)" }} />
+            Summary
+          </Card.Header>
+
+          {/* Body */}
           <Card.Body>
-            <Row>
-              <Col md={4}><strong>Total Requested:</strong> ₹{amount || 0}</Col>
-              <Col md={4}><strong>Total Paid:</strong> ₹{totalPaid}</Col>
-              <Col md={4}><strong>Remaining Amount:</strong> ₹{remaining}</Col>
+            <Row className="gy-3 text-center">
+              {/* Total Requested */}
+              <Col md={4}>
+                <small className="text-muted">Total Amount Requested</small>
+                <div className="fw-bold fs-5 mt-1" style={{ color: "var(--text-strong)" }}>
+                  ₹{amount || 0}
+                </div>
+              </Col>
+
+              {/* Total Paid */}
+              <Col md={4}>
+                <small className="text-muted">Total Amount Paid</small>
+                <div className="fw-bold fs-5 mt-1" style={{ color: "var(--success-foreground)" }}>
+                  ₹{transactions.reduce((total, txn) => total + (txn.amount || 0), 0)}
+                </div>
+              </Col>
+
+              {/* Remaining */}
+              <Col md={4}>
+                <small className="text-muted">Amount Remaining</small>
+                <div className="fw-bold fs-5 mt-1" style={{ color: "var(--destructive)" }}>
+                  ₹{Math.max((Number(amount) || 0) - transactions.reduce((total, txn) => total + (txn.amount || 0), 0), 0)}
+                </div>
+              </Col>
             </Row>
           </Card.Body>
         </Card>
 
+
         {/* User Info */}
-        <Card className="mb-4">
-          <Card.Header className="fw-semibold">User Information</Card.Header>
+        <Card
+          className="mb-4 shadow-sm border-0"
+          style={{
+            background: "var(--card)",
+            color: "var(--card-foreground)",
+            borderRadius: "12px",
+          }}
+        >
+          {/* Header */}
+          <Card.Header
+            className="d-flex align-items-center gap-2 fw-semibold"
+            style={{
+              background: "var(--secondary)",
+              color: "var(--secondary-foreground)",
+              borderBottom: "1px solid var(--border)",
+            }}
+          >
+            <i className="bi bi-person-badge fs-5" style={{ color: "var(--accent)" }} />
+            User Information
+          </Card.Header>
+
+          {/* Body */}
           <Card.Body>
-            <Row>
-              <Col md={3}>
+            <Row className="gy-4 align-items-start">
+              {/* Profile */}
+              <Col md={3} className="text-center">
                 <Image
-                  src={user?.profile || 'https://via.placeholder.com/150'}
+                  src={user?.profile || "https://via.placeholder.com/150"}
                   roundedCircle
                   width={120}
                   height={120}
                   alt="User Profile"
+                  style={{
+                    border: "3px solid var(--secondary)",
+                    background: "var(--muted)",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => navigate(`/admin/client-detail/${user._id}`)}
                 />
+                <div
+                  className="mt-2 fw-semibold"
+                  style={{ color: "var(--text-strong)" }}
+                >
+                  {user?.name || "—"}
+                </div>
               </Col>
+
+              {/* Details */}
               <Col md={9}>
-                <Row>
-                  <Col md={6}><strong>Name:</strong> {user.name || '—'}</Col>
-                  <Col md={6}><strong>Email:</strong> {user.email || '—'}</Col>
-                  <Col md={6}><strong>Phone:</strong> {user.phoneNo || '—'}</Col>
-                  <Col md={6}><strong>Client ID (CID):</strong> {user.cid || '—'}</Col>
-                  <Col md={6}><strong>Firm Name:</strong> {user.firmName || '—'}</Col>
-                  <Col md={6}><strong>Address:</strong> {user.address || '—'}</Col>
-                  <Col md={6}><strong>Bank Name:</strong> {user.bankName || '—'}</Col>
-                  <Col md={6}><strong>Account No:</strong> {user.accountNo || '—'}</Col>
-                  <Col md={6}><strong>IFSC Code:</strong> {user.ifscCode || '—'}</Col>
-                  <Col md={6}><strong>UPI:</strong> {user.upi || '—'}</Col>
-                  <Col md={6}><strong>GST No:</strong> {user.gstno || '—'}</Col>
+                <Row className="gy-3">
+                  <Col md={6}>
+                    <small className="text-muted">Email</small>
+                    <div className="fw-semibold">{user?.email || "—"}</div>
+                  </Col>
+
+                  <Col md={6}>
+                    <small className="text-muted">Client ID (CID)</small>
+                    <div className="fw-semibold">{user?.cid || "—"}</div>
+                  </Col>
+
+                  <Col md={6}>
+                    <small className="text-muted">Phone</small>
+                    <div className="fw-semibold">{user?.phoneNo || "—"}</div>
+                  </Col>
+
+                  <Col md={6}>
+                    <small className="text-muted">Firm Name</small>
+                    <div className="fw-semibold">{user?.firmName || "—"}</div>
+                  </Col>
+
+                  <Col md={12}>
+                    <small className="text-muted">Address</small>
+                    <div className="fw-semibold" style={{ color: "var(--text-muted)" }}>
+                      {user?.address || "—"}
+                    </div>
+                  </Col>
+
+                  <Col md={6}>
+                    <small className="text-muted">Bank Name</small>
+                    <div className="fw-semibold">{user?.bankName || "—"}</div>
+                  </Col>
+
+                  <Col md={6}>
+                    <small className="text-muted">Account No</small>
+                    <div className="fw-semibold">{user?.accountNo || "—"}</div>
+                  </Col>
+
+                  <Col md={6}>
+                    <small className="text-muted">IFSC Code</small>
+                    <div className="fw-semibold">{user?.ifscCode || "—"}</div>
+                  </Col>
+
+                  <Col md={6}>
+                    <small className="text-muted">UPI</small>
+                    <div className="fw-semibold">{user?.upi || "—"}</div>
+                  </Col>
+
+                  <Col md={6}>
+                    <small className="text-muted">GST No</small>
+                    <div className="fw-semibold">{user?.gstno || "—"}</div>
+                  </Col>
                 </Row>
               </Col>
             </Row>
           </Card.Body>
         </Card>
+
       </Container>
     </>
   );

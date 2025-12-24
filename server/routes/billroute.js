@@ -2,12 +2,11 @@ const express = require("express")
 const User = require("../models/usermodel")
 const Bill = require("../models/billmodel")
 const Document = require("../models/documentmodel")
-const RecentActivity  = require("../models/RecentActivityModel")
+const RecentActivity = require("../models/RecentActivityModel")
 const { createNotification } = require("./notificationRoutes")
 
 
 const router = express.Router();
-
 
 router.post("/post-bill", async (req, res) => {
   try {
@@ -50,7 +49,7 @@ router.post("/post-bill", async (req, res) => {
         actionUrl: `/client/bill/${savedBill._id}`,
         metadata: {
           firmName,
-          workArea, 
+          workArea,
           loaNo,
           amount,
           invoiceNo

@@ -1,854 +1,755 @@
-import React, { useEffect, useState } from 'react';
-import ClientHeader from '../../component/header/ClientHeader';
-import { Card, Spinner, Button, Badge, Alert, Row, Col } from 'react-bootstrap';
-import {
-  FaFileAlt, FaCheckCircle, FaTimesCircle, FaRupeeSign, FaMoneyBill,
-  FaClock, FaCalendarCheck, FaChartLine, FaChartBar, FaEye,
-  FaUpload, FaDownload, FaBell, FaInfoCircle, FaCalendarAlt,
-  FaWallet, FaFileInvoiceDollar, FaHandshake, FaCog, FaMobileAlt
-} from 'react-icons/fa';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { useAuthStore } from '../../store/authStore';
-import { clientService } from '../../services/clientService';
-// Assuming a service that can fetch documents by type exists
-import { getDocumentsByUserId } from '../../services/documentService'; 
-import { getBillsByUserId } from '../../services/billServices';
-import { getPaymentsByUserId } from '../../services/paymentService';
-import { useNavigate } from 'react-router-dom';
-import { Pie, Bar, Line, Doughnut } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement } from 'chart.js';
-import PendingDocumentsTable from '../../component/PendingDocumentsTable';
+import React, { useState, useEffect } from "react";
+import { FiFileText, FiClock, FiCheckCircle, FiDollarSign, FiFile, FiUpload, FiCreditCard, FiFolder } from "react-icons/fi";
+import ClientHeader from "../../component/header/ClientHeader";
+import { backend_url } from "../../store/keyStore";
+import { getRecentActivity } from "../../services/generalService";
+import { getClientOverview, getClientBillOverview } from "../../services/dashboardService";
+import { useAuthStore } from "../../store/authStore";
+import { useNavigate } from "react-router-dom";
+import RecentActivityModal from "../../component/models/RecentActivityModel";
 
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, LineElement, PointElement);
 
-// This array is based on your DocumentCategory.jsx file
-const documentCategories = [
-  'LOA', 'SalesOrder', 'PurchaseOrder', 'PayIn', 'PayOut', 
-  'Estimate', 'DeliveryChallan', 'Expense', 'BankReference', 'Other'
-];
-
-const StatCard = ({ title, value, icon, color, subtitle }) => (
-  <Card className="shadow-sm border-0 h-100" style={{
-    backgroundColor: '#fff',
-    borderRadius: '15px',
-    transition: 'transform 0.2s ease-in-out',
-    border: '1px solid #e9ecef'
-  }}
-  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-  >
-    <Card.Body className="d-flex flex-column justify-content-center align-items-center p-4">
-      <div className="rounded-circle d-flex justify-content-center align-items-center mb-3"
-        style={{
-          width: '60px',
-          height: '60px',
-          backgroundColor: color,
-          boxShadow: `0 4px 15px ${color}30`
-        }}>
-        {React.cloneElement(icon, { color: 'white', size: 20 })}
-      </div>
-      <h4 className="card-title mb-2 text-dark fw-bold">{value}</h4>
-      <p className="card-text mb-1 text-muted text-center fw-semibold">{title}</p>
-      {subtitle && <small className="text-muted">{subtitle}</small>}
-    </Card.Body>
-  </Card>
-);
-
-const ActivityCard = ({ title, items, icon, color }) => (
-  <Card className="shadow-sm border-0 h-100" style={{
-    backgroundColor: '#fff',
-    borderRadius: '15px',
-    border: '1px solid #e9ecef'
-  }}>
-    <Card.Header className="border-0 bg-white d-flex align-items-center" style={{ borderRadius: '15px 15px 0 0' }}>
-      <div className={`rounded-circle p-2 me-3`} style={{ backgroundColor: color }}>
-        {React.cloneElement(icon, { color: 'white', size: 16 })}
-      </div>
-      <h6 className="card-title mb-0 text-dark fw-bold">{title}</h6>
-    </Card.Header>
-    <Card.Body>
-      {items.length > 0 ? (
-        <div className="list-group list-group-flush">
-          {items.map((item, index) => (
-            <div key={index} className="list-group-item border-0 px-0 py-2">
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <p className="mb-1 text-dark fw-semibold small">{item.title}</p>
-                  <small className="text-muted">{item.description}</small>
-                </div>
-                {/* UPDATED: Badge color logic for more status types */}
-                <Badge bg={
-                    item.status === 'approved' || item.status === 'Paid' ? 'success' 
-                    : item.status === 'rejected' || item.status === 'Overdue' ? 'danger' 
-                    : item.status === 'Sanctioned' ? 'primary'
-                    : 'warning'
-                }>
-                  {item.status}
-                </Badge>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-4">
-          <div className={`rounded-circle p-3 mx-auto mb-3`} style={{ backgroundColor: `${color}20`, width: 'fit-content' }}>
-            {React.cloneElement(icon, { color: color, size: 24 })}
-          </div>
-          <p className="text-muted mb-0">No recent activity</p>
-        </div>
-      )}
-    </Card.Body>
-  </Card>
-);
 
 export default function HomePageClient() {
-  const { user } = useAuthStore();
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
-  const navigate = useNavigate();
-  const [activityData, setActivityData] = useState({ bills: [], payments: [] });
-  const [isActivityLoading, setActivityLoading] = useState(false);
+    const [recentActivity, setRecentActivity] = useState([]);
+    const [fullRecentActivity, setFullRecentActivity] = useState([]);
+    const [showActivityModal, setShowActivityModal] = useState(false);//modal to show all recent activity 
+    const [overviewData, setOverviewData] = useState(); // for the overall bill . PR , agreeent data
+    const [billOverview, setBillOverview] = useState(null); // for donut chart 
+    const {
+        totalAmount = 0,
+        paidAmount = 0,
+        pendingAmount = 0,
+        overdueAmount = 0,
+        otherAmount = 0
+    } = billOverview || {};
 
-  useEffect(() => {
-    if (!user?._id) return;
 
-    // --- NEW FUNCTION TO FETCH DOCUMENT COUNTS ---
-    // This function demonstrates fetching counts for each document type.
-    // NOTE: This makes many API calls. A single backend endpoint returning this data is more efficient.
-    const fetchDocumentCounts = async () => {
-        try {
-            const counts = await Promise.all(
-                documentCategories.map(async (docType) => {
-                    // We use the service from ViewDocumentPage to get documents of a specific type
-                    const documents = await getDocumentsByUserId(user._id, docType);
-                    return { type: docType, count: documents.length };
-                })
-            );
-            return counts.filter(item => item.count > 0); // Only include types with documents
-        } catch (error) {
-            console.error("Failed to fetch document counts:", error);
-            return []; // Return empty array on error
-        }
-    };
 
-    const fetchStats = async () => {
-      try {
-        console.log('Fetching dashboard stats for user:', user._id);
-        // Fetch main stats
-        const response = await clientService.getDashboardStats(user._id);
-        
-        // Fetch detailed document counts separately
-        const docTypeCounts = await fetchDocumentCounts();
 
-        let finalStats = {};
+    const { user } = useAuthStore()
+    const navigate = useNavigate();
 
-        if (response.success) {
-          console.log('Setting stats data:', response.stats);
-          finalStats = response.stats;
-        } else {
-          console.error('Failed to fetch dashboard stats:', response.message);
-          // Set default values if API fails
-          finalStats = {
-            totalBills: 0, totalPayments: 0, totalDocuments: 0, totalDfsRequests: 0,
-            pendingBills: 0, approvedBills: 0, rejectedBills: 0,
-            pendingPayments: 0, approvedPayments: 0,
-            recentActivity: [], monthlyTrends: [],
-          };
-        }
 
-        // Combine the stats with the newly fetched document counts
-        setStats({ ...finalStats, documentTypes: docTypeCounts });
 
-      } catch (err) {
-        console.error('Error fetching stats:', err);
-        // Set default values if API fails
-        setStats({
-            totalBills: 0, totalPayments: 0, totalDocuments: 0, totalDfsRequests: 0,
-            pendingBills: 0, approvedBills: 0, rejectedBills: 0,
-            pendingPayments: 0, approvedPayments: 0,
-            recentActivity: [], monthlyTrends: [], documentTypes: []
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const data = await getRecentActivity(user._id);
+                const overview = await getClientOverview();
+                const bills = await getClientBillOverview();  // ⬅ NEW
 
-    fetchStats();
-  }, [user]);
+                // recent activity
+                const topThree = data.activities.slice(0, 2);
+                const topTen = data.activities.slice(0, 10);
 
-  useEffect(() => {
-    if (activeTab === 'activity' && user?._id) {
-        const fetchActivityData = async () => {
-            setActivityLoading(true);
-            try {
-                const [bills, payments] = await Promise.all([
-                    getBillsByUserId(user._id),
-                    getPaymentsByUserId(user._id)
-                ]);
+                setRecentActivity(topThree);
+                setFullRecentActivity(topTen);
 
-                const sortedBills = (Array.isArray(bills) ? bills : []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                const sortedPayments = (Array.isArray(payments) ? payments : []).sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
-                
-                setActivityData({
-                    bills: sortedBills.slice(0, 5),
-                    payments: sortedPayments.slice(0, 5)
-                });
-            } catch (error) {
-                console.error("Failed to fetch activity data:", error);
-                setActivityData({ bills: [], payments: [] });
-            } finally {
-                setActivityLoading(false);
-            }
-        };
-        fetchActivityData();
-    }
-  }, [activeTab, user]);
+                // overview
+                if (overview?.success) {
+                    setOverviewData(overview.data);
+                }
 
-  if (loading) {
-    return (
-      <>
-        <div className="d-none d-md-block">
-          <ClientHeader />
-        </div>
-        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "100vh", backgroundColor: '#f8f9fa' }}>
-          <div className="text-center">
-            <Spinner animation="border" variant="primary" size="lg" />
-            <h5 className="text-muted mt-3">Loading your dashboard...</h5>
-          </div>
-        </div>
-      </>
-    );
-  }
+                // bill overview
+                if (bills?.success) {
+                    setBillOverview(bills.data);   // ⬅ SET HERE
+                }
 
-  const recentBills = stats?.recentActivity?.filter(item => item.type === 'bill').slice(0, 3) || [];
-  const recentPayments = stats?.recentActivity?.filter(item => item.type === 'payment').slice(0, 2) || [];
+            } catch (error) {
+                console.log("Failed to load dashboard", error);
+            }
+        }
 
-  // Data for the new charts
-  const monthlyTrendsData = {
-      labels: stats?.monthlyTrends?.map(d => d.month) || [],
-      datasets: [
-          {
-              label: 'Bills Submitted',
-              data: stats?.monthlyTrends?.map(d => d.bills) || [],
-              borderColor: '#22c55e',
-              backgroundColor: 'rgba(34, 197, 94, 0.1)',
-              fill: true,
-              tension: 0.4,
-          },
-          {
-              label: 'Payments Requested',
-              data: stats?.monthlyTrends?.map(d => d.payments) || [],
-              borderColor: '#3b82f6',
-              backgroundColor: 'rgba(59, 130, 246, 0.1)',
-              fill: true,
-              tension: 0.4,
-          }
-      ]
-  };
-    
-  const documentTypesData = {
-      labels: stats?.documentTypes?.map(d => d.type) || [],
-      datasets: [{
-          label: 'Document Count',
-          data: stats?.documentTypes?.map(d => d.count) || [],
-          backgroundColor: [
-              '#3b82f6', '#10b981', '#f97316', '#8b5cf6', '#ec4899', 
-              '#64748b', '#f43f5e', '#d946ef', '#0ea5e9', '#84cc16'
-          ],
-          borderRadius: 4,
-      }]
-  };
-  
-  const renderInfoCard = (tab) => {
-    let title = "About RS-WMS";
-    let content = (
-        <p className="text-muted mb-0">
-            RS-WMS stands for <strong>RANE & SONS - WORK MANAGEMENT SYSTEM</strong>, a robust digital platform based in Indore, Madhya Pradesh. It is developed to manage and streamline <strong>construction project workflows</strong>, with a special focus on <strong>railway sector</strong> projects.
-            <br /><br />
-            This system was created by <strong>RANE & SONS PVT. LTD.</strong> to assist with execution, planning, resource management, progress tracking, and overall project supervision.
-        </p>
-    );
+        fetchData();
+    }, [user._id]);
 
-    if (tab === 'analytics') {
-        title = "Understanding Your Analytics";
-        content = (
-            <p className="text-muted mb-0">
-                This tab provides a visual breakdown of your financial and document activity. Track your monthly trends, see the status of your bills, and analyze the types of documents you've submitted to gain insights into your operations.
-            </p>
-        );
-    } else if (tab === 'activity') {
-        title = "Tracking Your Recent Activity";
-        content = (
-            <p className="text-muted mb-0">
-                This tab shows a real-time feed of your most recent bill submissions and payment requests. Keep track of your latest financial activities and their current status at a glance.
-            </p>
-        );
-    }
 
-    return (
-        <div className="row mt-4">
-            <div className="col-12">
-                <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
-                    <Card.Body className="p-4">
-                        <div className="d-flex align-items-center mb-3">
-                            <div className="rounded-circle p-2 me-3" style={{ backgroundColor: '#667eea' }}>
-                                <FaInfoCircle color="white" size={16} />
-                            </div>
-                            <h6 className="card-title mb-0 text-dark fw-bold">{title}</h6>
-                        </div>
-                        {content}
-                    </Card.Body>
-                </Card>
-            </div>
-        </div>
-    );
-  };
+    const overview = overviewData ? [
+        {
+            title: "Submitted Bills",
+            count: overviewData.billcnt,
+            desc: "This fiscal year",
+            icon: <FiUpload size={20} />,
+            bg: "linear-gradient(135deg, #e6f4ff 0%, #f3faff 100%)",
+        },
+        {
+            title: "Payment Requests",
+            count: overviewData.prcnt,
+            desc: "In various stages",
+            icon: <FiCreditCard size={20} />,
+            bg: "linear-gradient(135deg, #e4faf8 0%, #f3fdfc 100%)",
+        },
+        {
+            title: "Signed Agreements",
+            count: overviewData.signedAgreement,
+            desc: "Fully executed",
+            icon: <FiCheckCircle size={20} />,
+            bg: "linear-gradient(135deg, #d9f2e4 0%, #eefaf2 100%)",
+        },
+        {
+            title: "Paid Bills",
+            count: overviewData.paidBillCnt,
+            desc: "Full payment done",
+            icon: <FiDollarSign size={20} />,
+            bg: "linear-gradient(135deg, #f2edf7 0%, #faf7ff 100%)",
+        },
+        {
+            title: "Completed PR",
+            count: overviewData.paidPrCnt,
+            desc: "All active and historical",
+            icon: <FiFileText size={20} />,
+            bg: "linear-gradient(135deg, #e8e7ff 0%, #f7f6ff 100%)",
+        },
+        {
+            title: "Total Agreements",
+            count: overviewData.agreementcnt,
+            desc: "Awaiting your action",
+            icon: <FiFile size={20} />,
+            bg: "linear-gradient(135deg, #ffe9d6 0%, #fff4ea 100%)",
+        },
+    ] : [];
 
-  return (
-    <>
-      <div className="d-none d-md-block">
-        <ClientHeader />
-      </div>
-      <div className="container-fluid p-4" style={{ backgroundColor: '#f8f9fa', minHeight: '100vh', paddingBottom: '100px' }}>
 
-        {/* Navigation Tabs */}
-        <div className="row mb-4">
-          <div className="col-12">
-            <div className="card shadow-sm border-0">
-              <div className="card-body p-0">
-                <div className="d-flex justify-content-center">
-                  {[
-                    { id: 'overview', label: 'Overview', icon: <FaEye /> },
-                    { id: 'analytics', label: 'Analytics', icon: <FaChartLine /> },
-                    { id: 'activity', label: 'Activity', icon: <FaFileAlt /> }
-                  ].map(tab => (
-                    <button
-                      key={tab.id}
-                      className={`btn flex-fill py-3 ${activeTab === tab.id ? 'btn-primary' : 'btn-outline-primary'}`}
-                      onClick={() => setActiveTab(tab.id)}
-                      style={{
-                        borderRadius: '0',
-                        border: 'none',
-                        fontWeight: '600'
-                      }}
-                    >
-                      {tab.icon} <span className="ms-2">{tab.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Overview Tab */}
-        {activeTab === 'overview' && (
-          <>
-            {/* Stats Cards */}
-            <div className="row mb-4">
-              <div className="col-lg-3 col-md-6 mb-4">
-                <StatCard
-                  title="Total Bills"
-                  value={stats?.totalBills ?? 0}
-                  icon={<FaFileInvoiceDollar />}
-                  color="#4CAF50"
-                  subtitle="All submitted bills"
-                />
-              </div>
-              <div className="col-lg-3 col-md-6 mb-4">
-                <StatCard
-                  title="Approved Bills"
-                  value={stats?.approvedBills ?? 0}
-                  icon={<FaCheckCircle />}
-                  color="#22c55e"
-                  subtitle="Successfully processed"
-                />
-              </div>
-              <div className="col-lg-3 col-md-6 mb-4">
-                <StatCard
-                  title="Rejected Bills"
-                  value={stats?.rejectedBills ?? 0}
-                  icon={<FaTimesCircle />}
-                  color="#ef4444"
-                  subtitle="Need revision"
-                />
-              </div>
-              <div className="col-lg-3 col-md-6 mb-4">
-                <StatCard
-                  title="Pending Bills"
-                  value={stats?.pendingBills ?? 0}
-                  icon={<FaClock />}
-                  color="#f59e0b"
-                  subtitle="Awaiting approval"
-                />
-              </div>
-            </div>
+    return (
+        <>
+            <ClientHeader />
+            {/* overview and recent activuty */}
+            <div className="row mt-3">
 
-            {/* Payment Stats */}
-            <div className="row mb-4">
-              <div className="col-lg-4 col-md-6 mb-4">
-                <StatCard
-                  title="Payment Requests"
-                  value={stats?.totalPayments ?? 0}
-                  icon={<FaMoneyBill />}
-                  color="#7e5bef"
-                  subtitle="Total requests made"
-                />
-              </div>
-              <div className="col-lg-4 col-md-6 mb-4">
-                <StatCard
-                  title="Approved Payments"
-                  value={stats?.approvedPayments ?? 0}
-                  icon={<FaWallet />}
-                  color="#10b981"
-                  subtitle="Successfully processed"
-                />
-              </div>
-              <div className="col-lg-4 col-md-12 mb-4">
-                <StatCard
-  _SUMMARY_
-                  value={stats?.pendingPayments ?? 0}
-                  icon={<FaClock />}
-                  color="#f59e0b"
-                  subtitle="Awaiting processing"
-                />
-              </div>
-            </div>
+                {/* ===================== LEFT SIDE : OVERVIEW ===================== */}
 
-            {/* Pending Documents Table */}
-            <div className="row mb-4">
-              <div className="col-12">
-                <PendingDocumentsTable />
-              </div>
-            </div>
+                <div className="col-lg-8 col-md-7 col-12">
+                    <div
+                        className="p-4"
+                        style={{
+                            backgroundColor: "var(--background)",
+                            boxShadow: "0px 2px 10px var(--shadow-color)",
+                            borderRadius: "14px",
+                            height: "100%",
+                        }}
+                    >
+                        {/* Title */}
+                        <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-strong)" }}>
+                            Overview
+                        </div>
+                        <div
+                            style={{
+                                color: "var(--text-muted)",
+                                marginBottom: "14px",
+                                marginTop: "4px",
+                                fontSize: "14px",
+                            }}
+                        >
+                            High-level metrics across agreements, bills, and documents.
+                        </div>
 
-            {/* Salary Overview */}
-            <div className="row mb-4">
-              <div className="col-12">
-                <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
-                  <Card.Header className="border-0 bg-white d-flex align-items-center" style={{ borderRadius: '15px 15px 0 0' }}>
-                    <div className="rounded-circle p-2 me-3" style={{ backgroundColor: '#4CAF50' }}>
-                      <FaRupeeSign color="white" size={16} />
-                    </div>
-                    <h6 className="card-title mb-0 text-dark fw-bold">Documents Overview</h6>
-                  </Card.Header>
-                  <Card.Body>
-                    <div className="row">
-                      <div className="col-md-4 mb-3">
-                        <div className="text-center p-3 rounded" style={{ backgroundColor: '#f8f9fa' }}>
-                          <FaFileAlt size={24} className="text-success mb-2" />
-                          <h5 className="text-success mb-1">{stats?.totalDocuments ?? 0}</h5>
-                          <small className="text-muted">Total Documents</small>
-                        </div>
-                      </div>
-                      <div className="col-md-4 mb-3">
-                        <div className="text-center p-3 rounded" style={{ backgroundColor: '#f8f9fa' }}>
-                          <FaFileAlt size={24} className="text-warning mb-2" />
-                          <h5 className="text-warning mb-1">{stats?.totalDfsRequests ?? 0}</h5>
-                          <small className="text-muted">DFS Requests</small>
-                        </div>
-                      </div>
-                      <div className="col-md-4 mb-3">
-                        <div className="text-center p-3 rounded" style={{ backgroundColor: '#f8f9fa' }}>
-                          <FaCalendarCheck size={24} className="text-info mb-2" />
-                          <h5 className="text-info mb-1">{new Date().toLocaleDateString()}</h5>
-                          <small className="text-muted">Last Updated</small>
-                        </div>
-                      </div>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </div>
-            </div>
+                        {/* Cards Grid – 2 rows */}
+                        <div className="row g-3">
+                            {overview.length === 0 ? (
+                                <div className="text-center py-4">Loading metrics...</div>
+                            ) : (
+                                overview.map((item, index) => (
+                                    <div key={index} className="col-6 col-sm-4 col-md-4 col-lg-4">
+                                        <div
+                                            style={{
+                                                background: item.bg,
+                                                borderRadius: "14px",
+                                                padding: "14px",
+                                                boxShadow: "0 2px 5px var(--shadow-color)",
+                                                border: "1px solid var(--border)",
+                                                height: "120px",
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                justifyContent: "space-between",
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    justifyContent: "space-between",
+                                                    fontWeight: 600,
+                                                    color: "var(--text-strong)",
+                                                    fontSize: "13px",
+                                                }}
+                                            >
+                                                <div>{item.title}</div>
+                                                <div
+                                                    style={{
+                                                        background: "var(--card)",
+                                                        padding: "5px",
+                                                        borderRadius: "8px",
+                                                        border: "1px solid var(--border)",
+                                                        color: "var(--text-muted)",
+                                                    }}
+                                                >
+                                                    {item.icon}
+                                                </div>
+                                            </div>
 
-        
-            
-            {/* Quick Actions - This section is now below Pending Documents and is hidden on screens smaller than lg */}
-            <div className="row mb-4 d-none d-lg-block">
-              <div className="col-12">
-                <Card className="shadow-sm border-0" style={{ borderRadius: '15px', backgroundColor: '#fff' }}>
-                  <Card.Header className="border-0 bg-white" style={{ borderRadius: '15px 15px 0 0' }}>
-                    <h6 className="card-title mb-0 text-dark fw-bold">
-                      <FaHandshake className="me-2 text-primary" />
-                      Quick Actions
-                    </h6>
-                  </Card.Header>
-                  <Card.Body>
-                    <div className="row g-3">
-                      <div className="col-md-3">
-                        <Button
-                          variant="outline-primary"
-                          className="w-100 d-flex align-items-center justify-content-center p-3"
-                          onClick={() => navigate('/client/upload-bill')}
-                          style={{ borderRadius: '10px', height: 'auto' }}
-                        >
-                          <FaUpload className="me-2" />
-                          <div className="text-start">
-                            <div className="fw-bold">Upload Bill</div>
-                            <small>Submit new bill</small>
-                          </div>
-                        </Button>
-                      </div>
-                      <div className="col-md-3">
-                      	<Button
-                      	  variant="outline-success"
-                      	  className="w-100 d-flex align-items-center justify-content-center p-3"
-                      	  onClick={() => navigate('/client/my-bill')}
-                      	  style={{ borderRadius: '10px', height: 'auto' }}
-                      	>
-                      	  <FaFileAlt className="me-2" />
-                      	  <div className="text-start">
-                      	    <div className="fw-bold">My Bills</div>
-                      	    <small>View all bills</small>
-                      	  </div>
-                      	</Button>
-                      </div>
-                      <div className="col-md-3">
-                        <Button
-                          variant="outline-info"
-                          className="w-100 d-flex align-items-center justify-content-center p-3"
-                          onClick={() => navigate('/client/payment-request')}
-                          style={{ borderRadius: '10px', height: 'auto' }}
-                      	>
-                      	  <FaMoneyBill className="me-2" />
-                      	  <div className="text-start">
-                      	    <div className="fw-bold">Payment Request</div>
-                      	    <small>Request payment</small>
-                      	  </div>
-                      	</Button>
-                      </div>
-                      <div className="col-md-3">
-                        <Button
-                          variant="outline-warning"
-                          className="w-100 d-flex align-items-center justify-content-center p-3"
-                          onClick={() => navigate('/client/my-payment-request')}
-                          style={{ borderRadius: '10px', height: 'auto' }}
-                      	>
-                      	  <FaDownload className="me-2" />
-                      	  <div className="text-start">
-                      	    <div className="fw-bold">My Payments</div>
-                      	    <small>View payment history</small>
-                      	  </div>
-                      	</Button>
-                      </div>
-                    </div>
-                    <div className="row g-3 mt-2">
-                      <div className="col-md-3">
-                        <Button
-                          variant="outline-secondary"
-                          className="w-100 d-flex align-items-center justify-content-center p-3"
-  	onClick={() => navigate('/client/upload-document')}
-  	style={{ borderRadius: '10px', height: 'auto' }}
-  	>
-  	  <FaUpload className="me-2" />
-  	  <div className="text-start">
-  	    <div className="fw-bold">Upload Document</div>
-  	    <small>DFS document upload</small>
-  	  </div>
-  	</Button>
-  	</div>
-<div className="col-md-3">
-<Button
-variant="outline-dark"
-className="w-100 d-flex align-items-center justify-content-center p-3"
-onClick={() => navigate('/client/track-dfs/all')}
-style={{ borderRadius: '10px', height: 'auto' }}
->
-<FaEye className="me-2" />
-<div className="text-start">
-<div className="fw-bold">Track DFS</div>
-<small>Track documents</small>
-</div>
-</Button>
-</div>
-<div className="col-md-3">
-<Button
-variant="outline-primary"
-className="w-100 d-flex align-items-center justify-content-center p-3"
-onClick={() => navigate('/client/transaction')}
-style={{ borderRadius: '10px', height: 'auto' }}
->
-<FaRupeeSign className="me-2" />
-<div className="text-start">
-<div className="fw-bold">Transactions</div>
-<small>View transactions</small>
-</div>
-</Button>
-</div>
-<div className="col-md-3">
-<Button
-variant="outline-success"
-className="w-100 d-flex align-items-center justify-content-center p-3"
-onClick={() => navigate('/client/document/category')}
-style={{ borderRadius: '10px', height: 'auto' }}
->
-<FaFileAlt className="me-2" />
-<div className="text-start">
-<div className="fw-bold">My Documents</div>
-<small>View documents</small>
-</div>
-</Button>
-</div>
-  	</div>
-  	<div className="row g-3 mt-2">
-  	  <div className="col-md-3">
-  	    <Button
-  	      variant="outline-info"
-  	      className="w-100 d-flex align-items-center justify-content-center p-3"
-  	      onClick={() => navigate('/client/salary')}
-  	      style={{ borderRadius: '10px', height: 'auto' }}
-  	    >
-  	      <FaWallet className="me-2" />
-  	      <div className="text-start">
-  	        <div className="fw-bold">Salary</div>
-  	        <small>View salary info</small>
-  	      </div>
-  	    </Button>
-  	  </div>
-  	  <div className="col-md-3">
-  	    <Button
-  	      variant="outline-secondary"
-  	      className="w-100 d-flex align-items-center justify-content-center p-3"
-  	      onClick={() => navigate('/client/setting')}
-  	      style={{ borderRadius: '10px', height: 'auto' }}
-  	    >
-  	      <FaCog className="me-2" />
-  	      <div className="text-start">
-  	        <div className="fw-bold">Settings</div>
-  	        <small>Account settings</small>
-  	      </div>
-  	    </Button>
-  	  </div>
-  	  <div className="col-md-3">
-  	    <Button
-  	      variant="outline-warning"
-  	      className="w-100 d-flex align-items-center justify-content-center p-3"
-  	      onClick={() => navigate('/client/support')}
-  	      style={{ borderRadius: '10px', height: 'auto' }}
-  	    >
-  	      <FaBell className="me-2" />
-  	      <div className="text-start">
-  	        <div className="fw-bold">Support</div>
-  	        <small>Get help</small>
-  	      </div>
-  	    </Button>
-  	  </div>
-  	</div>
-  </Card.Body>
-</Card>
-  	  </div>
-  	</div>
-  	
-  	<div className="row mb-4 d-none">
-  	  {/* This empty div with d-none replaces the previous mobile message */}
-  	</div>
+                                            <div
+                                                style={{
+                                                    fontSize: "24px",
+                                                    fontWeight: 700,
+                                                    color: "var(--text-strong)",
+                                                    marginTop: "6px",
+                                                }}
+                                            >
+                                                {item.count}
+                                            </div>
 
-    </>
-  )}
+                                            <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                                                {item.desc}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
 
-  {/* Analytics Tab - REVAMPED */}
-  {activeTab === 'analytics' && (
-  	<div className="row">
-  	  {/* Monthly Activity */}
-  	  <div className="col-lg-12 mb-4">
-  	    <Card className="shadow-sm border-0" style={{ borderRadius: '15px' }}>
-  	      <Card.Header className="border-0 bg-white"><h6 className="mb-0 fw-bold">Monthly Activity</h6></Card.Header>
-  	      <Card.Body>
-  	        <div style={{ height: '300px' }}>
-  	          <Line data={monthlyTrendsData} options={{ responsive: true, maintainAspectRatio: false }} />
-  	        </div>
-  	      </Card.Body>
-  	    </Card>
-  	  </div>
+                    </div>
+                </div>
 
-  	  {/* Bill Status */}
-  	  <div className="col-lg-6 col-xl-4 mb-4">
-  	    <Card className="shadow-sm border-0" style={{ borderRadius: '15px' }}>
-  	      <Card.Header className="border-0 bg-white"><h6 className="mb-0 fw-bold">Bill Status</h6></Card.Header>
-  	      <Card.Body className="d-flex justify-content-center align-items-center">
-  	        <div style={{ width: '250px', height: '250px' }}>
-  	          <Doughnut data={{
-  	            labels: ['Approved', 'Pending', 'Rejected'],
-  	            datasets: [{
-  	              data: [stats?.approvedBills, stats?.pendingBills, stats?.rejectedBills],
-  	              backgroundColor: ['#22c55e', '#f59e0b', '#ef4444']
-  	            }]
-  	          }} options={{ responsive: true, maintainAspectRatio: false, cutout: '50%' }} />
-  	        </div>
-  	      </Card.Body>
-  	    </Card>
-  	  </div>
-  	  
-  	  {/* Document Types */}
-  	  <div className="col-lg-6 col-xl-8 mb-4">
-  	    <Card className="shadow-sm border-0" style={{ borderRadius: '15px' }}>
-  	      <Card.Header className="border-0 bg-white"><h6 className="mb-0 fw-bold">Document Types Breakdown</h6></Card.Header>
-  	      <Card.Body>
-  	        <div style={{ height: '250px' }}>
-  	          <Bar data={documentTypesData} options={{ responsive: true, maintainAspectRatio: false, indexAxis: 'y' }} />
-  	        </div>
-  	      </Card.Body>
-  	    </Card>
-  	  </div>
-  	</div>
-  )}
+                {/* ===================== RIGHT SIDE : RECENT ACTIVITY ===================== */}
+                <div className="col-lg-4 col-md-5 col-12 mt-3 mt-md-0">
+                    <div
+                        className="p-4"
+                        style={{
+                            backgroundColor: "var(--background)",
+                            boxShadow: "0px 2px 10px var(--shadow-color)",
+                            borderRadius: "14px",
+                            height: "100%",
+                        }}
+                    >
+                        <div
+                            style={{
+                                fontSize: "16px",
+                                fontWeight: 700,
+                                color: "var(--text-strong)",
+                            }}
+                        >
+                            Recent Activity
+                        </div>
 
-  {/* Activity Tab */}
-  {activeTab === 'activity' && (
-  	<div className="row">
-  	  <div className="col-lg-6 mb-4">
-  	  <ActivityCard
-  	      title="Recent Bills"
-  	      items={recentBills.map(item => ({
-  	        title: item.title || 'Bill Activity',
-  	        description: item.description || 'Bill submission activity',
-  	        status: item.status || 'pending'
-  	      }))}
-  	      icon={<FaFileAlt />}
-  	      color="#4CAF50"
-  	    />
-  	  </div>
-  	  <div className="col-lg-6 mb-4">
-  	  <ActivityCard
-  	      title="Payment Requests"
-  	      items={recentPayments.map(item => ({
-  	        title: item.title || 'Payment Activity',
-  	        description: item.description || 'Payment request activity',
-  	        status: item.status || 'pending'
-  	      }))}
-  	      icon={<FaMoneyBill />}
-  	      color="#2196F3"
-  	    />
-  	  </div>
-  	</div>
-  )}
+                        <div
+                            style={{
+                                color: "var(--text-muted)",
+                                marginBottom: "16px",
+                                marginTop: "4px",
+                                fontSize: "14px",
+                            }}
+                        >
+                            Latest events across agreements, bills, and documents.
+                        </div>
 
-  {/* UPDATED: Contextual Info Card */}
-  {renderInfoCard(activeTab)}
+                        {/* Activity List */}
+                        {recentActivity.map((activity, idx) => (
+                            <div
+                                key={idx}
+                                style={{
+                                    display: "flex",
+                                    marginBottom: "22px",
+                                    position: "relative",
+                                    paddingLeft: "18px",
+                                }}
+                            >
+                                {/* Vertical Line */}
+                                <div
+                                    style={{
+                                        position: "absolute",
+                                        left: "4px",
+                                        top: "0",
+                                        bottom: idx === recentActivity.length - 1 ? "50%" : "0",
+                                        width: "2px",
+                                        background: "#D1C7B7",
+                                    }}
+                                ></div>
 
-  {/* Mobile Floating Quick Action Button */}
-  <div className="d-lg-none">
-  	<div className="position-fixed bottom-0 start-50 translate-middle-x mb-4" style={{ zIndex: 1050 }}>
-  	  <div className="dropdown">
-  	    <button
-  	      className="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center"
-  	      style={{
-  	        width: '60px',
-  	        height: '60px',
-  	        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  	        border: 'none',
-  	        boxShadow: '0 4px 20px rgba(102, 126, 234, 0.4)',
-  	        transition: 'all 0.3s ease'
-  	      }}
-  	      type="button"
-  	      id="quickActionsDropdown"
-  	      data-bs-toggle="dropdown"
-  	      aria-expanded="false"
-  	      onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
-  	      onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-  	    >
-  	      <FaHandshake size={24} color="white" />
-  	    </button>
-  	    <ul className="dropdown-menu shadow-lg border-0" aria-labelledby="quickActionsDropdown" style={{ minWidth: '200px' }}>
-  	      <li>
-  	        <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/upload-bill')}>
-  	          <FaUpload className="me-3 text-primary" />
-  	          <div>
-  	            <div className="fw-bold">Upload Bill</div>
-  	            <small className="text-muted">Submit new bill</small>
-  	          </div>
-  	        </button>
-  	      </li>
-  	      <li>
-  	        <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/my-bill')}>
-  	          <FaFileAlt className="me-3 text-success" />
-  	          <div>
-  	            <div className="fw-bold">My Bills</div>
-  	            <small className="text-muted">View all bills</small>
-  	          </div>
-  	        </button>
-  	      </li>
-  	      <li>
-  	        <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/payment-request')}>
-  	          <FaMoneyBill className="me-3 text-info" />
-  	          <div>
-  	            <div className="fw-bold">Payment Request</div>
-  	            <small className="text-muted">Request payment</small>
-  	          </div>
-  	        </button>
-  	      </li>
-  	      <li>
-  	        <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/my-payment-request')}>
-  	          <FaDownload className="me-3 text-warning" />
-  	          <div>
-  	            <div className="fw-bold">My Payments</div>
-  	            <small className="text-muted">View payment history</small>
-  	          </div>
-  	        </button>
-  	      </li>
-  	      <li><hr className="dropdown-divider" /></li>
-  	      <li>
-  	        <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/upload-document')}>
-  	          <FaUpload className="me-3 text-secondary" />
-  	          <div>
-  	            <div className="fw-bold">Upload Document</div>
-  	            <small className="text-muted">DFS document upload</small>
-  	          </div>
-  	        </button>
-  	      </li>
-  	      <li>
-  	        <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/track-dfs/all')}>
-  	          <FaEye className="me-3 text-dark" />
-  	          <div>
-  	            <div className="fw-bold">Track DFS</div>
-  	            <small className="text-muted">Track documents</small>
-  	          </div>
-  	        </button>
-  	      </li>
-  	      <li>
-  	        <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/transaction')}>
-  	          <FaRupeeSign className="me-3 text-primary" />
-  	          <div>
-  	            <div className="fw-bold">Transactions</div>
-  	            <small className="text-muted">View transactions</small>
-  	          </div>
-  	        </button>
-  	      </li>
-  	      <li>
-  	        <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/document/category')}>
-  	          <FaFileAlt className="me-3 text-success" />
-  	          <div>
-  	            <div className="fw-bold">My Documents</div>
-  	            <small className="text-muted">View documents</small>
-  	          </div>
-  	        </button>
-  	      </li>
-  	      <li><hr className="dropdown-divider" /></li>
-  	      <li>
-  	        <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/setting')}>
-  	          <FaCog className="me-3 text-secondary" />
-  	          <div>
-  	            <div className="fw-bold">Settings</div>
-  	            <small className="text-muted">Account settings</small>
-  	          </div>
-  	        </button>
-  	      </li>
-  	      <li>
-  	        <button className="dropdown-item d-flex align-items-center py-3" onClick={() => navigate('/client/support')}>
-  	          <FaBell className="me-3 text-warning" />
-  	          <div>
-  	            <div className="fw-bold">Support</div>
-  	            <small className="text-muted">Get help</small>
-  	          </div>
-  	        </button>
-  	      </li>
-  	    </ul>
-  	  </div>
-  	</div>
-  </div>
-</div>
-</>
-  );
+                                {/* Bullet Dot */}
+                                <div
+                                    style={{
+                                        width: "10px",
+                                        height: "10px",
+                                        background: "#7B3F00",
+                                        borderRadius: "50%",
+                                        marginRight: "12px",
+                                        position: "relative",
+                                        zIndex: 2,
+                                    }}
+                                ></div>
+
+                                {/* Content */}
+                                <div style={{ flex: 1 }}>
+                                    <div
+                                        style={{
+                                            fontWeight: 600,
+                                            color: "var(--text-strong)",
+                                            fontSize: "14px",
+                                            textTransform: "capitalize",
+                                        }}
+                                    >
+                                        {activity.actionType}
+                                    </div>
+
+                                    <div
+                                        style={{
+                                            fontSize: "12px",
+                                            color: "var(--text-muted)",
+                                            marginTop: "2px",
+                                        }}
+                                    >
+                                        {new Date(activity.createdAt).toLocaleString()}
+                                    </div>
+
+                                    <div
+                                        style={{
+                                            fontSize: "13px",
+                                            color: "var(--text-muted)",
+                                            marginTop: "4px",
+                                        }}
+                                    >
+                                        {activity.description}
+                                    </div>
+
+                                    {/* More Button */}
+                                    <button
+                                        onClick={() => navigate(activity.actionUrl)}
+                                        style={{
+                                            marginTop: "8px",
+                                            background: "#7B3F00",
+                                            color: "#fff",
+                                            border: "none",
+                                            padding: "6px 14px",
+                                            fontSize: "12px",
+                                            borderRadius: "6px",
+                                            cursor: "pointer",
+                                            transition: "0.2s",
+                                        }}
+                                        onMouseOver={(e) => (e.target.style.opacity = "0.8")}
+                                        onMouseOut={(e) => (e.target.style.opacity = "1")}
+                                    >
+                                        More
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+
+                        {/* Small View More Link */}
+                        <div className="text-end ">
+                            <span
+                                role="button"
+                                onClick={() => setShowActivityModal(true)}
+                                style={{
+                                    fontSize: "13px",
+                                    color: "var(--link)",
+                                    cursor: "pointer",
+                                    fontWeight: "500"
+                                }}
+                                onMouseEnter={(e) => (e.target.style.textDecoration = "underline")}
+                                onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
+                            >
+                                View more →
+                            </span>
+                        </div>
+
+
+
+                    </div>
+                </div>
+
+
+            </div>
+
+
+
+            {/* BILLS + Payment Request CHART WRAPPER */}
+            <div
+                className="mt-4"
+                style={{
+                }}
+            >
+                <div className="row align-items-stretch">
+
+                    {/* ================= LEFT CARD – DONUT CHART ================= */}
+                    <div className="col-12 col-lg-6 mb-4 h-100 d-flex">
+                        <div
+                            className="p-4 h-100 w-100"
+                            style={{
+                                backgroundColor: "var(--background)",
+                                borderRadius: "14px",
+                                border: "1px solid var(--border)",
+                                boxShadow: "0px 1px 5px var(--shadow-color)",
+                            }}
+                        >
+                            <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-strong)" }}>
+                                Bills Status Breakdown
+                            </div>
+
+                            <div
+                                style={{
+                                    color: "var(--text-muted)",
+                                    marginBottom: "20px",
+                                    marginTop: "4px",
+                                    fontSize: "14px",
+                                }}
+                            >
+                                Overview of your bill statuses.
+                            </div>
+
+                            <div className="row">
+
+                                {/* ================= DONUT CHART ================= */}
+                                <div className="col-12 col-md-5 d-flex justify-content-center">
+                                    <div
+                                        style={{
+                                            width: "180px",
+                                            height: "180px",
+                                            borderRadius: "50%",
+                                            background: `conic-gradient(
+                #1bb55c 0 ${(billOverview?.paid / billOverview?.totalBills) * 100 || 0}%,
+                #ff9f01 ${(billOverview?.paid / billOverview?.totalBills) * 100 || 0}% 
+                         ${((billOverview?.paid + billOverview?.pending) / billOverview?.totalBills) * 100 || 0}%,
+                #2d7cfa ${((billOverview?.paid + billOverview?.pending) / billOverview?.totalBills) * 100 || 0}% 
+                         ${((billOverview?.paid + billOverview?.pending + billOverview?.unpaid) / billOverview?.totalBills) * 100 || 0}%,
+                #a1a4aa ${((billOverview?.paid + billOverview?.pending + billOverview?.unpaid) / billOverview?.totalBills) * 100 || 0}% 
+                        100%
+            )`,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            position: "relative",
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                width: "95px",
+                                                height: "95px",
+                                                borderRadius: "50%",
+                                                background: "var(--background)",
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                fontWeight: 700,
+                                                color: "var(--text-strong)",
+                                            }}
+                                        >
+                                            <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>Total</div>
+                                            {billOverview?.totalBills || 0}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* ================= LEGENDS ================= */}
+                                <div className="col-12 col-md-7 d-flex flex-column justify-content-center mt-4 mt-md-0">
+                                    {[
+                                        { color: "#1bb55c", label: "Paid", value: billOverview?.paid || 0 },
+                                        { color: "#ff9f01", label: "Pending", value: billOverview?.pending || 0 },
+                                        { color: "#2d7cfa", label: "Unpaid", value: billOverview?.unpaid || 0 },
+                                        {
+                                            color: "#a1a4aa", label: "Others (Sanctioned / Rejected / Overdue)",
+                                            value: (billOverview?.sanctioned || 0) + (billOverview?.rejected || 0) + (billOverview?.overdue || 0)
+                                        }
+                                    ].map((item, i) => (
+                                        <div key={i} style={{ display: "flex", alignItems: "center", marginBottom: "10px" }}>
+                                            <div
+                                                style={{
+                                                    width: "12px",
+                                                    height: "12px",
+                                                    borderRadius: "3px",
+                                                    background: item.color,
+                                                    marginRight: "10px",
+                                                }}
+                                            ></div>
+                                            <span style={{ width: "200px", fontSize: "14px", color: "var(--text-strong)" }}>
+                                                {item.label}
+                                            </span>
+                                            <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>{item.value}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ================= RIGHT CARD – BILLS SUMMARY ================= */}
+                    {/* ================= RIGHT CARD – BILLS SUMMARY ================= */}
+                    <div className="col-12 col-lg-6 h-100 d-flex">
+                        <div
+                            className="p-4 h-100 w-100"
+                            style={{
+                                backgroundColor: "var(--background)",
+                                borderRadius: "14px",
+                                border: "1px solid var(--border)",
+                                boxShadow: "0px 1px 5px var(--shadow-color)",
+                            }}
+                        >
+                            <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-strong)" }}>
+                                Bills Summary
+                            </div>
+
+                            <div style={{ color: "var(--text-muted)", marginBottom: 10, marginTop: 4 }}>
+                                Overview of your billing performance.
+                            </div>
+
+                            {/* ===== TOTAL SUBMITTED ===== */}
+                            <div style={{ fontSize: 24, fontWeight: 700 }}>
+                                ₹ {(totalAmount ?? 0).toLocaleString("en-IN")}
+                            </div>
+                            <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
+                                Total submitted
+                            </div>
+
+                            {/* ===== PROGRESS BAR (PAID %) ===== */}
+                            <div
+                                style={{
+                                    width: "100%",
+                                    height: 10,
+                                    background: "#e6e6e6",
+                                    borderRadius: 8,
+                                    marginTop: 12,
+                                    overflow: "hidden",
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        width: `${Math.round(
+                                            (paidAmount / Math.max(totalAmount, 1)) * 100
+                                        )}%`,
+                                        height: "100%",
+                                        background: "linear-gradient(90deg, #2d7cfa, #1bb55c)",
+                                    }}
+                                />
+                            </div>
+
+                            {/* ===== PAID / PENDING / OVERDUE ===== */}
+                            {/* ===== PAID / PENDING / OVERDUE / OTHERS ===== */}
+                            <div className="row mt-4">
+                                <div className="col-3">
+                                    <div className="text-muted" style={{ fontSize: 13 }}>Paid</div>
+                                    <div style={{ fontWeight: 700 }}>
+                                        ₹ {(paidAmount ?? 0).toLocaleString("en-IN")}
+                                    </div>
+                                </div>
+
+                                <div className="col-3">
+                                    <div className="text-muted" style={{ fontSize: 13 }}>Pending</div>
+                                    <div style={{ fontWeight: 700 }}>
+                                        ₹ {(pendingAmount ?? 0).toLocaleString("en-IN")}
+                                    </div>
+                                </div>
+
+                                <div className="col-3">
+                                    <div className="text-muted" style={{ fontSize: 13 }}>Overdue</div>
+                                    <div style={{ fontWeight: 700 }}>
+                                        ₹ {(overdueAmount ?? 0).toLocaleString("en-IN")}
+                                    </div>
+                                </div>
+
+                                <div className="col-3">
+                                    <div className="text-muted" style={{ fontSize: 13 }}>Others</div>
+                                    <div style={{ fontWeight: 700, color: "#a1a4aa" }}>
+                                        ₹ {(otherAmount ?? 0).toLocaleString("en-IN")}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style={{ marginTop: 20, fontSize: 14, color: "var(--text-muted)" }}>
+                                Last bill submitted on —
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                </div>
+            </div>
+            {/* AGREEMENT + BILLS CHART WRAPPER */}
+
+
+
+            {/* QUICK ACCESS SECTION */}
+            <div
+                className="mt-4 p-4"
+                style={{
+                    backgroundColor: "var(--background)",
+                    boxShadow: "0px 2px 10px var(--shadow-color)",
+                    borderRadius: "14px",
+                }}
+            >
+                {/* Title */}
+                <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-strong)" }}>
+                    Quick Access
+                </div>
+                <div
+                    style={{
+                        color: "var(--text-muted)",
+                        marginBottom: "16px",
+                        marginTop: "4px",
+                        fontSize: "14px",
+                    }}
+                >
+                    Jump directly into frequently used modules.
+                </div>
+
+                <div className="row g-3">
+                    {/* My Agreements */}
+                    <div className="col-12 col-sm-6 col-md-3" onClick={() => navigate("/client/agreement")}>
+                        <div
+                            style={{
+                                background: "linear-gradient(135deg, #e8e7ff 0%, #f7f6ff 100%)",
+                                borderRadius: "14px",
+                                padding: "18px",
+                                height: "110px",
+                                border: "1px solid var(--border)",
+                                boxShadow: "0 2px 5px var(--shadow-color)",
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "space-between",
+                            }}
+                        >
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                <div style={{ fontWeight: 600, fontSize: "14px" }}>My Agreements</div>
+                                <div
+                                    style={{
+                                        background: "var(--card)",
+                                        padding: "6px",
+                                        borderRadius: "8px",
+                                        border: "1px solid var(--border)",
+                                    }}
+                                >
+                                    <FiFileText size={18} />
+                                </div>
+                            </div>
+                            <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                                View, track and manage all your agreements.
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* My Bills */}
+                    <div className="col-12 col-sm-6 col-md-3" onClick={() => navigate("/client/my-bill")}>
+                        <div
+                            style={{
+                                background: "linear-gradient(135deg, #e6f4ff 0%, #f3faff 100%)",
+                                borderRadius: "14px",
+                                padding: "18px",
+                                height: "110px",
+                                border: "1px solid var(--border)",
+                                boxShadow: "0 2px 5px var(--shadow-color)",
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "space-between",
+                            }}
+                        >
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                <div style={{ fontWeight: 600, fontSize: "14px" }}>My Bills</div>
+                                <div
+                                    style={{
+                                        background: "var(--card)",
+                                        padding: "6px",
+                                        borderRadius: "8px",
+                                        border: "1px solid var(--border)",
+                                    }}
+                                >
+                                    <FiCreditCard size={18} />
+                                </div>
+                            </div>
+                            <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                                Submit and monitor billing activity.
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* My Documents */}
+                    <div className="col-12 col-sm-6 col-md-3" onClick={() => navigate("/client/document/category")}>
+                        <div
+                            style={{
+                                background: "linear-gradient(135deg, #d9f2e4 0%, #eefaf2 100%)",
+                                borderRadius: "14px",
+                                padding: "18px",
+                                height: "110px",
+                                border: "1px solid var(--border)",
+                                boxShadow: "0 2px 5px var(--shadow-color)",
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "space-between",
+                            }}
+                        >
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                <div style={{ fontWeight: 600, fontSize: "14px" }}>My Documents</div>
+                                <div
+                                    style={{
+                                        background: "var(--card)",
+                                        padding: "6px",
+                                        borderRadius: "8px",
+                                        border: "1px solid var(--border)",
+                                    }}
+                                >
+                                    <FiFolder size={18} />
+                                </div>
+                            </div>
+                            <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                                Upload and track compliance documents.
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* File Forwarding */}
+                    <div className="col-12 col-sm-6 col-md-3" onClick={() => navigate("/client/track-dfs/all")}>
+                        <div
+                            style={{
+                                background: "linear-gradient(135deg, #e8e7ff 0%, #f7f6ff 100%)",
+                                borderRadius: "14px",
+                                padding: "18px",
+                                height: "110px",
+                                border: "1px solid var(--border)",
+                                boxShadow: "0 2px 5px var(--shadow-color)",
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "space-between",
+                            }}
+                        >
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                <div style={{ fontWeight: 600, fontSize: "14px" }}>File Forwarding</div>
+                                <div
+                                    style={{
+                                        background: "var(--card)",
+                                        padding: "6px",
+                                        borderRadius: "8px",
+                                        border: "1px solid var(--border)",
+                                    }}
+                                >
+                                    <FiUpload size={18} />
+                                </div>
+                            </div>
+                            <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                                Track routed files and approvals.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+
+
+
+
+
+
+            <RecentActivityModal
+                show={showActivityModal}
+                onHide={() => setShowActivityModal(false)}
+                activities={fullRecentActivity}
+                navigate={navigate}
+            />
+
+
+
+        </>
+    );
 }
-

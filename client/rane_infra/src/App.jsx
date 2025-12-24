@@ -24,7 +24,6 @@ import ClientSidebar from "./component/sidebar/ClientSidebar";
 import AdminSidebar from "./component/sidebar/AdminSidebar";
 import StaffSidebar from "./component/sidebar/StaffSidebar";
 import HomePageClient from "./pages/client/HomePageClient";
-import ClientDashboard from "./pages/client/ClientDashboard.jsx";
 import ClientLayout from "./Layout/ClientLayout";
 import UploadBillPage from "./pages/client/UploadBillPage";
 import MyBillPage from "./pages/client/MyBillPage";
@@ -53,6 +52,7 @@ import PushDocumentAdminPage from "./pages/admin/PushDocumentAdminPage.jsx";
 import MyPushedDocument from "./pages/admin/MyPushedDocument.jsx";
 import ClientsListAdminPage from "./pages/admin/ClientsListAdminPage.jsx";
 import ClientDetailAdminPage from "./pages/admin/ClientDetailAdminPage.jsx";
+import PushAgreement from "./pages/admin/PushAgreement.jsx";
 import SingleBillDetailAdminPage from "./pages/admin/SingleBillDetailAdminPage.jsx";
 import SinglePRdetailAdminPAge from "./pages/admin/SinglePRdetailAdminPAge.jsx";
 import DfsRequest from "./pages/admin/DfsRequest.jsx";
@@ -158,7 +158,6 @@ function App() {
         >
           <Route index element={<HomePageClient />} />
           <Route path="home" element={<HomePageClient />} />
-          <Route path="home2" element={<ClientDashboard />} />
           <Route path="upload-bill" element={<UploadBillPage />} />
           <Route path="my-bill" element={<MyBillPage />} />
           <Route path="bill/:id" element={<SingleBillDetailsClient />} />
@@ -202,6 +201,7 @@ function App() {
           <Route path="push-document/:cid" element={<PushDocumentAdminPage />} />
           <Route path="push-document" element={<PushDocumentAdminPage />} />
           <Route path="push-document/by-me" element={<MyPushedDocument />} />
+          <Route path="agreement/push" element={<PushAgreement />} />
           <Route path="all-client" element={<ClientsListAdminPage />} />
           <Route path="client-detail/:id" element={<ClientDetailAdminPage />} />
           <Route path="dfsrequest" element={<DfsRequest />} />

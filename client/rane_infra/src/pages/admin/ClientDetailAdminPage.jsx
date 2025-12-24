@@ -5,7 +5,27 @@ import AdminHeader from '../../component/header/AdminHeader';
 import { getUserFullDetails } from '../../services/userServices';
 import dummyUser from '../../assets/images/dummyUser.jpeg';
 import { backend_url } from '../../store/keyStore';
- 
+import { FaUser, FaEnvelope, FaPhoneAlt, FaArrowLeft } from "react-icons/fa";
+import {
+    FaBuilding,
+    FaUniversity,
+    FaHashtag,
+    FaRegClock,
+    FaCheckCircle,
+    FaIdCard,
+    FaMoneyCheckAlt,
+    FaQrcode
+} from "react-icons/fa";
+import {
+    FaFileInvoice,
+    FaFilePdf,
+    FaClipboardList,
+    FaTimesCircle,
+    FaHourglassHalf
+} from "react-icons/fa";
+
+
+
 export default function ClientDetailAdminPage() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -92,115 +112,305 @@ export default function ClientDetailAdminPage() {
     return (
         <>
             <AdminHeader />
-            <Container className="my-4">
+            <Container
+                fluid
+                className="my-4 p-4"
+                style={{ backgroundColor: "var(--background)", borderRadius: "15px" }}
+            >
                 {/* Profile Overview */}
-                <Card className="mb-4 shadow-sm">
+                {/* Profile Overview */}
+                <Card
+                    className="mb-4 border-0"
+                    style={{
+                        backgroundColor: "var(--card)",
+                        color: "var(--card-foreground)",
+                        borderRadius: "14px",
+                        boxShadow: "0 4px 12px var(--shadow-color)"
+                    }}
+                >
                     <Card.Body>
-                        <Row className="align-items-center">
-                            <Col md="auto">
-                                <Image
-                                    src={user.profile || dummyUser}
-                                    roundedCircle
-                                    width={100}
-                                    height={100}
-                                    alt="Profile"
-                                />
+                        <Row className="align-items-center gy-3">
+                            {/* Profile Image */}
+                            <Col md="auto" className="text-center">
+                                <div
+                                    style={{
+                                        padding: "4px",
+                                        borderRadius: "50%",
+                                        backgroundColor: "var(--secondary)",
+                                        display: "inline-block"
+                                    }}
+                                >
+                                    <Image
+                                        src={user.profile || dummyUser}
+                                        roundedCircle
+                                        width={96}
+                                        height={96}
+                                        alt="Profile"
+                                        style={{
+                                            objectFit: "cover",
+                                            border: "2px solid var(--border)"
+                                        }}
+                                    />
+                                </div>
                             </Col>
+
+                            {/* User Info */}
                             <Col>
-                                <h4 className="mb-1">{user.name}</h4>
-                                <p className="mb-1 text-muted">{user.email}</p>
-                                <p className="mb-0 small">Phone: {user.phoneNo || '-'}</p>
+                                <h4
+                                    className="mb-1 fw-semibold d-flex align-items-center gap-2"
+                                    style={{ color: "var(--text-strong)" }}
+                                >
+                                    <FaUser style={{ color: "var(--accent)" }} />
+                                    {user.name}
+                                </h4>
+
+                                <div
+                                    className="d-flex align-items-center gap-2 small mb-1"
+                                    style={{ color: "var(--text-muted)" }}
+                                >
+                                    <FaEnvelope />
+                                    {user.email}
+                                </div>
+
+                                <div
+                                    className="d-flex align-items-center gap-2 small"
+                                    style={{ color: "var(--text-muted)" }}
+                                >
+                                    <FaPhoneAlt />
+                                    {user.phoneNo || "-"}
+                                </div>
                             </Col>
+
+                            {/* Back Button */}
                             <Col md="auto">
-                                <Button variant="outline-secondary" onClick={() => navigate(-1)}>← Back</Button>
+                                <Button
+                                    size="sm"
+                                    onClick={() => navigate(-1)}
+                                    style={{
+                                        backgroundColor: "var(--secondary)",
+                                        color: "var(--secondary-foreground)",
+                                        border: "1px solid var(--border)",
+                                        borderRadius: "8px"
+                                    }}
+                                >
+                                    <FaArrowLeft className="me-1" />
+                                    Back
+                                </Button>
                             </Col>
                         </Row>
                     </Card.Body>
                 </Card>
 
+
                 {/* Detailed Info + Tabs */}
-                <Card className="shadow-sm mb-4">
+                <Card
+                    className="mb-4 border-0"
+                    style={{
+                        backgroundColor: "var(--card)",
+                        color: "var(--card-foreground)",
+                        borderRadius: "14px",
+                        boxShadow: "0 4px 12px var(--shadow-color)"
+                    }}
+                >
                     <Card.Body>
-                        <Row>
+                        <Row className="gy-4">
+                            {/* Left Column – Bank Details */}
                             <Col md={6}>
-                                <ul className="list-unstyled mb-0">
-                                    <li><strong>Firm:</strong> {user.firmName || '-'}</li>
-                                    <li><strong>Account No:</strong> {user.accountNo || '-'}</li>
-                                    <li><strong>Bank:</strong> {user.bankName || '-'}</li>
-                                    <li><strong>IFSC:</strong> {user.ifscCode || '-'}</li>
-                                    <li><strong>UPI:</strong> {user.upi || '-'}</li>
+                                <div className="fw-semibold mb-3" style={{ color: "var(--text-strong)" }}>
+                                    <FaUniversity className="me-2" style={{ color: "var(--accent)" }} />
+                                    Bank & Firm Details
+                                </div>
+
+                                <ul className="list-unstyled mb-0 small">
+                                    <li className="d-flex align-items-center gap-2 mb-2">
+                                        <FaBuilding className="text-muted" />
+                                        <span><strong>Firm:</strong> {user.firmName || "-"}</span>
+                                    </li>
+
+                                    <li className="d-flex align-items-center gap-2 mb-2">
+                                        <FaMoneyCheckAlt className="text-muted" />
+                                        <span><strong>Account No:</strong> {user.accountNo || "-"}</span>
+                                    </li>
+
+                                    <li className="d-flex align-items-center gap-2 mb-2">
+                                        <FaUniversity className="text-muted" />
+                                        <span><strong>Bank:</strong> {user.bankName || "-"}</span>
+                                    </li>
+
+                                    <li className="d-flex align-items-center gap-2 mb-2">
+                                        <FaHashtag className="text-muted" />
+                                        <span><strong>IFSC:</strong> {user.ifscCode || "-"}</span>
+                                    </li>
+
+                                    <li className="d-flex align-items-center gap-2">
+                                        <FaQrcode className="text-muted" />
+                                        <span><strong>UPI:</strong> {user.upi || "-"}</span>
+                                    </li>
                                 </ul>
                             </Col>
+
+                            {/* Right Column – Compliance & System Info */}
                             <Col md={6}>
-                                <ul className="list-unstyled mb-3">
-                                    <li><strong>GST No:</strong> {user.gstno || '-'}</li>
-                                    <li><strong>Last Login:</strong> {user.lastlogin ? new Date(user.lastlogin).toLocaleString() : '-'}</li>
-                                    <li className="d-flex align-items-center gap-2">
+                                <div className="fw-semibold mb-3" style={{ color: "var(--text-strong)" }}>
+                                    <FaIdCard className="me-2" style={{ color: "var(--accent)" }} />
+                                    Compliance & System Info
+                                </div>
+
+                                <ul className="list-unstyled mb-3 small">
+                                    <li className="d-flex align-items-center gap-2 mb-2">
+                                        <FaIdCard className="text-muted" />
+                                        <span><strong>GST No:</strong> {user.gstno || "-"}</span>
+                                    </li>
+
+                                    <li className="d-flex align-items-center gap-2 mb-2">
+                                        <FaRegClock className="text-muted" />
+                                        <span>
+                                            <strong>Last Login:</strong>{" "}
+                                            {user.lastlogin
+                                                ? new Date(user.lastlogin).toLocaleString()
+                                                : "-"}
+                                        </span>
+                                    </li>
+
+                                    {/* CID Update */}
+                                    <li className="d-flex align-items-center gap-2 mb-2">
                                         <strong className="me-2">CID:</strong>
+
                                         <Form.Control
                                             type="text"
                                             value={cid}
                                             onChange={(e) => setCid(e.target.value)}
                                             size="sm"
-                                            style={{ maxWidth: "200px" }}
+                                            style={{
+                                                maxWidth: "160px",
+                                                backgroundColor: "var(--input)",
+                                                borderColor: "var(--border)"
+                                            }}
                                         />
+
                                         <Button
-                                            variant="primary"
                                             size="sm"
-                                            onClick={()=>{handleCidUpdate(user._id)}}
+                                            onClick={() => handleCidUpdate(user._id)}
                                             disabled={updating}
+                                            style={{
+                                                backgroundColor: "var(--primary)",
+                                                color: "var(--primary-foreground)",
+                                                border: "none"
+                                            }}
                                         >
-                                            {updating ? "Updating..." : "Update CID"}
+                                            {updating ? "Updating..." : "Update"}
                                         </Button>
                                     </li>
-                                    <li><strong>Verified:</strong> {user.isverified ? "Yes" : "No"}</li>
+
+                                    {/* Verification */}
+                                    <li className="d-flex align-items-center gap-2">
+                                        <strong>Verified:</strong>
+                                        <span
+                                            className="px-2 py-1 rounded-pill small"
+                                            style={{
+                                                backgroundColor: user.isverified
+                                                    ? "var(--success)"
+                                                    : "var(--warning)",
+                                                color: user.isverified
+                                                    ? "var(--success-foreground)"
+                                                    : "var(--warning-foreground)"
+                                            }}
+                                        >
+                                            {user.isverified ? "Yes" : "No"}
+                                        </span>
+                                    </li>
                                 </ul>
                             </Col>
                         </Row>
                     </Card.Body>
                 </Card>
+
                 {/* Tab View for Bills & Payments */}
-                <Tabs defaultActiveKey="bills" className="mb-3" fill>
+                <Tabs
+                    defaultActiveKey="bills"
+                    className="mb-4"
+                    fill
+                    style={{
+                        backgroundColor: "var(--secondary)",
+                        borderRadius: "12px",
+                        padding: "6px"
+                    }}
+                >
                     {/* Bills Tab */}
-                    <Tab eventKey="bills" title="Bills">
-                        <Card className="shadow-sm">
+                    <Tab
+                        eventKey="bills"
+                        title={
+                            <span className="d-flex align-items-center gap-2">
+                                <FaFileInvoice /> Bills
+                            </span>
+                        }
+                    >
+                        <Card
+                            className="border-0 shadow-sm"
+                            style={{ backgroundColor: "var(--card)" }}
+                        >
                             <Card.Body>
                                 {bills.length === 0 ? (
                                     <p className="text-muted">No bills submitted.</p>
                                 ) : (
                                     <div className="table-responsive">
-                                        <Table bordered hover>
-                                            <thead className="table-light">
-                                                <tr>
+                                        <Table hover className="align-middle small">
+                                            <thead style={{ background: "var(--muted)" }}>
+                                                <tr className="text-uppercase text-muted small">
                                                     <th>Firm</th>
                                                     <th>Work Area</th>
-                                                    <th>LOA No</th>
-                                                    <th>Invoice No</th>
+                                                    <th>LOA</th>
+                                                    <th>Invoice</th>
                                                     <th>Amount</th>
                                                     <th>Status</th>
-                                                    <th>Description</th>
                                                     <th>Submitted</th>
                                                     <th>PDF</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {bills.map(bill => (
-                                                    <tr key={bill._id}>
-                                                        <td>{bill.firmName}</td>
-                                                        <td>{bill.workArea}</td>
-                                                        <td>{bill.loaNo}</td>
-                                                        <td>{bill.invoiceNo}</td>
-                                                        <td>₹{bill.amount}</td>
-                                                        <td>{bill.paymentStatus}</td>
-                                                        <td>{bill.workDescription}</td>
-                                                        <td>{new Date(bill.submittedAt).toLocaleString()}</td>
-                                                        <td>
-                                                            <a href={bill.pdfurl} target="_blank" rel="noreferrer">
-                                                                View
-                                                            </a>
-                                                        </td>
-                                                    </tr>
-                                                ))}
+                                                {bills.map(bill => {
+                                                    const statusColor =
+                                                        bill.paymentStatus === "Paid"
+                                                            ? "var(--success)"
+                                                            : bill.paymentStatus === "Rejected"
+                                                                ? "var(--destructive)"
+                                                                : "var(--warning)";
+
+                                                    return (
+                                                        <tr key={bill._id}>
+                                                            <td className="fw-semibold">{bill.firmName}</td>
+                                                            <td>{bill.workArea}</td>
+                                                            <td>{bill.loaNo}</td>
+                                                            <td>{bill.invoiceNo}</td>
+                                                            <td className="fw-semibold">₹{bill.amount}</td>
+                                                            <td>
+                                                                <span
+                                                                    className="px-2 py-1 rounded-pill small"
+                                                                    style={{
+                                                                        backgroundColor: statusColor,
+                                                                        color: "var(--card-foreground)"
+                                                                    }}
+                                                                >
+                                                                    {bill.paymentStatus}
+                                                                </span>
+                                                            </td>
+                                                            <td className="text-muted">
+                                                                {new Date(bill.submittedAt).toLocaleDateString()}
+                                                            </td>
+                                                            <td>
+                                                                <a
+                                                                    href={bill.pdfurl}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    className="d-inline-flex align-items-center gap-1"
+                                                                    style={{ color: "var(--accent)" }}
+                                                                >
+                                                                    <FaFilePdf /> View
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
                                             </tbody>
                                         </Table>
                                     </div>
@@ -209,44 +419,83 @@ export default function ClientDetailAdminPage() {
                         </Card>
                     </Tab>
 
+
                     {/* Payments Tab */}
-                    <Tab eventKey="payments" title="Payment Requests">
-                        <Card className="shadow-sm">
+                    <Tab
+                        eventKey="payments"
+                        title={
+                            <span className="d-flex align-items-center gap-2">
+                                <FaMoneyCheckAlt /> Payments
+                            </span>
+                        }
+                    >
+                        <Card
+                            className="border-0 shadow-sm"
+                            style={{ backgroundColor: "var(--card)" }}
+                        >
                             <Card.Body>
                                 {payments.length === 0 ? (
                                     <p className="text-muted">No payments available.</p>
                                 ) : (
                                     <div className="table-responsive">
-                                        <Table bordered hover>
-                                            <thead className="table-light">
-                                                <tr>
+                                        <Table hover className="align-middle small">
+                                            <thead style={{ background: "var(--muted)" }}>
+                                                <tr className="text-uppercase text-muted small">
                                                     <th>Tender</th>
                                                     <th>Amount</th>
-                                                    <th>Description</th>
                                                     <th>Status</th>
                                                     <th>Type</th>
                                                     <th>Mode</th>
-                                                    <th>Image</th>
                                                     <th>Submitted</th>
+                                                    <th>Proof</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {payments.map(payment => (
-                                                    <tr key={payment._id}>
-                                                        <td>{payment.tender}</td>
-                                                        <td>₹{payment.amount}</td>
-                                                        <td>{payment.description}</td>
-                                                        <td>{payment.status}</td>
-                                                        <td>{payment.paymentType}</td>
-                                                        <td>{payment.paymentMode || '-'}</td>
-                                                        <td>
-                                                            {payment.image ? (
-                                                                <a href={payment.image} target="_blank" rel="noreferrer">View</a>
-                                                            ) : '-'}
-                                                        </td>
-                                                        <td>{new Date(payment.submittedAt).toLocaleString()}</td>
-                                                    </tr>
-                                                ))}
+                                                {payments.map(payment => {
+                                                    const statusBadge =
+                                                        payment.status === "Paid"
+                                                            ? { bg: "var(--success)", icon: <FaCheckCircle /> }
+                                                            : payment.status === "Rejected"
+                                                                ? { bg: "var(--destructive)", icon: <FaTimesCircle /> }
+                                                                : { bg: "var(--warning)", icon: <FaHourglassHalf /> };
+
+                                                    return (
+                                                        <tr key={payment._id}>
+                                                            <td className="fw-semibold">{payment.tender}</td>
+                                                            <td className="fw-semibold">₹{payment.amount}</td>
+                                                            <td>
+                                                                <span
+                                                                    className="px-2 py-1 rounded-pill d-inline-flex align-items-center gap-1 small"
+                                                                    style={{
+                                                                        backgroundColor: statusBadge.bg,
+                                                                        color: "var(--card-foreground)"
+                                                                    }}
+                                                                >
+                                                                    {statusBadge.icon} {payment.status}
+                                                                </span>
+                                                            </td>
+                                                            <td>{payment.paymentType}</td>
+                                                            <td>{payment.paymentMode || "-"}</td>
+                                                            <td className="text-muted">
+                                                                {new Date(payment.submittedAt).toLocaleDateString()}
+                                                            </td>
+                                                            <td>
+                                                                {payment.image ? (
+                                                                    <a
+                                                                        href={payment.image}
+                                                                        target="_blank"
+                                                                        rel="noreferrer"
+                                                                        style={{ color: "var(--accent)" }}
+                                                                    >
+                                                                        View
+                                                                    </a>
+                                                                ) : (
+                                                                    "-"
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
                                             </tbody>
                                         </Table>
                                     </div>
