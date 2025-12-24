@@ -109,7 +109,7 @@ const AdminSidebar = ({ isOpen = true, onCollapse }) => {
 
   return (
     <div
-      className=" p-3 d-flex flex-column"
+      className=" p-3 mt-3 d-flex flex-column"
       style={{
         width: isSidebarCollapsed ? "70px" : "260px",
         minHeight: "100vh",

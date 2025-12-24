@@ -189,10 +189,9 @@ const handleDocUpload = async (type, file) => {
   return (
     <>
       {getHeaderComponent()}
-      <div className="container-fluid mt-4 mb-5 p-4" style={{
-        backgroundColor: 'var(--client-component-bg-color)',
-        color: 'var(--client-text-color)',
-        border: '1px solid var(--client-border-color)',
+      <div className="container-fluid mt-3  p-4" style={{
+        backgroundColor: 'var(--background)',
+        borderRadius:"15px"
       }}>
         <h5 className="mb-4 fw-bold" style={{ color: 'var(--client-heading-color)' }}>
           <FaKey className="me-2" /> Settings{' '}

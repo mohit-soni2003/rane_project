@@ -150,7 +150,8 @@ export default function HomePageAdmin() {
     <>
       <AdminHeader />
 
-      <Container fluid className="py-4" style={{ backgroundColor: 'var(--admin-dashboard-bg-color)', minHeight: '100vh' }}>
+      <Container fluid className="py-4 mt-3" 
+      style={{ backgroundColor: 'var(--background)', minHeight: '100vh' , borderRadius:"15px" }}>
 
         {/* Welcome Section */}
         <Row className="mb-4">
