@@ -5,7 +5,8 @@ const { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail, sendRes
 const verifyToken = require("../middleware/verifyToken")
 const crypto = require("crypto")
 const { FRONTEND_ORIGIN_URL } = require("../keys")
-const { sendWhatsAppMessage } = require("../utils/whatsappMessageSender")
+const RecentActivity = require("../models/RecentActivityModel")
+const Notification = require("../models/notificationModel")
 
 
 const router = express.Router();
@@ -119,48 +120,69 @@ router.post("/verify-email", async (req, res) => {
 		res.status(500).json({ success: false, error: "Server error" });
 	}
 })
-router.post("/signin", async (req, res) => {
-	console.log("Signin Route Hitted/.");
-	const { email, password } = req.body;
-	try {
-		const user = await User.findOne({ email });
-		if (!user) {
-			return res.json({ success: false, error: "Invalid credentials" });
-		}
 
-		const isPasswordValid = password == user.password;
-		if (!isPasswordValid) {
-			return res.json({ success: false, error: "Invalid credentials" });
-		}
 
-		// Generate token and set cookie
-		generateTokenAndSetCookie(res, user._id);
+router.post("/signin", async (req, res) => {	
+  console.log("Signin Route Hitted/.");
+  const { email, password } = req.body;
 
-		// Update last login 
-		user.lastlogin = new Date();
-		await user.save();
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.json({ success: false, error: "Invalid credentials" });
+    }
 
-		// Send WhatsApp message but ignore errors
-		
-			const dateTime = new Date().toLocaleString();
-			const message = `Hello ${user.name}, you just logged in to RSWMS work management system successfully on ${dateTime}.`;
-			// await sendWhatsAppMessage("919589571577", message);
+    const isPasswordValid = password == user.password;
+    if (!isPasswordValid) {
+      return res.json({ success: false, error: "Invalid credentials" });
+    }
 
-		
-		// Respond to client
-		res.status(200).json({
-			success: true,
-			message: "Logged in successfully",
-			user: {
-				...user._doc,
-				password: undefined,
-			},
-		});
-	} catch (error) {
-		console.log("Error in login ", error);
-		res.status(400).json({ success: false, message: error.message });
-	}
+    // Generate token and set cookie
+    generateTokenAndSetCookie(res, user._id);
+
+    //  Update last login
+    user.lastlogin = new Date();
+    await user.save();
+
+    //  RECENT ACTIVITY (LOGIN)
+    try {
+      await RecentActivity.create({
+        user: user._id,
+        actionType: "login",
+        description: "User logged in successfully",
+        relatedModel: "User",
+        relatedId: user._id,
+        metadata: {
+          email: user.email,
+          role: user.role,
+        },
+      });
+    } catch (activityError) {
+      console.error("RecentActivity login error:", activityError);
+      // do not block login
+    }
+
+    //  Optional WhatsApp (ignored on failure)
+    const dateTime = new Date().toLocaleString();
+    const message = `Hello ${user.name}, you just logged in to RSWMS work management system successfully on ${dateTime}.`;
+    // await sendWhatsAppMessage("919589571577", message);
+
+    // Response
+    res.status(200).json({
+      success: true,
+      message: "Logged in successfully",
+      user: {
+        ...user._doc,
+        password: undefined,
+      },
+    });
+
+  } catch (error) {
+    console.log("Error in login ", error);
+    res.status(400).json({ success: false, message: error.message });
+  }
 });
+
 
 router.post("/forgot-password", async (req, res) => {
 	const { email } = req.body;

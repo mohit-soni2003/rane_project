@@ -22,17 +22,23 @@ const recentActivitySchema = new mongoose.Schema({
       "status_changed",
       "system_action",
       "other",
+
+      // ✅ AGREEMENT ACTIONS
       "agreement_signed",
+      "agreement_extension_requested",
+      "agreement_extension_approved",
+      "agreement_extension_rejected",
     ],
     default: "other",
   },
+
   description: {
     type: String,
     required: true,
   },
   relatedModel: {
     type: String,
-    enum: ["User", "Bill", "Payment", "Document", "FileForward", "Notification", "MonthlySalary", "BaseSalary","Agreement"],
+    enum: ["User", "Bill", "Payment", "Document", "FileForward", "Notification", "MonthlySalary", "BaseSalary", "Agreement"],
     default: null,
   },
   relatedId: {

@@ -12,7 +12,7 @@ export default function SingleBillDetailAdminPage() {
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState('');
-
+ 
     const navigate = useNavigate();
 
     useEffect(() => {

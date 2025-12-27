@@ -3,12 +3,15 @@ import ClientHeader from "../../component/header/ClientHeader";
 import { getAgreementById } from "../../services/agreement";
 import { useParams } from "react-router-dom";
 import AgreementSignModal from "../../assets/cards/models/AgreementSignModal";
+import AgreementExtensionRequestModal from "../../assets/cards/models/AgreementExtensionRequestModal";
 
 export default function AgreementView() {
     const { id } = useParams();
     const [agreement, setAgreement] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showSignModal, setShowSignModal] = useState(false); // used to render agreement sign modal
+    const [showExtensionModal, setShowExtensionModal] = useState(false);
+
 
 
     useEffect(() => {
@@ -57,11 +60,13 @@ export default function AgreementView() {
                                     style={{
                                         backgroundColor: "var(--primary)",
                                         padding: "6px 14px",
-                                        width: "auto"        // 🔥 makes button small instead of full width
+                                        width: "auto",
                                     }}
+                                    onClick={() => setShowExtensionModal(true)}
                                 >
                                     Request Extension
                                 </button>
+
                             </>
                         )}
 
@@ -312,6 +317,14 @@ export default function AgreementView() {
                     </div>
                 </div>
             </div>
+
+            <AgreementExtensionRequestModal
+                show={showExtensionModal}
+                onClose={() => setShowExtensionModal(false)}
+                agreementId={agreement._id}
+                onSuccess={(updatedAgreement) => setAgreement(updatedAgreement)}
+            />
+
 
 
         </>

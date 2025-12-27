@@ -19,6 +19,7 @@
     "mailtrap": "^3.4.0",
     "mongodb": "^6.12.0",
     "mongoose": "^8.9.5",
+    "node-cron": "^4.2.1",
     "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.16"
   }

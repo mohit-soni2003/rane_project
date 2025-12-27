@@ -251,7 +251,7 @@ const AdminSidebar = ({ isOpen = true, onCollapse }) => {
             <Link to="/admin/agreement/push" style={{ textDecoration: "none" }}>
               <div style={sidebarItemStyle} >Push  Agreement</div>
             </Link>
-            <Link to="/admin/under-dev" style={{ textDecoration: "none" }}>
+            <Link to="/admin/agreement/track" style={{ textDecoration: "none" }}>
               <div style={sidebarItemStyle}>Track agreements</div>
             </Link>
           </>

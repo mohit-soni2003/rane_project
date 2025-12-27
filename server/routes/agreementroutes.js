@@ -2,9 +2,8 @@ const express = require("express");
 const Agreement = require("../models/agreementModel");
 const verifyToken = require("../middleware/verifyToken");
 const User = require("../models/usermodel")
-const RecentActivityModel = require("../models/RecentActivityModel")
+const RecentActivity = require("../models/RecentActivityModel")
 const Notification = require("../models/notificationModel")
-const {createNotification} = require("../utils/createNotification")
 
 
 
@@ -17,97 +16,97 @@ const router = express.Router();
  * @pending only access to admin . staff is pending for sanitization.
  */
 router.post("/create", verifyToken, async (req, res) => {
-  console.log("Create Agreement route hit...");
+    console.log("Create Agreement route hit...");
 
-  try {
-    const { title, description, clientId, fileUrl, expiryDate } = req.body;
+    try {
+        const { title, description, clientId, fileUrl, expiryDate } = req.body;
 
-    /* ----------------------------------
-       BASIC VALIDATION
-    ---------------------------------- */
-    if (!title || !clientId || !fileUrl) {
-      return res.status(400).json({
-        success: false,
-        message: "Title, Client ID, and File URL are required.",
-      });
-    }
+        /* ----------------------------------
+           BASIC VALIDATION
+        ---------------------------------- */
+        if (!title || !clientId || !fileUrl) {
+            return res.status(400).json({
+                success: false,
+                message: "Title, Client ID, and File URL are required.",
+            });
+        }
 
-    /* ----------------------------------
-       FIND CLIENT
-    ---------------------------------- */
-    const clientUser = await User.findOne({ cid: clientId });
+        /* ----------------------------------
+           FIND CLIENT
+        ---------------------------------- */
+        const clientUser = await User.findOne({ cid: clientId });
 
-    if (!clientUser) {
-      return res.status(404).json({
-        success: false,
-        message: "Client not found.",
-      });
-    }
+        if (!clientUser) {
+            return res.status(404).json({
+                success: false,
+                message: "Client not found.",
+            });
+        }
 
-    /* ----------------------------------
-       OPTIONAL: EXPIRY DATE VALIDATION
-    ---------------------------------- */
-    let parsedExpiryDate = null;
-    if (expiryDate) {
-      parsedExpiryDate = new Date(expiryDate);
-      if (isNaN(parsedExpiryDate.getTime())) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid expiry date.",
+        /* ----------------------------------
+           OPTIONAL: EXPIRY DATE VALIDATION
+        ---------------------------------- */
+        let parsedExpiryDate = null;
+        if (expiryDate) {
+            parsedExpiryDate = new Date(expiryDate);
+            if (isNaN(parsedExpiryDate.getTime())) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid expiry date.",
+                });
+            }
+        }
+
+        /* ----------------------------------
+           CREATE AGREEMENT
+        ---------------------------------- */
+        const newAgreement = new Agreement({
+            title,
+            description,
+            client: clientUser._id,   // store ObjectId
+            fileUrl,
+            uploadedBy: req.userId,
+            expiryDate: parsedExpiryDate,
         });
-      }
+
+        await newAgreement.save();
+
+        /* ----------------------------------
+           CREATE NOTIFICATION
+        ---------------------------------- */
+        await Notification.create({
+            title: "New Agreement Assigned",
+            message: `A new agreement "${title}" has been assigned to you.`,
+            type: "agreement",
+            priority: "medium",
+            recipient: clientUser._id,
+            sender: req.userId,
+            relatedId: newAgreement._id,
+            relatedModel: "Agreement",
+            actionUrl: `/client/agreement/view/${newAgreement._id}`,
+            metadata: {
+                agreementTitle: title,
+                uploadedBy: req.userId,
+            },
+        });
+
+        /* ----------------------------------
+           SUCCESS RESPONSE
+        ---------------------------------- */
+        return res.status(201).json({
+            success: true,
+            message: "Agreement created successfully.",
+            agreement: newAgreement,
+        });
+
+    } catch (error) {
+        console.error("Error creating agreement:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error.",
+        });
     }
-
-    /* ----------------------------------
-       CREATE AGREEMENT
-    ---------------------------------- */
-    const newAgreement = new Agreement({
-      title,
-      description,
-      client: clientUser._id,   // store ObjectId
-      fileUrl,
-      uploadedBy: req.userId,
-      expiryDate: parsedExpiryDate,
-    });
-
-    await newAgreement.save();
-
-    /* ----------------------------------
-       CREATE NOTIFICATION
-    ---------------------------------- */
-    await createNotification({
-      title: "New Agreement Assigned",
-      message: `A new agreement "${title}" has been assigned to you.`,
-      type: "agreement",
-      priority: "medium",
-      recipient: clientUser._id,
-      sender: req.userId,
-      relatedId: newAgreement._id,
-      relatedModel: "Agreement",
-      actionUrl: `/client/agreement/view/${newAgreement._id}`,
-      metadata: {
-        agreementTitle: title,
-        uploadedBy: req.userId,
-      },
-    });
-
-    /* ----------------------------------
-       SUCCESS RESPONSE
-    ---------------------------------- */
-    return res.status(201).json({
-      success: true,
-      message: "Agreement created successfully.",
-      agreement: newAgreement,
-    });
-
-  } catch (error) {
-    console.error("Error creating agreement:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error.",
-    });
-  }
 });
 
 
@@ -439,7 +438,7 @@ router.patch("/:id/sign", verifyToken, async (req, res) => {
 
         // ⭐ ADD RECENT ACTIVITY LOG
         try {
-            await RecentActivityModel.create({
+            await RecentActivity.create({
                 user: req.userId,
                 actionType: "agreement_signed",
                 description: `You signed the agreement: ${agreement.title || "Agreement"}.`,
@@ -465,6 +464,215 @@ router.patch("/:id/sign", verifyToken, async (req, res) => {
         });
     }
 });
+
+
+/**
+ * @route   PATCH /agreement/:id/request-extension
+ * @desc    Client requests agreement expiry extension
+ * @access  Private (Client only)
+ */
+router.patch("/:id/request-extension", verifyToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { requestedExpiryDate, reason } = req.body;
+
+        if (!requestedExpiryDate) {
+            return res.status(400).json({
+                success: false,
+                message: "Requested expiry date is required.",
+            });
+        }
+
+        const agreement = await Agreement.findOne({
+            _id: id,
+            client: req.userId,
+        }).populate("client");
+
+        if (!agreement) {
+            return res.status(404).json({
+                success: false,
+                message: "Agreement not found.",
+            });
+        }
+
+        if (agreement.extensionRequest?.requested) {
+            return res.status(400).json({
+                success: false,
+                message: "Extension request already exists.",
+            });
+        }
+
+        agreement.extensionRequest = {
+            requested: true,
+            requestedBy: req.userId,
+            requestedAt: new Date(),
+            requestedExpiryDate: new Date(requestedExpiryDate),
+            reason,
+            status: "pending",
+        };
+
+        await agreement.save();
+
+        /* ===============================
+           ⭐ RECENT ACTIVITY (CLIENT)
+        =============================== */
+        try {
+            await RecentActivity.create({
+                user: req.userId,
+                actionType: "agreement_extension_requested",
+                description: `Requested an extension for agreement "${agreement.title}".`,
+                relatedModel: "Agreement",
+                relatedId: agreement._id,
+                actionUrl: `/client/agreement/view/${agreement._id}`,
+                metadata: {
+                    requestedExpiryDate,
+                    reason,
+                },
+            });
+        } catch (activityErr) {
+            console.error("Error creating recent activity:", activityErr);
+        }
+
+        /* ===============================
+           🔔 NOTIFICATION (ALL ADMINS)
+        =============================== */
+        try {
+            const admins = await User.find({ role: "admin" });
+
+            for (const admin of admins) {
+                await Notification.create({
+                    title: "Agreement Extension Requested",
+                    message: `${agreement.client.name} requested an extension for "${agreement.title}".`,
+                    type: "agreement",
+                    priority: "high",
+                    recipient: admin._id,
+                    sender: req.userId,
+                    relatedId: agreement._id,
+                    relatedModel: "Agreement",
+                    actionUrl: `/admin/agreement/${agreement._id}`,
+                    metadata: {
+                        clientName: agreement.client.name,
+                        requestedExpiryDate,
+                        reason,
+                    },
+                });
+            }
+        } catch (notificationErr) {
+            console.error("Error creating extension request notification:", notificationErr);
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Extension request submitted.",
+            agreement,
+        });
+
+    } catch (error) {
+        console.error("Extension request error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error.",
+        });
+    }
+});
+
+
+
+/**
+ * @route   PATCH /agreement/:id/review-extension
+ * @desc    Admin/Staff reviews extension request
+ */
+router.patch("/:id/review-extension", verifyToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { decision } = req.body; // approved | rejected
+
+        if (!["approved", "rejected"].includes(decision)) {
+            return res.status(400).json({ success: false, message: "Invalid decision." });
+        }
+
+        const user = await User.findById(req.userId);
+        if (!user || !["admin", "staff"].includes(user.role)) {
+            return res.status(403).json({ success: false, message: "Unauthorized." });
+        }
+
+        const agreement = await Agreement.findById(id).populate("client");
+        if (!agreement || !agreement.extensionRequest.requested) {
+            return res.status(404).json({
+                success: false,
+                message: "No extension request found.",
+            });
+        }
+
+        const {
+            requestedExpiryDate,
+            reason,
+        } = agreement.extensionRequest;
+
+        const oldExpiry = agreement.expiryDate;
+        const newExpiry = requestedExpiryDate;
+
+        /* ===============================
+           ✅ APPROVAL FLOW
+        =============================== */
+        if (decision === "approved") {
+            agreement.extensions.push({
+                extendedBy: req.userId,
+                oldExpiryDate: oldExpiry,
+                newExpiryDate: newExpiry,
+                reason,
+            });
+
+            agreement.expiryDate = newExpiry;
+        }
+
+        /* ===============================
+           🧹 RESET REQUEST OBJECT
+        =============================== */
+        agreement.extensionRequest = {
+            requested: false,
+            status: decision,
+            reviewedBy: req.userId,
+            reviewedAt: new Date(),
+        };
+
+        await agreement.save();
+
+        /* ===============================
+           ⭐ RECENT ACTIVITY
+        =============================== */
+        await RecentActivity.create({
+            user: agreement.client._id,
+            actionType:
+                decision === "approved"
+                    ? "agreement_extension_approved"
+                    : "agreement_extension_rejected",
+            description:
+                decision === "approved"
+                    ? `Your agreement "${agreement.title}" extension was approved.`
+                    : `Your agreement "${agreement.title}" extension was rejected.`,
+            relatedModel: "Agreement",
+            relatedId: agreement._id,
+            actionUrl: `/client/agreement/view/${agreement._id}`,
+            metadata: {
+                decision,
+                oldExpiryDate: oldExpiry,
+                newExpiryDate: newExpiry,
+            },
+        });
+
+        res.status(200).json({
+            success: true,
+            message: `Extension request ${decision}.`,
+            agreement,
+        });
+
+    } catch (error) {
+        console.error("Review extension error:", error);
+        res.status(500).json({ success: false, message: "Internal server error." });
+    }
+});
+
 
 
 

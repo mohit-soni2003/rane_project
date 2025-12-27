@@ -6,8 +6,11 @@ import {
 import {
   FaFileInvoice, FaSearch, FaCheckCircle,
   FaTimesCircle, FaExclamationTriangle,
-  FaEllipsisV, FaRupeeSign, FaSortAmountDownAlt, FaFilter,FaUser
+  FaEllipsisV, FaRupeeSign, FaSortAmountDownAlt, FaFilter,FaUser,FaFileContract,
+  FaClock,
 } from 'react-icons/fa';
+
+
 
 
 import AdminHeader from "../../component/header/AdminHeader";

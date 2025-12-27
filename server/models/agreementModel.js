@@ -16,7 +16,7 @@ const agreementSchema = new mongoose.Schema(
     },
 
     description: {
-      type: String, 
+      type: String,
       trim: true,
     },
 
@@ -64,9 +64,69 @@ const agreementSchema = new mongoose.Schema(
     expiryDate: {
       type: Date,
     },
-    message:{
-        type:String
-    }
+    message: {
+      type: String
+    },
+    extensions: [
+      {
+        extendedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User", 
+          required: true,
+        },
+        oldExpiryDate: {
+          type: Date,
+          required: true,
+        },
+        newExpiryDate: {
+          type: Date,
+          required: true,
+        },
+        reason: {
+          type: String,
+          trim: true,
+        },
+        extendedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+
+    extensionRequest: {
+      requested: {
+        type: Boolean,
+        default: false,
+      },
+      requestedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+      requestedAt: {
+        type: Date,
+      },
+      requestedExpiryDate: {
+        type: Date,
+      },
+      reason: {
+        type: String,
+        trim: true,
+      },
+      status: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+        default: "pending",
+      },
+      reviewedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+      reviewedAt: {
+        type: Date,
+      },
+    },
+
+
   },
   { timestamps: true }
 );

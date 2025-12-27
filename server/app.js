@@ -5,6 +5,8 @@ const mongoose = require('./db/mongoConnection'); // Import the db.js file
 const cookieParser = require("cookie-parser")
 const cors  = require("cors")
 const {FRONTEND_ORIGIN_URL} = require("./keys")
+const expireAgreementsJob = require("./cron/expireAgreementsCron")
+const startExpiryJob = require("./cron/expireAgreementsCron")
 
 
 // Middleware to parse JSON data
@@ -21,6 +23,9 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));  // Handle OPTIONS preflight requests
 app.use(express.json());
+expireAgreementsJob();
+startExpiryJob();
+
 
 // Define a port for the server
 const PORT = 3000;

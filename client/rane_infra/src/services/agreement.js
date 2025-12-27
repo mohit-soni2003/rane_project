@@ -5,7 +5,7 @@ export const getAgreementById = async (id) => {
   try {
     const res = await fetch(`${backend_url}/agreement/view/${id}`, {
       method: "GET",
-      credentials: "include", 
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
@@ -44,7 +44,7 @@ export const getClientAgreements = async (status = "") => {
       throw new Error(data.message || "Failed to fetch client agreements");
     }
 
-    return data; 
+    return data;
     // { success, count, agreements: [...] }
   } catch (error) {
     console.error("Error fetching client agreements:", error);
@@ -98,7 +98,7 @@ export const rejectAgreement = async (id, reason) => {
       throw new Error(data.message || "Failed to reject agreement");
     }
 
-    return data; 
+    return data;
     // { success: true, message: "...", agreement: {...} }
   } catch (error) {
     console.error("Error rejecting agreement:", error);
@@ -127,7 +127,7 @@ export const getClientActionAgreements = async () => {
       throw new Error(data.message || "Failed to fetch actionable agreements");
     }
 
-    return data; 
+    return data;
     // { success, count, agreements: [...] }
   } catch (error) {
     console.error("Error fetching actionable agreements:", error);
@@ -161,6 +161,103 @@ export const createAgreement = async (payload) => {
     // { success, message, agreement }
   } catch (error) {
     console.error("Error creating agreement:", error);
+    throw error;
+  }
+};
+
+// Request agreement extension (Client)
+export const requestAgreementExtension = async (id, payload) => {
+  try {
+    const res = await fetch(
+      `${backend_url}/agreement/${id}/request-extension`,
+      {
+        method: "PATCH",
+        credentials: "include", // send JWT cookie
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload), // { requestedExpiryDate, reason }
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to request agreement extension");
+    }
+
+    return data;
+    // { success: true, message, agreement }
+  } catch (error) {
+    console.error("Error requesting agreement extension:", error);
+    throw error;
+  }
+};
+
+/**
+ * Review agreement extension request (Admin / Staff)
+ * @param {string} id - Agreement ID
+ * @param {"approved" | "rejected"} decision
+ */
+export const reviewAgreementExtension = async (id, decision) => {
+  try {
+    const res = await fetch(
+      `${backend_url}/agreement/${id}/review-extension`,
+      {
+        method: "PATCH",
+        credentials: "include", // JWT cookie
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ decision }),
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to review extension request");
+    }
+
+    return data;
+    // { success, message, agreement }
+  } catch (error) {
+    console.error("Error reviewing agreement extension:", error);
+    throw error;
+  }
+};
+
+
+/**
+ * Get all agreements (Admin / Staff)
+ * @param {boolean} mine - true → only agreements uploaded by logged-in user
+ * @returns {Object} { success, total, agreements }
+ */
+export const getAllAgreements = async (mine = false) => {
+  try {
+    const query = mine ? "?mine=true" : "";
+
+    const res = await fetch(
+      `${backend_url}/agreement/all${query}`,
+      {
+        method: "GET",
+        credentials: "include", // JWT cookie
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to fetch agreements");
+    }
+
+    return data;
+    // { success, total, agreements }
+  } catch (error) {
+    console.error("Error fetching all agreements:", error);
     throw error;
   }
 };

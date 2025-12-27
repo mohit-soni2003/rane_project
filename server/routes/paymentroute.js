@@ -2,45 +2,38 @@ const express = require("express")
 const User = require("../models/usermodel")
 const Bill = require("../models/billmodel")
 const Payment = require("../models/paymentmodel")
-const { createNotification } = require("./notificationRoutes")
+const RecentActivity = require("../models/RecentActivityModel")
+const Notification = require("../models/notificationModel")
 
 
 const router = express.Router();
 
-router.post("/post-payment", async (req, res) => {
-  // console.log("Post Payment route hit...");
 
+
+router.post("/post-payment", async (req, res) => {
   try {
     const {
       tender,
       user,
       amount,
       description,
-      image_url,       // Optional now
+      image_url,
       paymentType,
       paymentMode
     } = req.body;
 
-    // console.log("Tender:", tender);
-    // console.log("User:", user);
-    // console.log("Amount:", amount);
-    // console.log("Description:", description);
-    // console.log("Image:", image_url);
-    // console.log("Payment Type:", paymentType);
-    // console.log("Payment Mode:", paymentMode);
-
-    // Required field validation (image_url is not required)
+    // 🔎 Required field validation
     if (!tender || !amount || !user || !paymentType || !paymentMode) {
       return res.status(400).json({ message: "All required fields must be provided" });
     }
 
-    // Validate user
+    // 👤 Validate user
     const existingUser = await User.findById(user);
     if (!existingUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Business logic
+    // 🧠 Business rules
     if (paymentType === "IP" && amount > 50000) {
       return res.status(400).json({
         message: "Payment Request Failed: You can request only up to ₹50,000 in IP"
@@ -53,7 +46,7 @@ router.post("/post-payment", async (req, res) => {
       });
     }
 
-    // Create new payment, image is conditionally added
+    // 💾 Create payment
     const paymentData = {
       tender,
       user,
@@ -63,44 +56,69 @@ router.post("/post-payment", async (req, res) => {
       paymentMode
     };
 
-    if (image_url) {
-      paymentData.image = image_url; // Only add if image_url is provided
-    }
+    if (image_url) paymentData.image = image_url;
 
-    const newPayment = new Payment(paymentData);
-    const savedPayment = await newPayment.save();
+    const savedPayment = await new Payment(paymentData).save();
 
-    // Create notification for admins
-    try {
-        const admins = await User.find({ role: 'admin' });
-        for (const admin of admins) {
-            await createNotification({
-                title: 'New Payment Request',
-                message: `${existingUser.name} requested ₹${amount} (${paymentType})`,
-                type: 'payment',
-                priority: paymentType === 'IP' && amount > 50000 ? 'high' : 'medium',
-                recipient: admin._id,
-                sender: existingUser._id,
-                relatedId: savedPayment._id,
-                relatedModel: 'Payment',
-                actionUrl: `/admin/payment-request/${savedPayment._id}`,
-                metadata: {
-                    amount,
-                    paymentType,
-                    paymentMode,
-                    description
-                }
-            });
-        }
-    } catch (notificationError) {
-        console.error('Error creating payment notification:', notificationError);
-        // Don't fail the payment creation if notification fails
-    }
+    /* ----------------------------------
+       🕒 RECENT ACTIVITY (USER)
+    ---------------------------------- */
+    // try {
+    //   await RecentActivity.create({
+    //     user: existingUser._id,
+    //     actionType: "payment_requested",
+    //     description: `Requested ₹${amount} via ${paymentMode} (${paymentType})`,
+    //     relatedModel: "Payment",
+    //     relatedId: savedPayment._id,
+    //     actionUrl: `/client/payment/${savedPayment._id}`,
+    //     metadata: {
+    //       amount,
+    //       paymentType,
+    //       paymentMode,
+    //       tender
+    //     }
+    //   });
+    // } catch (activityError) {
+    //   console.error("RecentActivity error:", activityError);
+    // }
 
+    // /* ----------------------------------
+    //    🔔 NOTIFICATIONS (ADMINS)
+    // ---------------------------------- */
+    // try {
+    //   const admins = await User.find({ role: "admin" });
+
+    //   for (const admin of admins) {
+    //     await Notification.create({
+    //       title: "New Payment Request",
+    //       message: `${existingUser.name} requested ₹${amount} (${paymentType})`,
+    //       type: "payment",
+    //       priority: "medium",
+    //       recipient: admin._id,
+    //       sender: existingUser._id,
+    //       relatedId: savedPayment._id,
+    //       relatedModel: "Payment",
+    //       actionUrl: `/admin/payment-request/${savedPayment._id}`,
+    //       metadata: {
+    //         amount,
+    //         paymentType,
+    //         paymentMode,
+    //         tender
+    //       }
+    //     });
+    //   }
+    // } catch (notificationError) {
+    //   console.error("Payment notification error:", notificationError);
+    // }
+
+    /* ----------------------------------
+       ✅ RESPONSE
+    ---------------------------------- */
     res.status(201).json({
-        message: "Payment created successfully",
-        payment: savedPayment
+      message: "Payment created successfully",
+      payment: savedPayment
     });
+
   } catch (error) {
     console.error("Error creating payment:", error);
 
@@ -111,6 +129,7 @@ router.post("/post-payment", async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 });
+
 // all payment of particular user id 
 router.get('/my-payment-request/:id', async (req, res) => {
   console.log("show all my payment route hitted ..")

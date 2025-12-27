@@ -63,6 +63,8 @@ import AllUser from "./pages/admin/AllUser.jsx";
 import AllDFSRequests from "./pages/admin/AllDFSRequests.jsx";
 import AllDocuments from "./pages/admin/AllDocuments.jsx";
 import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage.jsx";
+import AgreementTableListAll from "./pages/admin/AgreementTableListAll.jsx";
+import SingleAgreementDetails from "./pages/admin/SingleAgreementDetails.jsx";
 
 
 import StaffLayout from "./Layout/StaffLayout.jsx";
@@ -202,6 +204,8 @@ function App() {
           <Route path="push-document" element={<PushDocumentAdminPage />} />
           <Route path="push-document/by-me" element={<MyPushedDocument />} />
           <Route path="agreement/push" element={<PushAgreement />} />
+          <Route path="agreement/track" element={<AgreementTableListAll/>} />
+          <Route path="agreement/track/:id" element={<SingleAgreementDetails/>} />
           <Route path="all-client" element={<ClientsListAdminPage />} />
           <Route path="client-detail/:id" element={<ClientDetailAdminPage />} />
           <Route path="dfsrequest" element={<DfsRequest />} />

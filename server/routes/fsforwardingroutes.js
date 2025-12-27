@@ -3,12 +3,17 @@ const router = express.Router();
 const FileForward = require("../models/fileForwardingModel")
 const verifyToken = require("../middleware/verifyToken")
 const User = require("../models/usermodel")
-const { createNotification } = require("./notificationRoutes")
- 
+const RecentActivity = require("../models/RecentActivityModel")
+const Notification = require("../models/notificationModel")
+
 
 // client will upload document
+
+
+
 router.post('/upload-document', verifyToken, async (req, res) => {
-  console.log("DOCUMENT UPLOAD ROUTE HITTED...")
+  console.log("DOCUMENT UPLOAD ROUTE HIT...");
+
   try {
     const {
       fileTitle,
@@ -18,18 +23,26 @@ router.post('/upload-document', verifyToken, async (req, res) => {
       description
     } = req.body;
 
-    // Basic validation
+    /* -------------------------------
+       BASIC VALIDATION
+    -------------------------------- */
     if (!fileTitle || !fileUrl || !docType || !description) {
-      return res.status(400).json({ error: "fileTitle, fileUrl, docType, and description are required." });
+      return res.status(400).json({
+        error: "fileTitle, fileUrl, docType, and description are required."
+      });
     }
 
-    // Find admin user (who will initially review/own the file)
-    const currentOwner = await User.findOne({ cid: "ADMIN" });
+    /* -------------------------------
+       FIND ADMIN (INITIAL OWNER)
+    -------------------------------- */
+    const currentOwner = await User.findOne({ role: "admin" });
     if (!currentOwner) {
       return res.status(404).json({ error: "Admin not found" });
     }
 
-    // Create document
+    /* -------------------------------
+       CREATE DOCUMENT
+    -------------------------------- */
     const newFile = new FileForward({
       fileTitle,
       fileUrl,
@@ -51,43 +64,70 @@ router.post('/upload-document', verifyToken, async (req, res) => {
 
     await newFile.save();
 
-    // Populate references for response
+    /* -------------------------------
+       POPULATE FOR RESPONSE
+    -------------------------------- */
     const populatedFile = await FileForward.findById(newFile._id)
       .populate('uploadedBy', 'name email')
       .populate('currentOwner', 'name email')
       .populate('forwardingTrail.forwardedBy', 'name email')
       .populate('forwardingTrail.forwardedTo', 'name email');
 
-    // Get uploader details for notification
     const uploadedByUser = await User.findById(req.userId);
 
-    // Create notification for admins
+    /* -------------------------------
+       🕒 RECENT ACTIVITY (CLIENT)
+    -------------------------------- */
     try {
-        const admins = await User.find({ role: 'admin' });
-        for (const admin of admins) {
-            await createNotification({
-                title: 'New DFS Document Submitted',
-                message: `${uploadedByUser.name} submitted a document: ${fileTitle}`,
-                type: 'dfs',
-                priority: 'medium',
-                recipient: admin._id,
-                sender: req.userId,
-                relatedId: newFile._id,
-                relatedModel: 'FileForward',
-                actionUrl: `/admin/dfsrequest/${newFile._id}`,
-                metadata: {
-                    fileTitle,
-                    docType,
-                    Department,
-                    uploadedBy: uploadedByUser.name
-                }
-            });
+      await RecentActivity.create({
+        user: uploadedByUser._id,
+        actionType: "document_uploaded",
+        description: `Uploaded DFS document: ${fileTitle}`,
+        relatedModel: "FileForward",
+        relatedId: newFile._id,
+        actionUrl: `/client/track-dfs/all`,
+        metadata: {
+          fileTitle,
+          docType,
+          Department
         }
-    } catch (notificationError) {
-        console.error('Error creating DFS notification:', notificationError);
-        // Don't fail the document upload if notification fails
+      });
+    } catch (activityErr) {
+      console.error("RecentActivity error:", activityErr);
     }
 
+    /* -------------------------------
+       🔔 NOTIFICATIONS (ADMINS)
+    -------------------------------- */
+    try {
+      const admins = await User.find({ role: 'admin' });
+
+      for (const admin of admins) {
+        await Notification.create({
+          title: "New DFS Document Submitted",
+          message: `${uploadedByUser.name} submitted a document: ${fileTitle}`,
+          type: "dfs",
+          priority: "medium",
+          recipient: admin._id,
+          sender: uploadedByUser._id,
+          relatedId: newFile._id,
+          relatedModel: "FileForward",
+          actionUrl: `/admin/dfsrequest/${newFile._id}`,
+          metadata: {
+            fileTitle,
+            docType,
+            Department,
+            uploadedBy: uploadedByUser.name
+          }
+        });
+      }
+    } catch (notificationError) {
+      console.error("DFS notification error:", notificationError);
+    }
+
+    /* -------------------------------
+       RESPONSE
+    -------------------------------- */
     return res.status(201).json({
       message: "Document uploaded successfully.",
       file: populatedFile
@@ -98,6 +138,7 @@ router.post('/upload-document', verifyToken, async (req, res) => {
     return res.status(500).json({ error: "Server error" });
   }
 });
+
 
 // Get all files uploaded by the current user
 router.get('/my-files', verifyToken, async (req, res) => {
@@ -160,7 +201,7 @@ router.put("/forward/:fileId", verifyToken, async (req, res) => {
   }
 });
 
- 
+
 // @route   GET /my-requests
 // @desc    Get documents assigned to the current logged-in user
 // @access  Protected

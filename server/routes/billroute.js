@@ -3,7 +3,9 @@ const User = require("../models/usermodel")
 const Bill = require("../models/billmodel")
 const Document = require("../models/documentmodel")
 const RecentActivity = require("../models/RecentActivityModel")
-const { createNotification } = require("./notificationRoutes")
+const Notification = require("../models/notificationModel")
+// const { createNotification } = require("./notificationRoutes")
+
 
 
 const router = express.Router();
@@ -60,32 +62,33 @@ router.post("/post-bill", async (req, res) => {
     }
 
     // ⭐ Create notifications for admins
-    // try {
-    //   const admins = await User.find({ role: 'admin' });
+    try {
+      const admins = await User.find({ role: 'admin' });
 
-    //   for (const admin of admins) {
-    //     await createNotification({
-    //       title: 'New Bill Submitted',
-    //       message: `${existingUser.name} submitted a bill for ₹${amount} (${firmName})`,
-    //       type: 'bill',
-    //       priority: 'medium',
-    //       recipient: admin._id,
-    //       sender: existingUser._id,
-    //       relatedId: savedBill._id,
-    //       relatedModel: 'Bill',
-    //       actionUrl: `/admin/bill/${savedBill._id}`,
-    //       metadata: {
-    //         firmName,
-    //         amount,
-    //         workArea,
-    //         submittedAt: savedBill.submittedAt
-    //       }
-    //     });
-    //   }
-    // } catch (notificationError) {
-    //   console.error('Error creating bill notification:', notificationError);
-    //   // Do not stop bill creation
-    // }
+
+      for (const admin of admins) {
+        await Notification.create({
+          title: 'New Bill Submitted',
+          message: `${existingUser.name} submitted a bill for ₹${amount} (${firmName})`,
+          type: 'bill',
+          priority: 'medium',
+          recipient: admin._id,
+          sender: existingUser._id,
+          relatedId: savedBill._id,
+          relatedModel: 'Bill',
+          actionUrl: `/admin/bill/${savedBill._id}`,
+          metadata: {
+            firmName,
+            amount,
+            workArea,
+            submittedAt: savedBill.submittedAt
+          }
+        });
+      }
+    } catch (notificationError) {
+      console.error('Error creating bill notification:', notificationError);
+      // Do not stop bill creation
+    }
 
     res.status(201).json({ message: "Bill created successfully", bill: savedBill });
 
@@ -198,30 +201,73 @@ router.get('/bill/update-payment/:id', async (req, res) => {
   }
 });
 
+
+// this route is used by admin to change status 
 router.put('/bill/update-payment/:id', async (req, res) => {
-  // console.log("Update bill payment status route hit");
-  const { status } = req.body; // Extract the paymentStatus value from the request body
-  const { id } = req.params; // Extract the bill ID from the request parameters
+  const { status } = req.body;
+  const { id } = req.params;
 
   try {
-    // Find and update the bill with the new payment status
     const updatedBill = await Bill.findByIdAndUpdate(
       id,
-      { paymentStatus: status }, // Update the paymentStatus field
-      { new: true } // Return the updated document
-    ).populate("user"); // Populate the "user" field if needed
+      { paymentStatus: status },
+      { new: true }
+    ).populate("user");
 
-    if (updatedBill) {
-      // console.log("Bill updated:", updatedBill);
-      res.status(200).json(updatedBill); // Respond with the updated bill
-    } else {
-      res.status(404).json({ error: 'No bill found with this ID' }); // If no bill is found, return a 404 error
+    if (!updatedBill) {
+      return res.status(404).json({ error: 'No bill found with this ID' });
     }
+
+    /* ----------------------------------
+       🔔 NOTIFICATION (CLIENT)
+    ---------------------------------- */
+    await Notification.create({
+      title: "Bill Payment Status Updated",
+      message: `Your bill for "${updatedBill.firmName}" has been marked as "${status}".`,
+      type: "bill",
+      priority: status === "Paid" ? "high" : "medium",
+      recipient: updatedBill.user._id,
+      sender: req.userId || null,
+      relatedId: updatedBill._id,
+      relatedModel: "Bill",
+      actionUrl: `/client/bill/${updatedBill._id}`,
+      metadata: {
+        firmName: updatedBill.firmName,
+        invoiceNo: updatedBill.invoiceNo,
+        loaNo: updatedBill.loaNo,
+        amount: updatedBill.amount,
+        paymentStatus: status,
+      },
+    });
+
+    /* ----------------------------------
+       🕒 RECENT ACTIVITY
+    ---------------------------------- */
+    await RecentActivity.create({
+      user: updatedBill.user._id,
+      actionType: "payment_approved",
+      description: `Payment status updated to "${status}" for bill (${updatedBill.firmName})`,
+      relatedModel: "Bill",
+      relatedId: updatedBill._id,
+      actionUrl: `/client/bill/${updatedBill._id}`,
+      metadata: {
+        firmName: updatedBill.firmName,
+        amount: updatedBill.amount,
+        status,
+      },
+    });
+
+    res.status(200).json(updatedBill);
+
   } catch (error) {
-    console.error("Error updating bill:", error);
-    res.status(500).json({ error: 'Server error', details: error.message }); // Handle server errors
+    console.error("Error updating bill payment status:", error);
+    res.status(500).json({
+      error: "Server error",
+      details: error.message,
+    });
   }
 });
+
 
 router.delete("/bill/:id", async (req, res) => {
   try {
