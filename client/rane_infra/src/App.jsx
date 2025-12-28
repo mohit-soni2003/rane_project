@@ -9,7 +9,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Signup from "./assets/components/elements/Signup";
 import Signin from "./assets/components/elements/Signin";
 import VerifyEmail from "./assets/components/elements/VerifyEmail";
-import BillbookForm from "./assets/components/elements/BillbookForm";
+
+// import BillbookForm from "./assets/components/elements/BillbookForm";
+
 import AdminDashboard from "./assets/components/elements/dashboard/AdminDashboard";
 import UserDashboard from "./assets/components/elements/dashboard/UserDashboard";
 import { useAuthStore } from "./store/authStore";
@@ -18,11 +20,7 @@ import Spinner from "react-bootstrap/esm/Spinner";
 import Maintainence from "./assets/components/unique_component/Maintainence";
 import ForgotPass from "./assets/components/elements/ForgotPass";
 import ResetPass from "./assets/components/elements/ResetPass";
-import StaffDashboard from "./assets/components/elements/staff/StaffDashboard";
 
-import ClientSidebar from "./component/sidebar/ClientSidebar";
-import AdminSidebar from "./component/sidebar/AdminSidebar";
-import StaffSidebar from "./component/sidebar/StaffSidebar";
 import HomePageClient from "./pages/client/HomePageClient";
 import ClientLayout from "./Layout/ClientLayout";
 import UploadBillPage from "./pages/client/UploadBillPage";
@@ -74,6 +72,7 @@ import HomePageStaff from "./pages/staff/HomePageStaff.jsx";
 import MaintainencePage from "./pages/MaintainencePage.jsx";
 import UnderDevPage from "./pages/UnderDevPage.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
+import Loader from "./component/animation/Loader.jsx";
 
 
 function App() {
@@ -94,7 +93,7 @@ function App() {
 
 
   if (loading) {
-    return <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh" }}><Spinner></Spinner></div>; // Display loading message while waiting for auth check
+    return <div><Loader></Loader></div>; // Display loading message while waiting for auth check
   }
 
 
