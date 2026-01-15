@@ -1,30 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { FiSearch, FiFilter, FiClock, FiChevronDown } from "react-icons/fi";
 import ClientHeader from "../../component/header/ClientHeader";
-import { getClientAgreements } from "../../services/agreement";  // <-- use your service
+import { getClientAgreements } from "../../services/agreement";
+import { useNavigate } from "react-router-dom";
+import AgreementExtensionRequestModal from "../../assets/cards/models/AgreementExtensionRequestModal";
 
 export default function ClosedAgreement() {
   const navigate = useNavigate();
   const [closedAgreements, setClosedAgreements] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [showExtensionModal, setShowExtensionModal] = useState(false);
+  const [currentAgreement, setCurrentAgreement] = useState(null);
 
   useEffect(() => {
     const fetchClosedAgreements = async () => {
       try {
-        // fetch all agreements (empty status = no filter)
-        const response = await getClientAgreements("");
-
-        const agreements = response.agreements;
-
-        const today = new Date(); 
-
-        // filter: rejected AND expired
-        const filtered = agreements.filter((ag) => {
-          const expiryDate = new Date(ag.expiry);
-          return ag.status === "rejected" || expiryDate > today;
-        });
-
-        setClosedAgreements(filtered);
+        const response = await getClientAgreements("expired");
+        const agreements = response.agreements || [];
+        setClosedAgreements(agreements);
       } catch (error) {
         console.error("Error loading closed agreements", error);
         setClosedAgreements([]);
@@ -36,223 +30,401 @@ export default function ClosedAgreement() {
     fetchClosedAgreements();
   }, []);
 
+  const filteredAgreements = closedAgreements.filter(a =>
+    a.title.toLowerCase().includes(search.toLowerCase()) ||
+    a.agreementId.toLowerCase().includes(search.toLowerCase())
+  );
+
   const handleRequestExtension = (id) => {
-    console.log("Requesting extension for:", id);
+    const agreement = closedAgreements.find(a => a._id === id);
+    setCurrentAgreement(agreement);
+    setShowExtensionModal(true);
   };
+
   const formatDate = (d) => {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-};
+    if (!d) return "—";
+    return new Date(d).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const daysLeft = (expiry) => {
+    if (!expiry) return "—";
+    const diff = (new Date(expiry) - new Date()) / (1000 * 60 * 60 * 24);
+    return Math.ceil(diff) + " days left";
+  };
+
+  const statusStyles = {
+    pending: {
+      background: "#FFF4CC",
+      color: "#B58A00",
+    },
+    viewed: {
+      background: "#E6F0FF",
+      color: "#2A64D6",
+    },
+    signed: {
+      background: "#D6F5D6",
+      color: "#1C7C1C",
+    },
+    rejected: {
+      background: "#FFE4E4",
+      color: "#D64545",
+    },
+    expired: {
+      background: "#EAEAEA",
+      color: "#666",
+    },
+  };
 
   return (
     <>
       <ClientHeader />
 
       <div
-        className="container py-4 mt-3"
-        style={{ background: "var(--background)", color: "var(--foreground)" }}
+        className="container-fluid py-4 my-3"
+        style={{
+          background: "var(--background)",
+          borderRadius: "12px",
+          color: "var(--card-foreground)",
+        }}
       >
-        <h3 className="fw-bold mb-2" style={{ color: "var(--text-strong)" }}>
-          Closed Agreements
-        </h3>
-        <p style={{ color: "var(--text-muted)", marginTop: "-8px" }}>
-          These agreements were rejected and have crossed the expiry date.
-        </p>
+        {/* Page Title + Search + Filter + Sort */}
+        <div className="d-flex justify-content-between align-items-center flex-wrap mb-4">
+          <div className="mb-2">
+            <h3 className="fw-bold" style={{ color: "var(--text-strong)" }}>
+              Closed Agreements – Expired
+            </h3>
+            <p className="m-0" style={{ color: "var(--text-muted)" }}>
+              Agreements that have expired and may require extension requests.
+            </p>
+          </div>
 
+          {/* Search + actions */}
+          <div className="d-flex gap-2 mt-2 mt-md-0 w-100 w-md-auto">
+            <div
+              className="input-group flex-grow-1"
+              style={{ background: "var(--input)", borderRadius: "8px" }}
+            >
+              <div
+                className="input-group mt-1"
+                style={{
+                  border: "2px solid var(--border)",
+                  borderRadius: "10px",
+                  overflow: "hidden",
+                  background: "var(--input)",
+                }}
+              >
+                <span
+                  className="input-group-text"
+                  style={{
+                    background: "var(--input)",
+                    color: "var(--text-muted)",
+                    border: "none",
+                  }}
+                >
+                  <FiSearch />
+                </span>
+
+                <input
+                  type="text"
+                  className="form-control shadow-none border-0"
+                  placeholder="Search: agreementId / title"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  style={{ background: "var(--input)", color: "var(--foreground)" }}
+                />
+              </div>
+            </div>
+
+            <button
+              className="btn d-flex align-items-center px-3"
+              style={{
+                background: "var(--secondary)",
+                color: "var(--secondary-foreground)",
+                border: "1px solid var(--border)",
+                borderRadius: "8px",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <FiFilter className="me-2" />
+              Filter
+            </button>
+
+            <button
+              className="btn d-flex align-items-center px-3"
+              style={{
+                background: "var(--secondary)",
+                color: "var(--secondary-foreground)",
+                border: "1px solid var(--border)",
+                borderRadius: "8px",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Sort: Newest
+              <FiChevronDown className="ms-2" />
+            </button>
+          </div>
+        </div>
+
+       
         {/* Loading State */}
         {loading && (
           <div className="text-center text-muted mt-4">Loading...</div>
         )}
 
         {/* Desktop Table View */}
-        {!loading && (
-          <>
-            <div
-              className="table-responsive d-none d-md-block mt-4"
-              style={{
-                background: "var(--card)",
-                borderRadius: "12px",
-                border: "1px solid var(--border)",
-                boxShadow: "0 2px 4px var(--shadow-color)",
-              }}
+        {!loading && closedAgreements.length > 0 && (
+          <div
+            className="table-responsive d-none d-md-block"
+            style={{
+              background: "var(--card)",
+              borderRadius: "12px",
+              border: "1px solid var(--border)",
+              boxShadow: "0 2px 4px var(--shadow-color)",
+            }}
+          >
+            <table
+              className="table align-middle mb-0"
+              style={{ borderCollapse: "separate", borderSpacing: "0 10px" }}
             >
-              <table
-                className="table align-middle mb-0"
-                style={{ borderCollapse: "separate", borderSpacing: "0 10px" }}
-              >
-                <thead>
-                  <tr style={{ color: "var(--text-muted)", fontSize: "14px" }}>
-                    <th>#</th>
-                    <th>Title</th>
-                    <th>Uploaded By</th>
-                    <th>Uploaded</th>
-                    <th>Expiry</th>
-                    <th>Status</th>
-                    <th className="text-end">Actions</th>
-                  </tr>
-                </thead>
+              <thead>
+                <tr style={{ color: "var(--text-muted)", fontSize: "14px" }}>
+                  <th style={{ width: "60px" }}>#</th>
+                  <th>Title</th>
+                  <th>Uploaded By</th>
+                  <th>Uploaded</th>
+                  <th>Expiry</th>
+                  <th>Status</th>
+                  <th className="text-end">Actions</th>
+                </tr>
+              </thead>
 
-                <tbody>
-                  {closedAgreements.map((item, idx) => (
-                    <tr key={idx} style={{ background: "var(--card)" }}>
-                      <td>
-                        <div
-                          className="d-flex justify-content-center align-items-center"
-                          style={{
-                            width: "34px",
-                            height: "34px",
-                            borderRadius: "50%",
-                            background: "var(--muted)",
-                            color: "var(--text-strong)",
-                            fontWeight: 600,
-                          }}
-                        >
-                          {idx + 1}
-                        </div>
-                      </td>
+              <tbody>
+                {filteredAgreements.map((item, idx) =>{
 
-                      <td>
-                        <div
-                          className="fw-semibold"
-                          style={{ color: "var(--text-strong)" }}
-                        >
-                          {item.title}
-                        </div>
-                        <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                          {item._id}
-                        </div>
-                      </td>
+                const isExtensionRequested = item.extensionRequest?.requested;
+                return (
+                  <tr key={idx} style={{ background: "var(--card)" }}>
+                    <td>
+                      <div
+                        className="d-flex justify-content-center align-items-center"
+                        style={{
+                          width: "34px",
+                          height: "34px",
+                          borderRadius: "50%",
+                          background: "var(--muted)",
+                          color: "var(--text-strong)",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {idx + 1}
+                      </div>
+                    </td>
 
-                      <td>{item.uploadedBy?.name}</td>
+                    <td>
+                      <div
+                        className="fw-semibold"
+                        style={{ color: "var(--text-strong)", fontSize: "15px" }}
+                      >
+                        {item.title}
+                      </div>
+                      <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                        {item.agreementId}
+                      </div>
+                    </td>
 
-                      <td style={{ color: "var(--text-muted)" }}>
-                        {item.createdAt?.split("T")[0]}
-                      </td>
+                    <td>
+                      <div className="fw-semibold" style={{ fontSize: "14px" }}>
+                        {item.uploadedBy?.name}
+                      </div>
+                      <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+                        Staff
+                      </div>
+                    </td>
 
-                      <td style={{ color: "var(--text-muted)" }}>
-                        {formatDate(item.createdAt)}
-                      </td>
+                    <td style={{ fontSize: "14px", color: "var(--text-muted)" }}>
+                      {formatDate(item.uploadedAt)}
+                    </td>
 
-                      <td>
-                        <span
-                          className="badge px-3 py-2"
-                          style={{
-                            background: "#dc3545",
-                            color: "white",
-                            borderRadius: "6px",
-                            fontSize: "12px",
-                          }}
-                          >
-                          {item.status}
+                    <td style={{ fontSize: "14px", color: "var(--text-muted)" }}>
+                      {formatDate(item.expiryDate)}
+                    </td>
 
-                        </span>
-                      </td>
+                    <td>
+                      <span
+                        className="badge px-3 py-2"
+                        style={{
+                          background: statusStyles[item.status]?.background,
+                          color: statusStyles[item.status]?.color,
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        {item.status}
+                      </span>
+                    </td>
 
-                      <td className="text-end">
+                    <td className="text-end">
+                      <div className="d-flex justify-content-end gap-2">
                         <button
                           className="btn btn-sm"
                           style={{
-                            background: "var(--primary)",
-                            color: "var(--primary-foreground)",
+                            background: "var(--secondary)",
+                            color: "var(--secondary-foreground)",
                             borderRadius: "6px",
+                            padding: "6px 14px",
+                            fontSize: "13px",
                           }}
-                          onClick={() => handleRequestExtension(item._id)}
+                          onClick={() => window.open(`/client/agreement/view/${item._id}`, "_blank")}
                         >
-                          Request Extension
+                          View
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        <button
+                          className="btn btn-sm"
+                          disabled={isExtensionRequested}
+                          style={{
+                            background: isExtensionRequested
+                              ? "var(--muted)"
+                              : "var(--primary)",
+                            color: isExtensionRequested
+                              ? "var(--text-muted)"
+                              : "var(--primary-foreground)",
+                            borderRadius: "6px",
+                            padding: "6px 14px",
+                            fontSize: "13px",
+                            cursor: isExtensionRequested ? "not-allowed" : "pointer",
+                            opacity: isExtensionRequested ? 0.6 : 1,
+                          }}
+                          onClick={() => {
+                            if (!isExtensionRequested) {
+                              handleRequestExtension(item._id);
+                            }
+                          }}
+                        >
+                          {isExtensionRequested
+                            ? "Extension Requested"
+                            : "Request Extension"}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-            {/* No Data */}
-            {closedAgreements.length === 0 && !loading && (
+        {/* No Data */}
+        {!loading && closedAgreements.length === 0 && (
+          <div
+            className="text-center p-3 mt-4"
+            style={{
+              background: "var(--card)",
+              borderRadius: "12px",
+              border: "1px solid var(--border)",
+              color: "var(--text-muted)",
+            }}
+          >
+            No closed agreements found.
+          </div>
+        )}
+
+        {/* Mobile Cards View */}
+        {!loading && closedAgreements.length > 0 && (
+          <div className="d-block d-md-none mt-4">
+            {filteredAgreements.map((item, idx) => (
               <div
-                className="text-center p-3 mt-4"
+                key={idx}
+                className="p-3 mb-3"
                 style={{
                   background: "var(--card)",
                   borderRadius: "12px",
                   border: "1px solid var(--border)",
-                  color: "var(--text-muted)",
+                  boxShadow: "0 2px 4px var(--shadow-color)",
                 }}
               >
-                No closed agreements found.
-              </div>
-            )}
-          </>
-        )}
+                <div className="fw-semibold" style={{ color: "var(--text-strong)" }}>
+                  {item.title}
+                </div>
 
-        {/* Mobile Cards View */}
-        {!loading && (
-          <div className="d-block d-md-none mt-4">
-            {closedAgreements.length === 0 ? (
-              <div className="text-center text-muted">
-                No Closed Agreements
-              </div>
-            ) : (
-              closedAgreements.map((item, idx) => (
                 <div
-                  key={idx}
-                  className="p-3 mb-3"
                   style={{
-                    background: "var(--card)",
-                    borderRadius: "12px",
-                    border: "1px solid var(--border)",
+                    fontSize: "13px",
+                    color: "var(--text-muted)",
+                    marginBottom: "6px",
                   }}
                 >
-                  <div className="fw-semibold">{item.title}</div>
+                  {item.agreementId}
+                </div>
 
-                  <div
-                    style={{
-                      fontSize: "13px",
-                      color: "var(--text-muted)",
-                      marginBottom: "6px",
-                    }}
-                  >
-                    {item._id}
-                  </div>
+                <div style={{ fontSize: "13px", marginBottom: "6px" }}>
+                  <strong>Uploaded By:</strong> {item.uploadedBy?.name}
+                </div>
+                <div style={{ fontSize: "13px", marginBottom: "6px" }}>
+                  <strong>Uploaded:</strong> {formatDate(item.uploadedAt)}
+                </div>
+                <div style={{ fontSize: "13px", marginBottom: "10px" }}>
+                  <strong>Expired:</strong> {formatDate(item.expiryDate)}
+                </div>
 
-                  <div>Uploaded By: {item.uploadedBy?.name}</div>
-                  <div>Uploaded: {item.createdAt?.split("T")[0]}</div>
-                  <div>Expired On: {item.expiry}</div>
+                <span
+                  className="badge px-3 py-2 my-2 d-block"
+                  style={{
+                    background: statusStyles[item.status]?.background,
+                    color: statusStyles[item.status]?.color,
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                    textTransform: "capitalize",
+                    textAlign: "center",
+                  }}
+                >
+                  {item.status}
+                </span>
 
-                  <span
-                    className="badge px-3 py-2 my-2"
-                    style={{
-                      background: "#dc3545",
-                      color: "white",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                    }}
-                  >
-                    Rejected & Expired
-                  </span>
-
+                <div className="d-flex gap-2 mt-3">
                   <button
-                    className="btn w-100 mt-2"
+                    className="btn btn-sm flex-grow-1"
+                    style={{
+                      background: "var(--secondary)",
+                      color: "var(--secondary-foreground)",
+                      borderRadius: "6px",
+                    }}
+                    onClick={() => window.open(`/client/agreement/view/${item._id}`, "_blank")}
+                  >
+                    View
+                  </button>
+                  <button
+                    className="btn btn-sm flex-grow-1"
                     style={{
                       background: "var(--primary)",
                       color: "var(--primary-foreground)",
+                      borderRadius: "6px",
                     }}
                     onClick={() => handleRequestExtension(item._id)}
                   >
                     Request Extension
                   </button>
                 </div>
-              ))
-            )}
+              </div>
+            ))}
           </div>
         )}
       </div>
+
+      {/* EXTENSION REQUEST MODAL */}
+      <AgreementExtensionRequestModal
+        show={showExtensionModal}
+        onClose={() => setShowExtensionModal(false)}
+        agreementId={currentAgreement?._id}
+        onSuccess={() => {
+          setShowExtensionModal(false);
+        }}
+      />
     </>
-
-
-);
-
+  );
 }

@@ -624,6 +624,10 @@ router.patch("/:id/review-extension", verifyToken, async (req, res) => {
             });
 
             agreement.expiryDate = newExpiry;
+            // Set status back to signed if it was expired
+            if (agreement.status === "expired") {
+                agreement.status = "signed";
+            }
         }
 
         /* ===============================

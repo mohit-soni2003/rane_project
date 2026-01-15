@@ -19,7 +19,7 @@ export default function AgreementPage() {
     const [currentSignAgreement, setCurrentSignAgreement] = useState();
     const [summary, setSummary] = useState({
         pending: 0,
-        viewed: 0,
+        viewed: 0, 
         signed: 0,
         expired: 0
     });

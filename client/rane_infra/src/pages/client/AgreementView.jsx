@@ -3,6 +3,7 @@ import ClientHeader from "../../component/header/ClientHeader";
 import { getAgreementById } from "../../services/agreement";
 import { useParams } from "react-router-dom";
 import AgreementSignModal from "../../assets/cards/models/AgreementSignModal";
+import AgreementRejectModal from "../../assets/cards/models/AgreementRejectModal";
 import AgreementExtensionRequestModal from "../../assets/cards/models/AgreementExtensionRequestModal";
 
 export default function AgreementView() {
@@ -10,6 +11,7 @@ export default function AgreementView() {
     const [agreement, setAgreement] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showSignModal, setShowSignModal] = useState(false); // used to render agreement sign modal
+    const [showRejectModal, setShowRejectModal] = useState(false);
     const [showExtensionModal, setShowExtensionModal] = useState(false);
 
 
@@ -27,6 +29,19 @@ export default function AgreementView() {
         }
         fetchAgreement();
     }, [id]);
+
+    // Refresh the agreement data (used after sign/reject/extension)
+    async function refreshAgreement() {
+        try {
+            setLoading(true);
+            const data = await getAgreementById(id);
+            setAgreement(data.agreement);
+        } catch (err) {
+            console.error("Failed to refresh agreement:", err);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     if (loading) return <p className="text-center mt-5">Loading Agreement...</p>;
     if (!agreement) return <p className="text-center mt-5">Agreement not found</p>;
@@ -53,7 +68,7 @@ export default function AgreementView() {
 
                     {/* ACTION BUTTONS */}
                     <div className="d-flex flex-column flex-sm-row gap-2">
-                        {agreement.status === "signed" && (
+                        {agreement.status === "expired" && (
                             <>
                                 <button
                                     className="btn text-white"
@@ -67,12 +82,12 @@ export default function AgreementView() {
                                     Request Extension
                                 </button>
 
-                            </>
+                            </> 
                         )}
 
 
                         {/* SHOW ONLY IF NOT signed OR rejected */}
-                        {agreement.status !== "signed" && agreement.status !== "rejected" && (
+                        {agreement.status !== "signed" && agreement.status !== "rejected" && agreement.status !== "expired" && (
                             <>
                                 <button
                                     className="btn text-white"
@@ -323,6 +338,20 @@ export default function AgreementView() {
                 onClose={() => setShowExtensionModal(false)}
                 agreementId={agreement._id}
                 onSuccess={(updatedAgreement) => setAgreement(updatedAgreement)}
+            />
+
+            <AgreementSignModal
+                show={showSignModal}
+                onHide={() => setShowSignModal(false)}
+                agreement={agreement}
+                onSignSuccess={() => refreshAgreement()}
+            />
+
+            <AgreementRejectModal
+                show={showRejectModal}
+                onHide={() => setShowRejectModal(false)}
+                agreement={agreement}
+                onRejectSuccess={() => refreshAgreement()}
             />
 
 

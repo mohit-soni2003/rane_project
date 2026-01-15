@@ -487,7 +487,7 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
               onMouseLeave={handleHoverOut}
             >
               <FaArrowAltCircleRight className="me-2" style={iconStyle} />
-              <Link to="/client/track-dfs/all" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
+              <Link to="/client/agreement/closed" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
                 onClick={() => {
                   if (isSidebarCollapsed) {
                     setIsSidebarCollapsed(false);
@@ -498,16 +498,16 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
               </Link>
             </div>
             {/* sub-item  */}
-            <div className="py-1 ps-3 sidebar-item"
+            {/* <div className="py-1 ps-3 sidebar-item"
               style={sidebarItemStyle}
               onMouseEnter={handleHoverIn}
               onMouseLeave={handleHoverOut}
             >
               <FaArrowAltCircleRight className="me-2" style={iconStyle} />
-              <Link to="/client/dfsrequest" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}>
+              <Link to="/client/agreement/action" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}>
                 Agreement for action
               </Link>
-            </div>
+            </div> */}
           </div>
         )}
       </div>

@@ -1,14 +1,25 @@
 // AgreementSignModal.jsx
 import React, { useEffect, useState } from "react";
 import { Modal, Button, Form, Alert } from "react-bootstrap";
+import {
+    HiOutlinePencilAlt,
+    HiOutlineDocumentText,
+    HiOutlineUser,
+    HiOutlineLockClosed,
+    HiOutlineClock,
+    HiOutlineExclamation,
+    HiOutlineCheckCircle,
+    HiOutlineX,
+} from "react-icons/hi";
 import { signAgreement } from "../../../services/agreement";
+import { Row, Col } from "react-bootstrap";
+
 
 export default function AgreementSignModal({ show, onHide, agreement, onSignSuccess }) {
     const [name, setName] = useState("");
-    const [password, setPassword] = useState(""); // 🔥 NEW PASSWORD STATE
+    const [password, setPassword] = useState("");
     const [currentDateTime, setCurrentDateTime] = useState("");
 
-    // Auto-fill current date & time
     useEffect(() => {
         const now = new Date().toLocaleString();
         setCurrentDateTime(now);
@@ -39,6 +50,7 @@ export default function AgreementSignModal({ show, onHide, agreement, onSignSucc
 
     return (
         <Modal show={show} onHide={onHide} size="xl" centered>
+            {/* HEADER */}
             <Modal.Header
                 closeButton
                 style={{
@@ -46,114 +58,156 @@ export default function AgreementSignModal({ show, onHide, agreement, onSignSucc
                     borderBottom: "1px solid var(--divider)",
                 }}
             >
-                <Modal.Title style={{ color: "var(--primary)" }}>
+                <Modal.Title
+                    className="d-flex align-items-center gap-2 fw-semibold"
+                    style={{ color: "var(--primary)" }}
+                >
+                    <HiOutlinePencilAlt size={22} />
                     Sign Agreement
                 </Modal.Title>
             </Modal.Header>
 
             <Modal.Body style={{ background: "var(--background)" }}>
                 {/* AGREEMENT SUMMARY */}
+                {/* AGREEMENT SUMMARY */}
                 <div
                     className="p-4 mb-4"
                     style={{
                         background: "var(--card)",
                         borderRadius: "12px",
-                        boxShadow: "0 2px 8px var(--shadow-color)",
                         border: "1px solid var(--border)",
+                        boxShadow: "0 2px 8px var(--shadow-color)",
                     }}
                 >
-                    <h5 className="fw-bold" style={{ color: "var(--text-strong)" }}>
+                    <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
+                        <HiOutlineDocumentText size={20} />
                         Agreement Summary
-                    </h5>
+                    </h6>
 
-                    <p><strong>Title:</strong> {agreement?.title}</p>
-                    <p><strong>Agreement ID:</strong> {agreement?.agreementId}</p>
-                    <p><strong>Uploaded By:</strong> {agreement?.uploadedBy?.name}</p>
-                    <p><strong>Description:</strong> {agreement?.description}</p>
+                    <Row className="mb-2">
+                        <Col md={6}>
+                            <p className="mb-1"><strong>Title:</strong> {agreement?.title}</p>
+                        </Col>
+                        <Col md={6}>
+                            <p className="mb-1"><strong>Agreement ID:</strong> {agreement?.agreementId}</p>
+                        </Col>
+                    </Row>
 
-                    <p>
-                        <strong>File:</strong>{" "}
-                        <a
-                            href={agreement?.fileUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{ color: "var(--link)" }}
-                        >
-                            View Agreement PDF
-                        </a>
-                    </p>
+                    <Row className="mb-2">
+                        <Col md={6}>
+                            <p className="mb-1"><strong>Uploaded By:</strong> {agreement?.uploadedBy?.name}</p>
+                        </Col>
+                        <Col md={6}>
+                            <p className="mb-1">
+                                <strong>File:</strong>{" "}
+                                <a
+                                    href={agreement?.fileUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    style={{ color: "var(--link)", fontWeight: 500 }}
+                                >
+                                    View PDF
+                                </a>
+                            </p>
+                        </Col>
+                    </Row>
+
+                    <Row>
+                        <Col>
+                            <p className="mb-0">
+                                <strong>Description:</strong> {agreement?.description}
+                            </p>
+                        </Col>
+                    </Row>
                 </div>
 
+
+                {/* SIGNATURE FORM */}
                 {/* SIGNATURE FORM */}
                 <div
                     className="p-4"
                     style={{
                         background: "var(--card)",
                         borderRadius: "12px",
-                        boxShadow: "0 2px 8px var(--shadow-color)",
                         border: "1px solid var(--border)",
+                        boxShadow: "0 2px 8px var(--shadow-color)",
                     }}
                 >
-                    <h5 className="fw-bold mb-3" style={{ color: "var(--primary)" }}>
-                        Provide Your Signature
-                    </h5>
+                    <h6
+                        className="fw-bold mb-3 d-flex align-items-center gap-2"
+                        style={{ color: "var(--primary)" }}
+                    >
+                        <HiOutlineCheckCircle size={20} />
+                        Signature Details
+                    </h6>
 
                     <Form>
-                        {/* NAME */}
-                        <Form.Group className="mb-3">
-                            <Form.Label style={{ color: "var(--text-strong)" }}>
-                                Full Name (Signature)
-                            </Form.Label>
-                            <Form.Control
-                                style={{
-                                    background: "var(--input)",
-                                    border: "1px solid var(--border)",
-                                }}
-                                type="text"
-                                placeholder="Enter your full name"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                            />
-                        </Form.Group>
+                        {/* NAME + PASSWORD ROW */}
+                        <Row>
+                            <Col md={6}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label className="fw-semibold d-flex align-items-center gap-2">
+                                        <HiOutlineUser size={18} />
+                                        Full Name
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Enter full legal name"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        style={{
+                                            background: "var(--input)",
+                                            border: "1px solid var(--border)",
+                                        }}
+                                    />
+                                </Form.Group>
+                            </Col>
 
-                        {/* PASSWORD FIELD — 🔥 ADDED */}
-                        <Form.Group className="mb-3">
-                            <Form.Label style={{ color: "var(--text-strong)" }}>
-                                Account Password (Required for verification)
-                            </Form.Label>
-                            <Form.Control
-                                style={{
-                                    background: "var(--input)",
-                                    border: "1px solid var(--border)",
-                                }}
-                                type="password"
-                                placeholder="Enter your account password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                        </Form.Group>
+                            <Col md={6}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label className="fw-semibold d-flex align-items-center gap-2">
+                                        <HiOutlineLockClosed size={18} />
+                                        Password
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="password"
+                                        placeholder="Account password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        style={{
+                                            background: "var(--input)",
+                                            border: "1px solid var(--border)",
+                                        }}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
 
                         {/* DATE & TIME */}
-                        <Form.Group className="mb-3">
-                            <Form.Label style={{ color: "var(--text-strong)" }}>
-                                Current Date & Time
-                            </Form.Label>
-                            <Form.Control
-                                style={{
-                                    background: "var(--input)",
-                                    border: "1px solid var(--border)",
-                                }}
-                                type="text"
-                                value={currentDateTime}
-                                readOnly
-                            />
-                        </Form.Group>
+                        <Row>
+                            <Col>
+                                <Form.Group className="mb-3">
+                                    <Form.Label className="fw-semibold d-flex align-items-center gap-2">
+                                        <HiOutlineClock size={18} />
+                                        Date & Time of Signature
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={currentDateTime}
+                                        readOnly
+                                        style={{
+                                            background: "var(--muted)",
+                                            border: "1px solid var(--border)",
+                                        }}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
                     </Form>
 
-                    {/* WARNING BOX */}
+                    {/* WARNING */}
                     <Alert
-                        variant="warning"
-                        className="mt-4"
+                        className="mt-4 d-flex gap-2 align-items-start"
                         style={{
                             background: "var(--warning)",
                             color: "var(--warning-foreground)",
@@ -161,37 +215,42 @@ export default function AgreementSignModal({ show, onHide, agreement, onSignSucc
                             borderRadius: "10px",
                         }}
                     >
-                        <strong>Final Confirmation:</strong>
-                        By signing this agreement, you confirm that you have read and agree to the terms.
-                        <br />
-                        Your digital signature will be recorded with the above timestamp.
+                        <HiOutlineExclamation size={22} className="mt-1" />
+                        <div>
+                            <strong>Final Confirmation</strong>
+                            <br />
+                            By signing this agreement, you confirm that all details are accurate
+                            and you legally agree to the stated terms.
+                            <br />
+                            This action is recorded with the above timestamp.
+                        </div>
                     </Alert>
                 </div>
             </Modal.Body>
 
+            {/* FOOTER */}
             <Modal.Footer style={{ background: "var(--card)" }}>
                 <Button
-                    variant="secondary"
                     onClick={onHide}
-                    style={{
-                        background: "var(--secondary)",
-                        color: "var(--secondary-foreground)",
-                        border: "none",
-                    }}
+                    variant="outline-secondary"
+                    className="d-flex align-items-center gap-2"
                 >
+                    <HiOutlineX />
                     Cancel
                 </Button>
 
                 <Button
                     onClick={handleSign}
+                    className="d-flex align-items-center gap-2"
                     style={{
                         background: "var(--primary)",
                         color: "var(--primary-foreground)",
-                        padding: "10px 24px",
-                        borderRadius: "8px",
                         border: "none",
+                        padding: "10px 26px",
+                        borderRadius: "8px",
                     }}
                 >
+                    <HiOutlineCheckCircle size={18} />
                     Sign Agreement
                 </Button>
             </Modal.Footer>
