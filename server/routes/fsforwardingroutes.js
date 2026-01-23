@@ -35,7 +35,7 @@ router.post('/upload-document', verifyToken, async (req, res) => {
     /* -------------------------------
        FIND ADMIN (INITIAL OWNER)
     -------------------------------- */
-    const currentOwner = await User.findOne({ role: "admin" });
+    const currentOwner = await User.findOne({ cid: "ADMIN" });
     if (!currentOwner) {
       return res.status(404).json({ error: "Admin not found" });
     }
