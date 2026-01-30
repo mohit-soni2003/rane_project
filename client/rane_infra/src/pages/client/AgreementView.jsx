@@ -6,7 +6,8 @@ import AgreementSignModal from "../../assets/cards/models/AgreementSignModal";
 import AgreementRejectModal from "../../assets/cards/models/AgreementRejectModal";
 import AgreementExtensionRequestModal from "../../assets/cards/models/AgreementExtensionRequestModal";
 
-export default function AgreementView() {
+export default function 
+AgreementView() {
     const { id } = useParams();
     const [agreement, setAgreement] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -254,6 +255,43 @@ export default function AgreementView() {
                                 <span>
                                     {agreement.status === "rejected" ? "Rejected" : "Expired"}
                                 </span>
+                            </div>
+                        
+                            {/* EXTENSION HISTORY (match admin layout) */}
+                            <div className="p-4 rounded shadow-sm mt-4" style={{ background: "var(--card)" }}>
+                                <h5 className="fw-semibold mb-3">Extension History</h5>
+
+                                {(!agreement.extensions || agreement.extensions.length === 0) ? (
+                                    <div className="d-flex align-items-center gap-2" style={{ color: "var(--muted-foreground)" }}>
+                                        <small className="text-muted">No extensions applied</small>
+                                    </div>
+                                ) : (
+                                    agreement.extensions.map((ext, i) => (
+                                        <div key={i} className="mb-3 p-3 rounded" style={{ background: "var(--muted)" }}>
+                                            <div className="row gy-2">
+                                                <div className="col-6">
+                                                    <small className="text-muted">Old Expiry</small>
+                                                    <div className="fw-semibold">{formatDate(ext.oldExpiryDate)}</div>
+                                                </div>
+
+                                                <div className="col-6">
+                                                    <small className="text-muted">New Expiry</small>
+                                                    <div className="fw-semibold" style={{ color: "var(--success-foreground)" }}>{formatDate(ext.newExpiryDate)}</div>
+                                                </div>
+
+                                                <div className="col-6">
+                                                    <small className="text-muted">Extended At</small>
+                                                    <div>{formatDate(ext.extendedAt)}</div>
+                                                </div>
+
+                                                <div className="col-6">
+                                                    <small className="text-muted">Reason</small>
+                                                    <div style={{ color: "var(--text-muted)" }}>{ext.reason || "—"}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
 
