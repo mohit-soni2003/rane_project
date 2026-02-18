@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   getAgreementById,
   reviewAgreementExtension,
+  deleteAgreement,
 } from "../../services/agreement";
 import AdminHeader from "../../component/header/AdminHeader";
 import {
@@ -17,7 +20,7 @@ import {
 } from "react-bootstrap";
 import {
   FaFileContract, FaCalendarAlt, FaInfoCircle, FaEye, FaPenFancy, FaCheckCircle,
-  FaTimesCircle,
+  FaTimesCircle, FaTrash,
   FaHistory, FaClock
 } from "react-icons/fa";
 import { FaUserTie, FaUserCircle } from "react-icons/fa";
@@ -35,6 +38,8 @@ export default function SingleAgreementDetails() {
   const [showModal, setShowModal] = useState(false);
   const [decision, setDecision] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     fetchAgreement();
@@ -68,11 +73,62 @@ export default function SingleAgreementDetails() {
       await reviewAgreementExtension(id, decision);
       closeModal();
       fetchAgreement();
+      toast.success(`Extension request ${decision} successfully!`, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } catch (err) {
       console.error(err);
-      alert(err.message || "Action failed");
+      toast.error(err.message || "Action failed", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleDeleteClick = () => setShowDeleteModal(true);
+
+  const closeDeleteModal = () => setShowDeleteModal(false);
+
+  const handleDeleteConfirm = async () => {
+    try {
+      setDeleteLoading(true);
+      await deleteAgreement(id);
+      setShowDeleteModal(false);
+      toast.success("Agreement deleted successfully!", {
+        position: "top-right",
+        autoClose: 4000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      // Wait for toast to complete before navigating
+      setTimeout(() => {
+        navigate("/admin/agreement/track");
+      }, 3000);
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || "Failed to delete agreement", {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -102,6 +158,17 @@ export default function SingleAgreementDetails() {
   return (
     <>
       <AdminHeader />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
 
       <Container
         fluid
@@ -589,6 +656,108 @@ export default function SingleAgreementDetails() {
           </Card.Body>
         </Card>
 
+        <div className="d-flex justify-content-end mt-3">
+          <Button
+            size="sm"
+            onClick={handleDeleteClick}
+            style={{
+              background: "var(--destructive)",
+              color: "var(--destructive-foreground)",
+              border: "none",
+            }}
+          >
+            <FaTrash className="me-1" /> Delete Agreement
+          </Button>
+        </div>
+
+        {/* Delete Confirmation Modal */}
+        <Modal show={showDeleteModal} onHide={closeDeleteModal} centered>
+          <Modal.Header
+            closeButton
+            style={{
+              background: "var(--secondary)",
+              color: "var(--secondary-foreground)",
+              borderBottom: "1px solid var(--border)",
+            }}
+          >
+            <Modal.Title className="d-flex align-items-center gap-2 fw-semibold">
+              <FaTrash style={{ color: "var(--destructive)" }} />
+              Delete Agreement
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body
+            style={{
+              background: "var(--card)",
+              color: "var(--card-foreground)",
+              padding: "24px",
+            }}
+          >
+            <div className="d-flex align-items-start gap-3">
+              <div
+                className="d-flex align-items-center justify-content-center flex-shrink-0"
+                style={{
+                  width: "50px",
+                  height: "50px",
+                  borderRadius: "10px",
+                  background: "var(--warning)",
+                }}
+              >
+                <FaInfoCircle
+                  size={24}
+                  style={{ color: "var(--warning-foreground)" }}
+                />
+              </div>
+              <div>
+                <h6 className="fw-semibold mb-2" style={{ color: "var(--text-strong)" }}>
+                  This action cannot be undone
+                </h6>
+                <p style={{ color: "var(--text-muted)", fontSize: "14px", margin: 0 }}>
+                  Are you sure you want to permanently delete this agreement? All related
+                  notifications and activities will also be removed.
+                </p>
+              </div>
+            </div>
+          </Modal.Body>
+
+          <Modal.Footer
+            style={{
+              background: "var(--muted)",
+              borderTop: "1px solid var(--border)",
+              padding: "16px 24px",
+            }}
+          >
+            <Button
+              onClick={closeDeleteModal}
+              disabled={deleteLoading}
+              style={{
+                background: "var(--secondary)",
+                color: "var(--secondary-foreground)",
+                border: "none",
+                borderRadius: "8px",
+                fontWeight: "500",
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteConfirm}
+              disabled={deleteLoading}
+              style={{
+                background: "var(--destructive)",
+                color: "var(--destructive-foreground)",
+                border: "none",
+                borderRadius: "8px",
+                fontWeight: "500",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <FaTrash size={14} />
+              {deleteLoading ? "Deleting..." : "Delete Agreement"}
+            </Button>
+          </Modal.Footer>
+        </Modal>
 
 
 

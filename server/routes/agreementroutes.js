@@ -60,51 +60,69 @@ router.post("/create", verifyToken, async (req, res) => {
         /* ----------------------------------
            CREATE AGREEMENT
         ---------------------------------- */
-        const newAgreement = new Agreement({
-            title,
-            description,
-            client: clientUser._id,   // store ObjectId
-            fileUrl,
-            uploadedBy: req.userId,
-            expiryDate: parsedExpiryDate,
-        });
-
-        await newAgreement.save();
-
-        /* ----------------------------------
-           CREATE NOTIFICATION
-        ---------------------------------- */
-        await Notification.create({
-            title: "New Agreement Assigned",
-            message: `A new agreement "${title}" has been assigned to you.`,
-            type: "agreement",
-            priority: "medium",
-            recipient: clientUser._id,
-            sender: req.userId,
-            relatedId: newAgreement._id,
-            relatedModel: "Agreement",
-            actionUrl: `/client/agreement/view/${newAgreement._id}`,
-            metadata: {
-                agreementTitle: title,
+        try {
+            const newAgreement = new Agreement({
+                title,
+                description,
+                client: clientUser._id,   // store ObjectId
+                fileUrl,
                 uploadedBy: req.userId,
-            },
-        });
+                expiryDate: parsedExpiryDate,
+            });
 
-        /* ----------------------------------
-           SUCCESS RESPONSE
-        ---------------------------------- */
-        return res.status(201).json({
-            success: true,
-            message: "Agreement created successfully.",
-            agreement: newAgreement,
-        });
+            await newAgreement.save();
+
+            /* ----------------------------------
+               CREATE NOTIFICATION
+            ---------------------------------- */
+            try {
+                await Notification.create({
+                    title: "New Agreement Assigned",
+                    message: `A new agreement "${title}" has been assigned to you.`,
+                    type: "agreement",
+                    priority: "medium",
+                    recipient: clientUser._id,
+                    sender: req.userId,
+                    relatedId: newAgreement._id,
+                    relatedModel: "Agreement",
+                    actionUrl: `/client/agreement/view/${newAgreement._id}`,
+                    metadata: {
+                        agreementTitle: title,
+                        uploadedBy: req.userId,
+                    },
+                });
+            } catch (notificationErr) {
+                console.error("Error creating notification:", notificationErr);
+                // Don't fail the entire request if notification fails
+            }
+
+            /* ----------------------------------
+               SUCCESS RESPONSE
+            ---------------------------------- */
+            return res.status(201).json({
+                success: true,
+                message: "Agreement created successfully.",
+                agreement: newAgreement,
+            });
+
+        } catch (dbError) {
+            console.error("Error saving agreement to database:", dbError);
+            console.error("Request body:", req.body);
+            console.error("User ID:", req.userId);
+            
+            return res.status(500).json({
+                success: false,
+                message: dbError.message || "Failed to create agreement.",
+            });
+        }
 
     } catch (error) {
         console.error("Error creating agreement:", error);
+        console.error("Request body:", req.body);
 
         return res.status(500).json({
             success: false,
-            message: "Internal server error.",
+            message: error.message || "Internal server error.",
         });
     }
 });
@@ -267,7 +285,7 @@ router.delete("/:id", verifyToken, async (req, res) => {
                 success: false,
                 message: "Access denied. Only admin or staff can delete agreements.",
             });
-        }
+        } 
 
         // ✅ Check if the agreement exists
         const agreement = await Agreement.findById(agreementId);
@@ -276,6 +294,26 @@ router.delete("/:id", verifyToken, async (req, res) => {
                 success: false,
                 message: "Agreement not found.",
             });
+        }
+
+        // ✅ Delete related notifications
+        try {
+            await Notification.deleteMany({
+                relatedId: agreementId,
+                relatedModel: "Agreement",
+            });
+        } catch (notificationErr) {
+            console.error("Error deleting related notifications:", notificationErr);
+        }
+
+        // ✅ Delete related recent activities
+        try {
+            await RecentActivity.deleteMany({
+                relatedId: agreementId,
+                relatedModel: "Agreement",
+            }); 
+        } catch (activityErr) {
+            console.error("Error deleting related recent activities:", activityErr);
         }
 
         // ✅ Delete the agreement

@@ -5,8 +5,7 @@ const agreementSchema = new mongoose.Schema(
     // Unique readable ID like AGR-0001 Currently not in use.
     agreementId: {
       type: String,
-      unique: true,
-      required: true,
+      default: null,
     },
 
     title: {
@@ -134,17 +133,20 @@ const agreementSchema = new mongoose.Schema(
 //
 // 🧠 Auto-generate readable Agreement ID before saving
 //
-agreementSchema.pre("validate", async function (next) {
+agreementSchema.pre("save", async function (next) {
   if (!this.agreementId) {
-    const Agreement = mongoose.model("Agreement");
-    const count = await Agreement.countDocuments();
-    // e.g., AGR-0001, AGR-0002, ...
-    this.agreementId = `AGR-${String(count + 1).padStart(4, "0")}`;
+    try {
+      // Use MongoDB ObjectId timestamp (first 4 bytes) + random component for uniqueness
+      const timestamp = Math.floor(Date.now() / 1000).toString(16);
+      const random = Math.floor(Math.random() * 1000000).toString().padStart(6, "0");
+      this.agreementId = `AGR-${timestamp}${random}`.substring(0, 20);
+    } catch (err) {
+      console.error("Error generating agreementId:", err);
+      // Fallback: use current timestamp
+      this.agreementId = `AGR-${Date.now()}`;
+    }
   }
-  next();
-});
 
-agreementSchema.pre("save", function (next) {
   if (this.isModified("status")) {
     if (this.status === "viewed") this.viewedAt = new Date();
     if (this.status === "signed") this.signedAt = new Date();

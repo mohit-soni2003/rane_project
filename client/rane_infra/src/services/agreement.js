@@ -261,3 +261,27 @@ export const getAllAgreements = async (mine = false) => {
     throw error;
   }
 };
+
+  // Delete an agreement by ID (Admin / Staff)
+  export const deleteAgreement = async (id) => {
+    try {
+      const res = await fetch(`${backend_url}/agreement/${id}`, {
+        method: "DELETE",
+        credentials: "include", // JWT cookie
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to delete agreement");
+      }
+
+      return data; // { success, message }
+    } catch (error) {
+      console.error("Error deleting agreement:", error);
+      throw error;
+    }
+  };

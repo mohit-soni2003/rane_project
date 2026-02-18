@@ -45,7 +45,7 @@ const notificationSchema = new mongoose.Schema({
     readAt: {
         type: Date,
         default: null,
-    },
+    }, 
     actionUrl: {
         type: String,
         default: null, // URL to navigate to when clicked
