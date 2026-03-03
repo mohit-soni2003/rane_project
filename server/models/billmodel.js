@@ -24,6 +24,7 @@ const billSchema = new mongoose.Schema({
     invoiceNo: {
         type: String,
     },
+
     amount: {
         type: String,
     },
@@ -42,9 +43,28 @@ const billSchema = new mongoose.Schema({
         ref: "User", // Name of the user model
         required: true, // Ensure user is always provided
     },
-    paidby:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"User",
+    paidby: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    },
+
+
+    withdrawStatus: {
+        type: String,
+        enum: ["None", "Requested", "Approved", "Rejected"],
+        default: "None"
+    },
+
+    withdrawRequestedAt: {
+        type: Date
+    },
+
+    withdrawApprovedAt: {
+        type: Date
+    },
+
+    withdrawReason: {
+        type: String
     }
 });
 

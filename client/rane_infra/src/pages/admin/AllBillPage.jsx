@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Container, Row, Col, Table, Form, Button,
-  InputGroup, Pagination, Spinner
+  InputGroup, Pagination, Spinner, Tooltip, OverlayTrigger
 } from 'react-bootstrap';
 import {
   FaFileInvoice, FaSearch, FaCheckCircle,
@@ -275,12 +275,81 @@ export default function AllBillPage() {
                               </div>
                             )}
 
-                            <span>{bill.user?.name || 'N/A'}</span>
+                            {bill.user?.name && bill.user.name.length > 18 ? (
+                              <OverlayTrigger
+                                placement="top"
+                                overlay={
+                                  <Tooltip id={`tooltip-${bill._id}`}>
+                                    {bill.user.name}
+                                  </Tooltip>
+                                }
+                              >
+                                <span
+                                  style={{
+                                    maxWidth: "120px",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                    display: "inline-block",
+                                  }}
+                                >
+                                  {bill.user.name}
+                                </span>
+                              </OverlayTrigger>
+                            ) : (
+                              <span>{bill.user?.name || 'N/A'}</span>
+                            )}
                           </div>
                         </td>
 
-                        <td>{bill.firmName}</td>
-                        <td>{bill.workArea}</td>
+                        <td>
+                          {bill.firmName && bill.firmName.length > 18 ? (
+                            <OverlayTrigger
+                              placement="top"
+                              overlay={
+                                <Tooltip id={`tooltip-firm-${bill._id}`}>
+                                  {bill.firmName}
+                                </Tooltip>
+                              }
+                            >
+                              <span
+                                style={{
+                                  maxWidth: "120px",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                  display: "inline-block",
+                                }}
+                              >
+                                {bill.firmName}
+                              </span>
+                            </OverlayTrigger>
+                          ) : (
+                            bill.firmName
+                          )}
+                        </td>
+                        <td>
+                          {bill.workArea && bill.workArea.length > 20 ? (
+                            <OverlayTrigger
+                              placement="top"
+                              overlay={<Tooltip id={`tooltip-work-${bill._id}`}>{bill.workArea}</Tooltip>}
+                            >
+                              <span
+                                style={{
+                                  maxWidth: "160px",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                  display: "inline-block",
+                                }}
+                              >
+                                {bill.workArea}
+                              </span>
+                            </OverlayTrigger>
+                          ) : (
+                            bill.workArea || "—"
+                          )}
+                        </td>
 
                         <td>
                           <span

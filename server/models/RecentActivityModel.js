@@ -28,6 +28,12 @@ const recentActivitySchema = new mongoose.Schema({
       "agreement_extension_requested",
       "agreement_extension_approved",
       "agreement_extension_rejected",
+      //bill withdraw actions
+      "withdraw_requested",
+      "withdraw_rejected",
+      "withdraw_approved"
+
+      
     ],
     default: "other",
   },
@@ -38,7 +44,7 @@ const recentActivitySchema = new mongoose.Schema({
   },
   relatedModel: {
     type: String,
-    enum: ["User", "Bill", "Payment", "Document", "FileForward", "Notification", "MonthlySalary", "BaseSalary", "Agreement"],
+    enum: ["User", "Bill", "Payment", "Document", "FileForward", "Notification", "MonthlySalary", "BaseSalary", "Agreement", "withdraw_requested"],
     default: null,
   },
   relatedId: {

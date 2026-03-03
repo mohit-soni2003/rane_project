@@ -121,3 +121,47 @@ export const getBillsByUserId = async (userId) => {
     throw error;
   }
 };
+
+  // Update withdraw status (admin action: approve/reject)
+  export const updateWithdrawStatus = async (billId, action, note) => {
+    try {
+      const res = await fetch(`${backend_url}/bill/withdraw-action/${billId}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, note }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to update withdraw status');
+      }
+
+      return data.bill || data;
+    } catch (error) {
+      console.error('Error updating withdraw status:', error);
+      throw error;
+    }
+  };
+
+// Request withdraw for a bill (client action)
+export const requestBillWithdraw = async (billId, reason) => {
+  try {
+    const res = await fetch(`${backend_url}/bill/withdraw/${billId}`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || 'Failed to request withdrawal');
+    }
+
+    return data.bill || data;
+  } catch (error) {
+    console.error('Error requesting bill withdrawal:', error);
+    throw error;
+  }
+};

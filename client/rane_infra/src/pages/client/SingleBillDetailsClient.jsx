@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getBillById } from '../../services/billServices';
-import { getBillTransactions } from '../../services/billServices';
+import { getBillById, getBillTransactions, requestBillWithdraw } from '../../services/billServices';
 import ClientHeader from '../../component/header/ClientHeader';
 import {
     Container,
@@ -13,7 +12,11 @@ import {
     Badge,
     Button,
     Table,
+    Modal,
+    Form,
 } from 'react-bootstrap';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import {
     FaFileInvoice,
     FaUserTie,
@@ -39,6 +42,10 @@ export default function SingleBillDetailsClient() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [transactions, setTransactions] = useState([]);
+    const [withdrawLoading, setWithdrawLoading] = useState(false);
+    const [withdrawError, setWithdrawError] = useState('');
+    const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+    const [withdrawReason, setWithdrawReason] = useState('');
 
     useEffect(() => {
         const fetchBillAndTransactions = async () => {
@@ -66,6 +73,33 @@ export default function SingleBillDetailsClient() {
         if (id) fetchBillAndTransactions();
     }, [id]);
 
+    const handleWithdrawRequest = async () => {
+        setShowWithdrawModal(true);
+    };
+
+    const handleSubmitWithdraw = async () => {
+        try {
+            setWithdrawError('');
+            setWithdrawLoading(true);
+            const updatedBill = await requestBillWithdraw(id, withdrawReason);
+            setBill(updatedBill);
+            setShowWithdrawModal(false);
+            setWithdrawReason('');
+            toast.success('Withdrawal request submitted successfully! Admin will review it shortly.');
+        } catch (err) {
+            console.error(err);
+            setWithdrawError(err.message || 'Failed to request withdrawal');
+        } finally {
+            setWithdrawLoading(false);
+        }
+    };
+
+    const handleCloseModal = () => {
+        setShowWithdrawModal(false);
+        setWithdrawReason('');
+        setWithdrawError('');
+    };
+
     const getStatusBadge = (status) => {
         switch (status) {
             case 'Paid':
@@ -82,6 +116,7 @@ export default function SingleBillDetailsClient() {
     return (
         <>
             <ClientHeader />
+            <ToastContainer position="top-right" />
             <Container fluid className="py-4 my-3" style={{ backgroundColor: "var(--client-component-bg-color" }}>
                 {loading ? (
                     <div className="text-center py-5">
@@ -209,7 +244,7 @@ export default function SingleBillDetailsClient() {
                                                             <small className="text-muted fw-bold">PAID BY</small>
                                                         </div>
                                                         <div className="text-muted">
-                                                            -
+                                                            {bill?.paidBy ? (bill.paidBy._id || bill.paidBy) : '—'}
                                                         </div>
                                                     </div>
 
@@ -282,7 +317,251 @@ export default function SingleBillDetailsClient() {
                             </Col>
                         </Row>
 
-                        {/* Transaction Summary Table */}
+                        {/* Withdraw Request Card */}
+                        {bill.withdrawStatus && (
+                            <Row className="mt-4">
+                                <Col lg={12}>
+                                    <Card
+                                        className="shadow-sm"
+                                        style={{
+                                            backgroundColor: 'var(--client-dashboard-bg-color)',
+                                            borderLeft: `4px solid ${bill.withdrawStatus === 'Requested' ? '#ffc107' : bill.withdrawStatus === 'Approved' ? '#28a745' : '#dc3545'}`,
+                                            color: 'var(--client-text-color)',
+                                        }}
+                                    >
+                                        <Card.Header
+                                            style={{
+                                                backgroundColor: 'transparent',
+                                                borderBottom: `1px solid var(--client-border-color)`,
+                                                fontWeight: 600,
+                                                color: 'var(--client-heading-color)',
+                                            }}
+                                        >
+                                            <i className="bi bi-arrow-counterclockwise me-2" />
+                                            Withdrawal Request Status
+                                        </Card.Header>
+                                        <Card.Body>
+                                            <Row className="gy-3">
+                                                <Col md={6}>
+                                                    <small className="text-muted fw-bold">Status</small>
+                                                    <div className="fw-semibold mt-1">
+                                                        <Badge bg={bill.withdrawStatus === 'Requested' ? 'warning' : bill.withdrawStatus === 'Approved' ? 'success' : 'danger'}>
+                                                            {bill.withdrawStatus}
+                                                        </Badge>
+                                                    </div>
+                                                </Col>
+
+                                                <Col md={6}>
+                                                    <small className="text-muted fw-bold">Requested On</small>
+                                                    <div className="fw-semibold mt-1">
+                                                        {bill.withdrawRequestedAt
+                                                            ? new Date(bill.withdrawRequestedAt).toLocaleString()
+                                                            : '—'}
+                                                    </div>
+                                                </Col>
+
+                                                <Col md={12}>
+                                                    <small className="text-muted fw-bold">Reason</small>
+                                                    <div
+                                                        className="mt-1 p-2"
+                                                        style={{
+                                                            backgroundColor: 'var(--client-component-bg-color)',
+                                                            borderRadius: '4px',
+                                                            color: 'var(--client-text-color)',
+                                                        }}
+                                                    >
+                                                        {bill.withdrawReason || '—'}
+                                                    </div>
+                                                </Col>
+
+                                                {bill.withdrawApprovedAt && (
+                                                    <Col md={12}>
+                                                        <small className="text-muted fw-bold">Decision Made On</small>
+                                                        <div className="fw-semibold mt-1">
+                                                            {new Date(bill.withdrawApprovedAt).toLocaleString()}
+                                                        </div>
+                                                    </Col>
+                                                )}
+                                            </Row>
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
+                            </Row>
+                        )}
+
+                        {/* Withdraw Request Button (only if no pending request and bill not paid) */}
+                        {(bill.withdrawStatus === 'None' || bill.withdrawStatus === 'Rejected' || !bill.withdrawStatus) && bill.paymentStatus !== 'Paid' && (
+                            <Row className="mt-4">
+                                <Col lg={12}>
+                                    <div
+                                        className="p-3 rounded"
+                                        style={{
+                                            backgroundColor: 'var(--client-component-bg-color)',
+                                            borderTop: `2px dashed var(--client-border-color)`,
+                                        }}
+                                    >
+                                        <div className="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <h6 className="mb-1" style={{ color: 'var(--client-heading-color)' }}>
+                                                    Request Withdrawal
+                                                </h6>
+                                                <small className="text-muted">
+                                                    {bill.withdrawStatus === 'Rejected'
+                                                        ? 'Your previous withdrawal request was rejected. You can submit a new one.'
+                                                        : 'Submit a request to withdraw this bill from the system.'}
+                                                </small>
+                                            </div>
+                                            <Button
+                                                onClick={handleWithdrawRequest}
+                                                disabled={withdrawLoading}
+                                                style={{
+                                                    backgroundColor: 'var(--client-btn-bg)',
+                                                    color: 'var(--client-btn-text)',
+                                                    border: 'none',
+                                                    minWidth: '120px',
+                                                }}
+                                            >
+                                                {withdrawLoading ? (
+                                                    <>
+                                                        <Spinner
+                                                            as="span"
+                                                            animation="border"
+                                                            size="sm"
+                                                            role="status"
+                                                            aria-hidden="true"
+                                                            className="me-2"
+                                                        />
+                                                        Loading...
+                                                    </>
+                                                ) : (
+                                                    <>Request Withdrawal</>
+                                                )}
+                                            </Button>
+                                        </div>
+                                        {withdrawError && (
+                                            <Alert variant="danger" className="mt-2 mb-0">
+                                                {withdrawError}
+                                            </Alert>
+                                        )}
+                                    </div>
+                                </Col>
+                            </Row>
+                        )}
+
+                        {/* Withdraw Request Modal */}
+                        <Modal
+                            show={showWithdrawModal}
+                            onHide={handleCloseModal}
+                            centered
+                            backdrop="static"
+                            keyboard={false}
+                        >
+                            <Modal.Header
+                                closeButton
+                                style={{
+                                    backgroundColor: 'var(--client-component-bg-color)',
+                                    color: 'var(--client-heading-color)',
+                                    borderBottom: '1px solid var(--client-border-color)',
+                                }}
+                            >
+                                <Modal.Title>
+                                    <i className="bi bi-arrow-counterclockwise me-2" />
+                                    Request Bill Withdrawal
+                                </Modal.Title>
+                            </Modal.Header>
+                            <Modal.Body
+                                style={{
+                                    backgroundColor: 'var(--client-component-bg-color)',
+                                    color: 'var(--client-text-color)',
+                                }}
+                            >
+                                <Form>
+                                    <Form.Group className="mb-3">
+                                        <Form.Label style={{ color: 'var(--client-heading-color)', fontWeight: 600 }}>
+                                            Withdrawal Reason <span className="text-muted">(Optional)</span>
+                                        </Form.Label>
+                                        <Form.Control
+                                            as="textarea"
+                                            rows={4}
+                                            placeholder="Please provide a reason for withdrawing this bill..."
+                                            value={withdrawReason}
+                                            onChange={(e) => setWithdrawReason(e.target.value)}
+                                            style={{
+                                                backgroundColor: 'var(--client-dashboard-bg-color)',
+                                                color: 'var(--client-text-color)',
+                                                border: '1px solid var(--client-border-color)',
+                                            }}
+                                        />
+                                    </Form.Group>
+
+                                    <div
+                                        className="p-3 rounded mb-3"
+                                        style={{
+                                            backgroundColor: 'var(--client-dashboard-bg-color)',
+                                            borderLeft: '3px solid var(--client-btn-bg)',
+                                        }}
+                                    >
+                                        <strong style={{ color: 'var(--client-heading-color)' }}>Bill Details:</strong>
+                                        <div className="mt-2" style={{ fontSize: '0.9rem' }}>
+                                            <div><strong>Firm:</strong> {bill?.firmName}</div>
+                                            <div><strong>Amount:</strong> ₹{bill?.amount}</div>
+                                            <div><strong>Invoice:</strong> {bill?.invoiceNo}</div>
+                                        </div>
+                                    </div>
+
+                                    {withdrawError && (
+                                        <Alert variant="danger" className="mb-0">
+                                            {withdrawError}
+                                        </Alert>
+                                    )}
+                                </Form>
+                            </Modal.Body>
+                            <Modal.Footer
+                                style={{
+                                    backgroundColor: 'var(--client-component-bg-color)',
+                                    borderTop: '1px solid var(--client-border-color)',
+                                }}
+                            >
+                                <Button
+                                    variant="secondary"
+                                    onClick={handleCloseModal}
+                                    disabled={withdrawLoading}
+                                    style={{
+                                        backgroundColor: 'var(--client-border-color)',
+                                        color: 'var(--client-text-color)',
+                                        border: 'none',
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={handleSubmitWithdraw}
+                                    disabled={withdrawLoading}
+                                    style={{
+                                        backgroundColor: 'var(--client-btn-bg)',
+                                        color: 'var(--client-btn-text)',
+                                        border: 'none',
+                                    }}
+                                >
+                                    {withdrawLoading ? (
+                                        <>
+                                            <Spinner
+                                                as="span"
+                                                animation="border"
+                                                size="sm"
+                                                role="status"
+                                                aria-hidden="true"
+                                                className="me-2"
+                                            />
+                                            Submitting...
+                                        </>
+                                    ) : (
+                                        'Submit Withdrawal Request'
+                                    )}
+                                </Button>
+                            </Modal.Footer>
+                        </Modal>
+
                         <Row className="mt-4 d-none d-md-block">
                             <Col lg={12}>
                                 <Card

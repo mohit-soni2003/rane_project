@@ -19,9 +19,16 @@ const transactionSchema = new mongoose.Schema({
         ref: "User", // Reference to the admin who pay the bill or payment request amount because there are multiple admin on site
         // required: true
     },
+     type: {
+        type: String,
+        enum: ["bill", "payment_request", "salary"],
+    },
     amount: {
         type: Number,
         required: true
+    },
+    payNote: {
+        type: String,      //addded in version 4.0 for payment note while sanctioning bill
     },
     bankName: {
         type: String

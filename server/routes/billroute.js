@@ -329,4 +329,161 @@ router.get("/loa/:id", async (req, res) => {
   }
 });
 
+
+// CLIENT REQUEST WITHDRAW BILL
+router.put("/bill/withdraw/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    // Find bill
+    const bill = await Bill.findById(id).populate("user");
+
+    if (!bill) {
+      return res.status(404).json({ message: "Bill not found" });
+    }
+
+    // 🔒 Check if already paid
+    if (bill.paymentStatus === "Paid") {
+      return res.status(400).json({ message: "Paid bills cannot be withdrawn" });
+    }
+
+    // 🔁 Prevent duplicate request
+    if (bill.withdrawStatus === "Requested") {
+      return res.status(400).json({ message: "Withdraw already requested" });
+    }
+
+    // Update withdraw fields
+    bill.withdrawStatus = "Requested";
+    bill.withdrawRequestedAt = new Date();
+    bill.withdrawReason = reason || "No reason provided";
+
+    await bill.save();
+
+    /* ----------------------------------
+       🔔 NOTIFY ADMINS
+    ---------------------------------- */
+    const admins = await User.find({ role: "admin" });
+
+    for (const admin of admins) {
+      await Notification.create({
+        title: "Withdraw Request Submitted",
+        message: `${bill.user.name} requested to withdraw bill (${bill.firmName})`,
+        type: "bill",
+        priority: "high",
+        recipient: admin._id,
+        sender: bill.user._id,
+        relatedId: bill._id,
+        relatedModel: "Bill",
+        actionUrl: `/admin/bill/${bill._id}`,
+        metadata: {
+          firmName: bill.firmName,
+          amount: bill.amount,
+          withdrawReason: bill.withdrawReason,
+        },
+      });
+    }
+
+    /* ----------------------------------
+       🕒 RECENT ACTIVITY
+    ---------------------------------- */
+    await RecentActivity.create({
+      user: bill.user._id,
+      actionType: "withdraw_requested",
+      description: `Requested withdraw for bill (${bill.firmName})`,
+      relatedModel: "Bill", 
+      relatedId: bill._id,
+      actionUrl: `/client/bill/${bill._id}`,
+      metadata: {
+        firmName: bill.firmName,
+        amount: bill.amount,
+      },
+    });
+
+    res.status(200).json({
+      message: "Withdraw request sent to admin",
+      bill,
+    });
+
+  } catch (error) {
+    console.error("Withdraw request error:", error);
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+});
+
+// ADMIN: Approve or Reject withdraw request
+router.put('/bill/withdraw-action/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action, note } = req.body; // action should be 'Approved' or 'Rejected'
+
+    if (!['Approved', 'Rejected'].includes(action)) {
+      return res.status(400).json({ message: 'Invalid action' });
+    }
+
+    const bill = await Bill.findById(id).populate('user');
+    if (!bill) return res.status(404).json({ message: 'Bill not found' });
+
+    if (bill.withdrawStatus !== 'Requested') {
+      return res.status(400).json({ message: 'No pending withdraw request for this bill' });
+    }
+
+    bill.withdrawStatus = action;
+    if (action === 'Approved') {
+      bill.withdrawApprovedAt = new Date();
+    }
+
+    // Optional admin note can be stored in withdrawReason by appending
+    if (note) {
+      bill.withdrawReason = `${bill.withdrawReason || ''} \nAdmin Note: ${note}`;
+    }
+
+    await bill.save();
+
+    // Notify the user about the decision
+    await Notification.create({
+      title: `Withdraw request ${action.toLowerCase()}`,
+      message: `Your withdraw request for bill (${bill.firmName}) has been ${action.toLowerCase()}.`,
+      type: 'bill',
+      priority: action === 'Approved' ? 'high' : 'medium',
+      recipient: bill.user._id,
+      sender: req.userId || null,
+      relatedId: bill._id,
+      relatedModel: 'Bill',
+      actionUrl: `/client/bill/${bill._id}`,
+      metadata: {
+        firmName: bill.firmName,
+        amount: bill.amount,
+        withdrawStatus: bill.withdrawStatus,
+      },
+    });
+
+    await RecentActivity.create({
+      user: bill.user._id,
+      actionType: action === 'Approved' ? 'withdraw_approved' : 'withdraw_rejected',
+      description: `${action} withdraw request for bill (${bill.firmName})`,
+      relatedModel: 'Bill',
+      relatedId: bill._id,
+      actionUrl: `/client/bill/${bill._id}`,
+    });
+
+    // If approved, delete the bill from the system
+    if (action === 'Approved') {
+      await Bill.findByIdAndDelete(id);
+    }
+
+    return res.status(200).json({
+      message: action === 'Approved' ? 'Withdraw approved and bill deleted' : `Withdraw ${action.toLowerCase()}`,
+      bill,
+      deleted: action === 'Approved',
+    });
+  } catch (error) {
+    console.error('Error processing withdraw action:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 module.exports = router
