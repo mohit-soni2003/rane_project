@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import AdminHeader from '../../component/header/AdminHeader';
-import { getBillById, updateWithdrawStatus } from '../../services/billServices';
+import { createBillRemark, getBillById, getBillRemarks, updateWithdrawStatus } from '../../services/billServices';
 import { getTransactionsByBillId } from '../../services/transactionService';
 import { getPayNotesByBill } from '../../services/paynoteServices';
 import { Container, Row, Col, Card, Image, Spinner, Table, Tooltip, OverlayTrigger, Modal, Form, Button, Alert } from 'react-bootstrap';
@@ -22,6 +22,10 @@ export default function SingleBillDetailAdminPage() {
     const [rejectReason, setRejectReason] = useState('');
     const [paynotes, setPaynotes] = useState([]);
     const [showPaynoteModal, setShowPaynoteModal] = useState(false);
+    const [remarks, setRemarks] = useState([]);
+    const [remarkText, setRemarkText] = useState('');
+    const [remarksLoading, setRemarksLoading] = useState(false);
+    const [addingRemark, setAddingRemark] = useState(false);
 
     const navigate = useNavigate();
 
@@ -80,9 +84,30 @@ export default function SingleBillDetailAdminPage() {
         navigate('/admin/add-paynote?billId=' + id);
     };
 
+    const handleAddRemark = async () => {
+        try {
+            if (!remarkText.trim()) {
+                toast.error('Please enter a remark');
+                return;
+            }
+
+            setAddingRemark(true);
+            const response = await createBillRemark(id, remarkText.trim());
+            setRemarks(response.remarks || []);
+            setRemarkText('');
+            toast.success('Remark added successfully');
+        } catch (error) {
+            console.error(error);
+            toast.error(error.message || 'Failed to add remark');
+        } finally {
+            setAddingRemark(false);
+        }
+    };
+
     useEffect(() => {
         const fetchBillAndTransactions = async () => {
             try {
+                setRemarksLoading(true);
                 const [billData, transactionData] = await Promise.all([
                     getBillById(id),
                     getTransactionsByBillId(id)
@@ -90,10 +115,19 @@ export default function SingleBillDetailAdminPage() {
                 setBill(billData);
                 setTransactions(transactionData);
                 console.log("transaction data in single bill detail page", transactions);
+
+                try {
+                    const remarksData = await getBillRemarks(id);
+                    setRemarks(remarksData || []);
+                } catch (remarkError) {
+                    console.error('Failed to load remarks:', remarkError);
+                    setRemarks([]);
+                }
             } catch (error) {
                 console.error(error);
                 setErr('Failed to load bill or transactions');
             } finally {
+                setRemarksLoading(false);
                 setLoading(false);
             }
         };
@@ -650,6 +684,100 @@ export default function SingleBillDetailAdminPage() {
                                 No agreement linked with this bill.
                             </div>
                         )}
+                    </Card.Body>
+                </Card>
+
+                <Card
+                    className="mb-4 shadow-sm border-0"
+                    style={{
+                        background: "var(--card)",
+                        color: "var(--card-foreground)",
+                        borderRadius: "12px",
+                    }}
+                >
+                    <Card.Header
+                        className="d-flex align-items-center gap-2 fw-semibold"
+                        style={{
+                            background: "var(--secondary)",
+                            color: "var(--secondary-foreground)",
+                            borderBottom: "1px solid var(--border)",
+                        }}
+                    >
+                        <i className="bi bi-chat-left-text fs-5" style={{ color: "var(--accent)" }} />
+                        Remarks
+                    </Card.Header>
+
+                    <Card.Body>
+                        {remarksLoading ? (
+                            <div className="text-center py-3">
+                                <Spinner animation="border" size="sm" />
+                            </div>
+                        ) : remarks.length > 0 ? (
+                            <div className="mb-3">
+                                {remarks.map((remark) => (
+                                    <div
+                                        key={remark._id || remark.createdAt}
+                                        className="p-3 mb-2 rounded"
+                                        style={{
+                                            background: 'var(--muted)',
+                                            border: '1px solid var(--border)',
+                                        }}
+                                    >
+                                        <div className="fw-semibold mb-1" style={{ color: 'var(--text-strong)' }}>
+                                            {remark.text || '—'}
+                                        </div>
+                                        <div className="d-flex align-items-center gap-2 mb-1">
+                                            <Image
+                                                src={remark.createdBy?.profile || 'https://via.placeholder.com/28'}
+                                                roundedCircle
+                                                width={28}
+                                                height={28}
+                                                alt={remark.createdBy?.name || 'User'}
+                                                style={{ objectFit: 'cover' }}
+                                            />
+                                            <small className="text-muted mb-0">
+                                                Created By: {remark.createdBy?.name || 'Unknown'}
+                                            </small>
+                                        </div>
+                                        <small className="text-muted d-block">
+                                            Date: {remark.createdAt ? new Date(remark.createdAt).toLocaleString() : '—'}
+                                        </small>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-muted mb-3">No remarks yet.</div>
+                        )}
+
+                        <Form.Group className="mb-2">
+                            <Form.Label className="fw-semibold">Add Remark</Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                rows={3}
+                                placeholder="Write your remark here..."
+                                value={remarkText}
+                                onChange={(e) => setRemarkText(e.target.value)}
+                                style={{
+                                    background: 'var(--muted)',
+                                    color: 'var(--card-foreground)',
+                                    borderColor: 'var(--border)',
+                                }}
+                            />
+                        </Form.Group>
+
+                        <div>
+                            <Button
+                                onClick={handleAddRemark}
+                                disabled={addingRemark}
+                                style={{
+                                    background: 'var(--primary)',
+                                    color: 'var(--primary-foreground)',
+                                    border: 'none',
+                                }}
+                            >
+                                {addingRemark ? 'Adding...' : 'Add Remark'}
+                            </Button>
+                        </div>
                     </Card.Body>
                 </Card>
 

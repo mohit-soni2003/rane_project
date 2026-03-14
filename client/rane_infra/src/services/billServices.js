@@ -165,3 +165,55 @@ export const requestBillWithdraw = async (billId, reason) => {
     throw error;
   }
 };
+
+// Get remarks for a specific bill
+export const getBillRemarks = async (billId) => {
+  try {
+    const res = await fetch(`${backend_url}/bill/${billId}/remarks`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || 'Failed to fetch bill remarks');
+    }
+
+    return data.remarks || [];
+  } catch (error) {
+    console.error('Error fetching bill remarks:', error);
+    throw error;
+  }
+};
+
+// Add a remark to a specific bill
+export const createBillRemark = async (billId, text, createdBy) => {
+  try {
+    const payload = { text };
+    if (createdBy) payload.createdBy = createdBy;
+
+    const res = await fetch(`${backend_url}/bill/${billId}/remarks`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || 'Failed to create bill remark');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error creating bill remark:', error);
+    throw error;
+  }
+};

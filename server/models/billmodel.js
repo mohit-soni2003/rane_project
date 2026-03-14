@@ -69,7 +69,25 @@ const billSchema = new mongoose.Schema({
 
     withdrawReason: {
         type: String
-    }
+    },
+
+    // 🔹 Remarks field
+    remarks: [
+        {
+            text: {
+                type: String,
+                required: true
+            },
+            createdBy: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User"
+            },
+            createdAt: {
+                type: Date,
+                default: Date.now
+            }
+        }
+    ]
 });
 
 module.exports = mongoose.model("Bill", billSchema);

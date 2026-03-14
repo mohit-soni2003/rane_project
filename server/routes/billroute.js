@@ -5,6 +5,7 @@ const Agreement = require("../models/agreementModel")
 const Document = require("../models/documentmodel")
 const RecentActivity = require("../models/RecentActivityModel")
 const Notification = require("../models/notificationModel")
+const verifyToken = require("../middleware/verifyToken")
 // const { createNotification } = require("./notificationRoutes")
 
 
@@ -495,6 +496,74 @@ router.put('/bill/withdraw-action/:id', async (req, res) => {
   } catch (error) {
     console.error('Error processing withdraw action:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// GET all remarks for a bill
+router.get('/bill/:id/remarks', verifyToken,async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const bill = await Bill.findById(id).populate('remarks.createdBy', 'name email profile role');
+    if (!bill) {
+      return res.status(404).json({ message: 'Bill not found' });
+    }
+
+    const remarks = [...(bill.remarks || [])].sort(
+      (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+    );
+
+    return res.status(200).json({
+      message: 'Remarks fetched successfully',
+      remarks,
+    });
+  } catch (error) {
+    console.error('Error fetching bill remarks:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// POST add a remark to a bill
+router.post('/bill/:id/remarks', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { text, createdBy } = req.body;
+
+    if (!text || !String(text).trim()) {
+      return res.status(400).json({ message: 'Remark text is required' });
+    }
+
+    const bill = await Bill.findById(id);
+    if (!bill) {
+      return res.status(404).json({ message: 'Bill not found' });
+    }
+
+    let remarkCreator = createdBy || req.userId || null;
+    if (remarkCreator) {
+      const userExists = await User.findById(remarkCreator);
+      if (!userExists) {
+        return res.status(404).json({ message: 'Remark creator not found' });
+      }
+    }
+
+    bill.remarks.push({
+      text: String(text).trim(),
+      createdBy: remarkCreator,
+    });
+
+    await bill.save();
+
+    const updatedBill = await Bill.findById(id).populate('remarks.createdBy', 'name email profile role');
+    const latestRemark = updatedBill?.remarks?.[updatedBill.remarks.length - 1] || null;
+
+    return res.status(201).json({
+      message: 'Remark added successfully',
+      remark: latestRemark,
+      remarks: updatedBill?.remarks || [],
+    });
+  } catch (error) {
+    console.error('Error adding bill remark:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

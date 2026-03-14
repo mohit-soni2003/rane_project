@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getBillById, getBillTransactions, requestBillWithdraw } from '../../services/billServices';
+import { getBillById, getBillRemarks, getBillTransactions, requestBillWithdraw } from '../../services/billServices';
 import { getPayNotesByBill } from '../../services/paynoteServices';
 import ClientHeader from '../../component/header/ClientHeader';
 import {
@@ -46,6 +46,7 @@ export default function SingleBillDetailsClient() {
     const [error, setError] = useState('');
     const [transactions, setTransactions] = useState([]);
     const [paynotes, setPaynotes] = useState([]);
+    const [remarks, setRemarks] = useState([]);
     const [withdrawLoading, setWithdrawLoading] = useState(false);
     const [withdrawError, setWithdrawError] = useState('');
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -75,6 +76,15 @@ export default function SingleBillDetailsClient() {
                 } catch (paynoteError) {
                     console.warn('Could not fetch paynotes:', paynoteError.message);
                     setPaynotes([]);
+                }
+
+                // Fetch remarks for this bill
+                try {
+                    const remarksResult = await getBillRemarks(id);
+                    setRemarks(remarksResult || []);
+                } catch (remarkError) {
+                    console.warn('Could not fetch remarks:', remarkError.message);
+                    setRemarks([]);
                 }
             } catch (err) {
                 setError(err.message || 'Failed to fetch bill.');
@@ -565,6 +575,68 @@ export default function SingleBillDetailsClient() {
                                             <div className="p-4 text-center text-muted">
                                                 No paynotes found for this bill.
                                             </div>
+                                        )}
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                        </Row>
+
+                        {/* Remarks */}
+                        <Row className="mt-4">
+                            <Col lg={12}>
+                                <Card
+                                    className="shadow-sm"
+                                    style={{
+                                        backgroundColor: 'var(--client-dashboard-bg-color)',
+                                        borderColor: 'var(--client-border-color)',
+                                        color: 'var(--client-text-color)',
+                                    }}
+                                >
+                                    <Card.Header
+                                        style={{
+                                            backgroundColor: 'transparent',
+                                            borderBottom: `1px solid var(--client-border-color)`,
+                                            fontWeight: 600,
+                                            color: 'var(--client-heading-color)',
+                                        }}
+                                    >
+                                        <i className="bi bi-chat-left-text me-2 text-primary" />
+                                        Remarks ({remarks.length})
+                                    </Card.Header>
+                                    <Card.Body>
+                                        {remarks.length > 0 ? (
+                                            <div className="d-flex flex-column gap-2">
+                                                {remarks.map((remark, index) => (
+                                                    <div
+                                                        key={remark._id || index}
+                                                        className="p-3 rounded"
+                                                        style={{
+                                                            backgroundColor: 'var(--client-component-bg-color)',
+                                                            border: '1px solid var(--client-border-color)',
+                                                        }}
+                                                    >
+                                                        <div className="fw-semibold mb-1">{remark.text || '—'}</div>
+                                                        <div className="d-flex align-items-center gap-2 mb-1">
+                                                            <Image
+                                                                src={remark.createdBy?.profile || 'https://via.placeholder.com/28'}
+                                                                roundedCircle
+                                                                width={28}
+                                                                height={28}
+                                                                alt={remark.createdBy?.name || 'User'}
+                                                                style={{ objectFit: 'cover' }}
+                                                            />
+                                                            <small className="text-muted mb-0">
+                                                                Created By: {remark.createdBy?.name || 'Unknown'}
+                                                            </small>
+                                                        </div>
+                                                        <small className="text-muted d-block">
+                                                            Date: {remark.createdAt ? new Date(remark.createdAt).toLocaleString() : '—'}
+                                                        </small>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-muted">No remarks available for this bill.</div>
                                         )}
                                     </Card.Body>
                                 </Card>
