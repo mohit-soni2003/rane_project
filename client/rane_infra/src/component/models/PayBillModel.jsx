@@ -18,7 +18,6 @@ export default function PayBillModal({ show, onHide, billId }) {
   const [accNo, setAccNo] = useState('');
   const [ifscCode, setIfscCode] = useState('');
   const [amount, setAmount] = useState('');
-  const [payNote, setPayNote] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [transactions, setTransactions] = useState([]);
@@ -80,14 +79,13 @@ export default function PayBillModal({ show, onHide, billId }) {
         accNo,
         ifscCode,
         amount,
-        payNote,
+
       });
 
       alert(response.data.message);
       fetchBillDetails();
       fetchTransactions();
       setAmount('');
-      setPayNote('');
       onHide();
     } catch (err) {
       setError(err.response?.data?.message || 'Payment failed');
@@ -301,17 +299,6 @@ export default function PayBillModal({ show, onHide, billId }) {
                     type="number"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                  />
-                </Col>
-
-                <Col md={12}>
-                  <Form.Label>Payment Note</Form.Label>
-                  <Form.Control
-                    as="textarea"
-                    rows={3}
-                    value={payNote}
-                    onChange={(e) => setPayNote(e.target.value)}
-                    placeholder="Enter any notes about this payment..."
                   />
                 </Col>
               </Row>

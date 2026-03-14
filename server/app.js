@@ -67,6 +67,7 @@ app.use("/agreement",require("./routes/agreementroutes"))
 app.use(require("./routes/generalroutes")) //contains recent activit/notification
 app.use("/dashboard",require("./routes/dashboardroutes")) // give all detais relaed to dashboard
 app.use("/notification",require("./routes/notificationRoutes"))
+app.use("/paynote", require("./routes/paynoteroutes"))
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

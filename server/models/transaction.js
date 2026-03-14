@@ -27,9 +27,6 @@ const transactionSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    payNote: {
-        type: String,      //addded in version 4.0 for payment note while sanctioning bill
-    },
     bankName: {
         type: String
     },

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getBillById, getBillTransactions, requestBillWithdraw } from '../../services/billServices';
+import { getPayNotesByBill } from '../../services/paynoteServices';
 import ClientHeader from '../../component/header/ClientHeader';
 import {
     Container,
@@ -14,11 +15,13 @@ import {
     Table,
     Modal,
     Form,
+    Image,
 } from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {
     FaFileInvoice,
+    FaFileSignature,
     FaUserTie,
     FaFilePdf,
     FaCalendarAlt,
@@ -42,6 +45,7 @@ export default function SingleBillDetailsClient() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [transactions, setTransactions] = useState([]);
+    const [paynotes, setPaynotes] = useState([]);
     const [withdrawLoading, setWithdrawLoading] = useState(false);
     const [withdrawError, setWithdrawError] = useState('');
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -62,6 +66,15 @@ export default function SingleBillDetailsClient() {
                 } catch (transactionError) {
                     console.warn('Could not fetch transactions:', transactionError.message);
                     setTransactions([]);
+                }
+
+                // Fetch paynotes for this bill
+                try {
+                    const paynoteResult = await getPayNotesByBill(id);
+                    setPaynotes(paynoteResult?.paynotes || []);
+                } catch (paynoteError) {
+                    console.warn('Could not fetch paynotes:', paynoteError.message);
+                    setPaynotes([]);
                 }
             } catch (err) {
                 setError(err.message || 'Failed to fetch bill.');
@@ -110,6 +123,67 @@ export default function SingleBillDetailsClient() {
                 return <Badge bg="danger">Rejected</Badge>;
             default:
                 return <Badge bg="secondary">{status}</Badge>;
+        }
+    };
+
+    const getAgreementStatusBadge = (status) => {
+        switch (status) {
+            case 'signed':
+                return <Badge bg="success">Signed</Badge>;
+            case 'pending':
+                return <Badge bg="warning" text="dark">Pending</Badge>;
+            case 'viewed':
+                return <Badge bg="info">Viewed</Badge>;
+            case 'rejected':
+                return <Badge bg="danger">Rejected</Badge>;
+            case 'expired':
+                return <Badge bg="secondary">Expired</Badge>;
+            default:
+                return <Badge bg="secondary">{status || 'N/A'}</Badge>;
+        }
+    };
+
+    const getPaynoteStatusBadge = (status) => {
+        switch (status) {
+            case 'Paid':
+                return <Badge bg="success">Paid</Badge>;
+            case 'Approved':
+                return <Badge bg="info">Approved</Badge>;
+            case 'Pending':
+                return <Badge bg="warning" text="dark">Pending</Badge>;
+            case 'Rejected':
+                return <Badge bg="danger">Rejected</Badge>;
+            case 'Draft':
+            default:
+                return <Badge bg="secondary">{status || 'Draft'}</Badge>;
+        }
+    };
+
+    const agreement = bill?.agreement && typeof bill.agreement === 'object' ? bill.agreement : null;
+    const sortedTransactions = [...transactions].sort(
+        (a, b) => new Date(b?.transactionDate || 0) - new Date(a?.transactionDate || 0)
+    );
+    const latestTransaction = sortedTransactions.length > 0 ? sortedTransactions[0] : null;
+    const totalPaidAmount = sortedTransactions.reduce((sum, txn) => sum + (Number(txn?.amount) || 0), 0);
+    const remainingAmount = Math.max((Number(bill?.amount) || 0) - totalPaidAmount, 0);
+
+    const getPaymentMethodLabel = (txn) => {
+        if (!txn) return 'Pending';
+        if (txn.bankName) return 'Bank Transfer';
+        if (txn.upiId) return 'UPI Payment';
+        return 'Other';
+    };
+
+    const getTransactionTypeLabel = (type) => {
+        switch (type) {
+            case 'bill':
+                return 'Bill';
+            case 'payment_request':
+                return 'Payment Request';
+            case 'salary':
+                return 'Salary';
+            default:
+                return '—';
         }
     };
 
@@ -221,11 +295,28 @@ export default function SingleBillDetailsClient() {
                                     <Card.Body>
                                         {/* Get the latest transaction for this bill */}
                                         {(() => {
-                                            const latestTransaction = transactions.length > 0 ? transactions[0] : null;
-                                            const isPaid = bill?.paymentStatus === 'Paid' && latestTransaction;
+                                            const paidByName = latestTransaction?.paidBy?.name
+                                                || latestTransaction?.userId?.name
+                                                || latestTransaction?.paidBy
+                                                || latestTransaction?.userId
+                                                || '—';
+                                            const paidByProfile = latestTransaction?.paidBy?.profile
+                                                || latestTransaction?.userId?.profile
+                                                || 'https://via.placeholder.com/32';
 
                                             return (
                                                 <>
+                                                    {/* Bill Amount */}
+                                                    <div className="mb-3">
+                                                        <div className="d-flex align-items-center mb-2">
+                                                            <FaFileInvoice className="me-2 text-primary" />
+                                                            <small className="text-muted fw-bold">BILL AMOUNT</small>
+                                                        </div>
+                                                        <h5 className="mb-0" style={{ color: 'var(--client-text-color)' }}>
+                                                            ₹{(Number(bill?.amount) || 0).toLocaleString('en-IN')}
+                                                        </h5>
+                                                    </div>
+
                                                     {/* Amount Paid */}
                                                     <div className="mb-3">
                                                         <div className="d-flex align-items-center mb-2">
@@ -233,7 +324,7 @@ export default function SingleBillDetailsClient() {
                                                             <small className="text-muted fw-bold">AMOUNT PAID</small>
                                                         </div>
                                                         <h5 className="text-success mb-0">
-                                                            ₹{isPaid ? latestTransaction.amount?.toLocaleString('en-IN') : '0'}
+                                                            ₹{totalPaidAmount.toLocaleString('en-IN')}
                                                         </h5>
                                                     </div>
 
@@ -243,8 +334,16 @@ export default function SingleBillDetailsClient() {
                                                             <FaUserTie className="me-2 text-secondary" />
                                                             <small className="text-muted fw-bold">PAID BY</small>
                                                         </div>
-                                                        <div className="text-muted">
-                                                            {bill?.paidBy ? (bill.paidBy._id || bill.paidBy) : '—'}
+                                                        <div className="d-flex align-items-center gap-2 text-muted">
+                                                            <Image
+                                                                src={paidByProfile}
+                                                                roundedCircle
+                                                                width={28}
+                                                                height={28}
+                                                                alt={typeof paidByName === 'string' ? paidByName : 'User'}
+                                                                style={{ objectFit: 'cover' }}
+                                                            />
+                                                            <span>{paidByName}</span>
                                                         </div>
                                                     </div>
 
@@ -255,63 +354,218 @@ export default function SingleBillDetailsClient() {
                                                             <small className="text-muted fw-bold">TOTAL REMAINING</small>
                                                         </div>
                                                         <h6 className="text-warning mb-0">
-                                                            ₹{isPaid ? '0' : (bill?.amount ? bill.amount.toLocaleString('en-IN') : '0')}
+                                                            ₹{remainingAmount.toLocaleString('en-IN')}
                                                         </h6>
-                                                    </div>
-
-                                                    {/* Payment Method */}
-                                                    <div className="mb-3">
-                                                        <div className="d-flex align-items-center mb-2">
-                                                            <FaWallet className="me-2 text-info" />
-                                                            <small className="text-muted fw-bold">PAYMENT METHOD</small>
-                                                        </div>
-                                                        <div className="d-flex align-items-center">
-                                                            <Badge
-                                                                bg={isPaid ? 'success' : 'secondary'}
-                                                                className="d-flex align-items-center"
-                                                            >
-                                                                {isPaid ? (
-                                                                    <>
-                                                                        {latestTransaction?.bankName ? (
-                                                                            <>
-                                                                                <FaMoneyBillWave className="me-1" size={10} />
-                                                                                Bank Transfer
-                                                                            </>
-                                                                        ) : latestTransaction?.upiId ? (
-                                                                            <>
-                                                                                <FaWallet className="me-1" size={10} />
-                                                                                UPI Payment
-                                                                            </>
-                                                                        ) : (
-                                                                            <>
-                                                                                <FaCreditCard className="me-1" size={10} />
-                                                                                Online Payment
-                                                                            </>
-                                                                        )}
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <FaWallet className="me-1" size={10} />
-                                                                        Pending
-                                                                    </>
-                                                                )}
-                                                            </Badge>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Transaction ID */}
-                                                    <div className="mb-0">
-                                                        <div className="d-flex align-items-center mb-2">
-                                                            <FaHashtag className="me-2 text-primary" />
-                                                            <small className="text-muted fw-bold">TRANSACTION ID</small>
-                                                        </div>
-                                                        <div className="bg-light p-2 rounded small font-monospace">
-                                                            null
-                                                        </div>
                                                     </div>
                                                 </>
                                             );
                                         })()}
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                        </Row>
+
+                        {/* Attached Agreement Details */}
+                        <Row className="mt-4">
+                            <Col lg={12}>
+                                <Card
+                                    className="shadow-sm"
+                                    style={{
+                                        backgroundColor: 'var(--client-dashboard-bg-color)',
+                                        borderColor: 'var(--client-border-color)',
+                                        color: 'var(--client-text-color)',
+                                    }}
+                                >
+                                    <Card.Header
+                                        style={{
+                                            backgroundColor: 'transparent',
+                                            borderBottom: `1px solid var(--client-border-color)`,
+                                            fontWeight: 600,
+                                            color: 'var(--client-heading-color)',
+                                        }}
+                                    >
+                                        <FaFileSignature className="me-2 text-primary" />
+                                        Attached Agreement Details
+                                    </Card.Header>
+                                    <Card.Body>
+                                        {agreement ? (
+                                            <Row className="gy-3">
+                                                <Col md={6}>
+                                                    <p className="mb-2"><strong>Agreement Title</strong></p>
+                                                    <div>{agreement.title || '—'}</div>
+                                                </Col>
+                                                <Col md={3}>
+                                                    <p className="mb-2"><strong>Agreement ID</strong></p>
+                                                    <div>{agreement.agreementId || agreement._id || '—'}</div>
+                                                </Col>
+                                                <Col md={3}>
+                                                    <p className="mb-2"><strong>Status</strong></p>
+                                                    <div>{getAgreementStatusBadge(agreement.status)}</div>
+                                                </Col>
+
+                                                <Col md={6}>
+                                                    <p className="mb-2"><strong>Signed On</strong></p>
+                                                    <div>
+                                                        {agreement.signedAt
+                                                            ? new Date(agreement.signedAt).toLocaleDateString()
+                                                            : '—'}
+                                                    </div>
+                                                </Col>
+                                                <Col md={6}>
+                                                    <p className="mb-2"><strong>Expiry Date</strong></p>
+                                                    <div>
+                                                        {agreement.expiryDate
+                                                            ? new Date(agreement.expiryDate).toLocaleDateString()
+                                                            : '—'}
+                                                    </div>
+                                                </Col>
+
+                                                {agreement.description && (
+                                                    <Col md={12}>
+                                                        <p className="mb-2"><strong>Description</strong></p>
+                                                        <div
+                                                            className="p-2 rounded"
+                                                            style={{
+                                                                backgroundColor: 'var(--client-component-bg-color)',
+                                                            }}
+                                                        >
+                                                            {agreement.description}
+                                                        </div>
+                                                    </Col>
+                                                )}
+
+                                                {(agreement.fileUrl || agreement._id) && (
+                                                    <Col md={12}>
+                                                        <div className="d-flex gap-2 justify-content-end flex-wrap">
+                                                            {agreement._id && (
+                                                                <Button
+                                                                    onClick={() => navigate(`/client/agreement/view/${agreement._id}`)}
+                                                                    style={{
+                                                                        backgroundColor: 'var(--client-btn-bg)',
+                                                                        color: 'var(--client-btn-text)',
+                                                                        border: 'none',
+                                                                    }}
+                                                                >
+                                                                    <FaFileSignature className="me-2" />
+                                                                    Open Agreement Page
+                                                                </Button>
+                                                            )}
+                                                            {agreement.fileUrl && (
+                                                                <a
+                                                                    href={agreement.fileUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="btn"
+                                                                    style={{
+                                                                        backgroundColor: 'var(--client-btn-bg)',
+                                                                        color: 'var(--client-btn-text)',
+                                                                        border: 'none',
+                                                                    }}
+                                                                >
+                                                                    <FaFilePdf className="me-2" />
+                                                                    View Agreement PDF
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    </Col>
+                                                )}
+                                            </Row>
+                                        ) : (
+                                            <Alert variant="light" className="mb-0">
+                                                No agreement is attached to this bill.
+                                            </Alert>
+                                        )}
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                        </Row>
+
+                        {/* Paynote Details */}
+                        <Row className="mt-4">
+                            <Col lg={12}>
+                                <Card
+                                    className="shadow-sm"
+                                    style={{
+                                        backgroundColor: 'var(--client-dashboard-bg-color)',
+                                        borderColor: 'var(--client-border-color)',
+                                        color: 'var(--client-text-color)',
+                                    }}
+                                >
+                                    <Card.Header
+                                        style={{
+                                            backgroundColor: 'transparent',
+                                            borderBottom: `1px solid var(--client-border-color)`,
+                                            fontWeight: 600,
+                                            color: 'var(--client-heading-color)',
+                                        }}
+                                    >
+                                        <FaFileInvoice className="me-2 text-primary" />
+                                        Paynote Details ({paynotes.length})
+                                    </Card.Header>
+                                    <Card.Body className="p-0">
+                                        {paynotes.length > 0 ? (
+                                            <div className="table-responsive">
+                                                <Table bordered hover className="mb-0 align-middle">
+                                                    <thead className="table-light">
+                                                        <tr>
+                                                            <th className="ps-3">#</th>
+                                                            <th>Pay Note No</th>
+                                                            <th>Department</th>
+                                                            <th>Amount</th>
+                                                            <th>Mode</th>
+                                                            <th>Status</th>
+                                                            <th>Created On</th>
+                                                            <th>PDF</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {paynotes.map((paynote, index) => (
+                                                            <tr key={paynote._id || index}>
+                                                                <td className="ps-3 fw-bold">{index + 1}</td>
+                                                                <td>{paynote.payNoteNo || '—'}</td>
+                                                                <td>{paynote.department || '—'}</td>
+                                                                <td>
+                                                                    ₹{paynote.totalSanctionAmount
+                                                                        ? Number(paynote.totalSanctionAmount).toLocaleString('en-IN')
+                                                                        : '0'}
+                                                                </td>
+                                                                <td>{paynote.modeOfPayment || '—'}</td>
+                                                                <td>{getPaynoteStatusBadge(paynote.status)}</td>
+                                                                <td>
+                                                                    {paynote.createdAt
+                                                                        ? new Date(paynote.createdAt).toLocaleDateString()
+                                                                        : '—'}
+                                                                </td>
+                                                                <td>
+                                                                    {paynote.pdfUrl ? (
+                                                                        <a
+                                                                            href={paynote.pdfUrl}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="btn btn-sm"
+                                                                            style={{
+                                                                                backgroundColor: 'var(--client-btn-bg)',
+                                                                                color: 'var(--client-btn-text)',
+                                                                                border: 'none',
+                                                                            }}
+                                                                        >
+                                                                            <FaFilePdf className="me-1" />
+                                                                            View
+                                                                        </a>
+                                                                    ) : (
+                                                                        <span className="text-muted">—</span>
+                                                                    )}
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </Table>
+                                            </div>
+                                        ) : (
+                                            <div className="p-4 text-center text-muted">
+                                                No paynotes found for this bill.
+                                            </div>
+                                        )}
                                     </Card.Body>
                                 </Card>
                             </Col>
@@ -581,25 +835,27 @@ export default function SingleBillDetailsClient() {
                                         }}
                                     >
                                         <FaCreditCard className="me-2 text-primary" />
-                                        Transaction Summary ({transactions.length})
+                                        Transaction Summary ({sortedTransactions.length})
                                     </Card.Header>
                                     <Card.Body className="p-0">
-                                        {transactions.length > 0 ? (
+                                        {sortedTransactions.length > 0 ? (
                                             <div className="table-responsive">
                                                 <Table bordered hover className="mb-0 align-middle">
                                                     <thead className="table-light">
                                                         <tr>
                                                             <th className="ps-3">#</th>
                                                             <th>Amount</th>
-                                                            <th>Transaction Status</th>
+                                                            <th>Type</th>
                                                             <th>Paid By</th>
+                                                            <th>For User</th>
                                                             <th>UPI</th>
                                                             <th>Bank</th>
                                                             <th>Transaction ID</th>
+                                                            <th>Date</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {transactions.map((transaction, index) => (
+                                                        {sortedTransactions.map((transaction, index) => (
                                                             <tr key={transaction._id || index}>
                                                                 <td className="ps-3 fw-bold">{index + 1}</td>
                                                                 <td>
@@ -611,25 +867,13 @@ export default function SingleBillDetailsClient() {
                                                                     </div>
                                                                 </td>
                                                                 <td>
-                                                                    <Badge
-                                                                        bg={bill?.paymentStatus === 'Paid' ? 'success' : 'warning'}
-                                                                        className="d-flex align-items-center justify-content-center"
-                                                                    >
-                                                                        {bill?.paymentStatus === 'Paid' ? (
-                                                                            <>
-                                                                                <FaCheckCircle className="me-1" size={10} />
-                                                                                Completed
-                                                                            </>
-                                                                        ) : (
-                                                                            <>
-                                                                                <FaClock className="me-1" size={10} />
-                                                                                Pending
-                                                                            </>
-                                                                        )}
-                                                                    </Badge>
+                                                                    {getTransactionTypeLabel(transaction.type)}
                                                                 </td>
                                                                 <td>
-                                                                    <span className="text-muted">-</span>
+                                                                    {transaction.paidBy?.name || transaction.paidBy || <span className="text-muted">—</span>}
+                                                                </td>
+                                                                <td>
+                                                                    {transaction.userId?.name || transaction.userId || <span className="text-muted">—</span>}
                                                                 </td>
                                                                 <td>
                                                                     {transaction.upiId ? (
@@ -665,10 +909,18 @@ export default function SingleBillDetailsClient() {
                                                                         <span className="text-muted small">-</span>
                                                                     )}
                                                                 </td>
+                                                             
                                                                 <td>
                                                                     <div className="bg-light p-2 rounded small font-monospace text-center">
-                                                                        null
+                                                                        {transaction._id || '—'}
                                                                     </div>
+                                                                </td>
+                                                                <td>
+                                                                    <span className="small">
+                                                                        {transaction.transactionDate
+                                                                            ? new Date(transaction.transactionDate).toLocaleString()
+                                                                            : '—'}
+                                                                    </span>
                                                                 </td>
                                                             </tr>
                                                         ))}

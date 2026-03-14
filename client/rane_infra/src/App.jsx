@@ -52,6 +52,7 @@ import ClientsListAdminPage from "./pages/admin/ClientsListAdminPage.jsx";
 import ClientDetailAdminPage from "./pages/admin/ClientDetailAdminPage.jsx";
 import PushAgreement from "./pages/admin/PushAgreement.jsx";
 import SingleBillDetailAdminPage from "./pages/admin/SingleBillDetailAdminPage.jsx";
+import AddPaynotePage from "./pages/admin/AddPaynotePage.jsx";
 import SinglePRdetailAdminPAge from "./pages/admin/SinglePRdetailAdminPAge.jsx";
 import DfsRequest from "./pages/admin/DfsRequest.jsx";
 import SingleDfsRequestDetail from "./pages/admin/SingleDfsRequestDetail.jsx";
@@ -197,6 +198,7 @@ function App() {
           <Route path="home" element={<HomePageAdmin />} />
           <Route path="bill" element={<AllBillPage />} />
           <Route path="bill/:id" element={<SingleBillDetailAdminPage />} />
+          <Route path="add-paynote" element={<AddPaynotePage />} />
           <Route path="payment-request" element={<PaymentRequestListAdmin />} />
           <Route path="payment-request/:id" element={<SinglePRdetailAdminPAge />} />
           <Route path="push-document/:cid" element={<PushDocumentAdminPage />} />

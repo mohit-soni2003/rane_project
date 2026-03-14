@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
     Table,
     Button,
+    ButtonGroup,
     InputGroup,
     FormControl,
     Badge,
@@ -91,8 +92,8 @@ export default function MyBillPage() {
                     }}
                 >
                     {/* Filters */}
-                    <Row className="g-2 mb-3">
-                        <Col xs={12} md={4}>
+                    <Row className="g-2 mb-3 align-items-center">
+                        <Col xs={12} lg={5}>
                             <InputGroup className="mobile-input-sm">
                                 <InputGroup.Text
                                     style={{
@@ -119,58 +120,59 @@ export default function MyBillPage() {
                             </InputGroup>
                         </Col>
 
-                        <Col xs={6} md={3}>
-                            <FormControl
-                                as="select"
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className="mobile-input-sm"
-                                style={{
-                                    backgroundColor: "var(--input)",
-                                    color: "var(--foreground)",
-                                    borderColor: "var(--border)",
-                                    boxShadow: "inset 0 1px 2px var(--shadow-color)",
-                                }}
-                            >
-                                <option value="all">All Status</option>
-                                <option value="Completed">Completed</option>
-                                <option value="Pending">Pending</option>
-                                <option value="Rejected">Rejected</option>
-                                <option value="Partial">Partial</option>
-                            </FormControl>
+                        <Col xs={12} lg={7}>
+                            <div className="d-flex flex-wrap justify-content-lg-end justify-content-start gap-2">
+                                <div style={{ minWidth: '180px' }}>
+                                    <FormControl
+                                        as="select"
+                                        value={statusFilter}
+                                        onChange={(e) => setStatusFilter(e.target.value)}
+                                        className="mobile-input-sm"
+                                        style={{
+                                            backgroundColor: "var(--input)",
+                                            color: "var(--foreground)",
+                                            borderColor: "var(--border)",
+                                            boxShadow: "inset 0 1px 2px var(--shadow-color)",
+                                        }}
+                                    >
+                                        <option value="all">All Status</option>
+                                        <option value="Completed">Completed</option>
+                                        <option value="Pending">Pending</option>
+                                        <option value="Rejected">Rejected</option>
+                                        <option value="Partial">Partial</option>
+                                    </FormControl>
+                                </div>
+
+                                <div style={{ minWidth: '220px' }}>
+                                    <ButtonGroup className="w-100 mobile-input-sm">
+                                        <Button
+                                            onClick={() => setSortOrder('asc')}
+                                            style={{
+                                                backgroundColor: sortOrder === 'asc' ? 'var(--primary)' : 'var(--input)',
+                                                color: sortOrder === 'asc' ? 'var(--primary-foreground)' : 'var(--foreground)',
+                                                borderColor: 'var(--border)',
+                                                boxShadow: 'inset 0 1px 2px var(--shadow-color)',
+                                            }}
+                                        >
+                                            Ascending
+                                        </Button>
+                                        <Button
+                                            onClick={() => setSortOrder('desc')}
+                                            style={{
+                                                backgroundColor: sortOrder === 'desc' ? 'var(--primary)' : 'var(--input)',
+                                                color: sortOrder === 'desc' ? 'var(--primary-foreground)' : 'var(--foreground)',
+                                                borderColor: 'var(--border)',
+                                                boxShadow: 'inset 0 1px 2px var(--shadow-color)',
+                                            }}
+                                        >
+                                            Descending
+                                        </Button>
+                                    </ButtonGroup>
+                                </div>
+                            </div>
                         </Col>
 
-                        <Col xs={6} md={3}>
-                            <FormControl
-                                as="select"
-                                value={sortOrder}
-                                onChange={(e) => setSortOrder(e.target.value)}
-                                className="mobile-input-sm"
-                                style={{
-                                    backgroundColor: "var(--input)",
-                                    color: "var(--foreground)",
-                                    borderColor: "var(--border)",
-                                    boxShadow: "inset 0 1px 2px var(--shadow-color)",
-                                }}
-                            >
-                                <option value="asc">Sort: ▲ Asc</option>
-                                <option value="desc">Sort: ▼ Desc</option>
-                            </FormControl>
-                        </Col>
-
-                        <Col xs={12} md={2} className="d-grid">
-                            <Button
-                                style={{
-                                    backgroundColor: "var(--primary)",
-                                    color: "var(--primary-foreground)",
-                                    borderColor: "var(--primary)",
-                                    boxShadow: "0 2px 6px var(--shadow-color)",
-                                }}
-                                className="mobile-btn-sm"
-                            >
-                                Apply
-                            </Button>
-                        </Col>
+                       
                     </Row>
 
                     {/* Table or Loader */}

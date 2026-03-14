@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import AdminHeader from '../../component/header/AdminHeader';
 import { getBillById, updateWithdrawStatus } from '../../services/billServices';
 import { getTransactionsByBillId } from '../../services/transactionService';
+import { getPayNotesByBill } from '../../services/paynoteServices';
 import { Container, Row, Col, Card, Image, Spinner, Table, Tooltip, OverlayTrigger, Modal, Form, Button, Alert } from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -19,6 +20,8 @@ export default function SingleBillDetailAdminPage() {
     const [showApproveModal, setShowApproveModal] = useState(false);
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [rejectReason, setRejectReason] = useState('');
+    const [paynotes, setPaynotes] = useState([]);
+    const [showPaynoteModal, setShowPaynoteModal] = useState(false);
 
     const navigate = useNavigate();
 
@@ -61,6 +64,20 @@ export default function SingleBillDetailAdminPage() {
         } finally {
             setActionLoading(false);
         }
+    };
+
+    const handleViewPaynote = async () => {
+        try {
+            const response = await getPayNotesByBill(id);
+            setPaynotes(response.paynotes);
+            setShowPaynoteModal(true);
+        } catch (error) {
+            toast.error('Failed to fetch paynotes');
+        }
+    };
+
+    const handleAddPaynote = () => {
+        navigate('/admin/add-paynote?billId=' + id);
     };
 
     useEffect(() => {
@@ -111,6 +128,7 @@ export default function SingleBillDetailAdminPage() {
         firmName,
         workArea,
         loaNo,
+        agreement,
         invoiceNo,
         amount,
         workDescription,
@@ -219,7 +237,7 @@ export default function SingleBillDetailAdminPage() {
                             </Col>
 
                             {/* Action */}
-                            <Col md={12} className="mt-3">
+                            <Col md={12} className="mt-3 d-flex gap-2">
                                 <a
                                     href={pdfurl}
                                     target="_blank"
@@ -234,6 +252,24 @@ export default function SingleBillDetailAdminPage() {
                                     <i className="bi bi-file-earmark-pdf" />
                                     View PDF
                                 </a>
+                                <Button
+                                    variant="success"
+                                    size="sm"
+                                    onClick={handleAddPaynote}
+                                    className="d-inline-flex align-items-center gap-2"
+                                >
+                                    <i className="bi bi-plus-circle" />
+                                    Add Paynote
+                                </Button>
+                                <Button
+                                    variant="info"
+                                    size="sm"
+                                    onClick={handleViewPaynote}
+                                    className="d-inline-flex align-items-center gap-2"
+                                >
+                                    <i className="bi bi-eye" />
+                                    View Paynote
+                                </Button>
                             </Col>
                         </Row>
                     </Card.Body>
@@ -526,6 +562,97 @@ export default function SingleBillDetailAdminPage() {
                     </Card.Body>
                 </Card>
 
+                <Card
+                    className="mb-4 shadow-sm border-0"
+                    style={{
+                        background: "var(--card)",
+                        color: "var(--card-foreground)",
+                        borderRadius: "12px",
+                    }}
+                >
+                    <Card.Header
+                        className="d-flex align-items-center gap-2 fw-semibold"
+                        style={{
+                            background: "var(--secondary)",
+                            color: "var(--secondary-foreground)",
+                            borderBottom: "1px solid var(--border)",
+                        }}
+                    >
+                        <i className="bi bi-link-45deg fs-5" style={{ color: "var(--accent)" }} />
+                        Agreement Linked Details
+                    </Card.Header>
+
+                    <Card.Body>
+                        {agreement ? (
+                            <Row className="gy-3">
+                                <Col md={6}>
+                                    <small className="text-muted">Agreement No</small>
+                                    <div className="fw-semibold">{agreement.agreementId || agreement._id || "—"}</div>
+                                </Col>
+
+                                <Col md={6}>
+                                    <small className="text-muted">Title</small>
+                                    <div className="fw-semibold">{agreement.title || "—"}</div>
+                                </Col>
+
+                                <Col md={6}>
+                                    <small className="text-muted">Status</small>
+                                    <div className="fw-semibold text-capitalize">{agreement.status || "—"}</div>
+                                </Col>
+
+                                <Col md={6}>
+                                    <small className="text-muted">Uploaded At</small>
+                                    <div className="fw-semibold">
+                                        {agreement.uploadedAt ? new Date(agreement.uploadedAt).toLocaleDateString() : "—"}
+                                    </div>
+                                </Col>
+
+                                <Col md={6}>
+                                    <small className="text-muted">Signed At</small>
+                                    <div className="fw-semibold">
+                                        {agreement.signedAt ? new Date(agreement.signedAt).toLocaleDateString() : "—"}
+                                    </div>
+                                </Col>
+
+                                <Col md={6}>
+                                    <small className="text-muted">Expiry Date</small>
+                                    <div className="fw-semibold">
+                                        {agreement.expiryDate ? new Date(agreement.expiryDate).toLocaleDateString() : "—"}
+                                    </div>
+                                </Col>
+
+                                <Col md={12}>
+                                    <small className="text-muted">Description</small>
+                                    <div className="mt-1" style={{ color: "var(--text-muted)" }}>
+                                        {agreement.description || "—"}
+                                    </div>
+                                </Col>
+
+                                <Col md={12} className="mt-2 d-flex gap-2">
+                                    <a
+                                        href={agreement.fileUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="btn btn-sm d-inline-flex align-items-center gap-2"
+                                        style={{
+                                            background: "var(--primary)",
+                                            color: "var(--primary-foreground)",
+                                            borderRadius: "8px",
+                                        }}
+                                    >
+                                        <i className="bi bi-file-earmark-text" />
+                                        View Agreement File
+                                    </a>
+                                </Col>
+                            </Row>
+                        ) : (
+                            <div className="text-center py-3" style={{ color: "var(--muted-foreground)" }}>
+                                No agreement linked with this bill.
+                            </div>
+                        )}
+                    </Card.Body>
+                </Card>
+
                 {/* User Info */}
                 <Card
                     className="mb-4 shadow-sm border-0"
@@ -687,7 +814,7 @@ export default function SingleBillDetailAdminPage() {
                     >
                         <strong>⚠️ Important</strong>
                         <p className="mb-0 mt-2">
-                            This bill will be <strong>permanently deleted</strong> from the system once approved. This action cannot be undone.
+                            This request will mark the bill as <strong>Withdrawed</strong> and update withdraw approval details. The bill will not be deleted completely.
                         </p>
                     </div>
 
@@ -702,7 +829,7 @@ export default function SingleBillDetailAdminPage() {
                     </div>
 
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                        Are you sure you want to approve this withdrawal request? The bill will be deleted permanently.
+                        Are you sure you want to approve this withdrawal request? The bill status will be updated, not deleted.
                     </p>
 
                     {actionErr && (
@@ -744,7 +871,7 @@ export default function SingleBillDetailAdminPage() {
                                 Approving...
                             </>
                         ) : (
-                            'Yes, Approve & Delete'
+                            'Yes, Approve Request'
                         )}
                     </Button>
                 </Modal.Footer>
@@ -855,6 +982,46 @@ export default function SingleBillDetailAdminPage() {
                         ) : (
                             'Reject Request'
                         )}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Paynote Modal */}
+            <Modal show={showPaynoteModal} onHide={() => setShowPaynoteModal(false)} size="lg">
+                <Modal.Header closeButton>
+                    <Modal.Title>Paynotes for this Bill</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {paynotes.length > 0 ? (
+                        <Table striped bordered hover>
+                            <thead>
+                                <tr>
+                                    <th>Paynote No</th>
+                                    <th>Department</th>
+                                    <th>Status</th>
+                                    <th>Amount</th>
+                                    <th>Created At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {paynotes.map((paynote) => (
+                                    <tr key={paynote._id}>
+                                        <td>{paynote.payNoteNo}</td>
+                                        <td>{paynote.department}</td>
+                                        <td>{paynote.status}</td>
+                                        <td>{paynote.totalSanctionAmount}</td>
+                                        <td>{new Date(paynote.createdAt).toLocaleDateString()}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </Table>
+                    ) : (
+                        <p>No paynotes found for this bill.</p>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowPaynoteModal(false)}>
+                        Close
                     </Button>
                 </Modal.Footer>
             </Modal>

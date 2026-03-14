@@ -10,6 +10,7 @@ import { CLOUD_NAME, UPLOAD_PRESET, backend_url } from '../../store/keyStore';
 import { useAuthStore } from '../../store/authStore';
 import ClientHeader from '../../component/header/ClientHeader';
 import { postBill } from '../../services/billServices';
+import { getClientAgreements } from '../../services/agreement';
 
 export default function UploadBillPage() {
   const { user } = useAuthStore();
@@ -17,6 +18,7 @@ export default function UploadBillPage() {
     firmName: '',
     workArea: '',
     loaNo: '',
+    agreement: '',
     invoiceNo: '',
     amount: '',
     workDescription: '',
@@ -28,6 +30,8 @@ export default function UploadBillPage() {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [loaOptions, setLoaOptions] = useState([]);
   const [loadingLoa, setLoadingLoa] = useState(false);
+  const [agreementOptions, setAgreementOptions] = useState([]);
+  const [loadingAgreements, setLoadingAgreements] = useState(false);
   const fileInputRef = useRef();
 
   // Set user ID in formData
@@ -51,9 +55,6 @@ export default function UploadBillPage() {
         }
         const data = await res.json();
         setLoaOptions(data);
-        if (data.length > 0) {
-          setFormData(prev => ({ ...prev, loaNo: data[0].documentCode }));
-        }
       } catch (err) {
         setMessage({ type: 'danger', text: err.message });
       } finally {
@@ -62,6 +63,29 @@ export default function UploadBillPage() {
     };
 
     fetchLoas();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user?._id) return;
+
+    const fetchSignedAgreements = async () => {
+      setLoadingAgreements(true);
+      try {
+        const data = await getClientAgreements('signed');
+        const agreements = data.agreements || [];
+
+        setAgreementOptions(agreements);
+        if (agreements.length === 0) {
+          setMessage({ type: 'warning', text: 'No signed agreements available for bill upload.' });
+        }
+      } catch (err) {
+        setMessage({ type: 'danger', text: err.message });
+      } finally {
+        setLoadingAgreements(false);
+      }
+    };
+
+    fetchSignedAgreements();
   }, [user]);
 
   const handleChange = (e) => {
@@ -104,8 +128,8 @@ export default function UploadBillPage() {
       const pdfurl = await handleUpload();
       const payload = { ...formData, pdfurl };
       await postBill(payload);
-      setMessage({ type: 'success', text: 'Bill submitted successfully!' });
       handleClear();
+      setMessage({ type: 'success', text: 'Bill submitted successfully!' });
     } catch (err) {
       setMessage({ type: 'danger', text: 'Submission failed: ' + err.message });
     } finally {
@@ -118,6 +142,7 @@ export default function UploadBillPage() {
       firmName: '',
       workArea: '',
       loaNo: '',
+      agreement: '',
       invoiceNo: '',
       amount: '',
       workDescription: '',
@@ -190,7 +215,7 @@ export default function UploadBillPage() {
               </Col>
             </Row>
 
-            {/* LOA & Invoice No */}
+            {/* LOA & Agreement */}
             <Row className="mb-3">
               <Col md={6}>
                 <Form.Group>
@@ -217,11 +242,14 @@ export default function UploadBillPage() {
                       }}
                     >
                       {loaOptions.length > 0 ? (
-                        loaOptions.map((loa) => (
-                          <option key={loa._id} value={loa.documentCode}>
-                            {loa.documentCode}
-                          </option>
-                        ))
+                        <>
+                          <option value="">Select LOA</option>
+                          {loaOptions.map((loa) => (
+                            <option key={loa._id} value={loa.documentCode}>
+                              {loa.documentCode}
+                            </option>
+                          ))}
+                        </>
                       ) : (
                         <option value="">No LOA available</option>
                       )}
@@ -230,6 +258,51 @@ export default function UploadBillPage() {
                 </Form.Group>
               </Col>
 
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label className="fw-semibold" style={{ color: "var(--foreground)" }}>
+                    <FaFileAlt className="me-2" style={{ color: "var(--primary)" }} />
+                    Agreement
+                  </Form.Label>
+                  {loadingAgreements ? (
+                    <div className="d-flex align-items-center">
+                      <Spinner animation="border" size="sm" className="me-2" style={{ color: "var(--primary)" }} /> Loading
+                      agreements...
+                    </div>
+                  ) : (
+                    <Form.Select
+                      name="agreement"
+                      value={formData.agreement}
+                      onChange={handleChange}
+                      className="custom-input"
+                      required
+                      disabled={agreementOptions.length === 0}
+                      style={{
+                        backgroundColor: "var(--input)",
+                        color: "var(--foreground)",
+                        borderColor: "var(--border)",
+                      }}
+                    >
+                      {agreementOptions.length > 0 ? (
+                        <>
+                          <option value="">Select an agreement</option>
+                          {agreementOptions.map((agreement) => (
+                            <option key={agreement._id} value={agreement._id}>
+                              {`${agreement.title || 'Untitled Agreement'} (${agreement.agreementId || agreement._id})`}
+                            </option>
+                          ))}
+                        </>
+                      ) : (
+                        <option value="">No signed agreements available</option>
+                      )}
+                    </Form.Select>
+                  )}
+                </Form.Group>
+              </Col>
+            </Row>
+
+            {/* Invoice No */}
+            <Row className="mb-3">
               <Col md={6}>
                 <Form.Group>
                   <Form.Label className="fw-semibold" style={{ color: "var(--foreground)" }}>

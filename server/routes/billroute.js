@@ -1,6 +1,7 @@
 const express = require("express")
 const User = require("../models/usermodel")
 const Bill = require("../models/billmodel")
+const Agreement = require("../models/agreementModel")
 const Document = require("../models/documentmodel")
 const RecentActivity = require("../models/RecentActivityModel")
 const Notification = require("../models/notificationModel")
@@ -12,10 +13,10 @@ const router = express.Router();
 
 router.post("/post-bill", async (req, res) => {
   try {
-    const { firmName, workArea, loaNo, pdfurl, user, invoiceNo, workDescription, amount } = req.body;
+    const { firmName, workArea, loaNo, agreement, pdfurl, user, invoiceNo, workDescription, amount } = req.body;
 
     // Validate required fields
-    if (!firmName || !workArea || !loaNo || !pdfurl || !user || !amount) {
+    if (!firmName || !workArea || !loaNo || !agreement || !pdfurl || !user || !amount) {
       return res.status(400).json({ message: "All required fields must be provided" });
     }
 
@@ -25,11 +26,25 @@ router.post("/post-bill", async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    const existingAgreement = await Agreement.findById(agreement);
+    if (!existingAgreement) {
+      return res.status(404).json({ message: "Agreement not found" });
+    }
+
+    if (existingAgreement.status !== "signed") {
+      return res.status(400).json({ message: "Only signed agreements can be selected" });
+    }
+
+    if (existingAgreement.client.toString() !== existingUser._id.toString()) {
+      return res.status(403).json({ message: "Selected agreement does not belong to this user" });
+    }
+
     // Create a new bill
     const newBill = new Bill({
       firmName,
       workArea,
       loaNo,
+      agreement,
       pdfurl,
       invoiceNo,
       workDescription,
@@ -170,7 +185,7 @@ router.get('/bill/:id', async (req, res) => {
 
   try {
     // Find bills that match the user's ID
-    const bill = await Bill.findById(id).populate("user paidby");
+    const bill = await Bill.findById(id).populate("user paidby agreement");
     // console.log(bill)
     if (bill) {
       res.status(200).json(bill);
@@ -433,11 +448,13 @@ router.put('/bill/withdraw-action/:id', async (req, res) => {
 
     bill.withdrawStatus = action;
     if (action === 'Approved') {
+      bill.paymentStatus = 'Withdrawed';
       bill.withdrawApprovedAt = new Date();
+      bill.withdrawReason = note || bill.withdrawReason || 'Withdraw approved by admin';
     }
 
     // Optional admin note can be stored in withdrawReason by appending
-    if (note) {
+    if (action !== 'Approved' && note) {
       bill.withdrawReason = `${bill.withdrawReason || ''} \nAdmin Note: ${note}`;
     }
 
@@ -470,15 +487,10 @@ router.put('/bill/withdraw-action/:id', async (req, res) => {
       actionUrl: `/client/bill/${bill._id}`,
     });
 
-    // If approved, delete the bill from the system
-    if (action === 'Approved') {
-      await Bill.findByIdAndDelete(id);
-    }
-
     return res.status(200).json({
-      message: action === 'Approved' ? 'Withdraw approved and bill deleted' : `Withdraw ${action.toLowerCase()}`,
+      message: action === 'Approved' ? 'Withdraw approved and bill updated' : `Withdraw ${action.toLowerCase()}`,
       bill,
-      deleted: action === 'Approved',
+      deleted: false,
     });
   } catch (error) {
     console.error('Error processing withdraw action:', error);

@@ -12,11 +12,11 @@ const router = express.Router();
 router.post("/pay-bill", verifyToken , async (req, res) => { 
     // console.log("Received payment request:-------------");
     try {
-        const { billId, bankName, accNo, ifscCode, amount,payNote } = req.body;
-        console.log("Received payment request:", { billId, bankName, accNo, ifscCode, amount, payNote });
+        const { billId, bankName, accNo, ifscCode, amount} = req.body;
+        console.log("Received payment request:", { billId, bankName, accNo, ifscCode, amount,  });
 
         // Validate required fields
-        if (!billId || !bankName || !accNo || !ifscCode || !amount ||!payNote) {
+        if (!billId || !bankName || !accNo || !ifscCode || !amount ) {
             return res.status(400).json({ message: "All fields are required." });
         }
 
@@ -42,7 +42,6 @@ router.post("/pay-bill", verifyToken , async (req, res) => {
             bankName,
             accNo,
             ifscCode,
-            payNote,
             paidBy:userId
         });
         console.log("--------------------------------"+ transaction)

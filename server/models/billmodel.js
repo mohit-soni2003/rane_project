@@ -18,7 +18,7 @@ const billSchema = new mongoose.Schema({
     },
     paymentStatus: {
         type: String,
-        enum: ["Unpaid", "Pending", "Overdue", "Paid", "Sanctioned", "Reject"],
+        enum: ["Unpaid", "Pending", "Overdue", "Paid", "Sanctioned", "Reject", "Withdrawed"],
         default: "Unpaid"
     },
     invoiceNo: {
@@ -46,6 +46,10 @@ const billSchema = new mongoose.Schema({
     paidby: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
+    },
+    agreement: {
+        type: mongoose.Schema.Types.ObjectId, // store agreement reference for easy access
+        ref: "Agreement",
     },
 
 
