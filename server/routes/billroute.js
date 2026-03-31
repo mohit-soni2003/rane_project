@@ -5,6 +5,7 @@ const Agreement = require("../models/agreementModel")
 const Document = require("../models/documentmodel")
 const RecentActivity = require("../models/RecentActivityModel")
 const Notification = require("../models/notificationModel")
+const Transaction = require("../models/transaction")
 const verifyToken = require("../middleware/verifyToken")
 // const { createNotification } = require("./notificationRoutes")
 
@@ -295,9 +296,24 @@ router.delete("/bill/:id", async (req, res) => {
       return res.status(404).json({ message: "Bill not found" });
     }
 
-    // Delete the bill
+    // Delete all records linked to this bill
+    const [transactionDeleteResult, recentActivityDeleteResult, notificationDeleteResult] = await Promise.all([
+      Transaction.deleteMany({ billId: id }),
+      RecentActivity.deleteMany({ relatedId: id, relatedModel: "Bill" }),
+      Notification.deleteMany({ relatedId: id, relatedModel: "Bill" })
+    ]);
+
+    // Delete the bill document itself
     await Bill.findByIdAndDelete(id);
-    res.json({ message: "Bill deleted successfully" });
+    res.json({
+      message: "Bill and related records deleted successfully",
+      deleted: {
+        bill: 1,
+        transactions: transactionDeleteResult.deletedCount || 0,
+        recentActivities: recentActivityDeleteResult.deletedCount || 0,
+        notifications: notificationDeleteResult.deletedCount || 0,
+      },
+    });
 
   } catch (error) {
     console.error("Error deleting bill:", error);

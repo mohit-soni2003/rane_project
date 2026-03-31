@@ -153,43 +153,7 @@ export default function HomePageAdmin() {
       <Container fluid className="py-4 mt-3" 
       style={{ backgroundColor: 'var(--background)', minHeight: '100vh' , borderRadius:"15px" }}>
 
-        {/* Welcome Section */}
-        <Row className="mb-4">
-          <Col>
-            <div className="d-flex justify-content-between align-items-center">
-              <div>
-                <h2 className="mb-1 fw-bold" style={{ color: 'var(--admin-heading-color)' }}>
-                  Welcome back, {user?.name || 'Admin'}! 👋
-                </h2>
-                <p className="text-muted mb-0">Here's what's happening with your business today.</p>
-              </div>
-              <div className="d-flex gap-2">
-                <Button
-                  variant="outline-primary"
-                  size="sm"
-                  onClick={() => setShowNotification(true)}
-                  style={{
-                    borderColor: 'var(--admin-btn-primary-bg)',
-                    color: 'var(--admin-btn-primary-bg)'
-                  }}
-                >
-                  <FaBell className="me-1" />
-                  Notifications
-                </Button>
-                <Button
-                  style={{
-                    backgroundColor: 'var(--admin-btn-primary-bg)',
-                    borderColor: 'var(--admin-btn-primary-bg)',
-                    color: 'var(--admin-btn-primary-text)'
-                  }}
-                >
-                  <FaPlus className="me-1" />
-                  Quick Actions
-                </Button>
-              </div>
-            </div>
-          </Col>
-        </Row>
+       
 
         {/* Stats Cards */}
         <Row className="mb-4">

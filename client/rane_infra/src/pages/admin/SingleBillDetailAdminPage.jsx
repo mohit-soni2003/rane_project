@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import AdminHeader from '../../component/header/AdminHeader';
-import { createBillRemark, getBillById, getBillRemarks, updateWithdrawStatus } from '../../services/billServices';
+import { createBillRemark, getBillById, getBillRemarks, updateWithdrawStatus, deleteBill } from '../../services/billServices';
 import { getTransactionsByBillId } from '../../services/transactionService';
 import { getPayNotesByBill } from '../../services/paynoteServices';
 import { Container, Row, Col, Card, Image, Spinner, Table, Tooltip, OverlayTrigger, Modal, Form, Button, Alert } from 'react-bootstrap';
@@ -26,10 +26,11 @@ export default function SingleBillDetailAdminPage() {
     const [remarkText, setRemarkText] = useState('');
     const [remarksLoading, setRemarksLoading] = useState(false);
     const [addingRemark, setAddingRemark] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     const navigate = useNavigate();
 
-    const handleApprove = async () => {
+    const handleApprove = async () => { 
         try {
             setActionErr('');
             setActionLoading(true);
@@ -82,6 +83,26 @@ export default function SingleBillDetailAdminPage() {
 
     const handleAddPaynote = () => {
         navigate('/admin/add-paynote?billId=' + id);
+    };
+// handles the delete action for the bill. Shows a confirmation modal before proceeding with deletion. On successful deletion, shows a toast and navigates back to bill list. On error, shows error message in modal and toast.
+    const handleDelete = async () => {
+        try {
+            setActionErr('');
+            setActionLoading(true);
+            await deleteBill(id);
+            toast.success('Bill deleted successfully');
+            setTimeout(() => {
+                navigate('/admin/bill');
+            }, 1500);
+        } catch (error) {
+            console.error(error);
+            const msg = error.message || 'Failed to delete bill';
+            setActionErr(msg);
+            toast.error(msg);
+            setShowDeleteModal(false);
+        } finally {
+            setActionLoading(false);
+        }
     };
 
     const handleAddRemark = async () => {
@@ -904,6 +925,18 @@ export default function SingleBillDetailAdminPage() {
                     </Card.Body>
                 </Card>
 
+                {/* Delete Bill Button */}
+                <div className="d-flex justify-content-end mb-4">
+                    <Button
+                        variant="danger"
+                        onClick={() => setShowDeleteModal(true)}
+                        className="d-inline-flex align-items-center gap-2"
+                    >
+                        <i className="bi bi-trash" />
+                        Delete Bill
+                    </Button>
+                </div>
+
             </Container>
 
             {/* Approve Modal */}
@@ -1109,6 +1142,88 @@ export default function SingleBillDetailAdminPage() {
                             </>
                         ) : (
                             'Reject Request'
+                        )}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Delete Bill Modal */}
+            <Modal
+                show={showDeleteModal}
+                onHide={() => setShowDeleteModal(false)}
+                centered
+                backdrop="static"
+                keyboard={false}
+            >
+                <Modal.Header
+                    closeButton
+                    style={{
+                        background: 'var(--secondary)',
+                        color: 'var(--secondary-foreground)',
+                        borderBottom: '1px solid var(--border)',
+                    }}
+                >
+                    <Modal.Title>
+                        <i className="bi bi-exclamation-triangle me-2" style={{ color: 'var(--destructive)' }} />
+                        Delete Bill
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body
+                    style={{
+                        background: 'var(--card)',
+                        color: 'var(--card-foreground)',
+                    }}
+                >
+                    <div className="alert alert-danger" role="alert">
+                        <strong>
+                            <i className="bi bi-exclamation-circle me-2" />
+                            Warning!
+                        </strong>
+                        <p className="mb-0 mt-2">
+                            This action will permanently delete the bill from the system. <strong>All transactions related to this bill will also be deleted.</strong> This action cannot be undone.
+                        </p>
+                    </div>
+
+                    {actionErr && (
+                        <Alert variant="danger" className="mt-3 mb-0">
+                            {actionErr}
+                        </Alert>
+                    )}
+                </Modal.Body>
+                <Modal.Footer
+                    style={{
+                        background: 'var(--secondary)',
+                        borderTop: '1px solid var(--border)',
+                    }}
+                >
+                    <Button
+                        variant="secondary"
+                        onClick={() => setShowDeleteModal(false)}
+                        disabled={actionLoading}
+                        style={{
+                            background: 'var(--muted)',
+                            color: 'var(--text-strong)',
+                            border: 'none',
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleDelete}
+                        disabled={actionLoading}
+                        style={{
+                            background: 'var(--destructive)',
+                            color: 'var(--destructive-foreground)',
+                            border: 'none',
+                        }}
+                    >
+                        {actionLoading ? (
+                            <>
+                                <Spinner as="span" animation="border" size="sm" className="me-2" />
+                                Deleting...
+                            </>
+                        ) : (
+                            'Yes, Delete Bill Completely'
                         )}
                     </Button>
                 </Modal.Footer>

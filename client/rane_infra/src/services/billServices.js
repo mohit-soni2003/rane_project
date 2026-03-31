@@ -217,3 +217,27 @@ export const createBillRemark = async (billId, text, createdBy) => {
     throw error;
   }
 };
+
+// Delete a bill
+export const deleteBill = async (billId) => {
+  try {
+    const res = await fetch(`${backend_url}/bill/${billId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || 'Failed to delete bill');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error deleting bill:', error);
+    throw error;
+  }
+};
