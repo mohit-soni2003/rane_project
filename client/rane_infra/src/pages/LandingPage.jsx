@@ -120,7 +120,8 @@ export default function LandingPage() {
                         </Col>
                         <Col md={6}>
                             <img
-                                src="/images/landing-page-about.png"
+                                // src="/images/landing-page-about.png"
+                                src="/images/trainphoto.jpg"
                                 alt="About Our Company"
                                 className="img-fluid rounded shadow"
                                 style={{ transition: "transform 0.3s ease" }}
@@ -152,7 +153,7 @@ export default function LandingPage() {
                         </Col>
                         <Col md={6}>
                             <img
-                                src="/images/landing-page-expertise.png"
+                                src="/images/trainphoto2.jpg"
                                 alt="Our Expertise"
                                 className="img-fluid rounded shadow"
                                 style={{ transition: "transform 0.3s ease" }}
