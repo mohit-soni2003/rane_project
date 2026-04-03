@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Container, Row, Col,Button } from 'react-bootstrap';
-import { getMyUploadedDocuments } from '../../services/documentService';
+import { Table, Container, Row, Col, Button, Modal, Toast } from 'react-bootstrap';
+import { deleteDocument, getMyUploadedDocuments } from '../../services/documentService';
 import dummyuser from "../../assets/images/dummyUser.jpeg";
 import AdminHeader from '../../component/header/AdminHeader';
 import { FaRegFileAlt, FaTrash, FaSearch,FaUser } from "react-icons/fa";
@@ -14,6 +14,9 @@ const statusMap = {
 
 export default function MyPushedDocument() {
     const [documents, setDocuments] = useState([]);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [selectedDocumentId, setSelectedDocumentId] = useState(null);
+    const [showToast, setShowToast] = useState(false);
 
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
@@ -32,19 +35,23 @@ export default function MyPushedDocument() {
         fetchDocs();
     }, []);
 
-    const handleDelete = async (docId) => {
-        if (window.confirm('Are you sure you want to delete this document?')) {
-            try {
-                // Placeholder for delete functionality - implement when backend is ready
-                alert('Delete functionality not implemented yet. Document ID: ' + docId);
-                // After implementing delete service, call it here and refresh documents
-                // await deleteDocument(docId);
-                // const res = await getMyUploadedDocuments();
-                // setDocuments(res);
-            } catch (err) {
-                console.error('Failed to delete document:', err);
-                alert('Error deleting document: ' + err.message);
-            }
+    const openDeleteModal = (docId) => {
+        setSelectedDocumentId(docId);
+        setShowDeleteModal(true);
+    };
+
+    const handleDelete = async () => {
+        try {
+            await deleteDocument(selectedDocumentId);
+            const res = await getMyUploadedDocuments();
+            setDocuments(res);
+            setShowDeleteModal(false);
+            setSelectedDocumentId(null);
+            setShowToast(true);
+        } catch (err) {
+            console.error('Failed to delete document:', err);
+            setShowDeleteModal(false);
+            setSelectedDocumentId(null);
         }
     };
 
@@ -293,7 +300,7 @@ export default function MyPushedDocument() {
                                                     variant="outline-danger"
                                                     size="sm"
                                                     title="Delete Document"
-                                                    onClick={() => handleDelete(doc._id)}
+                                                    onClick={() => openDeleteModal(doc._id)}
                                                 >
                                                     <FaTrash />
                                                 </Button>
@@ -317,6 +324,42 @@ export default function MyPushedDocument() {
 
                 </div>
             </Container>
+
+            <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Delete Document</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Are you sure you want to delete this document? This action cannot be undone.
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+                        Cancel
+                    </Button>
+                    <Button variant="danger" onClick={handleDelete}>
+                        Delete
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            <div
+                style={{
+                    position: 'fixed',
+                    top: '1rem',
+                    right: '1rem',
+                    zIndex: 2000,
+                }}
+            >
+                <Toast
+                    show={showToast}
+                    onClose={() => setShowToast(false)}
+                    delay={2500}
+                    autohide
+                    bg="success"
+                >
+                    <Toast.Body className="text-white">Document deleted successfully.</Toast.Body>
+                </Toast>
+            </div>
         </>
     );
 }

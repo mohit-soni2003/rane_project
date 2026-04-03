@@ -80,6 +80,29 @@ export const updateDocumentStatus = async (documentId, status) => {
   }
 };
 
+export const deleteDocument = async (documentId) => {
+  try {
+    const response = await fetch(`${backend_url}/admin/document/delete/${documentId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to delete document.');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in deleteDocument:', error);
+    throw error;
+  }
+};
+
 
 
 // Fetch documents uploaded by the logged-in user. Used by admin and staff to find all document that are pushed by them.

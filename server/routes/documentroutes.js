@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const Document = require('../models/documentmodel');
 const User = require("../models/usermodel")
 const verifyToken = require("../middleware/verifyToken")
@@ -112,6 +113,31 @@ router.put('/client/document/update-status/:documentId', verifyToken, async (req
   } catch (error) {
     console.error("Error updating document status:", error);
     res.status(500).json({ error: "Server error while updating document status." });
+  }
+});
+
+// This route is used to delete a document by its document ID
+router.delete('/admin/document/delete/:documentId', verifyToken, async (req, res) => {
+  try {
+    const { documentId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(documentId)) {
+      return res.status(400).json({ error: "Invalid document ID." });
+    }
+
+    const deletedDocument = await Document.findByIdAndDelete(documentId);
+
+    if (!deletedDocument) {
+      return res.status(404).json({ error: "Document not found." });
+    }
+
+    res.status(200).json({
+      message: "Document deleted successfully.",
+      document: deletedDocument,
+    });
+  } catch (error) {
+    console.error("Error deleting document:", error);
+    res.status(500).json({ error: "Server error while deleting document." });
   }
 });
 
