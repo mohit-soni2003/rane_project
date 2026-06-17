@@ -1,12 +1,12 @@
 // Import required modules
 const express = require('express');
 const app = express();
-const mongoose = require('./db/mongoConnection'); // Import the db.js file
+const mongoose = require('./src/db/mongoConnection'); // Import the db.js file
 const cookieParser = require("cookie-parser")
 const cors  = require("cors")
 const {FRONTEND_ORIGIN_URL} = require("./keys")
-const expireAgreementsJob = require("./cron/expireAgreementsCron")
-const startExpiryJob = require("./cron/expireAgreementsCron")
+const expireAgreementsJob = require("./src/cron/expireAgreementsCron")
+const startExpiryJob = require("./src/cron/expireAgreementsCron")
 
 
 // Middleware to parse JSON data
@@ -51,23 +51,23 @@ app.get("/test-cookie", (req, res) => {
 });
 
 
-app.use(require("./routes/auth"))
-app.use(require("./routes/billroute"))
-app.use(require("./routes/clientroute"))
-app.use(require("./routes/paymentroute"))
-app.use(require("./routes/commonroute"))
-app.use(require("./routes/adminroutes"))
-app.use(require("./routes/staffroutes"))
-app.use(require("./routes/clientroutes"))
-app.use(require("./routes/transactionroutes"))
-app.use(require("./routes/documentroutes"))
-app.use("/dfs",require("./routes/fsforwardingroutes"))
-app.use("/salary",require("./routes/salaryroutes"))
-app.use("/agreement",require("./routes/agreementroutes"))
-app.use(require("./routes/generalroutes")) //contains recent activit/notification
-app.use("/dashboard",require("./routes/dashboardroutes")) // give all detais relaed to dashboard
-app.use("/notification",require("./routes/notificationRoutes"))
-app.use("/paynote", require("./routes/paynoteroutes"))
+app.use(require("./src/routes/auth"))
+app.use(require("./src/routes/billroute"))
+app.use(require("./src/routes/clientroute"))
+app.use(require("./src/routes/paymentroute"))
+app.use(require("./src/routes/commonroute"))
+app.use(require("./src/routes/adminroutes"))
+app.use(require("./src/routes/staffroutes"))
+app.use(require("./src/routes/clientroutes"))
+app.use(require("./src/routes/transactionroutes"))
+app.use(require("./src/routes/documentroutes"))
+app.use("/dfs",require("./src/routes/fsforwardingroutes"))
+app.use("/salary",require("./src/routes/salaryroutes"))
+app.use("/agreement",require("./src/routes/agreementroutes"))
+app.use(require("./src/routes/generalroutes")) //contains recent activit/notification
+app.use("/dashboard",require("./src/routes/dashboardroutes")) // give all detais relaed to dashboard
+app.use("/notification",require("./src/routes/notificationRoutes"))
+app.use("/paynote", require("./src/routes/paynoteroutes"))
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
