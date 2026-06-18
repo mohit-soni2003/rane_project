@@ -41,6 +41,7 @@ import AgreementPage from "./pages/client/AgreementPage.jsx";
 import AgreementForAction from "./pages/client/AgreementForAction.jsx";
 import ClosedAgreement from "./pages/client/ClosedAgreement.jsx";
 import AgreementView from "./pages/client/AgreementView.jsx";
+import SorDetails from "./pages/client/SorDetails.jsx";
 
 import AdminLayout from "./Layout/AdminLayout";
 import HomePageAdmin from "./pages/admin/HomePageAdmin.jsx";
@@ -180,7 +181,7 @@ function App() {
           <Route path="agreement/action" element={<AgreementForAction />} />
           <Route path="agreement/closed" element={<ClosedAgreement />} />
           <Route path="agreement/view/:id" element={<AgreementView />} />
-
+          <Route path="sor" element={<SorDetails />} />
         </Route> 
 
         {/* ---------Admin Route ---------- */}

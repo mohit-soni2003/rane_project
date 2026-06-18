@@ -688,6 +688,28 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
         </Link>
       </div>
 
+      {/* SOR */}
+      <div className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`} style={sidebarItemStyle}
+        onMouseEnter={handleHoverIn}
+        onMouseLeave={handleHoverOut}
+      >
+        <Link
+          to="/client/sor"
+          style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
+          onClick={() => {
+            if (isSidebarCollapsed) {
+              setIsSidebarCollapsed(false);
+              if (onCollapse) onCollapse(false);
+              setTimeout(() => { }, 0);
+            }
+          }}
+
+        >
+          <FaHeadset className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
+          {!isSidebarCollapsed && 'SOR'}
+        </Link>
+      </div>
+
       {/* Support */}
       <div className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`} style={sidebarItemStyle}
         onMouseEnter={handleHoverIn}
