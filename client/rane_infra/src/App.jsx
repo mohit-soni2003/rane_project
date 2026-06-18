@@ -65,6 +65,7 @@ import AllDocuments from "./pages/admin/AllDocuments.jsx";
 import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage.jsx";
 import AgreementTableListAll from "./pages/admin/AgreementTableListAll.jsx";
 import SingleAgreementDetails from "./pages/admin/SingleAgreementDetails.jsx";
+import SorDetailsAdmin from "./pages/admin/SorPage.jsx";
 
 
 import StaffLayout from "./Layout/StaffLayout.jsx";
@@ -220,6 +221,7 @@ function App() {
           <Route path="setting" element={<Setting />} />
           <Route path="notifications" element={<AdminNotificationsPage />} />
           <Route path="under-dev" element={<UnderDevPage />} />
+          <Route path="sor-details" element={<SorDetailsAdmin />} />
         </Route>
 
         {/* ---------Staff route------------ */}
