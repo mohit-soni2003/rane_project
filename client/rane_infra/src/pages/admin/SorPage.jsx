@@ -578,7 +578,7 @@ export default function SORAdmin() {
     const [addPanel, setAddPanel] = useState(null);
 
     const [rowStates, setRowStates] = useState({});   // { [_id]: 'edit' | 'delete' }
-    const [savingId, setSavingId]   = useState(null); // _id currently being saved
+    const [savingId, setSavingId] = useState(null); // _id currently being saved
     const [deletingId, setDeletingId] = useState(null); // _id currently being deleted
     const [addSaving, setAddSaving] = useState(false);
 
@@ -600,7 +600,7 @@ export default function SORAdmin() {
     useEffect(() => { fetchData(); }, []);
 
     const scheduleNames = Object.keys(data);
-    const totalItems    = Object.values(data).reduce((sum, arr) => sum + arr.length, 0);
+    const totalItems = Object.values(data).reduce((sum, arr) => sum + arr.length, 0);
 
     // inject _rowState
     const dataWithState = Object.fromEntries(
@@ -715,10 +715,16 @@ export default function SORAdmin() {
                 />
             )}
 
-            <div style={{ background: "var(--background)", minHeight: "100vh", fontFamily: "system-ui, -apple-system, sans-serif", color: "var(--foreground)" }}>
+            <div className="my-3"
+                style={{
+                    background: "var(--background)",
+                    minHeight: "100vh",
+                    fontFamily: "system-ui, -apple-system, sans-serif",
+                    color: "var(--foreground)",
+                }}>
 
                 {/* Page title bar */}
-                <div style={{ background: "var(--card)", borderBottom: "1px solid var(--border)", padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+                <div className="my-2" style={{ background: "var(--card)",  padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--warning)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                             <FiFileText size={15} color="#6b3e2b" />
@@ -748,10 +754,10 @@ export default function SORAdmin() {
                     {/* Stat cards */}
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 16 }}>
                         {[
-                            { label: "Total SOR Items",    value: loading ? "—" : totalItems.toLocaleString(), sub: "Across active fire safety schedules",    icon: <FiBarChart2 size={15} /> },
-                            { label: "Total Schedules",    value: loading ? "—" : scheduleNames.length,        sub: "Grouped for faster review",              icon: <FiFileText size={15} /> },
-                            { label: "Latest Version",     value: "v3.2",                                      sub: "Approved for ongoing works",             icon: <FiRefreshCw size={15} /> },
-                            { label: "Last Updated",       value: "14 Jan 2025",                               sub: "Published by technical standards team",  icon: <FiClock size={15} /> },
+                            { label: "Total SOR Items", value: loading ? "—" : totalItems.toLocaleString(), sub: "Across active fire safety schedules", icon: <FiBarChart2 size={15} /> },
+                            { label: "Total Schedules", value: loading ? "—" : scheduleNames.length, sub: "Grouped for faster review", icon: <FiFileText size={15} /> },
+                            { label: "Latest Version", value: "v3.2", sub: "Approved for ongoing works", icon: <FiRefreshCw size={15} /> },
+                            { label: "Last Updated", value: "14 Jan 2025", sub: "Published by technical standards team", icon: <FiClock size={15} /> },
                         ].map(s => (
                             <div key={s.label} style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px" }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
