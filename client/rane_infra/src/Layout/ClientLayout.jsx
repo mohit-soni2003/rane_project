@@ -4,17 +4,18 @@ import { Outlet } from 'react-router-dom';
 import ClientSidebar from '../component/sidebar/ClientSidebar';
 import { useAuthStore } from '../store/authStore';
 
+const EXPANDED_WIDTH = '260px';
+const COLLAPSED_WIDTH = '72px'; // ✅ matches the sidebar's collapsed width
+
 const ClientLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const { user } = useAuthStore();
 
-  const handleSidebarCollapse = (isCollapsed) => {
-    setIsSidebarCollapsed(isCollapsed);
-  };
+  const toggleSidebar = () => setSidebarOpen(prev => !prev);
+  const handleSidebarCollapse = (collapsed) => setIsSidebarCollapsed(collapsed);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -22,100 +23,98 @@ const ClientLayout = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => { 
+  useEffect(() => {
     setIsSidebarCollapsed(false);
   }, []);
 
+  const isDesktop = windowWidth >= 768;
+  const sidebarWidth = isSidebarCollapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH;
+
   return (
     <div style={{ backgroundColor: 'var(--background)', minHeight: '100vh' }}>
-      {/* Sidebar on Desktop */}
-      <div className="d-none d-md-block position-fixed">
+
+      {/* ── Desktop sidebar (fixed) ── */}
+      <div className="d-none d-md-block position-fixed top-0 start-0" style={{ zIndex: 1050 }}>
         <ClientSidebar key="desktop-sidebar" isOpen={true} onCollapse={handleSidebarCollapse} />
       </div>
 
-      {/* Sidebar on Mobile */}
+      {/* ── Mobile sidebar drawer (fixed overlay) ── */}
       {isSidebarOpen && (
         <>
-          <ClientSidebar key="mobile-sidebar" isOpen={true} toggleSidebar={toggleSidebar} />
+          <div className="d-md-none position-fixed top-0 start-0" style={{ zIndex: 1050 }}>
+            <ClientSidebar key="mobile-sidebar" isOpen={true} toggleSidebar={toggleSidebar} />
+          </div>
           <div
-            className="position-fixed top-0 start-0 w-100 h-100"
-            style={{ backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 1040 }}
+            className="d-md-none position-fixed top-0 start-0 w-100 h-100"
+            style={{ backgroundColor: 'rgba(0,0,0,0.45)', zIndex: 1040 }}
             onClick={toggleSidebar}
           />
         </>
       )}
 
-      {/* Topbar (Mobile only) */}
+      {/* ── Mobile topbar ── */}
       <div
         className="d-md-none px-3 py-2 d-flex justify-content-between align-items-center"
         style={{
           backgroundColor: 'var(--sidebar)',
           color: 'var(--sidebar-foreground)',
           borderBottom: '1px solid var(--border)',
+          position: 'sticky', top: 0, zIndex: 1030,
         }}
       >
-        {/* Left: Sidebar Toggle */}
         <button
-          className="btn p-0 m-0 d-flex align-items-center justify-content-center"
+          className="d-flex align-items-center justify-content-center"
           onClick={toggleSidebar}
           aria-label="Toggle sidebar menu"
           aria-expanded={isSidebarOpen}
           style={{
-            color: 'var(--sidebar-foreground)',
-            fontSize: '1.2rem',
-            border: '1px solid var(--border)',
-            borderRadius: '8px',
-            width: '36px',
-            height: '36px',
+            color: 'var(--secondary-foreground, #5a463f)',
+            border: '1px solid var(--border)', borderRadius: 8,
+            width: 36, height: 36, minWidth: 36, padding: 0, lineHeight: 0,
             backgroundColor: 'var(--secondary)',
-            transition: 'all 0.2s ease',
+            transition: 'background-color 0.2s ease',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--muted)')}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--secondary-hover)')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--secondary)')}
         >
-          <FaBars size={20} />
+          <FaBars size={18} color="var(--primary)" />
         </button>
 
-        {/* Center: Title */}
-        <span className="fw-semibold text-uppercase small" style={{ color: 'var(--foreground)' }}>
+        <span className="fw-semibold text-uppercase small" style={{ color: 'var(--primary)', letterSpacing: '0.5px' }}>
           RS-WMS
         </span>
 
-        {/* Right: Bell + Profile */}
         <div className="d-flex align-items-center gap-3">
-          <div className="position-relative">
-            <FaBell size={20} style={{ color: 'var(--foreground)' }} />
+          <div className="position-relative" style={{ cursor: 'pointer' }}>
+            <FaBell size={19} style={{ color: 'var(--accent)' }} />
             <span
-              className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"
-              style={{ width: '10px', height: '10px' }}
-            ></span>
+              className="position-absolute translate-middle rounded-circle"
+              style={{
+                top: 2, left: '100%', width: 9, height: 9,
+                backgroundColor: 'var(--destructive)', border: '2px solid var(--sidebar)',
+              }}
+            />
           </div>
-
           <img
             src={user?.profile || '/assets/images/dummyUser.jpeg'}
             alt="Profile"
             className="rounded-circle"
-            style={{
-              width: '32px',
-              height: '32px',
-              objectFit: 'cover',
-              border: '2px solid var(--border)',
-            }}
+            style={{ width: 32, height: 32, objectFit: 'cover', border: '2px solid var(--primary)' }}
           />
         </div>
       </div>
 
-      {/* Main Page Content */}
+      {/* ── Main content ── */}
       <div
-        className="p-0 p-md-3"
+        className="p-2 p-md-3"
         style={{
-          marginLeft: windowWidth >= 768 ? (isSidebarCollapsed ? '60px' : '260px') : '0px',
+          marginLeft: isDesktop ? sidebarWidth : '0px',
+          width: isDesktop ? `calc(100% - ${sidebarWidth})` : '100%',
           transition: 'margin-left 0.3s ease, width 0.3s ease',
           minHeight: '100vh',
           position: 'relative',
           zIndex: 1,
-          width: windowWidth >= 768 ? `calc(100% - ${isSidebarCollapsed ? '60px' : '260px'})` : '100%',
-          backgroundColor: 'var(--card)',
+          backgroundColor: 'var(--background)',
           color: 'var(--card-foreground)',
           overflowX: 'hidden',
         }}

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-  FaHome, FaFileInvoiceDollar, FaHistory, FaFileAlt,
-  FaUserCog, FaHeadset, FaSignOutAlt, FaChevronDown, FaChevronUp, FaArrowAltCircleRight, FaMoneyBillWave,
-  FaBars, FaTimes,FaFileSignature
+  FaHome, FaFileInvoiceDollar, FaHistory, FaFileAlt, FaUserCog, FaHeadset,
+  FaSignOutAlt, FaChevronDown, FaMoneyBillWave, FaBars, FaTimes,
+  FaFileSignature, FaClipboardList,
 } from 'react-icons/fa';
 import { BsCardChecklist } from 'react-icons/bs';
 import { MdPayment } from 'react-icons/md';
@@ -10,751 +10,262 @@ import dummyUser from "../../assets/images/dummyUser.jpeg";
 import { useAuthStore } from '../../store/authStore';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import LogoutModal from '../models/LogoutModal';
-import { right } from '@popperjs/core';
-import "../../assets/utility/color_codes.css"
 
-
-
-
+// ── Navigation config: single source of truth ───────────────────────────────
+const NAV = [
+  { type: 'link', label: 'Home', icon: FaHome, to: '/client' },
+  {
+    type: 'group', key: 'bill', label: 'Bill', icon: FaFileInvoiceDollar, items: [
+      { label: 'My Bills', to: '/client/my-bill' },
+      { label: 'Upload Bill', to: '/client/upload-bill' },
+    ],
+  },
+  {
+    type: 'group', key: 'payment', label: 'Payment', icon: MdPayment, items: [
+      { label: 'Payment Request', to: '/client/payment-request' },
+      { label: 'Payment Request Status', to: '/client/my-payment-request' },
+    ],
+  },
+  {
+    type: 'group', key: 'transaction', label: 'Transaction', icon: FaHistory, items: [
+      { label: 'Bill / IP / IPR', to: '/client/transaction' },
+    ],
+  },
+  {
+    type: 'group', key: 'eagreement', label: 'E-Agreement', icon: FaFileSignature, items: [
+      { label: 'Overview', to: '/client/agreement' },
+      { label: 'Closed Agreement', to: '/client/agreement/closed' },
+    ],
+  },
+  {
+    type: 'group', key: 'dfs', label: 'Forward Files — DFS', icon: BsCardChecklist, items: [
+      { label: 'Upload Document', to: '/client/upload-document' },
+      { label: 'Track Document', to: '/client/track-dfs/all' },
+      { label: 'Document for review', to: '/client/dfsrequest' },
+    ],
+  },
+  {
+    type: 'group', key: 'document', label: 'Document', icon: FaFileAlt, items: [
+      { label: 'All Documents', to: '/client/document/category' },
+    ],
+  },
+  { type: 'link', label: 'Salary', icon: FaMoneyBillWave, to: '/client/salary' },
+  { type: 'link', label: 'Setting', icon: FaUserCog, to: '/client/setting' },
+  { type: 'link', label: 'SOR', icon: FaClipboardList, to: '/client/sor' },
+  { type: 'link', label: 'Support', icon: FaHeadset, to: '/client/support' },
+];
 
 const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
   const { user } = useAuthStore();
-  const [openDropdown, setOpenDropdown] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const [openDropdown, setOpenDropdown] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
-  // Sync with parent component on mount and when navigation occurs
   useEffect(() => {
-    // Ensure sidebar starts in expanded state on component mount
-    setIsSidebarCollapsed(false);
-    if (onCollapse) {
-      onCollapse(false);
-    }
-  }, []); // Empty dependency array ensures this runs only on mount
+    setCollapsed(false);
+    if (onCollapse) onCollapse(false);
+  }, []);
 
-  // Handle location changes to ensure proper state synchronization
+  // Auto-open the group that contains the active route
   useEffect(() => {
-    // When location changes, ensure sidebar is properly synchronized
-    if (onCollapse) {
-      onCollapse(isSidebarCollapsed);
-    }
+    const active = NAV.find(n => n.type === 'group' && n.items.some(i => i.to === location.pathname));
+    if (active) setOpenDropdown(active.key);
   }, [location.pathname]);
 
-  const toggleDropdown = (menu) => {
-    setOpenDropdown(openDropdown === menu ? null : menu);
+  const setCollapseState = (val) => {
+    setCollapsed(val);
+    if (onCollapse) onCollapse(val);
   };
 
-  const handleLogoutClick = () => {
-    setShowLogoutModal(true);
-  };
+  const toggleDropdown = (key) => setOpenDropdown(prev => (prev === key ? null : key));
 
-  const toggleSidebarCollapse = () => {
-    const newCollapseState = !isSidebarCollapsed;
-    setIsSidebarCollapsed(newCollapseState);
-    // Immediately notify parent component about sidebar state change
-    if (onCollapse) {
-      onCollapse(newCollapseState);
+  const isActive = (to) => location.pathname === to;
+  const isGroupActive = (items) => items.some(i => location.pathname === i.to);
+
+  // Expand sidebar first if collapsed, then run the action
+  const expandThen = (fn) => {
+    if (collapsed) {
+      setCollapseState(false);
+      setTimeout(fn, 280);
+    } else {
+      fn();
     }
   };
 
-  const submenuStyle = (isOpen) => ({
-    maxHeight: isOpen ? '500px' : '0',
-    overflow: 'hidden',
-    transition: 'all 0.6s ease',
-    marginLeft: '22px',
-    fontSize: '0.9rem',
-    color: '#d1d1d1',
-    // backgroundColor: "rgba(255, 255, 255, 0.1)"
-  });
-
-
-
-  const handleHoverIn = (e) => {
-    e.currentTarget.style.backgroundColor = 'var(--client-btn-bg)';
-    e.currentTarget.style.color = 'var(--client-btn-text)';
-  };
-
-  const handleHoverOut = (e) => {
-    e.currentTarget.style.backgroundColor = 'transparent';
-    e.currentTarget.style.color = 'var(--client-header-text)';
-  };
-  const iconStyle = {
-    fontSize: '1.1rem',
-    flexShrink: 0,
-    minWidth: '22px', // ensures uniform width for all icons
-    textAlign: 'center',
-    color: 'var(--sidebar-foreground)',
-    marginRight: '8px',
-  };
-
-  const sidebarItemStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '8px 12px',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    transition: 'background-color 0.3s ease, color 0.3s ease',
-    color: 'var(--sidebar-foreground)',
-  };
-
-  const ArrowIconStyle = {
-    color: "var(--sidebar-foreground)",
-    fontSize: '1rem',
-    width: '15px',
-    height: '15px',
-    // border:"2px solid red ",
-    padding: "2px",
-    flexShrink: 0,
-    marginLeft: "5px"
-  };
-
-
   return (
-    <div
-      className="text-white vh-100 p-3 position-fixed top-0 start-0 d-flex flex-column"
-      style={{
-        width: isSidebarCollapsed ? '70px' : '260px',
-        zIndex: 1050,
-        backgroundColor: "var(--sidebar)",     // Sidebar background
-        display: isOpen ? 'flex' : 'none',
-        transition: 'width 0.3s ease',
-        overflow: 'hidden',
-        minHeight: '100vh',
-        color: "var(--sidebar-foreground)",               // Text color from theme
-      }}
-    >
-
-
-
-      {/* Toggle Button */}
-      <div className={`d-flex ${isSidebarCollapsed ? 'justify-content-center' : 'justify-content-end'}`} style={{ marginTop: '0px', marginBottom: '5px' }}>
-        <button
-          onClick={toggleSidebarCollapse}
-          className="btn p-0 d-flex align-items-center justify-content-center"
-          aria-label={isSidebarCollapsed ? 'Show Sidebar' : 'Hide Sidebar'}
-          title={isSidebarCollapsed ? 'Show Sidebar' : 'Hide Sidebar'}
-          style={{
-            color: 'var(--client-btn-text)',
-            backgroundColor: 'var(--client-btn-bg)',
-            width: '30px',
-            height: '30px',
-            borderRadius: '8px',
-            border: 'none',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--client-btn-hover)'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--client-btn-bg)'}
-        >
-          {isSidebarCollapsed ? <FaBars size={18} /> : <FaTimes size={18} />}
-        </button>
-
-      </div>
-
-      {/* Profile Section - Hidden when collapsed */}
-      {!isSidebarCollapsed && (
-        <div className="text-center mb-3">
-          {/* Profile Image */}
-          <img
-            src={user?.profile || dummyUser}
-            alt="Profile"
-            className="rounded-circle mb-2"
-            style={{
-              width: "80px",
-              height: "80px",
-              objectFit: "cover",
-              cursor: "pointer",
-              border: "2px solid var(--primary)",
-              transition: "all 0.3s ease",
-            }}
-            onClick={() => navigate('/client')}
-            onMouseEnter={(e) => {
-              e.target.style.transform = 'scale(1.08)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = 'scale(1)';
-            }}
-          />
-
-          {/* Name */}
-          <div
-            className="fw-semibold"
-            style={{
-              fontSize: '1rem',
-              color: 'var(--foreground)',
-            }}
-          >
-            {user?.name || 'Client Name'}
-          </div>
-
-          {/* Client ID */}
-          <div
-            style={{
-              fontSize: '0.85rem',
-              color: 'var(--muted-foreground)',
-            }}
-          >
-            Client ID • {user?.cid || 'CL-0000'}
-          </div>
-
-          {/* Divider */}
-          <hr
-            style={{
-              borderTop: '1px solid var(--border)',
-              opacity: 0.5,
-              margin: '0.8rem 1rem 0 1rem',
-            }}
-          />
-        </div>
-      )}
-
-      {/* Home */}
-      <div
-        onMouseEnter={handleHoverIn}
-        onMouseLeave={handleHoverOut}
-        className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`}
-        style={sidebarItemStyle}
-      >
-
-        <Link
-          to="/client"
-          style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
-          onClick={() => {
-            if (isSidebarCollapsed) {
-              setIsSidebarCollapsed(false);
-              if (onCollapse) onCollapse(false);
-              // Small delay to ensure state update before navigation
-              setTimeout(() => { }, 0);
-            }
-          }}
-        >
-          <FaHome className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
-          {!isSidebarCollapsed && 'Home'}
-        </Link>
-      </div>
-
-      {/* Dropdown: Bill */}
-      <div className="">
-        <div
-          onClick={() => {
-            if (isSidebarCollapsed) {
-              setIsSidebarCollapsed(false);
-              if (onCollapse) onCollapse(false);
-              setTimeout(() => toggleDropdown("bill"), 300);
-            } else {
-              toggleDropdown("bill");
-            }
-          }}
-          className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`}
-          style={sidebarItemStyle}
-          onMouseEnter={handleHoverIn}
-          onMouseLeave={handleHoverOut}
-        >
-          <div className="d-flex align-items-center w-100"
-            style={{ justifyContent: isSidebarCollapsed ? 'center' : 'space-between' }}>
-            <div className="d-flex align-items-center" style={{ color: 'var(--sidebar-foreground)' }}>
-              <FaFileInvoiceDollar className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
-              {!isSidebarCollapsed && <span >Bill</span>}
-            </div>
-
-            {!isSidebarCollapsed && (
-              openDropdown === "bill"
-                ? <FaChevronUp style={ArrowIconStyle} />
-                : <FaChevronDown style={ArrowIconStyle} />
-            )}
-          </div>
-
-        </div>
-        {!isSidebarCollapsed && (
-          <div style={submenuStyle(openDropdown === "bill")}>
-            <div className="py-1  sidebar-item"
-              onMouseEnter={handleHoverIn}
-              onMouseLeave={handleHoverOut}
-              style={sidebarItemStyle}>
-              <FaArrowAltCircleRight className="me-2 " style={iconStyle} />
-              <Link to="/client/my-bill" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
-                onClick={() => {
-                  if (isSidebarCollapsed) {
-                    setIsSidebarCollapsed(false);
-                    if (onCollapse) onCollapse(false);
-                  }
-                }}>
-                My Bills
-              </Link>
-            </div>
-            <div className="py-1 sidebar-item"
-              style={sidebarItemStyle}
-              onMouseEnter={handleHoverIn}
-              onMouseLeave={handleHoverOut}
-            >
-              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
-              <Link to="/client/upload-bill" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
-                onClick={() => {
-                  if (isSidebarCollapsed) {
-                    setIsSidebarCollapsed(false);
-                    if (onCollapse) onCollapse(false);
-                  }
-                }}>
-                Upload Bill
-              </Link>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Payment */}
-      <div className="">
-        <div
-          onClick={() => {
-            if (isSidebarCollapsed) {
-              setIsSidebarCollapsed(false);
-              if (onCollapse) onCollapse(false);
-              setTimeout(() => toggleDropdown("payment"), 300);
-            } else {
-              toggleDropdown("payment");
-            }
-          }}
-
-          className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`}
-          style={sidebarItemStyle}
-          onMouseEnter={handleHoverIn}
-          onMouseLeave={handleHoverOut}
-        >
-          <div className="d-flex align-items-center w-100"
-            style={{ justifyContent: isSidebarCollapsed ? 'center' : 'space-between' }}>
-            <div className="d-flex align-items-center" style={{ color: 'var(--sidebar-foreground)' }}>
-              <MdPayment className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
-              {!isSidebarCollapsed && <span>Payment</span>}
-            </div>
-
-            {!isSidebarCollapsed && (
-              openDropdown === "payment"
-                ? <FaChevronUp style={ArrowIconStyle} />
-                : <FaChevronDown style={ArrowIconStyle} />
-            )}
-          </div>
-
-        </div>
-        {!isSidebarCollapsed && (
-          <div style={submenuStyle(openDropdown === "payment")}>
-            <div className="py-1 sidebar-item"
-              onMouseEnter={handleHoverIn}
-              onMouseLeave={handleHoverOut}
-              style={sidebarItemStyle}>
-              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
-              <Link to="/client/payment-request" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
-                onClick={() => {
-                  if (isSidebarCollapsed) {
-                    setIsSidebarCollapsed(false);
-                    if (onCollapse) onCollapse(false);
-                  }
-                }}>
-                Payment Request
-              </Link>
-            </div>
-            <div className="py-1 sidebar-item"
-              onMouseEnter={handleHoverIn}
-              onMouseLeave={handleHoverOut}
-              style={sidebarItemStyle}>
-              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
-              <Link to="/client/my-payment-request" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
-                onClick={() => {
-                  if (isSidebarCollapsed) {
-                    setIsSidebarCollapsed(false);
-                    if (onCollapse) onCollapse(false);
-                  }
-                }}>
-                Payment Request Status
-              </Link>
-            </div>        </div>
-        )}
-      </div>
-
-      {/* Transactions */}
-      <div className="">
-        <div
-          onClick={() => {
-            if (isSidebarCollapsed) {
-              setIsSidebarCollapsed(false);
-              if (onCollapse) onCollapse(false);
-              setTimeout(() => toggleDropdown("transaction"), 300);
-            } else {
-              toggleDropdown("transaction");
-            }
-          }}
-          className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`}
-          style={sidebarItemStyle}
-          onMouseEnter={handleHoverIn}
-          onMouseLeave={handleHoverOut}
-        >
-          <div className="d-flex align-items-center w-100"
-            style={{ justifyContent: isSidebarCollapsed ? 'center' : 'space-between' }}>
-            <div className="d-flex align-items-center" style={{ color: 'var(--sidebar-foreground)' }}>
-              <FaHistory className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
-              {!isSidebarCollapsed && <span>Transaction</span>}
-            </div>
-
-            {!isSidebarCollapsed && (
-              openDropdown === "transaction"
-                ? <FaChevronUp style={ArrowIconStyle} />
-                : <FaChevronDown style={ArrowIconStyle} />
-            )}
-          </div>
-
-        </div>
-        {!isSidebarCollapsed && (
-          <div style={submenuStyle(openDropdown === "transaction")}>
-            <div className="py-1 ps-3 sidebar-item"
-              onMouseEnter={handleHoverIn}
-              onMouseLeave={handleHoverOut}
-              style={sidebarItemStyle}>
-              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
-              <Link to="/client/transaction" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
-                onClick={() => {
-                  if (isSidebarCollapsed) {
-                    setIsSidebarCollapsed(false);
-                    if (onCollapse) onCollapse(false);
-                  }
-                }}>
-                Bill/IP/IPR
-              </Link>
-            </div>
-            {/* //ode for overview  */}
-
-          </div>
-        )}
-      </div>
-
-      {/* E-aggreement */}
-      <div className="">
-        <div
-          onClick={() => {
-            if (isSidebarCollapsed) {
-              setIsSidebarCollapsed(false);
-              if (onCollapse) onCollapse(false);
-              setTimeout(() => toggleDropdown("e-agreement"), 300);
-            } else {
-              toggleDropdown("e-agreement");
-            }
-          }}
-          className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`}
-          style={sidebarItemStyle}
-          onMouseEnter={handleHoverIn}
-          onMouseLeave={handleHoverOut}
-        >
-          <div className="d-flex align-items-center w-100"
-            style={{ justifyContent: isSidebarCollapsed ? 'center' : 'space-between' }}>
-            <div className="d-flex align-items-center" style={{ color: 'var(--sidebar-foreground)' }}>
-              <FaFileSignature className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
-              {!isSidebarCollapsed && <span>E-Agreement</span>}
-            </div>
-
-            {!isSidebarCollapsed && (
-              openDropdown === "e-agreement"
-                ? <FaChevronUp style={ArrowIconStyle} />
-                : <FaChevronDown style={ArrowIconStyle} />
-            )}
-          </div>
-
-        </div>
-
-        {!isSidebarCollapsed && (
-          <div style={submenuStyle(openDropdown === "e-agreement")}>
-            {/* sub-Item  */}
-            <div className="py-1 ps-3 sidebar-item"
-              style={sidebarItemStyle}
-              onMouseEnter={handleHoverIn}
-              onMouseLeave={handleHoverOut}
-            >
-              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
-              <Link to="/client/agreement" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
-                onClick={() => {
-                  if (isSidebarCollapsed) {
-                    setIsSidebarCollapsed(false);
-                    if (onCollapse) onCollapse(false);
-                  }
-                }}>
-                Overview
-              </Link>
-            </div>
-            {/* sub-item  */}
-            <div className="py-1 ps-3 sidebar-item"
-              style={sidebarItemStyle}
-              onMouseEnter={handleHoverIn}
-              onMouseLeave={handleHoverOut}
-            >
-              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
-              <Link to="/client/agreement/closed" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
-                onClick={() => {
-                  if (isSidebarCollapsed) {
-                    setIsSidebarCollapsed(false);
-                    if (onCollapse) onCollapse(false);
-                  }
-                }}>
-                Closed Agreement
-              </Link>
-            </div>
-            {/* sub-item  */}
-            {/* <div className="py-1 ps-3 sidebar-item"
-              style={sidebarItemStyle}
-              onMouseEnter={handleHoverIn}
-              onMouseLeave={handleHoverOut}
-            >
-              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
-              <Link to="/client/agreement/action" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}>
-                Agreement for action
-              </Link>
-            </div> */}
-          </div>
-        )}
-      </div>
-      {/* DFS */}
-      <div className="">
-        <div
-          onClick={() => {
-            if (isSidebarCollapsed) {
-              setIsSidebarCollapsed(false);
-              if (onCollapse) onCollapse(false);
-              setTimeout(() => toggleDropdown("dfs"), 300);
-            } else {
-              toggleDropdown("dfs");
-            }
-          }}
-          className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`}
-          style={sidebarItemStyle}
-          onMouseEnter={handleHoverIn}
-          onMouseLeave={handleHoverOut}
-        >
-          <div className="d-flex align-items-center w-100"
-            style={{ justifyContent: isSidebarCollapsed ? 'center' : 'space-between' }}>
-            <div className="d-flex align-items-center" style={{ color: 'var(--sidebar-foreground)' }}>
-              <BsCardChecklist className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
-              {!isSidebarCollapsed && <span>Forward Files - DFS</span>}
-            </div>
-
-            {!isSidebarCollapsed && (
-              openDropdown === "dfs"
-                ? <FaChevronUp style={ArrowIconStyle} />
-                : <FaChevronDown style={ArrowIconStyle} />
-            )}
-          </div>
-
-        </div>
-        {!isSidebarCollapsed && (
-          <div style={submenuStyle(openDropdown === "dfs")}>
-            <div className="py-1 ps-3 sidebar-item"
-              style={sidebarItemStyle}
-              onMouseEnter={handleHoverIn}
-              onMouseLeave={handleHoverOut}
-            >
-              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
-              <Link to="/client/upload-document" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
-                onClick={() => {
-                  if (isSidebarCollapsed) {
-                    setIsSidebarCollapsed(false);
-                    if (onCollapse) onCollapse(false);
-                  }
-                }}>
-                Upload Document
-              </Link>
-            </div>
-            <div className="py-1 ps-3 sidebar-item"
-              style={sidebarItemStyle}
-              onMouseEnter={handleHoverIn}
-              onMouseLeave={handleHoverOut}
-            >
-              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
-              <Link to="/client/track-dfs/all" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
-                onClick={() => {
-                  if (isSidebarCollapsed) {
-                    setIsSidebarCollapsed(false);
-                    if (onCollapse) onCollapse(false);
-                  }
-                }}>
-                Track Document
-              </Link>
-            </div>
-            <div className="py-1 ps-3 sidebar-item"
-              style={sidebarItemStyle}
-              onMouseEnter={handleHoverIn}
-              onMouseLeave={handleHoverOut}
-            >
-              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
-              <Link to="/client/dfsrequest" style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}>
-                Document for review
-              </Link>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Document */}
-      <div className="">
-        <div
-          onClick={() => {
-            if (isSidebarCollapsed) {
-              setIsSidebarCollapsed(false);
-              if (onCollapse) onCollapse(false);
-              setOpenDropdown("document");
-            } else {
-              toggleDropdown("document");
-            }
-          }}
-          className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`}
-          style={sidebarItemStyle}
-          onMouseEnter={handleHoverIn}
-          onMouseLeave={handleHoverOut}
-        >
-          <div className="d-flex align-items-center w-100"
-            style={{ justifyContent: isSidebarCollapsed ? 'center' : 'space-between' }}>
-            <div className="d-flex align-items-center" style={{ color: 'var(--sidebar-foreground)' }}>
-              <FaFileAlt className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
-              {!isSidebarCollapsed && <span>Document</span>}
-            </div>
-
-            {!isSidebarCollapsed && (
-              openDropdown === "document"
-                ? <FaChevronUp style={ArrowIconStyle} />
-                : <FaChevronDown style={ArrowIconStyle} />
-            )}
-          </div>
-
-        </div>
-        {!isSidebarCollapsed && (
-          <div style={submenuStyle(openDropdown === "document")}>
-            <div className="py-1 ps-3 sidebar-item"
-              onMouseEnter={handleHoverIn}
-              onMouseLeave={handleHoverOut}
-              style={sidebarItemStyle}>
-              <FaArrowAltCircleRight className="me-2" style={iconStyle} />
-              <Link to="/client/document/category" style={{ textDecoration: 'none', color: "var(--sidebar-foreground)" }}
-                onClick={() => {
-                  if (isSidebarCollapsed) {
-                    setIsSidebarCollapsed(false);
-                    if (onCollapse) onCollapse(false);
-                  }
-                }}>
-                All Documents
-              </Link>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Salary */}
-      <div className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`}
-        style={sidebarItemStyle}
-        onMouseEnter={handleHoverIn}
-        onMouseLeave={handleHoverOut}
-      >
-        <Link
-          to="/client/salary"
-          style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
-          onClick={() => {
-            if (isSidebarCollapsed) {
-              setIsSidebarCollapsed(false);
-              if (onCollapse) onCollapse(false);
-              setTimeout(() => { }, 0);
-            }
-          }}
-        >
-          <FaMoneyBillWave className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
-          {!isSidebarCollapsed && 'Salary'}
-        </Link>
-      </div>
-
-      {/* Settings */}
-      <div className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`}
-        style={sidebarItemStyle}
-        onMouseEnter={handleHoverIn}
-        onMouseLeave={handleHoverOut}
-      >
-        <Link
-          to="/client/setting"
-          style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
-          onClick={() => {
-            if (isSidebarCollapsed) {
-              setIsSidebarCollapsed(false);
-              if (onCollapse) onCollapse(false);
-              setTimeout(() => { }, 0);
-            }
-          }}
-        >
-          <FaUserCog className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
-          {!isSidebarCollapsed && 'Setting'}
-        </Link>
-      </div>
-
-      {/* SOR */}
-      <div className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`} style={sidebarItemStyle}
-        onMouseEnter={handleHoverIn}
-        onMouseLeave={handleHoverOut}
-      >
-        <Link
-          to="/client/sor"
-          style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
-          onClick={() => {
-            if (isSidebarCollapsed) {
-              setIsSidebarCollapsed(false);
-              if (onCollapse) onCollapse(false);
-              setTimeout(() => { }, 0);
-            }
-          }}
-
-        >
-          <FaHeadset className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
-          {!isSidebarCollapsed && 'SOR'}
-        </Link>
-      </div>
-
-      {/* Support */}
-      <div className={`d-flex align-items-center sidebar-item ${isSidebarCollapsed ? 'justify-content-center' : ''}`} style={sidebarItemStyle}
-        onMouseEnter={handleHoverIn}
-        onMouseLeave={handleHoverOut}
-      >
-        <Link
-          to="/client/support"
-          style={{ textDecoration: 'none', color: 'var(--sidebar-foreground)' }}
-          onClick={() => {
-            if (isSidebarCollapsed) {
-              setIsSidebarCollapsed(false);
-              if (onCollapse) onCollapse(false);
-              setTimeout(() => { }, 0);
-            }
-          }}
-
-        >
-          <FaHeadset className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
-          {!isSidebarCollapsed && 'Support'}
-        </Link>
-      </div>
-
-      {/* Logout */}
-      <div className={`mt-auto p-2 d-flex align-items-center sidebar-item  ${isSidebarCollapsed ? 'justify-content-center' : ''}`} onClick={() => {
-        if (isSidebarCollapsed) {
-          setIsSidebarCollapsed(false);
-          if (onCollapse) onCollapse(false);
-          // Delay the logout modal to allow sidebar expansion animation
-          setTimeout(() => setShowLogoutModal(true), 300);
-        } else {
-          handleLogoutClick();
+    <>
+      <style>{`
+        .cl-sidebar { font-family: system-ui, -apple-system, sans-serif; }
+        .cl-sidebar .nav-item-btn {
+          display:flex; align-items:center; gap:10px; width:100%;
+          padding:9px 12px; border:none; background:transparent; border-radius:10px;
+          cursor:pointer; text-align:left; text-decoration:none;
+          color:var(--sidebar-foreground); font-size:0.92rem; font-weight:500;
+          transition:background .2s ease, color .2s ease;
         }
-      }}
-        onMouseEnter={handleHoverIn}
-        onMouseLeave={handleHoverOut}
+        .cl-sidebar .nav-item-btn:hover:not(.active){ background:var(--secondary); color:var(--primary); }
+        .cl-sidebar .nav-item-btn:hover:not(.active) .nav-ico{ color:var(--primary); }
+        .cl-sidebar .nav-item-btn.active{ background:var(--primary); color:var(--primary-foreground); font-weight:600; }
+        .cl-sidebar .nav-item-btn.active .nav-ico{ color:var(--primary-foreground); }
+        .cl-sidebar .nav-item-btn.parent-active{ color:var(--primary); }
+        .cl-sidebar .nav-item-btn.parent-active .nav-ico{ color:var(--primary); }
+        .cl-sidebar .nav-ico{ font-size:1.05rem; min-width:22px; text-align:center; color:var(--accent); flex-shrink:0; transition:color .2s ease; }
+        .cl-sidebar .lbl{ white-space:nowrap; overflow:hidden; flex:1; }
+        .cl-sidebar .chev{ font-size:.72rem; flex-shrink:0; opacity:.65; transition:transform .3s ease; }
+        .cl-sidebar .chev.open{ transform:rotate(180deg); }
+        .cl-sidebar .submenu{ overflow:hidden; transition:max-height .35s ease; margin:2px 0 4px 18px; border-left:1.5px solid var(--border); padding-left:8px; display:flex; flex-direction:column; gap:2px; }
+        .cl-sidebar .sub-item{ display:flex; align-items:center; gap:9px; padding:7px 10px; border-radius:8px; font-size:0.84rem; font-weight:500; color:var(--secondary-foreground); text-decoration:none; transition:background .2s ease, color .2s ease; }
+        .cl-sidebar .sub-item:hover:not(.active){ background:var(--secondary); color:var(--primary); }
+        .cl-sidebar .sub-item.active{ background:var(--secondary); color:var(--primary); font-weight:600; }
+        .cl-sidebar .sub-dot{ width:6px; height:6px; border-radius:50%; background:var(--muted-foreground); flex-shrink:0; transition:background .2s ease; }
+        .cl-sidebar .sub-item:hover .sub-dot, .cl-sidebar .sub-item.active .sub-dot{ background:var(--accent); }
+        .cl-sidebar .nav-scroll{ flex:1; overflow-y:auto; overflow-x:hidden; padding-right:3px; display:flex; flex-direction:column; gap:3px; }
+        .cl-sidebar .nav-scroll::-webkit-scrollbar{ width:6px; }
+        .cl-sidebar .nav-scroll::-webkit-scrollbar-thumb{ background:var(--border); border-radius:3px; }
+        .cl-sidebar .nav-scroll::-webkit-scrollbar-track{ background:transparent; }
+        .cl-sidebar.collapsed .nav-item-btn{ justify-content:center; padding:11px 0; }
+        .cl-sidebar.collapsed .lbl, .cl-sidebar.collapsed .chev{ display:none; }
+        .cl-sidebar .logout-btn:hover{ background:var(--warning); color:var(--warning-foreground); }
+        .cl-sidebar .logout-btn:hover .nav-ico{ color:var(--destructive); }
+      `}</style>
+
+      <div
+        className={`cl-sidebar vh-100 d-flex flex-column ${collapsed ? 'collapsed' : ''}`}
+        style={{
+          width: collapsed ? '72px' : '260px',
+          zIndex: 1050,
+          backgroundColor: 'var(--sidebar)',
+          borderRight: '1px solid var(--border)',
+          boxShadow: '2px 0 12px var(--shadow-color)',
+          display: isOpen ? 'flex' : 'none',
+          transition: 'width 0.3s ease',
+          overflow: 'hidden',
+          minHeight: '100vh',
+          padding: '14px 12px',
+          color: 'var(--sidebar-foreground)',
+        }}
       >
-        <FaSignOutAlt className={`me-2 ${isSidebarCollapsed ? 'me-0' : ''}`} style={iconStyle} />
-        <span style={{ color: 'var(--sidebar-foreground)' }}>
-          {!isSidebarCollapsed && 'Logout'}
-        </span>
+
+        {/* ── Toggle ── */}
+        {/* ── Toggle ── */}
+        <div className={`d-flex ${collapsed ? 'justify-content-center' : 'justify-content-end'} mb-2`}>
+          <button
+            onClick={() => setCollapseState(!collapsed)}
+            aria-label={collapsed ? 'Show sidebar' : 'Hide sidebar'}
+            title={collapsed ? 'Show sidebar' : 'Hide sidebar'}
+            className="d-flex align-items-center justify-content-center"
+            style={{
+              backgroundColor: 'var(--primary)',
+              color: 'var(--primary-foreground, #ffffff)',  // ✅ white fallback
+              width: 34, height: 34, minWidth: 34, padding: 0,
+              borderRadius: 8, border: 'none', cursor: 'pointer', lineHeight: 0,
+              transition: 'background-color 0.25s ease',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--primary-hover)')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--primary)')}
+          >
+            {collapsed
+              ? <FaBars size={16} color="#ffffff" />
+              : <FaTimes size={16} color="#ffffff" />}
+          </button>
+        </div>
+        {/* ── Profile ── */}
+        {!collapsed && (
+          <div className="text-center mb-3">
+            <img
+              src={user?.profile || dummyUser}
+              alt="Profile"
+              className="rounded-circle mb-2"
+              style={{
+                width: 76, height: 76, objectFit: 'cover', cursor: 'pointer',
+                border: '2px solid var(--primary)', transition: 'transform 0.25s ease',
+              }}
+              onClick={() => navigate('/client')}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.06)')}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+            />
+            <div style={{ fontSize: '0.98rem', fontWeight: 600, color: 'var(--text-strong)' }}>
+              {user?.name || 'Client Name'}
+            </div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--muted-foreground)', marginTop: 1 }}>
+              Client ID • {user?.cid || 'CL-0000'}
+            </div>
+            <hr style={{ borderTop: '1px solid var(--border)', opacity: 0.7, margin: '0.9rem 0.5rem 0' }} />
+          </div>
+        )}
+
+        {/* ── Scrollable nav ── */}
+        <div className="nav-scroll">
+          {NAV.map((item) => {
+            const Icon = item.icon;
+
+            // Single link
+            if (item.type === 'link') {
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  title={collapsed ? item.label : undefined}
+                  className={`nav-item-btn ${isActive(item.to) ? 'active' : ''}`}
+                  onClick={(e) => { if (collapsed) { e.preventDefault(); expandThen(() => navigate(item.to)); } }}
+                >
+                  <Icon className="nav-ico" />
+                  <span className="lbl">{item.label}</span>
+                </Link>
+              );
+            }
+
+            // Dropdown group
+            const groupActive = isGroupActive(item.items);
+            const open = openDropdown === item.key && !collapsed;
+            return (
+              <div key={item.key}>
+                <button
+                  type="button"
+                  title={collapsed ? item.label : undefined}
+                  className={`nav-item-btn ${groupActive && !open ? 'parent-active' : ''}`}
+                  onClick={() => expandThen(() => toggleDropdown(item.key))}
+                >
+                  <Icon className="nav-ico" />
+                  <span className="lbl">{item.label}</span>
+                  <FaChevronDown className={`chev ${open ? 'open' : ''}`} />
+                </button>
+
+                <div className="submenu" style={{ maxHeight: open ? `${item.items.length * 44 + 8}px` : 0 }}>
+                  {item.items.map((sub) => (
+                    <Link
+                      key={sub.to}
+                      to={sub.to}
+                      className={`sub-item ${isActive(sub.to) ? 'active' : ''}`}
+                    >
+                      <span className="sub-dot" />
+                      {sub.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── Logout (pinned) ── */}
+        <div style={{ paddingTop: 8, marginTop: 6, borderTop: '1px solid var(--border)' }}>
+          <button
+            type="button"
+            title={collapsed ? 'Logout' : undefined}
+            className="nav-item-btn logout-btn"
+            onClick={() => expandThen(() => setShowLogoutModal(true))}
+          >
+            <FaSignOutAlt className="nav-ico" />
+            <span className="lbl">Logout</span>
+          </button>
+        </div>
       </div>
 
       <LogoutModal show={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
-
-    </div >
+    </>
   );
 };
 
