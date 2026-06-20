@@ -30,7 +30,7 @@ const SUB_FIELD_CONFIG = {
 const DOC_TYPES = ["Proposal", "Report", "Quotation/Estimate", "Contract", "Invoices", "Others"];
 const DEPARTMENTS = ["Finance/Account", "Operations", "Executives", "Info-Technology"];
 
-// ── Shared field styles (warm input bg, never harsh black) ───────────────────
+// ── Shared styles ─────────────────────────────────────────────────────────────
 const labelStyle = {
     fontSize: 11, fontWeight: 600, color: "var(--text-muted)", display: "block",
     marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.05em",
@@ -39,6 +39,11 @@ const controlStyle = {
     width: "100%", border: "1px solid var(--border)", borderRadius: 8,
     padding: "9px 12px", fontSize: 13.5, color: "var(--foreground)",
     background: "var(--input)", outline: "none", boxSizing: "border-box",
+};
+// Consistent card shadow — matches the header
+const cardStyle = {
+    background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12,
+    padding: "16px 18px", marginBottom: 14, boxShadow: "0 2px 8px var(--shadow-color)",
 };
 
 export default function UploadDocumentPage() {
@@ -63,7 +68,6 @@ export default function UploadDocumentPage() {
 
     const activeSubFields = SUB_FIELD_CONFIG[documentType] || [];
 
-    // ── Completion progress ──
     const progress = (() => {
         let s = 0;
         if (documentType) s += 20;
@@ -136,195 +140,201 @@ export default function UploadDocumentPage() {
         <>
             {getHeaderComponent()}
 
-            <div className="shadow-sm border-0 my-3 py-1" style={{
-                background: "var(--background)", minHeight: "100vh",
-                fontFamily: "system-ui, -apple-system, sans-serif", color: "var(--foreground)",
-            }}>
+            <div style={{ padding: "0 2px", fontFamily: "system-ui, -apple-system, sans-serif", color: "var(--foreground)" }}>
 
-                {/* ── Title bar ── */}
+                {/* ── Page card (lifted, rounded, accent-topped — matches header) ── */}
                 <div style={{
-                    background: "var(--background)", borderBottom: "1px solid var(--border)",
-                    padding: "10px 20px", display: "flex", alignItems: "center",
-                    justifyContent: "space-between", flexWrap: "wrap", gap: 10,
+                    background: "var(--card)",
+                    borderRadius: 14,
+                    border: "1px solid var(--border)",
+                    boxShadow: "0 2px 10px var(--shadow-color)",
+                    overflow: "hidden",
+                    marginBottom: 16,
                 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--warning)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                            <FiUploadCloud size={15} color="var(--primary)" />
-                        </div>
-                        <div>
-                            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-strong)", lineHeight: 1.2 }}>Upload Document</div>
-                            <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>Submit a document into the forwarding & review workflow</div>
-                        </div>
-                    </div>
-                    <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "var(--text-muted)", padding: "3px 8px", background: "var(--muted)", borderRadius: 5 }}>
-                        <FiCheckCircle size={11} /> {progress}% complete
-                    </span>
-                </div>
 
-                {/* ── Main content (full width, padding only) ── */}
-                <div style={{ padding: "16px 20px" }}>
 
-                    <form onSubmit={handleUpload}>
 
-                        {/* Progress strip */}
-                        <div style={{ height: 4, background: "var(--border)", borderRadius: 99, overflow: "hidden", marginBottom: 16 }}>
-                            <div style={{ height: "100%", width: `${progress}%`, background: "var(--accent)", borderRadius: 99, transition: "width .35s ease" }} />
-                        </div>
-
-                        {/* ── Document details card ── */}
-                        <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 10, padding: "16px 18px", marginBottom: 14 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2 }}>
-                                <FiFileText size={14} color="var(--accent)" />
-                                <span style={{ fontWeight: 700, fontSize: 13, color: "var(--text-strong)" }}>Document details</span>
+                    {/* ── Title bar ── */}
+                    <div style={{
+                        borderBottom: "1px solid var(--border)",
+                        padding: "14px 20px", display: "flex", alignItems: "center",
+                        justifyContent: "space-between", flexWrap: "wrap", gap: 10,
+                    }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <div style={{ width: 34, height: 34, borderRadius: 8, background: "var(--warning)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                <FiUploadCloud size={16} color="var(--primary)" />
                             </div>
-                            <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 14 }}>
-                                Categorise the document so it routes to the right reviewers.
-                            </div>
-
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginBottom: 12 }}>
-                                <div>
-                                    <label style={labelStyle}><FiLayers size={11} style={{ marginRight: 4, verticalAlign: -1 }} />Document type *</label>
-                                    <select value={documentType} onChange={handleDocTypeChange} required style={{ ...controlStyle, cursor: "pointer" }}>
-                                        <option value="">Select type</option>
-                                        {DOC_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style={labelStyle}><FiHome size={11} style={{ marginRight: 4, verticalAlign: -1 }} />Department *</label>
-                                    <select value={department} onChange={e => setDepartment(e.target.value)} required style={{ ...controlStyle, cursor: "pointer" }}>
-                                        <option value="">Select department</option>
-                                        {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-                                    </select>
-                                </div>
-                            </div>
-
                             <div>
-                                <label style={labelStyle}><FiType size={11} style={{ marginRight: 4, verticalAlign: -1 }} />Document title *</label>
-                                <input
-                                    type="text"
-                                    placeholder="e.g. Q3 Commercial Invoice — Vendor XYZ"
-                                    value={fileTitle}
-                                    onChange={e => setFileTitle(e.target.value)}
-                                    required
-                                    style={controlStyle}
-                                />
+                                <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-strong)", lineHeight: 1.2 }}>Upload Document</div>
+                                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>Submit a document into the forwarding & review workflow</div>
                             </div>
                         </div>
+                        <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "var(--text-muted)", padding: "4px 10px", background: "var(--muted)", borderRadius: 20, fontWeight: 600 }}>
+                            <FiCheckCircle size={11} color="var(--accent)" /> {progress}% complete
+                        </span>
+                    </div>
 
-                        {/* ── Conditional sub-fields card ── */}
-                        {activeSubFields.length > 0 && (
-                            <div style={{
-                                background: "var(--card)", border: "1px solid var(--border)",
-                                borderRadius: 10, padding: "16px 18px", marginBottom: 14,
-                                borderLeft: "3px solid var(--accent)",
-                            }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 14 }}>
-                                    <span style={{ background: "var(--warning)", color: "var(--warning-foreground)", fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 20, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                                        {documentType}
-                                    </span>
-                                    <span style={{ fontWeight: 600, fontSize: 13, color: "var(--text-strong)" }}>Additional classification</span>
-                                </div>
+                    {/* ── Form body ── */}
+                    <div style={{ padding: "18px 20px" }}>
 
-                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-                                    {activeSubFields.map(field => (
-                                        <div key={field.key}>
-                                            <label style={labelStyle}>{field.label}</label>
-                                            <select
-                                                value={subFields[field.key] || ""}
-                                                onChange={e => handleSubFieldChange(field.key, e.target.value)}
-                                                style={{ ...controlStyle, cursor: "pointer" }}
-                                            >
-                                                <option value="">Select {field.label.toLowerCase()}</option>
-                                                {field.options.map(o => <option key={o} value={o}>{o}</option>)}
-                                            </select>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                        <form onSubmit={handleUpload}>
 
-                        {/* ── Description card ── */}
-                        <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 10, padding: "16px 18px", marginBottom: 14 }}>
-                            <label style={labelStyle}><FiAlignLeft size={11} style={{ marginRight: 4, verticalAlign: -1 }} />Description *</label>
-                            <textarea
-                                rows={3}
-                                placeholder="Briefly describe the document's purpose and any relevant context…"
-                                value={description}
-                                onChange={e => setDescription(e.target.value)}
-                                required
-                                style={{ ...controlStyle, resize: "vertical", minHeight: 84, lineHeight: 1.5 }}
-                            />
-                        </div>
-
-                        {/* ── File upload card ── */}
-                        <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 10, padding: "16px 18px", marginBottom: 14 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 12 }}>
-                                <FiUploadCloud size={14} color="var(--accent)" />
-                                <span style={{ fontWeight: 700, fontSize: 13, color: "var(--text-strong)" }}>Attach file</span>
+                            {/* Progress strip */}
+                            <div style={{ height: 4, background: "var(--border)", borderRadius: 99, overflow: "hidden", marginBottom: 16 }}>
+                                <div style={{ height: "100%", width: `${progress}%`, background: "var(--accent)", borderRadius: 99, transition: "width .35s ease" }} />
                             </div>
 
-                            <label
-                                htmlFor="fileUpload"
-                                onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-                                onDragLeave={() => setDragOver(false)}
-                                onDrop={e => { e.preventDefault(); setDragOver(false); setSelectedFile(e.dataTransfer.files[0]); }}
-                                style={{
-                                    display: "block", textAlign: "center", cursor: "pointer",
-                                    border: `2px dashed ${dragOver ? "var(--accent)" : "var(--border)"}`,
-                                    borderRadius: 10, padding: "26px 16px",
-                                    background: dragOver ? "var(--secondary)" : "var(--muted)",
-                                    transition: "border-color .2s, background .2s",
-                                }}
-                            >
-                                <FiUploadCloud size={30} color="var(--muted-foreground)" style={{ marginBottom: 8 }} />
-                                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--secondary-foreground)" }}>Tap to browse or drag & drop</div>
-                                <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 3 }}>PDF only · max 10 MB</div>
-                                <input
-                                    type="file" id="fileUpload" accept=".pdf"
-                                    onChange={e => setSelectedFile(e.target.files[0])}
-                                    style={{ display: "none" }}
-                                />
-                            </label>
+                            {/* ── Document details card ── */}
+                            <div style={cardStyle}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2 }}>
+                                    <FiFileText size={14} color="var(--accent)" />
+                                    <span style={{ fontWeight: 700, fontSize: 13, color: "var(--text-strong)" }}>Document details</span>
+                                </div>
+                                <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 14 }}>
+                                    Categorise the document so it routes to the right reviewers.
+                                </div>
 
-                            {file && (
-                                <div style={{ display: "flex", alignItems: "center", gap: 9, background: "var(--secondary)", border: "1px solid var(--border)", borderRadius: 8, padding: "9px 12px", marginTop: 10 }}>
-                                    <FiFile size={17} color="var(--primary)" style={{ flexShrink: 0 }} />
-                                    <span style={{ fontSize: 13, fontWeight: 500, color: "var(--foreground)", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{file.name}</span>
-                                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{fileSize}</span>
-                                    <FiX size={16} onClick={() => setFile(null)} style={{ cursor: "pointer", color: "var(--text-muted)", flexShrink: 0 }} />
+                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginBottom: 12 }}>
+                                    <div>
+                                        <label style={labelStyle}><FiLayers size={11} style={{ marginRight: 4, verticalAlign: -1 }} />Document type *</label>
+                                        <select value={documentType} onChange={handleDocTypeChange} required style={{ ...controlStyle, cursor: "pointer" }}>
+                                            <option value="">Select type</option>
+                                            {DOC_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style={labelStyle}><FiHome size={11} style={{ marginRight: 4, verticalAlign: -1 }} />Department *</label>
+                                        <select value={department} onChange={e => setDepartment(e.target.value)} required style={{ ...controlStyle, cursor: "pointer" }}>
+                                            <option value="">Select department</option>
+                                            {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label style={labelStyle}><FiType size={11} style={{ marginRight: 4, verticalAlign: -1 }} />Document title *</label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. Q3 Commercial Invoice — Vendor XYZ"
+                                        value={fileTitle}
+                                        onChange={e => setFileTitle(e.target.value)}
+                                        required
+                                        style={controlStyle}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* ── Conditional sub-fields card ── */}
+                            {activeSubFields.length > 0 && (
+                                <div style={{ ...cardStyle, borderLeft: "3px solid var(--accent)" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 14 }}>
+                                        <span style={{ background: "var(--warning)", color: "var(--warning-foreground)", fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 20, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                                            {documentType}
+                                        </span>
+                                        <span style={{ fontWeight: 600, fontSize: 13, color: "var(--text-strong)" }}>Additional classification</span>
+                                    </div>
+
+                                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+                                        {activeSubFields.map(field => (
+                                            <div key={field.key}>
+                                                <label style={labelStyle}>{field.label}</label>
+                                                <select
+                                                    value={subFields[field.key] || ""}
+                                                    onChange={e => handleSubFieldChange(field.key, e.target.value)}
+                                                    style={{ ...controlStyle, cursor: "pointer" }}
+                                                >
+                                                    <option value="">Select {field.label.toLowerCase()}</option>
+                                                    {field.options.map(o => <option key={o} value={o}>{o}</option>)}
+                                                </select>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
-                        </div>
 
-                        {/* ── Actions ── */}
-                        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", flexWrap: "wrap" }}>
-                            <button
-                                type="button" onClick={resetForm} disabled={loading}
-                                style={{
-                                    display: "flex", alignItems: "center", gap: 6,
-                                    padding: "9px 16px", borderRadius: 8, border: "1px solid var(--border)",
-                                    background: "var(--secondary)", color: "var(--secondary-foreground)",
-                                    fontSize: 13, fontWeight: 600, cursor: "pointer",
-                                }}
-                            >
-                                <FiX size={14} /> Clear form
-                            </button>
-                            <button
-                                type="submit" disabled={loading}
-                                style={{
-                                    display: "flex", alignItems: "center", gap: 7,
-                                    padding: "9px 20px", borderRadius: 8, border: "none",
-                                    background: "var(--primary)", color: "#fff",
-                                    fontSize: 13, fontWeight: 600,
-                                    cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1,
-                                }}
-                            >
-                                {loading
-                                    ? <><FiRefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} /> Uploading…</>
-                                    : <><FiSend size={14} /> Submit document</>}
-                            </button>
-                        </div>
-                    </form>
+                            {/* ── Description card ── */}
+                            <div style={cardStyle}>
+                                <label style={labelStyle}><FiAlignLeft size={11} style={{ marginRight: 4, verticalAlign: -1 }} />Description *</label>
+                                <textarea
+                                    rows={3}
+                                    placeholder="Briefly describe the document's purpose and any relevant context…"
+                                    value={description}
+                                    onChange={e => setDescription(e.target.value)}
+                                    required
+                                    style={{ ...controlStyle, resize: "vertical", minHeight: 84, lineHeight: 1.5 }}
+                                />
+                            </div>
+
+                            {/* ── File upload card ── */}
+                            <div style={cardStyle}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 12 }}>
+                                    <FiUploadCloud size={14} color="var(--accent)" />
+                                    <span style={{ fontWeight: 700, fontSize: 13, color: "var(--text-strong)" }}>Attach file</span>
+                                </div>
+
+                                <label
+                                    htmlFor="fileUpload"
+                                    onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                                    onDragLeave={() => setDragOver(false)}
+                                    onDrop={e => { e.preventDefault(); setDragOver(false); setSelectedFile(e.dataTransfer.files[0]); }}
+                                    style={{
+                                        display: "block", textAlign: "center", cursor: "pointer",
+                                        border: `2px dashed ${dragOver ? "var(--accent)" : "var(--border)"}`,
+                                        borderRadius: 10, padding: "26px 16px",
+                                        background: dragOver ? "var(--secondary)" : "var(--muted)",
+                                        transition: "border-color .2s, background .2s",
+                                    }}
+                                >
+                                    <FiUploadCloud size={30} color="var(--muted-foreground)" style={{ marginBottom: 8 }} />
+                                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--secondary-foreground)" }}>Tap to browse or drag & drop</div>
+                                    <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 3 }}>PDF only · max 10 MB</div>
+                                    <input
+                                        type="file" id="fileUpload" accept=".pdf"
+                                        onChange={e => setSelectedFile(e.target.files[0])}
+                                        style={{ display: "none" }}
+                                    />
+                                </label>
+
+                                {file && (
+                                    <div style={{ display: "flex", alignItems: "center", gap: 9, background: "var(--secondary)", border: "1px solid var(--border)", borderRadius: 8, padding: "9px 12px", marginTop: 10 }}>
+                                        <FiFile size={17} color="var(--primary)" style={{ flexShrink: 0 }} />
+                                        <span style={{ fontSize: 13, fontWeight: 500, color: "var(--foreground)", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{file.name}</span>
+                                        <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{fileSize}</span>
+                                        <FiX size={16} onClick={() => setFile(null)} style={{ cursor: "pointer", color: "var(--text-muted)", flexShrink: 0 }} />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* ── Actions ── */}
+                            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", flexWrap: "wrap" }}>
+                                <button
+                                    type="button" onClick={resetForm} disabled={loading}
+                                    style={{
+                                        display: "flex", alignItems: "center", gap: 6,
+                                        padding: "9px 16px", borderRadius: 8, border: "1px solid var(--border)",
+                                        background: "var(--secondary)", color: "var(--secondary-foreground)",
+                                        fontSize: 13, fontWeight: 600, cursor: "pointer",
+                                    }}
+                                >
+                                    <FiX size={14} /> Clear form
+                                </button>
+                                <button
+                                    type="submit" disabled={loading}
+                                    style={{
+                                        display: "flex", alignItems: "center", gap: 7,
+                                        padding: "9px 20px", borderRadius: 8, border: "none",
+                                        background: "var(--primary)", color: "#fff",
+                                        fontSize: 13, fontWeight: 600,
+                                        cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1,
+                                    }}
+                                >
+                                    {loading
+                                        ? <><FiRefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} /> Uploading…</>
+                                        : <><FiSend size={14} /> Submit document</>}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
 
