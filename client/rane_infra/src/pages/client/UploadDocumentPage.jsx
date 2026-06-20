@@ -1,287 +1,334 @@
 import React, { useState } from 'react';
-import { Form, Button, Row, Col, Card, Spinner } from 'react-bootstrap';
-import { FaFileAlt, FaCloudUploadAlt, FaRegFileAlt, FaBuilding } from 'react-icons/fa';
+import {
+    FiFileText, FiUploadCloud, FiFile, FiX, FiSend,
+    FiRefreshCw, FiLayers, FiHome, FiType, FiAlignLeft, FiCheckCircle
+} from 'react-icons/fi';
 import { uploadDocument } from '../../services/dfsService';
-
 import { CLOUDINARY_URL, UPLOAD_PRESET } from '../../store/keyStore';
-import { backend_url } from '../../store/keyStore';
 import ClientHeader from "../../component/header/ClientHeader";
 import StaffHeader from "../../component/header/StaffHeader";
 import { useAuthStore } from '../../store/authStore';
 
+// ── Sub-field config: single source of truth ─────────────────────────────────
+const SUB_FIELD_CONFIG = {
+    Invoices: [
+        { key: "invoiceType", label: "Invoice type", options: ["IR Invoice", "Commercial Invoice", "Return Invoice", "Labour Invoice"] },
+    ],
+    Contract: [
+        { key: "eAgreement", label: "E-agreement", options: ["Agreement Acceptance", "Agreement Modification", "Other"] },
+        { key: "generalContractAndLabour", label: "General contract & labour", options: ["Labour", "Goods and Supply"] },
+    ],
+    Proposal: [
+        { key: "proposalType", label: "Proposal type", options: ["New NS Item Proposal", "Vetted NS Item Proposal", "NS Under SORS", "Previous NS Query"] },
+    ],
+    Report: [
+        { key: "employeeMeasurementBook", label: "Measurement book (EMB)", options: ["Recorded MB", "Finalised MB", "Pending MB"] },
+        { key: "employeeReport", label: "Employee report", options: ["Document Report", "Tender Report", "Work Report", "Other"] },
+    ],
+};
+
+const DOC_TYPES = ["Proposal", "Report", "Quotation/Estimate", "Contract", "Invoices", "Others"];
+const DEPARTMENTS = ["Finance/Account", "Operations", "Executives", "Info-Technology"];
+
+// ── Shared field styles (warm input bg, never harsh black) ───────────────────
+const labelStyle = {
+    fontSize: 11, fontWeight: 600, color: "var(--text-muted)", display: "block",
+    marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.05em",
+};
+const controlStyle = {
+    width: "100%", border: "1px solid var(--border)", borderRadius: 8,
+    padding: "9px 12px", fontSize: 13.5, color: "var(--foreground)",
+    background: "var(--input)", outline: "none", boxSizing: "border-box",
+};
+
 export default function UploadDocumentPage() {
     const { user } = useAuthStore();
+
     const [fileTitle, setFileTitle] = useState('');
     const [description, setDescription] = useState('');
     const [file, setFile] = useState(null);
     const [documentType, setDocumentType] = useState('');
     const [department, setDepartment] = useState('');
-    const [loading, setLoading] = useState(false); 
+    const [subFields, setSubFields] = useState({});
+    const [loading, setLoading] = useState(false);
+    const [dragOver, setDragOver] = useState(false);
 
     const getHeaderComponent = () => {
         switch (user?.role) {
-          case 'client':
-            return <ClientHeader />;
-          case 'staff':
-            return <StaffHeader />;
-          default:
-            return <ClientHeader />;
+            case 'client': return <ClientHeader />;
+            case 'staff': return <StaffHeader />;
+            default: return <ClientHeader />;
         }
-      };
+    };
 
-    const handleFileChange = (e) => {
-        setFile(e.target.files[0]);
+    const activeSubFields = SUB_FIELD_CONFIG[documentType] || [];
+
+    // ── Completion progress ──
+    const progress = (() => {
+        let s = 0;
+        if (documentType) s += 20;
+        if (department) s += 15;
+        if (fileTitle.trim()) s += 20;
+        if (description.trim()) s += 20;
+        if (file) s += 25;
+        return s;
+    })();
+
+    const handleDocTypeChange = (e) => {
+        setDocumentType(e.target.value);
+        setSubFields({});
+    };
+    const handleSubFieldChange = (key, value) =>
+        setSubFields((prev) => ({ ...prev, [key]: value }));
+
+    const setSelectedFile = (f) => {
+        if (!f) return;
+        if (f.type !== 'application/pdf') { alert("Only PDF files are accepted."); return; }
+        if (f.size > 10 * 1024 * 1024) { alert("File exceeds the 10 MB limit."); return; }
+        setFile(f);
+    };
+
+    const resetForm = () => {
+        setFile(null); setFileTitle(''); setDescription('');
+        setDocumentType(''); setDepartment(''); setSubFields({});
     };
 
     const handleUpload = async (e) => {
         e.preventDefault();
-
-        if (!file) {
-            alert("Please select a file to upload.");
-            return;
-        }
-
+        if (!file) { alert("Please attach a PDF file."); return; }
         try {
-            setLoading(true); // ✅ start spinner
-
-            // 1. Upload file to Cloudinary
+            setLoading(true);
             const fileUrl = await uploadDocumentToCloudinary(file);
-
-            // 2. Send metadata to backend
             const response = await uploadDocument({
-                fileTitle,
-                fileUrl,
+                fileTitle, fileUrl,
                 docType: documentType,
                 Department: department,
-                description
+                description,
+                ...subFields,
             });
-
             alert("Document uploaded successfully!");
             console.log("Response:", response);
-
-            // 3. Reset form
-            setFile(null);
-            setFileTitle('');
-            setDescription('');
-            setDocumentType('');
-            setDepartment('');
+            resetForm();
         } catch (err) {
             alert("Upload failed: " + err.message);
         } finally {
-            setLoading(false); // ✅ stop spinner
+            setLoading(false);
         }
     };
 
-    const uploadDocumentToCloudinary = async (file) => {
-        try {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', UPLOAD_PRESET);
-
-            const res = await fetch(CLOUDINARY_URL, {
-                method: 'POST', 
-                body: formData,
-            });
-
-            if (!res.ok) throw new Error('Cloudinary upload failed');
-
-            const data = await res.json();
-            return data.secure_url; // File URL
-        } catch (err) {
-            console.error('Cloudinary Upload Error:', err);
-            throw err;
-        }
+    const uploadDocumentToCloudinary = async (f) => {
+        const formData = new FormData();
+        formData.append('file', f);
+        formData.append('upload_preset', UPLOAD_PRESET);
+        const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
+        if (!res.ok) throw new Error('Cloudinary upload failed');
+        const data = await res.json();
+        return data.secure_url;
     };
+
+    const fileSize = file
+        ? (file.size / 1024 > 1024
+            ? (file.size / 1048576).toFixed(1) + " MB"
+            : Math.round(file.size / 1024) + " KB")
+        : "";
 
     return (
         <>
             {getHeaderComponent()}
-            <div className="container-fluid w-100 p-0 my-3">
-                <Card className="p-3 border-0 w-100" style={{ backgroundColor: 'var(--client-component-bg-color)' }}>
-                    <h4 className="mb-4 mt-2" style={{ color: 'var(--client-heading-color)' }}>
-                        <FaRegFileAlt className="me-2" />
-                        Upload Document
-                    </h4>
 
-                    <Form onSubmit={handleUpload}>
-                        <Row className="mb-3">
-                            <Col md={6}>
-                                <Form.Group>
-                                    <Form.Label className="text-capitalize fw-bold" style={{ color: 'var(--client-text-color)' }}>
-                                        Document Type
-                                    </Form.Label>
-                                    <div className="input-group">
-                                        <span className="input-group-text bg-white" style={{ borderColor: 'var(--client-border-color)' }}>
-                                            <FaFileAlt style={{ color: 'var(--client-text-color)' }} />
-                                        </span>
-                                        <Form.Select
-                                            value={documentType}
-                                            onChange={(e) => setDocumentType(e.target.value)}
-                                            required
-                                            style={{ borderColor: 'var(--client-border-color)' }}
-                                        >
-                                            <option value="">Select department</option>
-                                            <option value="Proposal">Proposal</option>
-                                            <option value="Report">Report</option>
-                                            <option value="Quotation/Estimate">Quotation/Estimate</option>
-                                            <option value="Contract">Contract</option>
-                                            <option value="Invoices">Invoices</option>
-                                            <option value="Others">Others</option>
-                                        </Form.Select>
-                                    </div>
-                                </Form.Group>
-                            </Col>
+            <div className="shadow-sm border-0 my-3 py-1" style={{
+                background: "var(--background)", minHeight: "100vh",
+                fontFamily: "system-ui, -apple-system, sans-serif", color: "var(--foreground)",
+            }}>
 
-                            <Col md={6}>
-                                <Form.Group>
-                                    <Form.Label className="text-capitalize fw-bold" style={{ color: 'var(--client-text-color)' }}>
-                                        Document Title
-                                    </Form.Label>
-                                    <div className="input-group">
-                                        <span
-                                            className="input-group-text bg-white"
-                                            style={{
-                                                borderColor: 'var(--client-border-color)',
-                                                color: 'var(--client-text-color)',
-                                            }}
-                                        >
-                                            <FaRegFileAlt />
-                                        </span>
-                                        <Form.Control
-                                            type="text"
-                                            placeholder="Enter document title"
-                                            value={fileTitle}
-                                            onChange={(e) => setFileTitle(e.target.value)}
-                                            required
-                                            style={{
-                                                borderColor: 'var(--client-border-color)',
-                                                color: 'var(--client-text-color)',
-                                            }}
-                                        />
-                                    </div>
-                                </Form.Group>
-                            </Col>
-                        </Row>
+                {/* ── Title bar ── */}
+                <div style={{
+                    background: "var(--background)", borderBottom: "1px solid var(--border)",
+                    padding: "10px 20px", display: "flex", alignItems: "center",
+                    justifyContent: "space-between", flexWrap: "wrap", gap: 10,
+                }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--warning)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <FiUploadCloud size={15} color="var(--primary)" />
+                        </div>
+                        <div>
+                            <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-strong)", lineHeight: 1.2 }}>Upload Document</div>
+                            <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>Submit a document into the forwarding & review workflow</div>
+                        </div>
+                    </div>
+                    <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "var(--text-muted)", padding: "3px 8px", background: "var(--muted)", borderRadius: 5 }}>
+                        <FiCheckCircle size={11} /> {progress}% complete
+                    </span>
+                </div>
 
-                        <Row className="mb-3">
-                            <Col md={6}>
-                                <Form.Group>
-                                    <Form.Label className="text-capitalize fw-bold" style={{ color: 'var(--client-text-color)' }}>
-                                        Department
-                                    </Form.Label>
-                                    <div className="input-group">
-                                        <span
-                                            className="input-group-text bg-white"
-                                            style={{
-                                                borderColor: 'var(--client-border-color)',
-                                                color: 'var(--client-text-color)',
-                                            }}
-                                        >
-                                            <FaBuilding />
-                                        </span>
-                                        <Form.Select
-                                            value={department}
-                                            onChange={(e) => setDepartment(e.target.value)}
-                                            required
-                                            style={{
-                                                borderColor: 'var(--client-border-color)',
-                                                color: 'var(--client-text-color)',
-                                            }}
-                                        >
-                                            <option value="">Select type</option>
-                                            <option value="Finance/Account">Finance/Account</option>
-                                            <option value="Operations">Operations</option>
-                                            <option value="Executives">Executives</option>
-                                            <option value="Info-Technology">Info-Technology</option>
-                                        </Form.Select>
-                                    </div>
-                                </Form.Group>
-                            </Col>
-                        </Row>
+                {/* ── Main content (full width, padding only) ── */}
+                <div style={{ padding: "16px 20px" }}>
 
-                        <Form.Group className="mb-3">
-                            <Form.Label className="fw-bold" style={{ color: 'var(--client-text-color)' }}>Description</Form.Label>
-                            <Form.Control
-                                as="textarea"
+                    <form onSubmit={handleUpload}>
+
+                        {/* Progress strip */}
+                        <div style={{ height: 4, background: "var(--border)", borderRadius: 99, overflow: "hidden", marginBottom: 16 }}>
+                            <div style={{ height: "100%", width: `${progress}%`, background: "var(--accent)", borderRadius: 99, transition: "width .35s ease" }} />
+                        </div>
+
+                        {/* ── Document details card ── */}
+                        <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 10, padding: "16px 18px", marginBottom: 14 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2 }}>
+                                <FiFileText size={14} color="var(--accent)" />
+                                <span style={{ fontWeight: 700, fontSize: 13, color: "var(--text-strong)" }}>Document details</span>
+                            </div>
+                            <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 14 }}>
+                                Categorise the document so it routes to the right reviewers.
+                            </div>
+
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginBottom: 12 }}>
+                                <div>
+                                    <label style={labelStyle}><FiLayers size={11} style={{ marginRight: 4, verticalAlign: -1 }} />Document type *</label>
+                                    <select value={documentType} onChange={handleDocTypeChange} required style={{ ...controlStyle, cursor: "pointer" }}>
+                                        <option value="">Select type</option>
+                                        {DOC_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style={labelStyle}><FiHome size={11} style={{ marginRight: 4, verticalAlign: -1 }} />Department *</label>
+                                    <select value={department} onChange={e => setDepartment(e.target.value)} required style={{ ...controlStyle, cursor: "pointer" }}>
+                                        <option value="">Select department</option>
+                                        {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label style={labelStyle}><FiType size={11} style={{ marginRight: 4, verticalAlign: -1 }} />Document title *</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Q3 Commercial Invoice — Vendor XYZ"
+                                    value={fileTitle}
+                                    onChange={e => setFileTitle(e.target.value)}
+                                    required
+                                    style={controlStyle}
+                                />
+                            </div>
+                        </div>
+
+                        {/* ── Conditional sub-fields card ── */}
+                        {activeSubFields.length > 0 && (
+                            <div style={{
+                                background: "var(--card)", border: "1px solid var(--border)",
+                                borderRadius: 10, padding: "16px 18px", marginBottom: 14,
+                                borderLeft: "3px solid var(--accent)",
+                            }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 14 }}>
+                                    <span style={{ background: "var(--warning)", color: "var(--warning-foreground)", fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 20, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                                        {documentType}
+                                    </span>
+                                    <span style={{ fontWeight: 600, fontSize: 13, color: "var(--text-strong)" }}>Additional classification</span>
+                                </div>
+
+                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+                                    {activeSubFields.map(field => (
+                                        <div key={field.key}>
+                                            <label style={labelStyle}>{field.label}</label>
+                                            <select
+                                                value={subFields[field.key] || ""}
+                                                onChange={e => handleSubFieldChange(field.key, e.target.value)}
+                                                style={{ ...controlStyle, cursor: "pointer" }}
+                                            >
+                                                <option value="">Select {field.label.toLowerCase()}</option>
+                                                {field.options.map(o => <option key={o} value={o}>{o}</option>)}
+                                            </select>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── Description card ── */}
+                        <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 10, padding: "16px 18px", marginBottom: 14 }}>
+                            <label style={labelStyle}><FiAlignLeft size={11} style={{ marginRight: 4, verticalAlign: -1 }} />Description *</label>
+                            <textarea
                                 rows={3}
-                                placeholder="Enter document description..."
+                                placeholder="Briefly describe the document's purpose and any relevant context…"
                                 value={description}
-                                onChange={(e) => setDescription(e.target.value)}
+                                onChange={e => setDescription(e.target.value)}
                                 required
-                                style={{ borderColor: 'var(--client-border-color)', resize: 'vertical' }}
+                                style={{ ...controlStyle, resize: "vertical", minHeight: 84, lineHeight: 1.5 }}
                             />
-                        </Form.Group>
-
-                        {/* Upload Section */}
-                        <div
-                            className="border border-2 rounded text-center p-4 mb-4"
-                            style={{
-                                borderColor: 'var(--client-border-color)',
-                                backgroundColor: '#fff',
-                                borderStyle: 'dashed',
-                            }}
-                        >
-                            <label htmlFor="fileUpload" style={{ cursor: 'pointer', color: 'var(--client-btn-bg)' }}>
-                                <div><FaCloudUploadAlt size={32} /></div>
-                                <div className="fw-semibold mt-2">Drag & drop files here or click to browse</div>
-                                <div className="text-muted small">PDF format up to 10MB</div>
-                            </label>
-                            <input
-                                type="file"
-                                id="fileUpload"
-                                accept=".pdf"
-                                onChange={handleFileChange}
-                                required
-                                style={{ display: 'none' }}
-                            />
-                            {file && <div className="mt-2 text-secondary small">Selected File: {file.name}</div>}
                         </div>
 
-                        {/* Buttons */}
-                        <div className="d-flex justify-content-end gap-2">
-                            <Button
-                                variant="outline-secondary"
-                                type="reset"
-                                disabled={loading}
-                                onClick={() => {
-                                    setFile(null);
-                                    setFileTitle('');
-                                    setDescription('');
-                                    setDocumentType('');
-                                    setDepartment('');
-                                }}
-                            >
-                                Clear Form
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={loading}
+                        {/* ── File upload card ── */}
+                        <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 10, padding: "16px 18px", marginBottom: 14 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 12 }}>
+                                <FiUploadCloud size={14} color="var(--accent)" />
+                                <span style={{ fontWeight: 700, fontSize: 13, color: "var(--text-strong)" }}>Attach file</span>
+                            </div>
+
+                            <label
+                                htmlFor="fileUpload"
+                                onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                                onDragLeave={() => setDragOver(false)}
+                                onDrop={e => { e.preventDefault(); setDragOver(false); setSelectedFile(e.dataTransfer.files[0]); }}
                                 style={{
-                                    backgroundColor: 'var(--client-btn-bg)',
-                                    borderColor: 'var(--client-btn-bg)',
-                                    color: 'var(--client-btn-text)',
+                                    display: "block", textAlign: "center", cursor: "pointer",
+                                    border: `2px dashed ${dragOver ? "var(--accent)" : "var(--border)"}`,
+                                    borderRadius: 10, padding: "26px 16px",
+                                    background: dragOver ? "var(--secondary)" : "var(--muted)",
+                                    transition: "border-color .2s, background .2s",
                                 }}
                             >
-                                {loading ? (
-                                    <>
-                                        <Spinner
-                                            as="span"
-                                            animation="border"
-                                            size="sm"
-                                            role="status"
-                                            aria-hidden="true"
-                                            className="me-2"
-                                        />
-                                        Uploading...
-                                    </>
-                                ) : (
-                                    'Upload Document'
-                                )}
-                            </Button>
+                                <FiUploadCloud size={30} color="var(--muted-foreground)" style={{ marginBottom: 8 }} />
+                                <div style={{ fontSize: 14, fontWeight: 600, color: "var(--secondary-foreground)" }}>Tap to browse or drag & drop</div>
+                                <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 3 }}>PDF only · max 10 MB</div>
+                                <input
+                                    type="file" id="fileUpload" accept=".pdf"
+                                    onChange={e => setSelectedFile(e.target.files[0])}
+                                    style={{ display: "none" }}
+                                />
+                            </label>
+
+                            {file && (
+                                <div style={{ display: "flex", alignItems: "center", gap: 9, background: "var(--secondary)", border: "1px solid var(--border)", borderRadius: 8, padding: "9px 12px", marginTop: 10 }}>
+                                    <FiFile size={17} color="var(--primary)" style={{ flexShrink: 0 }} />
+                                    <span style={{ fontSize: 13, fontWeight: 500, color: "var(--foreground)", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{file.name}</span>
+                                    <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{fileSize}</span>
+                                    <FiX size={16} onClick={() => setFile(null)} style={{ cursor: "pointer", color: "var(--text-muted)", flexShrink: 0 }} />
+                                </div>
+                            )}
                         </div>
-                    </Form>
-                </Card>
+
+                        {/* ── Actions ── */}
+                        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", flexWrap: "wrap" }}>
+                            <button
+                                type="button" onClick={resetForm} disabled={loading}
+                                style={{
+                                    display: "flex", alignItems: "center", gap: 6,
+                                    padding: "9px 16px", borderRadius: 8, border: "1px solid var(--border)",
+                                    background: "var(--secondary)", color: "var(--secondary-foreground)",
+                                    fontSize: 13, fontWeight: 600, cursor: "pointer",
+                                }}
+                            >
+                                <FiX size={14} /> Clear form
+                            </button>
+                            <button
+                                type="submit" disabled={loading}
+                                style={{
+                                    display: "flex", alignItems: "center", gap: 7,
+                                    padding: "9px 20px", borderRadius: 8, border: "none",
+                                    background: "var(--primary)", color: "#fff",
+                                    fontSize: 13, fontWeight: 600,
+                                    cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1,
+                                }}
+                            >
+                                {loading
+                                    ? <><FiRefreshCw size={14} style={{ animation: "spin 1s linear infinite" }} /> Uploading…</>
+                                    : <><FiSend size={14} /> Submit document</>}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
+
+            <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
         </>
     );
 }

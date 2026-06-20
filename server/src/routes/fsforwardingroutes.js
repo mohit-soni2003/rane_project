@@ -7,10 +7,47 @@ const RecentActivity = require("../models/RecentActivityModel")
 const Notification = require("../models/notificationModel")
 
 
-// client will upload document
+// ─── Helper: extract sub-fields from req.body based on docType ───────────────
+const extractSubFields = (docType, body) => {
+  switch (docType) {
+    case "Invoices":
+      return {
+        invoiceSubFields: {
+          invoiceType: body.invoiceType || undefined,
+        },
+      };
+
+    case "Contract":
+      return {
+        contractSubFields: {
+          eAgreement: body.eAgreement || undefined,
+          generalContractAndLabour: body.generalContractAndLabour || undefined,
+        },
+      };
+
+    case "Proposal":
+      return {
+        proposalSubFields: {
+          proposalType: body.proposalType || undefined,
+        },
+      };
+
+    case "Report":
+      return {
+        reportSubFields: {
+          employeeMeasurementBook: body.employeeMeasurementBook || undefined,
+          employeeReport: body.employeeReport || undefined,
+        },
+      };
+
+    // Quotation/Estimate and Others have no sub-fields
+    default:
+      return {};
+  }
+};
 
 
-
+// ─── POST /upload-document ────────────────────────────────────────────────────
 router.post('/upload-document', verifyToken, async (req, res) => {
   console.log("DOCUMENT UPLOAD ROUTE HIT...");
 
@@ -20,35 +57,33 @@ router.post('/upload-document', verifyToken, async (req, res) => {
       fileUrl,
       docType,
       Department,
-      description
+      description,
     } = req.body;
 
-    /* -------------------------------
-       BASIC VALIDATION
-    -------------------------------- */
+    /* ── BASIC VALIDATION ── */
     if (!fileTitle || !fileUrl || !docType || !description) {
       return res.status(400).json({
         error: "fileTitle, fileUrl, docType, and description are required."
       });
     }
 
-    /* -------------------------------
-       FIND ADMIN (INITIAL OWNER)
-    -------------------------------- */
+    /* ── FIND ADMIN (INITIAL OWNER) ── */
     const currentOwner = await User.findOne({ cid: "ADMIN" });
     if (!currentOwner) {
       return res.status(404).json({ error: "Admin not found" });
     }
 
-    /* -------------------------------
-       CREATE DOCUMENT
-    -------------------------------- */
+    /* ── EXTRACT SUB-FIELDS BASED ON DOCTYPE ── */
+    const subFields = extractSubFields(docType, req.body);
+
+    /* ── CREATE DOCUMENT ── */
     const newFile = new FileForward({
       fileTitle,
       fileUrl,
       docType,
       Department,
       description,
+      ...subFields,                   // ✅ spreads only the relevant sub-field object
       uploadedBy: req.userId,
       currentOwner: currentOwner._id,
       status: "pending",
@@ -64,9 +99,7 @@ router.post('/upload-document', verifyToken, async (req, res) => {
 
     await newFile.save();
 
-    /* -------------------------------
-       POPULATE FOR RESPONSE
-    -------------------------------- */
+    /* ── POPULATE FOR RESPONSE ── */
     const populatedFile = await FileForward.findById(newFile._id)
       .populate('uploadedBy', 'name email')
       .populate('currentOwner', 'name email')
@@ -75,9 +108,7 @@ router.post('/upload-document', verifyToken, async (req, res) => {
 
     const uploadedByUser = await User.findById(req.userId);
 
-    /* -------------------------------
-       🕒 RECENT ACTIVITY (CLIENT)
-    -------------------------------- */
+    /* ── RECENT ACTIVITY (CLIENT) ── */
     try {
       await RecentActivity.create({
         user: uploadedByUser._id,
@@ -89,16 +120,14 @@ router.post('/upload-document', verifyToken, async (req, res) => {
         metadata: {
           fileTitle,
           docType,
-          Department
+          Department,
         }
       });
     } catch (activityErr) {
       console.error("RecentActivity error:", activityErr);
     }
 
-    /* -------------------------------
-       🔔 NOTIFICATIONS (ADMINS)
-    -------------------------------- */
+    /* ── NOTIFICATIONS (ADMINS) ── */
     try {
       const admins = await User.find({ role: 'admin' });
 
@@ -117,7 +146,7 @@ router.post('/upload-document', verifyToken, async (req, res) => {
             fileTitle,
             docType,
             Department,
-            uploadedBy: uploadedByUser.name
+            uploadedBy: uploadedByUser.name,
           }
         });
       }
@@ -125,9 +154,7 @@ router.post('/upload-document', verifyToken, async (req, res) => {
       console.error("DFS notification error:", notificationError);
     }
 
-    /* -------------------------------
-       RESPONSE
-    -------------------------------- */
+    /* ── RESPONSE ── */
     return res.status(201).json({
       message: "Document uploaded successfully.",
       file: populatedFile
@@ -140,6 +167,7 @@ router.post('/upload-document', verifyToken, async (req, res) => {
 });
 
 
+// ─── GET /my-files ────────────────────────────────────────────────────────────
 // Get all files uploaded by the current user
 router.get('/my-files', verifyToken, async (req, res) => {
   try {
@@ -149,7 +177,7 @@ router.get('/my-files', verifyToken, async (req, res) => {
       .populate('forwardingTrail.forwardedBy', 'name')
       .populate('forwardingTrail.forwardedTo', 'name')
       .populate('comments.user', 'name')
-      .sort({ createdAt: -1 }); // optional: latest first
+      .sort({ createdAt: -1 });
 
     res.status(200).json({ files: myFiles });
   } catch (error) {
@@ -158,10 +186,12 @@ router.get('/my-files', verifyToken, async (req, res) => {
   }
 });
 
+
+// ─── PUT /forward/:fileId ─────────────────────────────────────────────────────
 router.put("/forward/:fileId", verifyToken, async (req, res) => {
   try {
     const { fileId } = req.params;
-    const userId = req.userId; // current logged-in user
+    const userId = req.userId;
 
     const { note, action, forwardedTo, status, attachment } = req.body;
 
@@ -178,17 +208,15 @@ router.put("/forward/:fileId", verifyToken, async (req, res) => {
       return res.status(403).json({ error: "Not authorized to forward this file." });
     }
 
-    // Update current owner and status
     file.status = status;
     file.currentOwner = forwardedTo;
 
-    // Push to forwarding trail with attachment
     file.forwardingTrail.push({
       forwardedBy: userId,
       forwardedTo,
       note,
       action,
-      attachment: attachment || null, // ✅ now added to the trail
+      attachment: attachment || null,
       timestamp: new Date(),
     });
 
@@ -202,13 +230,11 @@ router.put("/forward/:fileId", verifyToken, async (req, res) => {
 });
 
 
-// @route   GET /my-requests
-// @desc    Get documents assigned to the current logged-in user
-// @access  Protected
-// GET /my-requests - documents assigned to the logged-in user
+// ─── GET /my-requests ─────────────────────────────────────────────────────────
+// Documents currently assigned to the logged-in user
 router.get("/my-requests", verifyToken, async (req, res) => {
   try {
-    const myUserId = req.userId; // ✅ corrected from req.user_Id
+    const myUserId = req.userId;
 
     console.log("🔐 Authenticated userId:", myUserId);
 
@@ -226,9 +252,9 @@ router.get("/my-requests", verifyToken, async (req, res) => {
   }
 });
 
-// @route    GET /api/all-users
-// @desc     Get all users with role 'admin' or 'staff' to show for forwarding selection 
-// @access   Protected
+
+// ─── GET /all-users ───────────────────────────────────────────────────────────
+// All users available for forwarding selection
 router.get('/all-users', verifyToken, async (req, res) => {
   try {
     const users = await User.find(
@@ -237,7 +263,6 @@ router.get('/all-users', verifyToken, async (req, res) => {
     );
 
     const roleOrder = { admin: 1, staff: 2, client: 3 };
-
     users.sort((a, b) => roleOrder[a.role] - roleOrder[b.role]);
 
     res.json({ users });
@@ -247,9 +272,9 @@ router.get('/all-users', verifyToken, async (req, res) => {
   }
 });
 
-// @route    GET /api/files
-// @desc     Get all files with complete details for Super Admin
-// @access   Protected (superadmin only, optional)
+
+// ─── GET /files ───────────────────────────────────────────────────────────────
+// All files — for Super Admin view
 router.get('/files', verifyToken, async (req, res) => {
   try {
     const files = await FileForward.find()
@@ -258,7 +283,7 @@ router.get('/files', verifyToken, async (req, res) => {
       .populate('forwardingTrail.forwardedBy', 'name email cid')
       .populate('forwardingTrail.forwardedTo', 'name email cid')
       .populate('comments.user', 'name email cid')
-      .sort({ createdAt: -1 }); // optional: latest first
+      .sort({ createdAt: -1 });
 
     res.status(200).json(files);
   } catch (error) {
@@ -266,9 +291,10 @@ router.get('/files', verifyToken, async (req, res) => {
     res.status(500).json({ error: "Server error while fetching all file records." });
   }
 });
-// @route   GET /dfs/file/:id
-// @desc    Get full details of a file by its ID
-// @access  Protected
+
+
+// ─── GET /file/:id ────────────────────────────────────────────────────────────
+// Full details of a single file
 router.get('/file/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -278,7 +304,7 @@ router.get('/file/:id', verifyToken, async (req, res) => {
       .populate('currentOwner')
       .populate('forwardingTrail.forwardedBy')
       .populate('forwardingTrail.forwardedTo')
-      .populate('comments.user')
+      .populate('comments.user');
 
     if (!file) {
       return res.status(404).json({ error: 'File not found' });
@@ -291,28 +317,23 @@ router.get('/file/:id', verifyToken, async (req, res) => {
   }
 });
 
-// @route   DELETE /dfs/file/:id
-// @desc    Delete a DFS file by its ID
-// @access  Protected
+
+// ─── DELETE /file/:id ─────────────────────────────────────────────────────────
 router.delete('/file/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.userId;
 
-    // Find the file first to check ownership
     const file = await FileForward.findById(id);
-
     if (!file) {
       return res.status(404).json({ error: 'File not found' });
     }
 
-    // Check if the current user is the owner of the file or an admin
     const user = await User.findById(userId);
     if (file.currentOwner.toString() !== userId && user.role !== 'admin') {
       return res.status(403).json({ error: 'Not authorized to delete this file' });
     }
 
-    // Delete the file
     await FileForward.findByIdAndDelete(id);
 
     res.status(200).json({
@@ -324,5 +345,6 @@ router.delete('/file/:id', verifyToken, async (req, res) => {
     res.status(500).json({ error: 'Server error while deleting file' });
   }
 });
+
 
 module.exports = router;

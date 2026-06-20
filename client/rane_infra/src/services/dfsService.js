@@ -6,7 +6,17 @@ export const uploadDocument = async ({
     fileUrl,
     docType,
     Department,
-    description
+    description,
+    // ── Invoice sub-fields ──
+    invoiceType,
+    // ── Contract sub-fields ──
+    eAgreement,
+    generalContractAndLabour,
+    // ── Proposal sub-fields ──
+    proposalType,
+    // ── Report sub-fields ──
+    employeeMeasurementBook,
+    employeeReport,
 }) => {
     try {
         const res = await fetch(`${backend_url}/dfs/upload-document`, {
@@ -20,7 +30,14 @@ export const uploadDocument = async ({
                 fileUrl,
                 docType,
                 Department,
-                description
+                description,
+                // ── sub-fields (backend ignores undefined values) ──
+                invoiceType,
+                eAgreement,
+                generalContractAndLabour,
+                proposalType,
+                employeeMeasurementBook,
+                employeeReport,
             }),
         });
 
@@ -34,7 +51,9 @@ export const uploadDocument = async ({
     }
 };
 
-// This give the all dfs requests assigned to the logged in user . 
+
+// ── All services below are unchanged ─────────────────────────────────────────
+
 export const getMyRequests = async () => {
     const res = await fetch(`${backend_url}/dfs/my-requests`, {
         credentials: "include",
@@ -43,7 +62,7 @@ export const getMyRequests = async () => {
     if (!res.ok) throw new Error(data.error || "Failed to fetch documents.");
     return data.files;
 };
-// This give the all user whose role is either admin or staff 
+
 export const getAllUsers = async () => {
     const res = await fetch(`${backend_url}/dfs/all-users`, {
         credentials: "include",
@@ -52,7 +71,7 @@ export const getAllUsers = async () => {
     if (!res.ok) throw new Error(data.error || "Failed to fetch users.");
     return data.users;
 };
-// this route is to forward the document from done user to another 
+
 export const forwardDocument = async (fileId, forwardData) => {
     console.log(forwardData)
     const res = await fetch(`${backend_url}/dfs/forward/${fileId}`, {
@@ -66,7 +85,6 @@ export const forwardDocument = async (fileId, forwardData) => {
     return result;
 };
 
-//this is the service used by client when file is assigned to staff for review and he can forward again to staff who forward to client 
 export const forwardDocumentToStaff = async (fileId, forwardData) => {
     console.log(forwardData)
     const res = await fetch(`${backend_url}/dfs/forward/${fileId}`, {
@@ -79,83 +97,60 @@ export const forwardDocumentToStaff = async (fileId, forwardData) => {
     if (!res.ok) throw new Error(result.error || "Failed to forward document.");
     return result;
 };
-// get all the detaisl of particula dfs by the id of DFS model . Id is dfs document id
+
 export const getFileById = async (id) => {
   try {
     const res = await fetch(`${backend_url}/dfs/file/${id}`, {
       method: "GET",
       credentials: "include",
     });
-
     const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error || "Failed to fetch file details.");
-    }
-
+    if (!res.ok) throw new Error(data.error || "Failed to fetch file details.");
     return data.file;
   } catch (error) {
     console.error("❌ Error in getFileById service:", error);
     throw error;
   }
-}; 
+};
 
-//  Get all files uploaded by the current user
 export const getMyUploadedFiles = async () => {
   try {
     const res = await fetch(`${backend_url}/dfs/my-files`, {
       method: 'GET',
       credentials: 'include',
     });
-
     const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error || "Failed to fetch your uploaded files.");
-    }
-
-    return data.files; // array of uploaded FileForward documents
+    if (!res.ok) throw new Error(data.error || "Failed to fetch your uploaded files.");
+    return data.files;
   } catch (err) {
     console.error("Error in getMyUploadedFiles:", err);
     throw err;
   }
 };
 
-// Get all DFS files/requests for admin
 export const getAllDfsRequests = async () => {
   try {
     const res = await fetch(`${backend_url}/dfs/files`, {
       method: 'GET',
       credentials: 'include',
     });
-
     const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error || "Failed to fetch all DFS requests.");
-    }
-
-    return data; // array of all DFS files
+    if (!res.ok) throw new Error(data.error || "Failed to fetch all DFS requests.");
+    return data;
   } catch (err) {
     console.error("Error in getAllDfsRequests:", err);
     throw err;
   }
 };
 
-// Delete a DFS file by ID
 export const deleteDfsFile = async (fileId) => {
   try {
     const res = await fetch(`${backend_url}/dfs/file/${fileId}`, {
       method: 'DELETE',
       credentials: 'include',
     });
-
     const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error || "Failed to delete DFS file.");
-    }
-
+    if (!res.ok) throw new Error(data.error || "Failed to delete DFS file.");
     return data;
   } catch (err) {
     console.error("Error in deleteDfsFile:", err);
