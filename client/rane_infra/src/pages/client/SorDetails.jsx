@@ -157,7 +157,7 @@ export default function ScheduleOfRates() {
             <ClientHeader />
 
             <div className="shadow-sm border-0 my-3 py-1" style={{
-                background: "var(--background)",
+                background: "var(--card)",
                 minHeight: "100vh",
                 fontFamily: "system-ui, -apple-system, sans-serif",
                 color: "var(--foreground)",
@@ -165,7 +165,7 @@ export default function ScheduleOfRates() {
 
                 {/* Page title bar — full width, flush with content edge */}
                 <div style={{
-                    background: "var(--background)",
+                    background: "var(--card)",
                     borderBottom: "1px solid var(--border)",
                     padding: "10px 20px",
                     display: "flex",

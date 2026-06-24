@@ -1,26 +1,36 @@
 :root {
-    /* Base Layout */
+    /* ============================================================
+       BASE LAYOUT
+       ============================================================ */
     --background: #fef7f3de;
     --foreground: #3a2e2a;
     --border: #eee6dd;
     --input: #fffbf8;
- 
-    /* Brand & Primary Colors */
+
+    /* ============================================================
+       BRAND & PRIMARY
+       ============================================================ */
     --primary: #6b3e2b;
     --primary-foreground: #ffffff;
-    --primary-hover: #5e3726; /* darker shade for hover */
+    --primary-hover: #5e3726;          /* darker shade for hover */
 
-    /* Secondary UI */
+    /* ============================================================
+       SECONDARY UI
+       ============================================================ */
     --secondary: #f6ede6;
     --secondary-foreground: #5a463f;
-    --secondary-hover: #e6d9cf; /* soft hover effect */
+    --secondary-hover: #e6d9cf;        /* soft hover effect */
 
-    /* Accent (used for icons, highlights, links) */
+    /* ============================================================
+       ACCENT (icons, highlights, links)
+       ============================================================ */
     --accent: #b95a52;
     --accent-foreground: #ffffff;
     --accent-hover: #a24f48;
 
-    /* Status Colors */
+    /* ============================================================
+       STATUS COLORS
+       ============================================================ */
     --success: #dff3e6;
     --success-foreground: #225b31;
     --warning: #f1d3ce;
@@ -28,32 +38,89 @@
     --destructive: #c94a3a;
     --destructive-foreground: #ffffff;
 
-    /* Muted / Neutral */
+    /* ============================================================
+       MUTED / NEUTRAL
+       ============================================================ */
     --muted: #faf5f2;
     --muted-foreground: #8b7b74;
 
-    /* Card / Containers */
+    /* ============================================================
+       CARD / CONTAINERS
+       ============================================================ */
     --card: #fffbf9;
     --card-foreground: #3a2e2a;
 
-    /* Sidebar / Navbar */
+    /* ============================================================
+       SIDEBAR / NAVBAR
+       ============================================================ */
     --sidebar: #fff7f2;
     --sidebar-foreground: #3a2e2a;
     --sidebar-primary: #6b3e2b;
     --sidebar-primary-foreground: #ffffff;
 
-    /* Shadows and Dividers */
+    /* ============================================================
+       SHADOWS & DIVIDERS
+       ============================================================ */
     --shadow-color: rgba(0, 0, 0, 0.08);
     --divider: rgba(0, 0, 0, 0.06);
 
-    /* Text variations */
+    /* ============================================================
+       TEXT VARIATIONS
+       ============================================================ */
     --text-muted: #7a6a64;
     --text-strong: #2b1f1a;
     --link: var(--accent);
     --link-hover: var(--accent-hover);
 
-    /* Special / System */
+    /* ============================================================
+       SPECIAL / SYSTEM
+       ============================================================ */
     --red: #ff0000;
+
+    /* ============================================================
+       NEW TOKENS — added to replace hardcoded hex in components
+       ============================================================ */
+
+    /* Destructive (error) soft background + border.
+       Used for error banners / alert boxes (was #fde8e6 / #f5b8b2). */
+    --destructive-bg: #fde8e6;
+    --destructive-border: #f5b8b2;
+
+    /* Success soft border to pair with --success background
+       (success bg/text already exist; this is the matching border). */
+    --success-border: #b6dfc4;
+
+    /* Warning soft border to pair with --warning background. */
+    --warning-border: #e8b4ab;
+
+    /* Info — blue status used for "Sanctioned" / "Viewed" / "Approved"
+       badges (was #dbeafe / #1e40af). Not in original palette. */
+    --info: #dbeafe;
+    --info-foreground: #1e40af;
+
+    /* Amber — used for the "Partial" bill status badge
+       (was #fef3c7 / #92400e). */
+    --amber: #fef3c7;
+    --amber-foreground: #92400e;
+
+    /* Primary light — mid-tone used in the auth-page gradient
+       (was #7d4a33, sits between --primary and --accent). */
+    --primary-light: #7d4a33;
+
+    /* Accent focus ring — soft glow on focused inputs
+       (was rgba(185,90,82,0.12)). */
+    --accent-ring: rgba(185, 90, 82, 0.12);
+
+    /* Overlay — modal/backdrop scrim (was rgba(0,0,0,0.45)). */
+    --overlay: rgba(0, 0, 0, 0.45);
+
+    /* On-primary translucent surfaces — used inside the gradient
+       brand panel for logo chip / decorative circles
+       (was rgba(255,255,255,0.06–0.22)). */
+    --on-primary-soft: rgba(255, 255, 255, 0.16);
+    --on-primary-faint: rgba(255, 255, 255, 0.06);
+
+    /* Status serial / left-border accents used in cards
+       (was #d9a441 for the "Bill" type stripe). */
+    --gold: #d9a441;
 }
-
-

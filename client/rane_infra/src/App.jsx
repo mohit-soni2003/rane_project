@@ -4,21 +4,21 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'; // Includes Popper
 
 import "./App.css";
-import Home from "./assets/Home";
+// import Home from "./assets/Home";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Signup from "./assets/components/elements/Signup";
-import Signin from "./assets/components/elements/Signin";
-import VerifyEmail from "./assets/components/elements/VerifyEmail";
+import Signup from "./pages/common/Signup.jsx";
+import Signin from "./pages/common/Signin.jsx";
+import VerifyEmail from "./pages/common/VerifyEmail.jsx";
 
 // import BillbookForm from "./assets/components/elements/BillbookForm";
 
 import AdminDashboard from "./assets/components/elements/dashboard/AdminDashboard";
-import UserDashboard from "./assets/components/elements/dashboard/UserDashboard";
+// import UserDashboard from "./assets/components/elements/dashboard/UserDashboard";
 import { useAuthStore } from "./store/authStore";
 import AdminLogin from "./assets/components/elements/AdminLogin";
 import Spinner from "react-bootstrap/esm/Spinner";
 import Maintainence from "./assets/components/unique_component/Maintainence";
-import ForgotPass from "./assets/components/elements/ForgotPass";
+import ForgotPass from "./pages/common/ForgotPass.jsx";
 import ResetPass from "./assets/components/elements/ResetPass";
 
 import HomePageClient from "./pages/client/HomePageClient";
@@ -260,39 +260,7 @@ function App() {
           <Route path="under-dev" element={<UnderDevPage />} />
         </Route>
 
-        <Route
-          path="/user-dashboard"
-          element={
-            <ProtectedRoute>
-              <ClientRoute>
-                <UserDashboard />
-              </ClientRoute>
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin-dashboard"
-          element={
-            <ProtectedRoute>
-              <AdminRoute>
-                <AdminDashboard />
-              </AdminRoute>
-            </ProtectedRoute>
-
-          }
-        />
-        <Route
-          path="/staff-dashboard"
-          element={
-            <ProtectedRoute>
-              <StaffRoute>
-                <AdminDashboard />
-              </StaffRoute>
-            </ProtectedRoute>
-
-          }
-        />
+       
       </Routes>
     </BrowserRouter>
   );

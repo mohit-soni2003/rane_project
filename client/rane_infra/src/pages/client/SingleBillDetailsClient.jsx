@@ -1,42 +1,129 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getBillById, getBillRemarks, getBillTransactions, requestBillWithdraw } from '../../services/billServices';
+import {
+    getBillById, getBillRemarks, getBillTransactions, requestBillWithdraw,
+} from '../../services/billServices';
 import { getPayNotesByBill } from '../../services/paynoteServices';
 import ClientHeader from '../../component/header/ClientHeader';
-import {
-    Container,
-    Spinner,
-    Alert,
-    Row,
-    Col,
-    Card,
-    Badge,
-    Button,
-    Table,
-    Modal,
-    Form,
-    Image,
-} from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {
-    FaFileInvoice,
-    FaFileSignature,
-    FaUserTie,
-    FaFilePdf,
-    FaCalendarAlt,
-    FaArrowLeft,
-    FaBuilding,
-    FaEnvelope,
-    FaCreditCard,
-    FaMoneyBillWave,
-    FaWallet,
-    FaHashtag,
-    FaRupeeSign,
-    FaCalculator,
-    FaCheckCircle,
-    FaClock,
+    FaFileInvoice, FaFileSignature, FaUserTie, FaFilePdf,
+    FaCalendarAlt, FaArrowLeft, FaCreditCard, FaMoneyBillWave,
+    FaWallet, FaRupeeSign, FaCalculator, FaUserCircle,
+    FaCommentDots, FaUndoAlt, FaTimes, FaExternalLinkAlt,
 } from 'react-icons/fa';
+
+// ── Hardcoded icon colors ─────────────────────────────────────────────────────
+const C = {
+    primary: '#6b3e2b',
+    accent: '#b95a52',
+    success: '#225b31',
+    destructive: '#c94a3a',
+    muted: '#8b7b74',
+    warning: '#4a1f18',
+    info: '#1e40af',
+};
+
+// ── Status badge meta ─────────────────────────────────────────────────────────
+const billStatusMeta = (status) => {
+    switch (status) {
+        case 'Paid':      return { bg: 'var(--success)', color: 'var(--success-foreground)', label: 'Paid' };
+        case 'Pending':   return { bg: 'var(--warning)', color: 'var(--warning-foreground)', label: 'Pending' };
+        case 'Reject':    return { bg: '#fde8e6', color: C.destructive, label: 'Rejected' };
+        default:          return { bg: 'var(--secondary)', color: 'var(--secondary-foreground)', label: status || '—' };
+    }
+};
+const agreementStatusMeta = (status) => {
+    switch (status) {
+        case 'signed':   return { bg: 'var(--success)', color: 'var(--success-foreground)', label: 'Signed' };
+        case 'pending':  return { bg: 'var(--warning)', color: 'var(--warning-foreground)', label: 'Pending' };
+        case 'viewed':   return { bg: '#dbeafe', color: C.info, label: 'Viewed' };
+        case 'rejected': return { bg: '#fde8e6', color: C.destructive, label: 'Rejected' };
+        case 'expired':  return { bg: 'var(--secondary)', color: 'var(--secondary-foreground)', label: 'Expired' };
+        default:         return { bg: 'var(--secondary)', color: 'var(--secondary-foreground)', label: status || 'N/A' };
+    }
+};
+const paynoteStatusMeta = (status) => {
+    switch (status) {
+        case 'Paid':     return { bg: 'var(--success)', color: 'var(--success-foreground)', label: 'Paid' };
+        case 'Approved': return { bg: '#dbeafe', color: C.info, label: 'Approved' };
+        case 'Pending':  return { bg: 'var(--warning)', color: 'var(--warning-foreground)', label: 'Pending' };
+        case 'Rejected': return { bg: '#fde8e6', color: C.destructive, label: 'Rejected' };
+        default:         return { bg: 'var(--secondary)', color: 'var(--secondary-foreground)', label: status || 'Draft' };
+    }
+};
+const withdrawStatusMeta = (status) => {
+    switch (status) {
+        case 'Requested': return { bg: 'var(--warning)', color: 'var(--warning-foreground)', accent: '#d9a441', label: 'Requested' };
+        case 'Approved':  return { bg: 'var(--success)', color: 'var(--success-foreground)', accent: C.success, label: 'Approved' };
+        default:          return { bg: '#fde8e6', color: C.destructive, accent: C.destructive, label: status || 'Rejected' };
+    }
+};
+
+const Badge = ({ meta }) => (
+    <span style={{
+        display: 'inline-block', padding: '3px 10px', borderRadius: 20,
+        fontSize: 11, fontWeight: 700, background: meta.bg, color: meta.color, letterSpacing: '0.03em',
+    }}>
+        {meta.label}
+    </span>
+);
+
+// ── Shared styles ─────────────────────────────────────────────────────────────
+const labelStyle = {
+    fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
+    textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3,
+};
+const valueStyle = { fontSize: 13.5, fontWeight: 600, color: 'var(--text-strong)', wordBreak: 'break-word' };
+
+const cardStyle = {
+    background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12,
+    marginBottom: 16, boxShadow: '0 2px 8px var(--shadow-color)', overflow: 'hidden',
+};
+const cardHeaderStyle = {
+    display: 'flex', alignItems: 'center', gap: 8,
+    padding: '12px 16px', borderBottom: '1px solid var(--border)',
+};
+const cardHeaderTitleStyle = { fontWeight: 700, fontSize: 13.5, color: 'var(--text-strong)' };
+const cardBodyStyle = { padding: '16px' };
+
+const pdfBtnStyle = {
+    display: 'inline-flex', alignItems: 'center', gap: 7,
+    padding: '8px 16px', borderRadius: 8, border: 'none',
+    background: 'var(--primary)', color: '#fff',
+    fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'none',
+};
+
+// Field block
+const Field = ({ label, children }) => (
+    <div>
+        <div style={labelStyle}>{label}</div>
+        <div style={valueStyle}>{children}</div>
+    </div>
+);
+
+// ── Avatar ────────────────────────────────────────────────────────────────────
+const Avatar = ({ src, name, size = 28 }) => {
+    const [err, setErr] = useState(false);
+    const initials = typeof name === 'string' && name.trim()
+        ? name.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase()
+        : null;
+    if (src && !err && !src.includes('placeholder')) {
+        return <img src={src} onError={() => setErr(true)} alt={name || 'user'}
+            style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />;
+    }
+    return (
+        <span style={{
+            width: size, height: size, borderRadius: '50%',
+            background: 'var(--secondary)', color: 'var(--secondary-foreground)',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: size * 0.4, fontWeight: 700, flexShrink: 0,
+        }}>
+            {initials || <FaUserCircle size={size} color={C.muted} />}
+        </span>
+    );
+};
 
 export default function SingleBillDetailsClient() {
     const { id } = useParams();
@@ -55,21 +142,15 @@ export default function SingleBillDetailsClient() {
     useEffect(() => {
         const fetchBillAndTransactions = async () => {
             try {
-                // Fetch bill details
                 const billResult = await getBillById(id);
                 setBill(billResult);
-
-                // Fetch transactions for this bill
                 try {
                     const transactionResult = await getBillTransactions(id);
-                    console.log('Transactions fetched:', transactionResult);
                     setTransactions(transactionResult || []);
                 } catch (transactionError) {
                     console.warn('Could not fetch transactions:', transactionError.message);
                     setTransactions([]);
                 }
-
-                // Fetch paynotes for this bill
                 try {
                     const paynoteResult = await getPayNotesByBill(id);
                     setPaynotes(paynoteResult?.paynotes || []);
@@ -77,8 +158,6 @@ export default function SingleBillDetailsClient() {
                     console.warn('Could not fetch paynotes:', paynoteError.message);
                     setPaynotes([]);
                 }
-
-                // Fetch remarks for this bill
                 try {
                     const remarksResult = await getBillRemarks(id);
                     setRemarks(remarksResult || []);
@@ -92,13 +171,10 @@ export default function SingleBillDetailsClient() {
                 setLoading(false);
             }
         };
-
         if (id) fetchBillAndTransactions();
     }, [id]);
 
-    const handleWithdrawRequest = async () => {
-        setShowWithdrawModal(true);
-    };
+    const handleWithdrawRequest = async () => setShowWithdrawModal(true);
 
     const handleSubmitWithdraw = async () => {
         try {
@@ -123,52 +199,6 @@ export default function SingleBillDetailsClient() {
         setWithdrawError('');
     };
 
-    const getStatusBadge = (status) => {
-        switch (status) {
-            case 'Paid':
-                return <Badge bg="success">Paid</Badge>;
-            case 'Pending':
-                return <Badge bg="warning" text="dark">Pending</Badge>;
-            case 'Reject':
-                return <Badge bg="danger">Rejected</Badge>;
-            default:
-                return <Badge bg="secondary">{status}</Badge>;
-        }
-    };
-
-    const getAgreementStatusBadge = (status) => {
-        switch (status) {
-            case 'signed':
-                return <Badge bg="success">Signed</Badge>;
-            case 'pending':
-                return <Badge bg="warning" text="dark">Pending</Badge>;
-            case 'viewed':
-                return <Badge bg="info">Viewed</Badge>;
-            case 'rejected':
-                return <Badge bg="danger">Rejected</Badge>;
-            case 'expired':
-                return <Badge bg="secondary">Expired</Badge>;
-            default:
-                return <Badge bg="secondary">{status || 'N/A'}</Badge>;
-        }
-    };
-
-    const getPaynoteStatusBadge = (status) => {
-        switch (status) {
-            case 'Paid':
-                return <Badge bg="success">Paid</Badge>;
-            case 'Approved':
-                return <Badge bg="info">Approved</Badge>;
-            case 'Pending':
-                return <Badge bg="warning" text="dark">Pending</Badge>;
-            case 'Rejected':
-                return <Badge bg="danger">Rejected</Badge>;
-            case 'Draft':
-            default:
-                return <Badge bg="secondary">{status || 'Draft'}</Badge>;
-        }
-    };
-
     const agreement = bill?.agreement && typeof bill.agreement === 'object' ? bill.agreement : null;
     const sortedTransactions = [...transactions].sort(
         (a, b) => new Date(b?.transactionDate || 0) - new Date(a?.transactionDate || 0)
@@ -177,844 +207,641 @@ export default function SingleBillDetailsClient() {
     const totalPaidAmount = sortedTransactions.reduce((sum, txn) => sum + (Number(txn?.amount) || 0), 0);
     const remainingAmount = Math.max((Number(bill?.amount) || 0) - totalPaidAmount, 0);
 
-    const getPaymentMethodLabel = (txn) => {
-        if (!txn) return 'Pending';
-        if (txn.bankName) return 'Bank Transfer';
-        if (txn.upiId) return 'UPI Payment';
-        return 'Other';
-    };
-
     const getTransactionTypeLabel = (type) => {
         switch (type) {
-            case 'bill':
-                return 'Bill';
-            case 'payment_request':
-                return 'Payment Request';
-            case 'salary':
-                return 'Salary';
-            default:
-                return '—';
+            case 'bill': return 'Bill';
+            case 'payment_request': return 'Payment Request';
+            case 'salary': return 'Salary';
+            default: return '—';
         }
     };
+
+    const wrapStyle = {
+        padding: '0 2px', fontFamily: 'system-ui, -apple-system, sans-serif',
+        color: 'var(--foreground)', background: 'var(--background)', minHeight: '100vh',
+    };
+
+    // ── Loading / error / empty states ────────────────────────────────────────
+    if (loading) {
+        return (
+            <>
+                <ClientHeader />
+                <div style={wrapStyle}>
+                    <div style={{ textAlign: 'center', padding: '60px 0' }}>
+                        <span style={{
+                            display: 'inline-block', width: 36, height: 36,
+                            border: '3px solid var(--border)', borderTopColor: C.accent,
+                            borderRadius: '50%', animation: 'spin 1s linear infinite',
+                        }} />
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 12 }}>Loading bill details…</div>
+                    </div>
+                    <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+                </div>
+            </>
+        );
+    }
+    if (error) {
+        return (
+            <>
+                <ClientHeader />
+                <div style={wrapStyle}>
+                    <div style={{ ...cardStyle, padding: '16px', color: C.destructive, background: '#fde8e6', border: '1px solid #f5b8b2' }}>
+                        {error}
+                    </div>
+                </div>
+            </>
+        );
+    }
+    if (!bill) {
+        return (
+            <>
+                <ClientHeader />
+                <div style={wrapStyle}>
+                    <div style={{ ...cardStyle, padding: '16px', color: C.warning, background: 'var(--warning)' }}>
+                        No bill data found.
+                    </div>
+                </div>
+            </>
+        );
+    }
+
+    const billMeta = billStatusMeta(bill.paymentStatus);
 
     return (
         <>
             <ClientHeader />
             <ToastContainer position="top-right" />
-            <Container fluid className="py-4 my-3" style={{ backgroundColor: "var(--client-component-bg-color" }}>
-                {loading ? (
-                    <div className="text-center py-5">
-                        <Spinner animation="border" variant="primary" />
-                    </div>
-                ) : error ? (
-                    <Alert variant="danger">{error}</Alert>
-                ) : bill ? (
-                    <>
-                        {/* Back button */}
-                        <div className="mb-3 d-flex align-items-center">
-                            <Button
-                                variant="link"
-                                onClick={() => navigate(-1)}
-                                className="text-decoration-none p-0 me-2"
-                            >
-                                <FaArrowLeft /> Back
-                            </Button>
-                            <h5 className="mb-0" style={{ color: 'var(--client-heading-color)' }}>
+
+            <div style={wrapStyle}>
+
+                {/* ── Header / back ── */}
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '14px 4px 16px', flexWrap: 'wrap',
+                }}>
+                    <button
+                        onClick={() => navigate(-1)}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: 6,
+                            padding: '8px 14px', borderRadius: 8,
+                            border: '1px solid var(--border)', background: 'var(--card)',
+                            color: C.primary, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                        }}
+                    >
+                        <FaArrowLeft size={12} color={C.primary} /> Back
+                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{
+                            width: 34, height: 34, borderRadius: 8, background: 'var(--warning)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                            <FaFileInvoice size={16} color={C.primary} />
+                        </div>
+                        <div>
+                            <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-strong)', lineHeight: 1.2 }}>
                                 Bill Details
-                            </h5>
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+                                Invoice {bill.invoiceNo || '—'} · {bill.firmName || '—'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── Bill info + Transaction summary ── */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16, marginBottom: 0 }}>
+
+                    {/* Bill Details (wide) */}
+                    <div style={{ ...cardStyle, gridColumn: 'span 2', minWidth: 0 }}>
+                        <div style={cardHeaderStyle}>
+                            <FaFileInvoice size={15} color={C.accent} />
+                            <span style={cardHeaderTitleStyle}>Bill Information</span>
+                        </div>
+                        <div style={cardBodyStyle}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
+                                <Field label="Invoice No.">{bill.invoiceNo || '—'}</Field>
+                                <Field label="Firm Name">{bill.firmName || '—'}</Field>
+                                <Field label="Work Area">{bill.workArea || '—'}</Field>
+                                <Field label="LOA No.">{bill.loaNo || '—'}</Field>
+                                <Field label="Amount">
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: 2, color: C.primary }}>
+                                        <FaRupeeSign size={12} color={C.accent} />
+                                        {(Number(bill.amount) || 0).toLocaleString('en-IN')}
+                                    </span>
+                                </Field>
+                                <Field label="Status"><Badge meta={billMeta} /></Field>
+                                <Field label="Submitted On">
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                                        <FaCalendarAlt size={11} color={C.muted} />
+                                        {bill.submittedAt ? new Date(bill.submittedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                                    </span>
+                                </Field>
+                            </div>
+
+                            <div style={{ marginTop: 14 }}>
+                                <div style={labelStyle}>Work Description</div>
+                                <div style={{
+                                    fontSize: 13, color: 'var(--foreground)', lineHeight: 1.55,
+                                    background: 'var(--muted)', borderRadius: 8, padding: '10px 12px',
+                                    border: '1px solid var(--border)',
+                                }}>
+                                    {bill.workDescription || 'No description provided.'}
+                                </div>
+                            </div>
+
+                            {bill.pdfurl && (
+                                <div style={{ textAlign: 'right', marginTop: 14 }}>
+                                    <a href={bill.pdfurl} target="_blank" rel="noopener noreferrer" style={pdfBtnStyle}>
+                                        <FaFilePdf size={13} color="#fff" /> View Bill PDF
+                                    </a>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Transaction summary (narrow) */}
+                    <div style={{ ...cardStyle, minWidth: 0 }}>
+                        <div style={cardHeaderStyle}>
+                            <FaCreditCard size={15} color={C.accent} />
+                            <span style={cardHeaderTitleStyle}>Payment Summary</span>
+                        </div>
+                        <div style={cardBodyStyle}>
+                            {(() => {
+                                const paidByName = latestTransaction?.paidBy?.name
+                                    || latestTransaction?.userId?.name
+                                    || latestTransaction?.paidBy
+                                    || latestTransaction?.userId || '—';
+                                const paidByProfile = latestTransaction?.paidBy?.profile
+                                    || latestTransaction?.userId?.profile || '';
+                                return (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                        <div>
+                                            <div style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                <FaFileInvoice size={11} color={C.accent} /> Bill amount
+                                            </div>
+                                            <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-strong)' }}>
+                                                ₹{(Number(bill?.amount) || 0).toLocaleString('en-IN')}
+                                            </div>
+                                        </div>
+                                        <div style={{ height: 1, background: 'var(--border)' }} />
+                                        <div>
+                                            <div style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                <FaRupeeSign size={11} color={C.success} /> Amount paid
+                                            </div>
+                                            <div style={{ fontSize: 20, fontWeight: 700, color: C.success }}>
+                                                ₹{totalPaidAmount.toLocaleString('en-IN')}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                <FaCalculator size={11} color={C.accent} /> Total remaining
+                                            </div>
+                                            <div style={{ fontSize: 18, fontWeight: 700, color: C.destructive }}>
+                                                ₹{remainingAmount.toLocaleString('en-IN')}
+                                            </div>
+                                        </div>
+                                        <div style={{ height: 1, background: 'var(--border)' }} />
+                                        <div>
+                                            <div style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                <FaUserTie size={11} color={C.muted} /> Paid by
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                                                <Avatar src={paidByProfile} name={typeof paidByName === 'string' ? paidByName : 'User'} />
+                                                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-strong)' }}>{paidByName}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── Attached Agreement ── */}
+                <div style={cardStyle}>
+                    <div style={cardHeaderStyle}>
+                        <FaFileSignature size={15} color={C.accent} />
+                        <span style={cardHeaderTitleStyle}>Attached Agreement</span>
+                    </div>
+                    <div style={cardBodyStyle}>
+                        {agreement ? (
+                            <>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
+                                    <Field label="Agreement Title">{agreement.title || '—'}</Field>
+                                    <Field label="Agreement ID">{agreement.agreementId || agreement._id || '—'}</Field>
+                                    <Field label="Status"><Badge meta={agreementStatusMeta(agreement.status)} /></Field>
+                                    <Field label="Signed On">{agreement.signedAt ? new Date(agreement.signedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</Field>
+                                    <Field label="Expiry Date">{agreement.expiryDate ? new Date(agreement.expiryDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</Field>
+                                </div>
+                                {agreement.description && (
+                                    <div style={{ marginTop: 14 }}>
+                                        <div style={labelStyle}>Description</div>
+                                        <div style={{
+                                            fontSize: 13, color: 'var(--foreground)', lineHeight: 1.55,
+                                            background: 'var(--muted)', borderRadius: 8, padding: '10px 12px', border: '1px solid var(--border)',
+                                        }}>
+                                            {agreement.description}
+                                        </div>
+                                    </div>
+                                )}
+                                {(agreement.fileUrl || agreement._id) && (
+                                    <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap', marginTop: 14 }}>
+                                        {agreement._id && (
+                                            <button onClick={() => navigate(`/client/agreement/view/${agreement._id}`)} style={pdfBtnStyle}>
+                                                <FaFileSignature size={13} color="#fff" /> Open Agreement Page
+                                            </button>
+                                        )}
+                                        {agreement.fileUrl && (
+                                            <a href={agreement.fileUrl} target="_blank" rel="noopener noreferrer"
+                                                style={{ ...pdfBtnStyle, background: 'var(--secondary)', color: 'var(--secondary-foreground)' }}>
+                                                <FaFilePdf size={13} color={C.accent} /> View Agreement PDF
+                                            </a>
+                                        )}
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>
+                                No agreement is attached to this bill.
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* ── Paynote Details ── */}
+                <div style={cardStyle}>
+                    <div style={cardHeaderStyle}>
+                        <FaFileInvoice size={15} color={C.accent} />
+                        <span style={cardHeaderTitleStyle}>Paynote Details</span>
+                        <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--muted)', padding: '2px 9px', borderRadius: 20 }}>
+                            {paynotes.length}
+                        </span>
+                    </div>
+                    {paynotes.length > 0 ? (
+                        <>
+                            {/* Desktop table */}
+                            <div className="d-none d-md-block" style={{ overflowX: 'auto' }}>
+                                <table style={{ width: '100%', minWidth: 760, borderCollapse: 'collapse', fontSize: 13 }}>
+                                    <thead>
+                                        <tr style={{ background: 'var(--muted)', borderBottom: '2px solid var(--border)' }}>
+                                            {['#', 'Pay Note No', 'Department', 'Amount', 'Mode', 'Status', 'Created On', 'PDF'].map(h => (
+                                                <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{h}</th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {paynotes.map((p, i) => (
+                                            <tr key={p._id || i} style={{ borderBottom: '1px solid var(--border)' }}>
+                                                <td style={{ padding: '11px 14px', fontWeight: 700 }}>{i + 1}</td>
+                                                <td style={{ padding: '11px 14px', fontWeight: 600, color: 'var(--text-strong)' }}>{p.payNoteNo || '—'}</td>
+                                                <td style={{ padding: '11px 14px', color: 'var(--text-muted)' }}>{p.department || '—'}</td>
+                                                <td style={{ padding: '11px 14px', fontWeight: 700, color: 'var(--text-strong)' }}>₹{p.totalSanctionAmount ? Number(p.totalSanctionAmount).toLocaleString('en-IN') : '0'}</td>
+                                                <td style={{ padding: '11px 14px', color: 'var(--text-muted)' }}>{p.modeOfPayment || '—'}</td>
+                                                <td style={{ padding: '11px 14px' }}><Badge meta={paynoteStatusMeta(p.status)} /></td>
+                                                <td style={{ padding: '11px 14px', color: 'var(--text-muted)', fontSize: 12, whiteSpace: 'nowrap' }}>{p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</td>
+                                                <td style={{ padding: '11px 14px' }}>
+                                                    {p.pdfUrl ? (
+                                                        <a href={p.pdfUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: C.accent, fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
+                                                            <FaFilePdf size={13} color={C.accent} /> View
+                                                        </a>
+                                                    ) : <span style={{ color: 'var(--text-muted)' }}>—</span>}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {/* Mobile cards */}
+                            <div className="d-md-none" style={{ padding: '12px 14px' }}>
+                                {paynotes.map((p, i) => (
+                                    <div key={p._id || i} style={{ border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', marginBottom: 10, background: 'var(--card)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                                            <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-strong)' }}>{p.payNoteNo || `Paynote #${i + 1}`}</div>
+                                            <Badge meta={paynoteStatusMeta(p.status)} />
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px' }}>
+                                            <Field label="Department">{p.department || '—'}</Field>
+                                            <Field label="Amount">₹{p.totalSanctionAmount ? Number(p.totalSanctionAmount).toLocaleString('en-IN') : '0'}</Field>
+                                            <Field label="Mode">{p.modeOfPayment || '—'}</Field>
+                                            <Field label="Created On">{p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</Field>
+                                        </div>
+                                        {p.pdfUrl && (
+                                            <a href={p.pdfUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: C.accent, fontSize: 12, fontWeight: 600, textDecoration: 'none', marginTop: 10 }}>
+                                                <FaFilePdf size={13} color={C.accent} /> View PDF
+                                            </a>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    ) : (
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: '24px 0' }}>
+                            No paynotes found for this bill.
+                        </div>
+                    )}
+                </div>
+
+                {/* ── Remarks ── */}
+                <div style={cardStyle}>
+                    <div style={cardHeaderStyle}>
+                        <FaCommentDots size={15} color={C.accent} />
+                        <span style={cardHeaderTitleStyle}>Remarks</span>
+                        <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--muted)', padding: '2px 9px', borderRadius: 20 }}>
+                            {remarks.length}
+                        </span>
+                    </div>
+                    <div style={cardBodyStyle}>
+                        {remarks.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                {remarks.map((remark, i) => (
+                                    <div key={remark._id || i} style={{ background: 'var(--muted)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px' }}>
+                                        <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text-strong)', marginBottom: 8, lineHeight: 1.5 }}>{remark.text || '—'}</div>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                                                <Avatar src={remark.createdBy?.profile} name={remark.createdBy?.name} size={26} />
+                                                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{remark.createdBy?.name || 'Unknown'}</span>
+                                            </div>
+                                            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                                                {remark.createdAt ? new Date(remark.createdAt).toLocaleString('en-IN') : '—'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>
+                                No remarks available for this bill.
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* ── Withdraw status ── */}
+                {bill.withdrawStatus && (() => {
+                    const meta = withdrawStatusMeta(bill.withdrawStatus);
+                    return (
+                        <div style={{ ...cardStyle, borderLeft: `4px solid ${meta.accent}` }}>
+                            <div style={cardHeaderStyle}>
+                                <FaUndoAlt size={14} color={C.accent} />
+                                <span style={cardHeaderTitleStyle}>Withdrawal Request Status</span>
+                            </div>
+                            <div style={cardBodyStyle}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
+                                    <Field label="Status"><Badge meta={meta} /></Field>
+                                    <Field label="Requested On">{bill.withdrawRequestedAt ? new Date(bill.withdrawRequestedAt).toLocaleString('en-IN') : '—'}</Field>
+                                    {bill.withdrawApprovedAt && (
+                                        <Field label="Decision Made On">{new Date(bill.withdrawApprovedAt).toLocaleString('en-IN')}</Field>
+                                    )}
+                                </div>
+                                <div style={{ marginTop: 14 }}>
+                                    <div style={labelStyle}>Reason</div>
+                                    <div style={{ fontSize: 13, color: 'var(--foreground)', background: 'var(--muted)', borderRadius: 8, padding: '10px 12px', border: '1px solid var(--border)' }}>
+                                        {bill.withdrawReason || '—'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })()}
+
+                {/* ── Withdraw request CTA ── */}
+                {(bill.withdrawStatus === 'None' || bill.withdrawStatus === 'Rejected' || !bill.withdrawStatus) && bill.paymentStatus !== 'Paid' && (
+                    <div style={{
+                        ...cardStyle, borderTop: '2px dashed var(--border)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        gap: 14, flexWrap: 'wrap', padding: '16px',
+                    }}>
+                        <div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-strong)', marginBottom: 3 }}>Request Withdrawal</div>
+                            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                                {bill.withdrawStatus === 'Rejected'
+                                    ? 'Your previous withdrawal request was rejected. You can submit a new one.'
+                                    : 'Submit a request to withdraw this bill from the system.'}
+                            </div>
+                            {withdrawError && (
+                                <div style={{ marginTop: 8, fontSize: 12, color: C.destructive, background: '#fde8e6', borderRadius: 6, padding: '6px 10px' }}>
+                                    {withdrawError}
+                                </div>
+                            )}
+                        </div>
+                        <button onClick={handleWithdrawRequest} disabled={withdrawLoading} style={{ ...pdfBtnStyle, minWidth: 130, justifyContent: 'center', opacity: withdrawLoading ? 0.7 : 1, cursor: withdrawLoading ? 'not-allowed' : 'pointer' }}>
+                            {withdrawLoading
+                                ? <><span style={{ width: 13, height: 13, border: '2px solid rgba(255,255,255,.4)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }} /> Loading…</>
+                                : <><FaUndoAlt size={12} color="#fff" /> Request Withdrawal</>}
+                        </button>
+                    </div>
+                )}
+
+                {/* ── Transaction Summary ── */}
+                <div style={cardStyle}>
+                    <div style={cardHeaderStyle}>
+                        <FaCreditCard size={15} color={C.accent} />
+                        <span style={cardHeaderTitleStyle}>Transaction Summary</span>
+                        <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--muted)', padding: '2px 9px', borderRadius: 20 }}>
+                            {sortedTransactions.length}
+                        </span>
+                    </div>
+                    {sortedTransactions.length > 0 ? (
+                        <>
+                            {/* Desktop table */}
+                            <div className="d-none d-md-block" style={{ overflowX: 'auto' }}>
+                                <table style={{ width: '100%', minWidth: 940, borderCollapse: 'collapse', fontSize: 13 }}>
+                                    <thead>
+                                        <tr style={{ background: 'var(--muted)', borderBottom: '2px solid var(--border)' }}>
+                                            {['#', 'Amount', 'Type', 'Paid By', 'For User', 'UPI', 'Bank', 'Transaction ID', 'Date'].map(h => (
+                                                <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{h}</th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {sortedTransactions.map((t, i) => (
+                                            <tr key={t._id || i} style={{ borderBottom: '1px solid var(--border)' }}>
+                                                <td style={{ padding: '11px 14px', fontWeight: 700 }}>{i + 1}</td>
+                                                <td style={{ padding: '11px 14px' }}>
+                                                    <span style={{ display: 'flex', alignItems: 'center', gap: 2, fontWeight: 700, color: C.success }}>
+                                                        <FaRupeeSign size={11} color={C.success} />{t.amount?.toLocaleString('en-IN') || '0'}
+                                                    </span>
+                                                </td>
+                                                <td style={{ padding: '11px 14px', color: 'var(--text-muted)' }}>{getTransactionTypeLabel(t.type)}</td>
+                                                <td style={{ padding: '11px 14px', color: 'var(--text-strong)' }}>{t.paidBy?.name || t.paidBy || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
+                                                <td style={{ padding: '11px 14px', color: 'var(--text-strong)' }}>{t.userId?.name || t.userId || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
+                                                <td style={{ padding: '11px 14px' }}>
+                                                    {t.upiId ? (
+                                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontFamily: 'monospace' }}>
+                                                            <FaWallet size={11} color={C.info} />{t.upiId}
+                                                        </span>
+                                                    ) : <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>-</span>}
+                                                </td>
+                                                <td style={{ padding: '11px 14px' }}>
+                                                    {t.bankName ? (
+                                                        <div style={{ fontSize: 12 }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600, color: 'var(--text-strong)' }}>
+                                                                <FaMoneyBillWave size={11} color={C.success} />{t.bankName}
+                                                            </div>
+                                                            {t.accNo && <div style={{ color: 'var(--text-muted)', marginTop: 2 }}>A/C: ****{t.accNo.slice(-4)}</div>}
+                                                            {t.ifscCode && <div style={{ color: 'var(--text-muted)' }}>IFSC: {t.ifscCode}</div>}
+                                                        </div>
+                                                    ) : <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>-</span>}
+                                                </td>
+                                                <td style={{ padding: '11px 14px' }}>
+                                                    <span style={{ display: 'inline-block', fontSize: 11, fontFamily: 'monospace', background: 'var(--muted)', borderRadius: 6, padding: '4px 8px', color: 'var(--text-muted)' }}>
+                                                        {t._id || '—'}
+                                                    </span>
+                                                </td>
+                                                <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                                    {t.transactionDate ? new Date(t.transactionDate).toLocaleString('en-IN') : '—'}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {/* Mobile cards */}
+                            <div className="d-md-none" style={{ padding: '12px 14px' }}>
+                                {sortedTransactions.map((t, i) => (
+                                    <div key={t._id || i} style={{ border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', marginBottom: 10, background: 'var(--card)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: 2, fontWeight: 700, fontSize: 15, color: C.success }}>
+                                                <FaRupeeSign size={12} color={C.success} />{t.amount?.toLocaleString('en-IN') || '0'}
+                                            </span>
+                                            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--secondary-foreground)', background: 'var(--secondary)', padding: '2px 9px', borderRadius: 20 }}>
+                                                {getTransactionTypeLabel(t.type)}
+                                            </span>
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px' }}>
+                                            <Field label="Paid By">{t.paidBy?.name || t.paidBy || '—'}</Field>
+                                            <Field label="For User">{t.userId?.name || t.userId || '—'}</Field>
+                                            {t.upiId && <Field label="UPI"><span style={{ fontFamily: 'monospace', fontSize: 12 }}>{t.upiId}</span></Field>}
+                                            {t.bankName && <Field label="Bank">{t.bankName}</Field>}
+                                            {t.accNo && <Field label="A/C No.">****{t.accNo.slice(-4)}</Field>}
+                                            {t.ifscCode && <Field label="IFSC">{t.ifscCode}</Field>}
+                                        </div>
+                                        <div style={{ marginTop: 10 }}>
+                                            <div style={labelStyle}>Transaction ID</div>
+                                            <div style={{ fontSize: 11, fontFamily: 'monospace', background: 'var(--muted)', borderRadius: 6, padding: '4px 8px', color: 'var(--text-muted)', wordBreak: 'break-all' }}>{t._id || '—'}</div>
+                                        </div>
+                                        <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-muted)' }}>
+                                            {t.transactionDate ? new Date(t.transactionDate).toLocaleString('en-IN') : '—'}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    ) : (
+                        <div style={{ textAlign: 'center', padding: '36px 20px' }}>
+                            <FaCreditCard size={40} color={C.muted} style={{ marginBottom: 12 }} />
+                            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-strong)', marginBottom: 4 }}>No transactions yet</div>
+                            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Transaction summary will appear here once payments are made.</div>
+                        </div>
+                    )}
+                </div>
+
+            </div>
+
+            {/* ── Withdraw modal ── */}
+            {showWithdrawModal && (
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 1060,
+                    background: 'rgba(0,0,0,0.45)', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center', padding: 16,
+                }}
+                    onClick={handleCloseModal}
+                >
+                    <div
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            background: 'var(--card)', borderRadius: 14,
+                            width: '100%', maxWidth: 480, overflow: 'hidden',
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.25)',
+                            fontFamily: 'system-ui, -apple-system, sans-serif',
+                        }}
+                    >
+                        {/* Modal header */}
+                        <div style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            padding: '14px 18px', background: 'var(--primary)',
+                        }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#fff', fontWeight: 700, fontSize: 15 }}>
+                                <FaUndoAlt size={14} color="#fff" /> Request Bill Withdrawal
+                            </span>
+                            <FaTimes size={16} color="#fff" style={{ cursor: 'pointer' }} onClick={handleCloseModal} />
                         </div>
 
-                        <Row className="g-4">
-                            {/* Bill Info */}
-                            <Col lg={8}>
-                                <Card
-                                    className="shadow-sm"
+                        {/* Modal body */}
+                        <div style={{ padding: '18px' }}>
+                            <div style={{ marginBottom: 14 }}>
+                                <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-strong)', display: 'block', marginBottom: 6 }}>
+                                    Withdrawal Reason <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(Optional)</span>
+                                </label>
+                                <textarea
+                                    rows={4}
+                                    placeholder="Please provide a reason for withdrawing this bill…"
+                                    value={withdrawReason}
+                                    onChange={e => setWithdrawReason(e.target.value)}
                                     style={{
-                                        backgroundColor: 'var(--client-dashboard-bg-color)',
-                                        color: 'var(--client-text-color)',
+                                        width: '100%', border: '1px solid var(--border)', borderRadius: 8,
+                                        padding: '9px 12px', fontSize: 13.5, color: 'var(--foreground)',
+                                        background: 'var(--input)', outline: 'none', boxSizing: 'border-box',
+                                        resize: 'vertical', minHeight: 90, lineHeight: 1.5,
                                     }}
-                                >
-                                    <Card.Header
-                                        style={{
-                                            backgroundColor: 'transparent',
-                                            borderBottom: `1px solid var(--client-border-color)`,
-                                            fontWeight: 600,
-                                            color: 'var(--client-heading-color)',
-                                        }}
-                                    >
-                                        <FaFileInvoice className="me-2 text-primary" />
-                                        Bill Details
-                                    </Card.Header>
-                                    <Card.Body>
-                                        <Row>
-                                            <Col md={6}>
-                                                <p><strong>Invoice No</strong><br />{bill.invoiceNo}</p>
-                                                <p><strong>Firm Name</strong><br />{bill.firmName}</p>
-                                                <p><strong>Work Area</strong><br />{bill.workArea}</p>
-                                                <p><strong>LOA No</strong><br />{bill.loaNo}</p>
-                                            </Col>
-                                            <Col md={6}>
-                                                <p><strong>Work Description</strong><br />{bill.workDescription}</p>
-                                                <p><strong>Amount</strong><br />₹{bill.amount}</p>
-                                                <p><strong>Status</strong><br />{getStatusBadge(bill.paymentStatus)}</p>
-                                                <p><FaCalendarAlt className="me-1" /><strong>Submitted On</strong><br />{new Date(bill.submittedAt).toLocaleDateString()}</p>
-                                            </Col>
-                                        </Row>
+                                />
+                            </div>
 
-                                        <div className="text-end">
-                                            <a
-                                                href={bill.pdfurl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="btn"
-                                                style={{
-                                                    backgroundColor: 'var(--client-btn-bg)',
-                                                    color: 'var(--client-btn-text)',
-                                                    border: 'none',
-                                                }}
-                                            >
-                                                <FaFilePdf className="me-2" />
-                                                View Bill PDF
-                                            </a>
-                                        </div>
-                                    </Card.Body>
-                                </Card>
-                            </Col>
+                            <div style={{ background: 'var(--muted)', borderLeft: '3px solid var(--accent)', borderRadius: 8, padding: '12px 14px', marginBottom: withdrawError ? 14 : 0 }}>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-strong)', marginBottom: 6 }}>Bill details</div>
+                                <div style={{ display: 'grid', gap: 4, fontSize: 13, color: 'var(--foreground)' }}>
+                                    <div><strong>Firm:</strong> {bill?.firmName || '—'}</div>
+                                    <div><strong>Amount:</strong> ₹{(Number(bill?.amount) || 0).toLocaleString('en-IN')}</div>
+                                    <div><strong>Invoice:</strong> {bill?.invoiceNo || '—'}</div>
+                                </div>
+                            </div>
 
-                            {/* Transaction Details */}
-                            <Col lg={4}>
-                                <Card
-                                    className="shadow-sm"
-                                    style={{
-                                        backgroundColor: 'var(--client-dashboard-bg-color)',
-                                        borderColor: 'var(--client-border-color)',
-                                        color: 'var(--client-text-color)',
-                                    }}
-                                >
-                                    <Card.Header
-                                        style={{
-                                            backgroundColor: 'transparent',
-                                            borderBottom: `1px solid var(--client-border-color)`,
-                                            fontWeight: 600,
-                                            color: 'var(--client-heading-color)',
-                                        }}
-                                    >
-                                        <FaCreditCard className="me-2 text-primary" />
-                                        Transaction Details
-                                    </Card.Header>
-                                    <Card.Body>
-                                        {/* Get the latest transaction for this bill */}
-                                        {(() => {
-                                            const paidByName = latestTransaction?.paidBy?.name
-                                                || latestTransaction?.userId?.name
-                                                || latestTransaction?.paidBy
-                                                || latestTransaction?.userId
-                                                || '—';
-                                            const paidByProfile = latestTransaction?.paidBy?.profile
-                                                || latestTransaction?.userId?.profile
-                                                || 'https://via.placeholder.com/32';
+                            {withdrawError && (
+                                <div style={{ fontSize: 13, color: C.destructive, background: '#fde8e6', border: '1px solid #f5b8b2', borderRadius: 8, padding: '10px 12px' }}>
+                                    {withdrawError}
+                                </div>
+                            )}
+                        </div>
 
-                                            return (
-                                                <>
-                                                    {/* Bill Amount */}
-                                                    <div className="mb-3">
-                                                        <div className="d-flex align-items-center mb-2">
-                                                            <FaFileInvoice className="me-2 text-primary" />
-                                                            <small className="text-muted fw-bold">BILL AMOUNT</small>
-                                                        </div>
-                                                        <h5 className="mb-0" style={{ color: 'var(--client-text-color)' }}>
-                                                            ₹{(Number(bill?.amount) || 0).toLocaleString('en-IN')}
-                                                        </h5>
-                                                    </div>
-
-                                                    {/* Amount Paid */}
-                                                    <div className="mb-3">
-                                                        <div className="d-flex align-items-center mb-2">
-                                                            <FaRupeeSign className="me-2 text-success" />
-                                                            <small className="text-muted fw-bold">AMOUNT PAID</small>
-                                                        </div>
-                                                        <h5 className="text-success mb-0">
-                                                            ₹{totalPaidAmount.toLocaleString('en-IN')}
-                                                        </h5>
-                                                    </div>
-
-                                                    {/* Paid By */}
-                                                    <div className="mb-3">
-                                                        <div className="d-flex align-items-center mb-2">
-                                                            <FaUserTie className="me-2 text-secondary" />
-                                                            <small className="text-muted fw-bold">PAID BY</small>
-                                                        </div>
-                                                        <div className="d-flex align-items-center gap-2 text-muted">
-                                                            <Image
-                                                                src={paidByProfile}
-                                                                roundedCircle
-                                                                width={28}
-                                                                height={28}
-                                                                alt={typeof paidByName === 'string' ? paidByName : 'User'}
-                                                                style={{ objectFit: 'cover' }}
-                                                            />
-                                                            <span>{paidByName}</span>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Total Remaining */}
-                                                    <div className="mb-3">
-                                                        <div className="d-flex align-items-center mb-2">
-                                                            <FaCalculator className="me-2 text-warning" />
-                                                            <small className="text-muted fw-bold">TOTAL REMAINING</small>
-                                                        </div>
-                                                        <h6 className="text-warning mb-0">
-                                                            ₹{remainingAmount.toLocaleString('en-IN')}
-                                                        </h6>
-                                                    </div>
-                                                </>
-                                            );
-                                        })()}
-                                    </Card.Body>
-                                </Card>
-                            </Col>
-                        </Row>
-
-                        {/* Attached Agreement Details */}
-                        <Row className="mt-4">
-                            <Col lg={12}>
-                                <Card
-                                    className="shadow-sm"
-                                    style={{
-                                        backgroundColor: 'var(--client-dashboard-bg-color)',
-                                        borderColor: 'var(--client-border-color)',
-                                        color: 'var(--client-text-color)',
-                                    }}
-                                >
-                                    <Card.Header
-                                        style={{
-                                            backgroundColor: 'transparent',
-                                            borderBottom: `1px solid var(--client-border-color)`,
-                                            fontWeight: 600,
-                                            color: 'var(--client-heading-color)',
-                                        }}
-                                    >
-                                        <FaFileSignature className="me-2 text-primary" />
-                                        Attached Agreement Details
-                                    </Card.Header>
-                                    <Card.Body>
-                                        {agreement ? (
-                                            <Row className="gy-3">
-                                                <Col md={6}>
-                                                    <p className="mb-2"><strong>Agreement Title</strong></p>
-                                                    <div>{agreement.title || '—'}</div>
-                                                </Col>
-                                                <Col md={3}>
-                                                    <p className="mb-2"><strong>Agreement ID</strong></p>
-                                                    <div>{agreement.agreementId || agreement._id || '—'}</div>
-                                                </Col>
-                                                <Col md={3}>
-                                                    <p className="mb-2"><strong>Status</strong></p>
-                                                    <div>{getAgreementStatusBadge(agreement.status)}</div>
-                                                </Col>
-
-                                                <Col md={6}>
-                                                    <p className="mb-2"><strong>Signed On</strong></p>
-                                                    <div>
-                                                        {agreement.signedAt
-                                                            ? new Date(agreement.signedAt).toLocaleDateString()
-                                                            : '—'}
-                                                    </div>
-                                                </Col>
-                                                <Col md={6}>
-                                                    <p className="mb-2"><strong>Expiry Date</strong></p>
-                                                    <div>
-                                                        {agreement.expiryDate
-                                                            ? new Date(agreement.expiryDate).toLocaleDateString()
-                                                            : '—'}
-                                                    </div>
-                                                </Col>
-
-                                                {agreement.description && (
-                                                    <Col md={12}>
-                                                        <p className="mb-2"><strong>Description</strong></p>
-                                                        <div
-                                                            className="p-2 rounded"
-                                                            style={{
-                                                                backgroundColor: 'var(--client-component-bg-color)',
-                                                            }}
-                                                        >
-                                                            {agreement.description}
-                                                        </div>
-                                                    </Col>
-                                                )}
-
-                                                {(agreement.fileUrl || agreement._id) && (
-                                                    <Col md={12}>
-                                                        <div className="d-flex gap-2 justify-content-end flex-wrap">
-                                                            {agreement._id && (
-                                                                <Button
-                                                                    onClick={() => navigate(`/client/agreement/view/${agreement._id}`)}
-                                                                    style={{
-                                                                        backgroundColor: 'var(--client-btn-bg)',
-                                                                        color: 'var(--client-btn-text)',
-                                                                        border: 'none',
-                                                                    }}
-                                                                >
-                                                                    <FaFileSignature className="me-2" />
-                                                                    Open Agreement Page
-                                                                </Button>
-                                                            )}
-                                                            {agreement.fileUrl && (
-                                                                <a
-                                                                    href={agreement.fileUrl}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    className="btn"
-                                                                    style={{
-                                                                        backgroundColor: 'var(--client-btn-bg)',
-                                                                        color: 'var(--client-btn-text)',
-                                                                        border: 'none',
-                                                                    }}
-                                                                >
-                                                                    <FaFilePdf className="me-2" />
-                                                                    View Agreement PDF
-                                                                </a>
-                                                            )}
-                                                        </div>
-                                                    </Col>
-                                                )}
-                                            </Row>
-                                        ) : (
-                                            <Alert variant="light" className="mb-0">
-                                                No agreement is attached to this bill.
-                                            </Alert>
-                                        )}
-                                    </Card.Body>
-                                </Card>
-                            </Col>
-                        </Row>
-
-                        {/* Paynote Details */}
-                        <Row className="mt-4">
-                            <Col lg={12}>
-                                <Card
-                                    className="shadow-sm"
-                                    style={{
-                                        backgroundColor: 'var(--client-dashboard-bg-color)',
-                                        borderColor: 'var(--client-border-color)',
-                                        color: 'var(--client-text-color)',
-                                    }}
-                                >
-                                    <Card.Header
-                                        style={{
-                                            backgroundColor: 'transparent',
-                                            borderBottom: `1px solid var(--client-border-color)`,
-                                            fontWeight: 600,
-                                            color: 'var(--client-heading-color)',
-                                        }}
-                                    >
-                                        <FaFileInvoice className="me-2 text-primary" />
-                                        Paynote Details ({paynotes.length})
-                                    </Card.Header>
-                                    <Card.Body className="p-0">
-                                        {paynotes.length > 0 ? (
-                                            <div className="table-responsive">
-                                                <Table bordered hover className="mb-0 align-middle">
-                                                    <thead className="table-light">
-                                                        <tr>
-                                                            <th className="ps-3">#</th>
-                                                            <th>Pay Note No</th>
-                                                            <th>Department</th>
-                                                            <th>Amount</th>
-                                                            <th>Mode</th>
-                                                            <th>Status</th>
-                                                            <th>Created On</th>
-                                                            <th>PDF</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {paynotes.map((paynote, index) => (
-                                                            <tr key={paynote._id || index}>
-                                                                <td className="ps-3 fw-bold">{index + 1}</td>
-                                                                <td>{paynote.payNoteNo || '—'}</td>
-                                                                <td>{paynote.department || '—'}</td>
-                                                                <td>
-                                                                    ₹{paynote.totalSanctionAmount
-                                                                        ? Number(paynote.totalSanctionAmount).toLocaleString('en-IN')
-                                                                        : '0'}
-                                                                </td>
-                                                                <td>{paynote.modeOfPayment || '—'}</td>
-                                                                <td>{getPaynoteStatusBadge(paynote.status)}</td>
-                                                                <td>
-                                                                    {paynote.createdAt
-                                                                        ? new Date(paynote.createdAt).toLocaleDateString()
-                                                                        : '—'}
-                                                                </td>
-                                                                <td>
-                                                                    {paynote.pdfUrl ? (
-                                                                        <a
-                                                                            href={paynote.pdfUrl}
-                                                                            target="_blank"
-                                                                            rel="noopener noreferrer"
-                                                                            className="btn btn-sm"
-                                                                            style={{
-                                                                                backgroundColor: 'var(--client-btn-bg)',
-                                                                                color: 'var(--client-btn-text)',
-                                                                                border: 'none',
-                                                                            }}
-                                                                        >
-                                                                            <FaFilePdf className="me-1" />
-                                                                            View
-                                                                        </a>
-                                                                    ) : (
-                                                                        <span className="text-muted">—</span>
-                                                                    )}
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </Table>
-                                            </div>
-                                        ) : (
-                                            <div className="p-4 text-center text-muted">
-                                                No paynotes found for this bill.
-                                            </div>
-                                        )}
-                                    </Card.Body>
-                                </Card>
-                            </Col>
-                        </Row>
-
-                        {/* Remarks */}
-                        <Row className="mt-4">
-                            <Col lg={12}>
-                                <Card
-                                    className="shadow-sm"
-                                    style={{
-                                        backgroundColor: 'var(--client-dashboard-bg-color)',
-                                        borderColor: 'var(--client-border-color)',
-                                        color: 'var(--client-text-color)',
-                                    }}
-                                >
-                                    <Card.Header
-                                        style={{
-                                            backgroundColor: 'transparent',
-                                            borderBottom: `1px solid var(--client-border-color)`,
-                                            fontWeight: 600,
-                                            color: 'var(--client-heading-color)',
-                                        }}
-                                    >
-                                        <i className="bi bi-chat-left-text me-2 text-primary" />
-                                        Remarks ({remarks.length})
-                                    </Card.Header>
-                                    <Card.Body>
-                                        {remarks.length > 0 ? (
-                                            <div className="d-flex flex-column gap-2">
-                                                {remarks.map((remark, index) => (
-                                                    <div
-                                                        key={remark._id || index}
-                                                        className="p-3 rounded"
-                                                        style={{
-                                                            backgroundColor: 'var(--client-component-bg-color)',
-                                                            border: '1px solid var(--client-border-color)',
-                                                        }}
-                                                    >
-                                                        <div className="fw-semibold mb-1">{remark.text || '—'}</div>
-                                                        <div className="d-flex align-items-center gap-2 mb-1">
-                                                            <Image
-                                                                src={remark.createdBy?.profile || 'https://via.placeholder.com/28'}
-                                                                roundedCircle
-                                                                width={28}
-                                                                height={28}
-                                                                alt={remark.createdBy?.name || 'User'}
-                                                                style={{ objectFit: 'cover' }}
-                                                            />
-                                                            <small className="text-muted mb-0">
-                                                                Created By: {remark.createdBy?.name || 'Unknown'}
-                                                            </small>
-                                                        </div>
-                                                        <small className="text-muted d-block">
-                                                            Date: {remark.createdAt ? new Date(remark.createdAt).toLocaleString() : '—'}
-                                                        </small>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="text-muted">No remarks available for this bill.</div>
-                                        )}
-                                    </Card.Body>
-                                </Card>
-                            </Col>
-                        </Row>
-
-                        {/* Withdraw Request Card */}
-                        {bill.withdrawStatus && (
-                            <Row className="mt-4">
-                                <Col lg={12}>
-                                    <Card
-                                        className="shadow-sm"
-                                        style={{
-                                            backgroundColor: 'var(--client-dashboard-bg-color)',
-                                            borderLeft: `4px solid ${bill.withdrawStatus === 'Requested' ? '#ffc107' : bill.withdrawStatus === 'Approved' ? '#28a745' : '#dc3545'}`,
-                                            color: 'var(--client-text-color)',
-                                        }}
-                                    >
-                                        <Card.Header
-                                            style={{
-                                                backgroundColor: 'transparent',
-                                                borderBottom: `1px solid var(--client-border-color)`,
-                                                fontWeight: 600,
-                                                color: 'var(--client-heading-color)',
-                                            }}
-                                        >
-                                            <i className="bi bi-arrow-counterclockwise me-2" />
-                                            Withdrawal Request Status
-                                        </Card.Header>
-                                        <Card.Body>
-                                            <Row className="gy-3">
-                                                <Col md={6}>
-                                                    <small className="text-muted fw-bold">Status</small>
-                                                    <div className="fw-semibold mt-1">
-                                                        <Badge bg={bill.withdrawStatus === 'Requested' ? 'warning' : bill.withdrawStatus === 'Approved' ? 'success' : 'danger'}>
-                                                            {bill.withdrawStatus}
-                                                        </Badge>
-                                                    </div>
-                                                </Col>
-
-                                                <Col md={6}>
-                                                    <small className="text-muted fw-bold">Requested On</small>
-                                                    <div className="fw-semibold mt-1">
-                                                        {bill.withdrawRequestedAt
-                                                            ? new Date(bill.withdrawRequestedAt).toLocaleString()
-                                                            : '—'}
-                                                    </div>
-                                                </Col>
-
-                                                <Col md={12}>
-                                                    <small className="text-muted fw-bold">Reason</small>
-                                                    <div
-                                                        className="mt-1 p-2"
-                                                        style={{
-                                                            backgroundColor: 'var(--client-component-bg-color)',
-                                                            borderRadius: '4px',
-                                                            color: 'var(--client-text-color)',
-                                                        }}
-                                                    >
-                                                        {bill.withdrawReason || '—'}
-                                                    </div>
-                                                </Col>
-
-                                                {bill.withdrawApprovedAt && (
-                                                    <Col md={12}>
-                                                        <small className="text-muted fw-bold">Decision Made On</small>
-                                                        <div className="fw-semibold mt-1">
-                                                            {new Date(bill.withdrawApprovedAt).toLocaleString()}
-                                                        </div>
-                                                    </Col>
-                                                )}
-                                            </Row>
-                                        </Card.Body>
-                                    </Card>
-                                </Col>
-                            </Row>
-                        )}
-
-                        {/* Withdraw Request Button (only if no pending request and bill not paid) */}
-                        {(bill.withdrawStatus === 'None' || bill.withdrawStatus === 'Rejected' || !bill.withdrawStatus) && bill.paymentStatus !== 'Paid' && (
-                            <Row className="mt-4">
-                                <Col lg={12}>
-                                    <div
-                                        className="p-3 rounded"
-                                        style={{
-                                            backgroundColor: 'var(--client-component-bg-color)',
-                                            borderTop: `2px dashed var(--client-border-color)`,
-                                        }}
-                                    >
-                                        <div className="d-flex align-items-center justify-content-between">
-                                            <div>
-                                                <h6 className="mb-1" style={{ color: 'var(--client-heading-color)' }}>
-                                                    Request Withdrawal
-                                                </h6>
-                                                <small className="text-muted">
-                                                    {bill.withdrawStatus === 'Rejected'
-                                                        ? 'Your previous withdrawal request was rejected. You can submit a new one.'
-                                                        : 'Submit a request to withdraw this bill from the system.'}
-                                                </small>
-                                            </div>
-                                            <Button
-                                                onClick={handleWithdrawRequest}
-                                                disabled={withdrawLoading}
-                                                style={{
-                                                    backgroundColor: 'var(--client-btn-bg)',
-                                                    color: 'var(--client-btn-text)',
-                                                    border: 'none',
-                                                    minWidth: '120px',
-                                                }}
-                                            >
-                                                {withdrawLoading ? (
-                                                    <>
-                                                        <Spinner
-                                                            as="span"
-                                                            animation="border"
-                                                            size="sm"
-                                                            role="status"
-                                                            aria-hidden="true"
-                                                            className="me-2"
-                                                        />
-                                                        Loading...
-                                                    </>
-                                                ) : (
-                                                    <>Request Withdrawal</>
-                                                )}
-                                            </Button>
-                                        </div>
-                                        {withdrawError && (
-                                            <Alert variant="danger" className="mt-2 mb-0">
-                                                {withdrawError}
-                                            </Alert>
-                                        )}
-                                    </div>
-                                </Col>
-                            </Row>
-                        )}
-
-                        {/* Withdraw Request Modal */}
-                        <Modal
-                            show={showWithdrawModal}
-                            onHide={handleCloseModal}
-                            centered
-                            backdrop="static"
-                            keyboard={false}
-                        >
-                            <Modal.Header
-                                closeButton
+                        {/* Modal footer */}
+                        <div style={{
+                            display: 'flex', justifyContent: 'flex-end', gap: 10,
+                            padding: '14px 18px', borderTop: '1px solid var(--border)',
+                        }}>
+                            <button
+                                onClick={handleCloseModal}
+                                disabled={withdrawLoading}
                                 style={{
-                                    backgroundColor: 'var(--client-component-bg-color)',
-                                    color: 'var(--client-heading-color)',
-                                    borderBottom: '1px solid var(--client-border-color)',
+                                    padding: '9px 16px', borderRadius: 8, border: '1px solid var(--border)',
+                                    background: 'var(--secondary)', color: 'var(--secondary-foreground)',
+                                    fontSize: 13, fontWeight: 600, cursor: 'pointer',
                                 }}
                             >
-                                <Modal.Title>
-                                    <i className="bi bi-arrow-counterclockwise me-2" />
-                                    Request Bill Withdrawal
-                                </Modal.Title>
-                            </Modal.Header>
-                            <Modal.Body
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSubmitWithdraw}
+                                disabled={withdrawLoading}
                                 style={{
-                                    backgroundColor: 'var(--client-component-bg-color)',
-                                    color: 'var(--client-text-color)',
+                                    display: 'flex', alignItems: 'center', gap: 7,
+                                    padding: '9px 18px', borderRadius: 8, border: 'none',
+                                    background: 'var(--primary)', color: '#fff',
+                                    fontSize: 13, fontWeight: 600,
+                                    cursor: withdrawLoading ? 'not-allowed' : 'pointer', opacity: withdrawLoading ? 0.7 : 1,
                                 }}
                             >
-                                <Form>
-                                    <Form.Group className="mb-3">
-                                        <Form.Label style={{ color: 'var(--client-heading-color)', fontWeight: 600 }}>
-                                            Withdrawal Reason <span className="text-muted">(Optional)</span>
-                                        </Form.Label>
-                                        <Form.Control
-                                            as="textarea"
-                                            rows={4}
-                                            placeholder="Please provide a reason for withdrawing this bill..."
-                                            value={withdrawReason}
-                                            onChange={(e) => setWithdrawReason(e.target.value)}
-                                            style={{
-                                                backgroundColor: 'var(--client-dashboard-bg-color)',
-                                                color: 'var(--client-text-color)',
-                                                border: '1px solid var(--client-border-color)',
-                                            }}
-                                        />
-                                    </Form.Group>
+                                {withdrawLoading
+                                    ? <><span style={{ width: 13, height: 13, border: '2px solid rgba(255,255,255,.4)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }} /> Submitting…</>
+                                    : 'Submit Withdrawal Request'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-                                    <div
-                                        className="p-3 rounded mb-3"
-                                        style={{
-                                            backgroundColor: 'var(--client-dashboard-bg-color)',
-                                            borderLeft: '3px solid var(--client-btn-bg)',
-                                        }}
-                                    >
-                                        <strong style={{ color: 'var(--client-heading-color)' }}>Bill Details:</strong>
-                                        <div className="mt-2" style={{ fontSize: '0.9rem' }}>
-                                            <div><strong>Firm:</strong> {bill?.firmName}</div>
-                                            <div><strong>Amount:</strong> ₹{bill?.amount}</div>
-                                            <div><strong>Invoice:</strong> {bill?.invoiceNo}</div>
-                                        </div>
-                                    </div>
-
-                                    {withdrawError && (
-                                        <Alert variant="danger" className="mb-0">
-                                            {withdrawError}
-                                        </Alert>
-                                    )}
-                                </Form>
-                            </Modal.Body>
-                            <Modal.Footer
-                                style={{
-                                    backgroundColor: 'var(--client-component-bg-color)',
-                                    borderTop: '1px solid var(--client-border-color)',
-                                }}
-                            >
-                                <Button
-                                    variant="secondary"
-                                    onClick={handleCloseModal}
-                                    disabled={withdrawLoading}
-                                    style={{
-                                        backgroundColor: 'var(--client-border-color)',
-                                        color: 'var(--client-text-color)',
-                                        border: 'none',
-                                    }}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    onClick={handleSubmitWithdraw}
-                                    disabled={withdrawLoading}
-                                    style={{
-                                        backgroundColor: 'var(--client-btn-bg)',
-                                        color: 'var(--client-btn-text)',
-                                        border: 'none',
-                                    }}
-                                >
-                                    {withdrawLoading ? (
-                                        <>
-                                            <Spinner
-                                                as="span"
-                                                animation="border"
-                                                size="sm"
-                                                role="status"
-                                                aria-hidden="true"
-                                                className="me-2"
-                                            />
-                                            Submitting...
-                                        </>
-                                    ) : (
-                                        'Submit Withdrawal Request'
-                                    )}
-                                </Button>
-                            </Modal.Footer>
-                        </Modal>
-
-                        <Row className="mt-4 d-none d-md-block">
-                            <Col lg={12}>
-                                <Card
-                                    className="shadow-sm"
-                                    style={{
-                                        backgroundColor: 'var(--client-dashboard-bg-color)',
-                                        borderColor: 'var(--client-border-color)',
-                                        color: 'var(--client-text-color)',
-                                    }}
-                                >
-                                    <Card.Header
-                                        style={{
-                                            backgroundColor: 'transparent',
-                                            borderBottom: `1px solid var(--client-border-color)`,
-                                            fontWeight: 600,
-                                            color: 'var(--client-heading-color)',
-                                        }}
-                                    >
-                                        <FaCreditCard className="me-2 text-primary" />
-                                        Transaction Summary ({sortedTransactions.length})
-                                    </Card.Header>
-                                    <Card.Body className="p-0">
-                                        {sortedTransactions.length > 0 ? (
-                                            <div className="table-responsive">
-                                                <Table bordered hover className="mb-0 align-middle">
-                                                    <thead className="table-light">
-                                                        <tr>
-                                                            <th className="ps-3">#</th>
-                                                            <th>Amount</th>
-                                                            <th>Type</th>
-                                                            <th>Paid By</th>
-                                                            <th>For User</th>
-                                                            <th>UPI</th>
-                                                            <th>Bank</th>
-                                                            <th>Transaction ID</th>
-                                                            <th>Date</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {sortedTransactions.map((transaction, index) => (
-                                                            <tr key={transaction._id || index}>
-                                                                <td className="ps-3 fw-bold">{index + 1}</td>
-                                                                <td>
-                                                                    <div className="d-flex align-items-center">
-                                                                        <FaRupeeSign className="me-1 text-success" />
-                                                                        <strong className="text-success">
-                                                                            {transaction.amount?.toLocaleString('en-IN') || '0'}
-                                                                        </strong>
-                                                                    </div>
-                                                                </td>
-                                                                <td>
-                                                                    {getTransactionTypeLabel(transaction.type)}
-                                                                </td>
-                                                                <td>
-                                                                    {transaction.paidBy?.name || transaction.paidBy || <span className="text-muted">—</span>}
-                                                                </td>
-                                                                <td>
-                                                                    {transaction.userId?.name || transaction.userId || <span className="text-muted">—</span>}
-                                                                </td>
-                                                                <td>
-                                                                    {transaction.upiId ? (
-                                                                        <div className="d-flex align-items-center">
-                                                                            <FaWallet className="me-1 text-info" size={12} />
-                                                                            <span className="small font-monospace">
-                                                                                {transaction.upiId}
-                                                                            </span>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <span className="text-muted small">-</span>
-                                                                    )}
-                                                                </td>
-                                                                <td>
-                                                                    {transaction.bankName ? (
-                                                                        <div className="small">
-                                                                            <div className="d-flex align-items-center mb-1">
-                                                                                <FaMoneyBillWave className="me-1 text-success" size={12} />
-                                                                                <strong>{transaction.bankName}</strong>
-                                                                            </div>
-                                                                            {transaction.accNo && (
-                                                                                <div className="text-muted">
-                                                                                    A/C: ****{transaction.accNo.slice(-4)}
-                                                                                </div>
-                                                                            )}
-                                                                            {transaction.ifscCode && (
-                                                                                <div className="text-muted">
-                                                                                    IFSC: {transaction.ifscCode}
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    ) : (
-                                                                        <span className="text-muted small">-</span>
-                                                                    )}
-                                                                </td>
-                                                             
-                                                                <td>
-                                                                    <div className="bg-light p-2 rounded small font-monospace text-center">
-                                                                        {transaction._id || '—'}
-                                                                    </div>
-                                                                </td>
-                                                                <td>
-                                                                    <span className="small">
-                                                                        {transaction.transactionDate
-                                                                            ? new Date(transaction.transactionDate).toLocaleString()
-                                                                            : '—'}
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </Table>
-                                            </div>
-                                        ) : (
-                                            <div className="text-center py-4">
-                                                <FaCreditCard size={48} className="text-muted mb-3" />
-                                                <h6 className="text-muted mb-1">No Transactions Yet</h6>
-                                                <p className="text-muted mb-0">Transaction summary will appear here once payments are made</p>
-                                            </div>
-                                        )}
-                                    </Card.Body>
-                                </Card>
-                            </Col>
-                        </Row>
-                    </>
-                ) : (
-                    <Alert variant="warning">No bill data found.</Alert>
-                )}
-            </Container>
+            <style>{`
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+            `}</style>
         </>
     );
 }
