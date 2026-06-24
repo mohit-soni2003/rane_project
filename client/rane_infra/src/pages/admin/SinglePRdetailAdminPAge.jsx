@@ -4,7 +4,99 @@ import AdminHeader from '../../component/header/AdminHeader';
 import { getPaymentRequestById } from '../../services/paymentService';
 import { getTransactionsByPaymentId } from '../../services/transactionService';
 import { backend_url } from '../../store/keyStore';
-import { Container, Row, Col, Card, Spinner, Table, Form, Button, Image } from 'react-bootstrap';
+import { Image } from 'react-bootstrap';
+import {
+  FaReceipt, FaPenSquare, FaCreditCard, FaChartBar, FaIdBadge,
+  FaFilePdf, FaExclamationTriangle, FaCheckCircle,
+} from 'react-icons/fa';
+
+// ── Shared styles ─────────────────────────────────────────────────────────────
+const cardStyle = {
+  background: 'var(--card)', borderRadius: 14, border: '1px solid var(--border)',
+  boxShadow: '0 2px 10px var(--shadow-color)', overflow: 'hidden', marginBottom: 16,
+};
+const titleBarStyle = {
+  borderBottom: '1px solid var(--border)', padding: '13px 20px',
+  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap',
+};
+const iconBadgeStyle = {
+  width: 32, height: 32, borderRadius: 8, background: 'var(--warning)',
+  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+};
+const sectionTitleStyle = { fontSize: 14, fontWeight: 700, color: 'var(--text-strong)' };
+const labelStyle = {
+  fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
+  textTransform: 'uppercase', letterSpacing: '0.05em',
+};
+const gridStyle = {
+  display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16,
+};
+const inputStyle = {
+  width: '100%', boxSizing: 'border-box',
+  background: 'var(--input)', color: 'var(--foreground)',
+  border: '1px solid var(--border)', borderRadius: 8, padding: '9px 12px',
+  fontSize: 14, outline: 'none', fontFamily: 'inherit',
+};
+
+// ── Module-scope helpers (avoid input remount / focus loss) ────────────────────
+function Section({ icon: Icon, title, right, children }) {
+  return (
+    <div style={cardStyle}>
+      <div style={titleBarStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={iconBadgeStyle}><Icon size={15} color="var(--primary)" /></div>
+          <div style={sectionTitleStyle}>{title}</div>
+        </div>
+        {right}
+      </div>
+      <div style={{ padding: '16px 20px' }}>{children}</div>
+    </div>
+  );
+}
+
+function Field({ label, value, full, color, pre }) {
+  return (
+    <div style={{ gridColumn: full ? '1 / -1' : 'auto', minWidth: 0 }}>
+      <div style={labelStyle}>{label}</div>
+      <div style={{
+        fontSize: 14, fontWeight: 600, marginTop: 3,
+        color: color || 'var(--text-strong)',
+        wordBreak: 'break-word', whiteSpace: pre ? 'pre-wrap' : 'normal',
+      }}>
+        {value === 0 || value ? value : '—'}
+      </div>
+    </div>
+  );
+}
+
+const statusMeta = (status) => {
+  switch (status) {
+    case 'Paid':
+    case 'Completed':
+      return { bg: 'var(--success)', color: 'var(--success-foreground)' };
+    case 'Sanctioned':
+      return { bg: '#dbeafe', color: '#1e40af' };
+    case 'Pending':
+      return { bg: 'var(--warning)', color: 'var(--warning-foreground)' };
+    case 'Reject':
+    case 'Rejected':
+    case 'Overdue':
+      return { bg: '#fde8e6', color: 'var(--destructive)' };
+    default:
+      return { bg: 'var(--secondary)', color: 'var(--secondary-foreground)' };
+  }
+};
+const StatusBadge = ({ status }) => {
+  const { bg, color } = statusMeta(status);
+  return (
+    <span style={{
+      display: 'inline-block', padding: '3px 12px', borderRadius: 20,
+      fontSize: 12, fontWeight: 700, background: bg, color,
+    }}>
+      {status || '—'}
+    </span>
+  );
+};
 
 export default function SinglePRdetailAdminPage() {
   const { id } = useParams();
@@ -66,14 +158,23 @@ export default function SinglePRdetailAdminPage() {
     }
   };
 
+  const Spin = ({ size = 32 }) => (
+    <span style={{
+      display: 'inline-block', width: size, height: size,
+      border: '3px solid var(--border)', borderTopColor: 'var(--accent)',
+      borderRadius: '50%', animation: 'spin 1s linear infinite',
+    }} />
+  );
+
   if (loading) {
     return (
       <>
         <AdminHeader />
-        <div className="text-center mt-5">
-          <Spinner animation="border" variant="primary" />
-          <p>Loading payment request details...</p>
+        <div style={{ textAlign: 'center', marginTop: 60, fontFamily: 'system-ui, sans-serif' }}>
+          <Spin />
+          <p style={{ color: 'var(--text-muted)', marginTop: 12 }}>Loading payment request details…</p>
         </div>
+        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       </>
     );
   }
@@ -82,459 +183,196 @@ export default function SinglePRdetailAdminPage() {
     return (
       <>
         <AdminHeader />
-        <div className="text-center mt-5 text-danger">
-          <p>{err || 'Payment Request not found'}</p>
+        <div style={{ textAlign: 'center', marginTop: 60, color: 'var(--destructive)', fontFamily: 'system-ui, sans-serif' }}>
+          <FaExclamationTriangle size={28} color="var(--destructive)" />
+          <p style={{ marginTop: 10 }}>{err || 'Payment Request not found'}</p>
         </div>
       </>
     );
   }
 
   const {
-    reason,
-    amount,
-    submittedAt,
-    status,
-    sanctionedAmount,
-    note,
-    sanctionDate,
-    user = {}
+    reason, amount, submittedAt, status, sanctionedAmount, note, sanctionDate, user = {}
   } = paymentData;
 
   const totalPaid = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
   const remaining = Math.max((sanctionedAmount || amount || 0) - totalPaid, 0);
+  const fmt = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 
   return (
     <>
       <AdminHeader />
-      <Container fluid className="py-4 my-3"
-        style={{
-          minHeight: '100vh',
-          background: 'var(--background)',
-          borderRadius:"13px"
-        }}>
 
-        {/* Header */}
+      <div style={{
+        padding: '0 2px', fontFamily: 'system-ui, -apple-system, sans-serif',
+        color: 'var(--foreground)', background: 'var(--background)', minHeight: '100vh',
+      }}>
 
+        {/* ── Request Information ── */}
+        <Section icon={FaReceipt} title="Request Information" right={<StatusBadge status={status} />}>
+          <div style={gridStyle}>
+            <Field label="Expense No" value={expenseNo} />
+            <Field label="Reference Mode" value={refMode} />
+            <Field label="Request Type" value={paymentData.paymentType} />
+            <Field label="Client Payment Preference" value={paymentData.paymentMOde} />
+            <Field label="Status" value={<StatusBadge status={status} />} />
+            <Field label="Requested Amount" value={fmt(amount)} color="var(--destructive)" />
+            <Field label="Request Date" value={submittedAt ? new Date(submittedAt).toLocaleString() : '—'} />
+            <Field label="Sanction Date" value={sanctionDate ? new Date(sanctionDate).toLocaleString() : '—'} />
+            <Field label="Sanctioned Amount" value={sanctionedAmount ? fmt(sanctionedAmount) : '—'} color="var(--success-foreground)" />
+            <Field label="Note" full value={note} color="var(--text-muted)" pre />
+            <Field label="Reason" full value={reason} color="var(--text-muted)" pre />
+            <Field label="Remark (by admin)" full value={remark} color="var(--text-muted)" pre />
+          </div>
 
-        {/* Request Info */}
-        {/* Payment / Request Information */}
-        <Card
-          className="mb-4 shadow-sm border-0"
-          style={{
-            background: "var(--card)",
-            color: "var(--card-foreground)",
-            borderRadius: "12px",
-          }}
-        >
-          {/* Header */}
-          <Card.Header
-            className="d-flex align-items-center gap-2 fw-semibold"
-            style={{
-              background: "var(--secondary)",
-              color: "var(--secondary-foreground)",
-              borderBottom: "1px solid var(--border)",
-            }}
-          >
-            <i className="bi bi-receipt fs-5" style={{ color: "var(--accent)" }} />
-            Request Information
-          </Card.Header>
+          <div style={{ marginTop: 16 }}>
+            <a href={paymentData.image} target="_blank" rel="noopener noreferrer"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 8, background: 'var(--primary)', color: 'var(--primary-foreground)', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+              <FaFilePdf size={13} color="var(--primary-foreground)" /> View PDF
+            </a>
+          </div>
+        </Section>
 
-          {/* Body */}
-          <Card.Body>
-            <Row className="gy-3">
-              <Col md={6}>
-                <small className="text-muted">Expense No</small>
-                <div className="fw-semibold">{expenseNo || "—"}</div>
-              </Col>
+        {/* ── Update Information ── */}
+        <Section icon={FaPenSquare} title="Update Information">
+          <div style={gridStyle}>
+            <div>
+              <label style={{ ...labelStyle, display: 'block', marginBottom: 6 }}>Reference Mode</label>
+              <input type="text" value={refMode} onChange={(e) => setRefMode(e.target.value)} style={inputStyle} />
+            </div>
+            <div>
+              <label style={{ ...labelStyle, display: 'block', marginBottom: 6 }}>Expense No</label>
+              <input type="text" value={expenseNo} onChange={(e) => setExpenseNo(e.target.value)} style={inputStyle} />
+            </div>
+          </div>
 
-              <Col md={6}>
-                <small className="text-muted">Reference Mode</small>
-                <div className="fw-semibold">{refMode || "—"}</div>
-              </Col>
+          <div style={{ marginTop: 14 }}>
+            <label style={{ ...labelStyle, display: 'block', marginBottom: 6 }}>Remark</label>
+            <input type="text" value={remark} onChange={(e) => setRemark(e.target.value)} style={inputStyle} />
+          </div>
 
-              <Col md={6}>
-                <small className="text-muted">Request Type</small>
-                <div className="fw-semibold">{paymentData.paymentType || "—"}</div>
-              </Col>
-
-              <Col md={6}>
-                <small className="text-muted">Client Payment Preference</small>
-                <div className="fw-semibold">{paymentData.paymentMOde || "—"}</div>
-              </Col>
-
-              <Col md={6}>
-                <small className="text-muted">Status</small>
-                <div className="fw-semibold">{paymentData.status || "—"}</div>
-              </Col>
-
-              <Col md={6}>
-                <small className="text-muted">Requested Amount</small>
-                <div className="fw-bold" style={{ color: "var(--destructive)" }}>
-                  ₹{amount || 0}
-                </div>
-              </Col>
-
-              <Col md={6}>
-                <small className="text-muted">Request Date</small>
-                <div className="fw-semibold">
-                  {submittedAt ? new Date(submittedAt).toLocaleString() : "—"}
-                </div>
-              </Col>
-
-              <Col md={6}>
-                <small className="text-muted">Sanction Date</small>
-                <div className="fw-semibold">
-                  {sanctionDate ? new Date(sanctionDate).toLocaleString() : "—"}
-                </div>
-              </Col>
-
-              <Col md={12} className="mt-3">
-                <a
-                  href={paymentData.image}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-sm d-inline-flex align-items-center gap-2"
+          <div style={{ ...labelStyle, marginTop: 18, marginBottom: 8 }}>Status</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {['Pending', 'Overdue', 'Paid', 'Sanctioned', 'Rejected'].map((s) => {
+              const active = selectedStatus === s;
+              return (
+                <label key={s}
                   style={{
-                    background: "var(--primary)",
-                    color: "var(--primary-foreground)",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <i className="bi bi-file-earmark-pdf" />
-                  View PDF
-                </a>
-              </Col>
-
-              <Col md={12}>
-                <small className="text-muted">Reason</small>
-                <div className="mt-1" style={{ color: "var(--text-muted)", whiteSpace: "pre-wrap" }}>
-                  {reason || "—"}
-                </div>
-              </Col>
-
-              <Col md={12}>
-                <small className="text-muted">Remark (by admin)</small>
-                <div className="mt-1" style={{ color: "var(--text-muted)", whiteSpace: "pre-wrap" }}>
-                  {remark || "—"}
-                </div>
-              </Col>
-            </Row>
-          </Card.Body>
-        </Card>
-
-
-        {/* Update / Payment Info */}
-        <Card
-          className="mb-4 shadow-sm border-0"
-          style={{
-            background: "var(--card)",
-            color: "var(--card-foreground)",
-            borderRadius: "12px",
-          }}
-        >
-          {/* Header */}
-          <Card.Header
-            className="d-flex align-items-center gap-2 fw-semibold"
-            style={{
-              background: "var(--secondary)",
-              color: "var(--secondary-foreground)",
-              borderBottom: "1px solid var(--border)",
-            }}
-          >
-            <i className="bi bi-pencil-square fs-5" style={{ color: "var(--accent)" }} />
-            Update Information
-          </Card.Header>
-
-          {/* Body */}
-          <Card.Body>
-            <Form>
-              <Row className="gy-3">
-                <Col md={6}>
-                  <Form.Label className="text-muted">Reference Mode</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={refMode}
-                    onChange={(e) => setRefMode(e.target.value)}
+                    display: 'inline-flex', alignItems: 'center', gap: 8,
+                    padding: '8px 14px', borderRadius: 8, cursor: 'pointer',
+                    border: `1px solid ${active ? 'var(--primary)' : 'var(--border)'}`,
+                    background: active ? 'var(--secondary)' : 'var(--card)',
+                    color: active ? 'var(--primary)' : 'var(--foreground)',
+                    fontSize: 13, fontWeight: 600, transition: 'all .15s',
+                  }}>
+                  <input
+                    type="radio"
+                    name="paymentStatus"
+                    value={s}
+                    checked={active}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    style={{ accentColor: 'var(--primary)', cursor: 'pointer' }}
                   />
-                </Col>
+                  {s}
+                </label>
+              );
+            })}
+          </div>
 
-                <Col md={6}>
-                  <Form.Label className="text-muted">Expense No</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={expenseNo}
-                    onChange={(e) => setExpenseNo(e.target.value)}
-                  />
-                </Col>
-              </Row>
+          <button onClick={updatePaymentStatus}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, marginTop: 18, padding: '9px 18px', borderRadius: 8, border: 'none', background: 'var(--success)', color: 'var(--success-foreground)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            <FaCheckCircle size={13} color="var(--success-foreground)" /> Update Payment Info
+          </button>
+        </Section>
 
-              <Form.Group className="mt-3">
-                <Form.Label className="text-muted">Remark</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={remark}
-                  onChange={(e) => setRemark(e.target.value)}
-                />
-              </Form.Group>
-
-              <div className="mt-3 fw-semibold text-muted">Status</div>
-              {['Pending', 'Overdue', 'Paid', 'Sanctioned', 'Rejected'].map((s) => (
-                <Form.Check
-                  key={s}
-                  type="radio"
-                  label={s}
-                  name="paymentStatus"
-                  value={s}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  checked={selectedStatus === s}
-                  className="mb-2"
-                />
-              ))}
-
-              <Button
-                variant="success"
-                className="mt-3"
-                onClick={updatePaymentStatus}
-              >
-                Update Payment Info
-              </Button>
-            </Form>
-          </Card.Body>
-        </Card>
-
-        {/* Transactions Card */}
-        <Card
-          className="mb-4 shadow-sm border-0"
-          style={{
-            background: "var(--card)",
-            color: "var(--card-foreground)",
-            borderRadius: "12px",
-          }}
-        >
-          {/* Header */}
-          <Card.Header
-            className="d-flex align-items-center gap-2 fw-semibold"
-            style={{
-              background: "var(--secondary)",
-              color: "var(--secondary-foreground)",
-              borderBottom: "1px solid var(--border)",
-            }}
-          >
-            <i className="bi bi-credit-card-2-front fs-5" style={{ color: "var(--accent)" }} />
-            Transaction Details
-          </Card.Header>
-
-          {/* Body */}
-          <Card.Body>
-            {transactions.length === 0 ? (
-              <div
-                className="text-center py-4"
-                style={{ color: "var(--muted-foreground)" }}
-              >
-                <i className="bi bi-info-circle fs-4 mb-2 d-block" />
-                No transactions found for this request.
-              </div>
-            ) : (
-              <div className="table-responsive">
-                <Table hover className="align-middle mb-0" style={{ borderColor: "var(--border)" }}>
-                  <thead style={{ background: "var(--muted)", color: "var(--text-strong)" }}>
-                    <tr>
-                      <th>#</th>
-                      <th>Amount</th>
-                      <th>Bank</th>
-                      <th>Account No</th>
-                      <th>IFSC</th>
-                      <th>UPI</th>
-                      <th>Transaction Date</th>
-                      <th>Sent To</th>
-                      <th>Done By</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transactions.map((txn, idx) => (
-                      <tr key={txn._id}>
-                        <td>{idx + 1}</td>
-                        <td className="fw-semibold" style={{ color: "var(--success-foreground)" }}>
-                          ₹{txn.amount}
-                        </td>
-                        <td>{txn.bankName || "—"}</td>
-                        <td>{txn.accNo || "—"}</td>
-                        <td>{txn.ifscCode || "—"}</td>
-                        <td>{txn.upiId || "—"}</td>
-                        <td>{txn.transactionDate ? new Date(txn.transactionDate).toLocaleString() : "—"}</td>
-                        <td className="fw-semibold">{txn.userId?.name || "—"}</td>
-                        <td>{txn.created_by || "—"}</td>
-                      </tr>
+        {/* ── Transaction Details ── */}
+        <Section icon={FaCreditCard} title="Transaction Details">
+          {transactions.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--muted-foreground)' }}>
+              <FaExclamationTriangle size={22} color="var(--muted-foreground)" style={{ marginBottom: 8 }} />
+              <div style={{ fontSize: 13 }}>No transactions found for this request.</div>
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', minWidth: 950, borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: 'var(--muted)', borderBottom: '2px solid var(--border)' }}>
+                    {['#', 'Amount', 'Bank', 'Account No', 'IFSC', 'UPI', 'Transaction Date', 'Sent To', 'Done By'].map(h => (
+                      <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
-                  </tbody>
-                </Table>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.map((txn, idx) => (
+                    <tr key={txn._id} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ padding: '10px 12px' }}>{idx + 1}</td>
+                      <td style={{ padding: '10px 12px', fontWeight: 700, color: 'var(--success-foreground)', whiteSpace: 'nowrap' }}>{fmt(txn.amount)}</td>
+                      <td style={{ padding: '10px 12px' }}>{txn.bankName || '—'}</td>
+                      <td style={{ padding: '10px 12px' }}>{txn.accNo || '—'}</td>
+                      <td style={{ padding: '10px 12px' }}>{txn.ifscCode || '—'}</td>
+                      <td style={{ padding: '10px 12px' }}>{txn.upiId || '—'}</td>
+                      <td style={{ padding: '10px 12px', fontSize: 12, whiteSpace: 'nowrap' }}>
+                        {txn.transactionDate ? new Date(txn.transactionDate).toLocaleString() : '—'}
+                      </td>
+                      <td style={{ padding: '10px 12px', fontWeight: 600 }}>{txn.userId?.name || '—'}</td>
+                      <td style={{ padding: '10px 12px' }}>{txn.created_by || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Section>
+
+        {/* ── Summary ── */}
+        <Section icon={FaChartBar} title="Summary">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+            {[
+              { label: 'Total Amount Requested', value: fmt(amount || 0), color: 'var(--text-strong)', bg: 'var(--secondary)' },
+              { label: 'Total Amount Paid', value: fmt(totalPaid), color: 'var(--success-foreground)', bg: 'var(--success)' },
+              { label: 'Amount Remaining', value: fmt(Math.max((Number(amount) || 0) - totalPaid, 0)), color: 'var(--destructive)', bg: '#fde8e6' },
+            ].map(({ label, value, color, bg }) => (
+              <div key={label} style={{ background: bg, border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px', textAlign: 'center' }}>
+                <div style={{ ...labelStyle, color }}>{label}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color, marginTop: 6 }}>{value}</div>
               </div>
-            )}
-          </Card.Body>
-        </Card>
+            ))}
+          </div>
+        </Section>
 
-        {/* Summary Card */}
-        <Card
-          className="mb-4 shadow-sm border-0"
-          style={{
-            background: "var(--card)",
-            color: "var(--card-foreground)",
-            borderRadius: "12px",
-          }}
-        >
-          {/* Header */}
-          <Card.Header
-            className="d-flex align-items-center gap-2 fw-semibold"
-            style={{
-              background: "var(--secondary)",
-              color: "var(--secondary-foreground)",
-              borderBottom: "1px solid var(--border)",
-            }}
-          >
-            <i className="bi bi-bar-chart-fill fs-5" style={{ color: "var(--accent)" }} />
-            Summary
-          </Card.Header>
+        {/* ── User Information ── */}
+        <Section icon={FaIdBadge} title="User Information">
+          <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+            {/* Profile */}
+            <div style={{ textAlign: 'center', flex: '0 0 140px' }}>
+              <Image src={user?.profile || 'https://via.placeholder.com/150'} roundedCircle width={120} height={120}
+                alt="User Profile"
+                onClick={() => navigate(`/admin/client-detail/${user._id}`)}
+                style={{ border: '3px solid var(--secondary)', background: 'var(--muted)', objectFit: 'cover', cursor: 'pointer' }} />
+              <div style={{ marginTop: 10, fontWeight: 700, color: 'var(--text-strong)' }}>{user?.name || '—'}</div>
+            </div>
 
-          {/* Body */}
-          <Card.Body>
-            <Row className="gy-3 text-center">
-              {/* Total Requested */}
-              <Col md={4}>
-                <small className="text-muted">Total Amount Requested</small>
-                <div className="fw-bold fs-5 mt-1" style={{ color: "var(--text-strong)" }}>
-                  ₹{amount || 0}
-                </div>
-              </Col>
+            {/* Details */}
+            <div style={{ flex: '1 1 300px', minWidth: 0 }}>
+              <div style={gridStyle}>
+                <Field label="Email" value={user?.email} />
+                <Field label="Client ID (CID)" value={user?.cid} />
+                <Field label="Phone" value={user?.phoneNo} />
+                <Field label="Firm Name" value={user?.firmName} />
+                <Field label="Address" full value={user?.address} color="var(--text-muted)" />
+                <Field label="Bank Name" value={user?.bankName} />
+                <Field label="Account No" value={user?.accountNo} />
+                <Field label="IFSC Code" value={user?.ifscCode} />
+                <Field label="UPI" value={user?.upi} />
+                <Field label="GST No" value={user?.gstno} />
+              </div>
+            </div>
+          </div>
+        </Section>
 
-              {/* Total Paid */}
-              <Col md={4}>
-                <small className="text-muted">Total Amount Paid</small>
-                <div className="fw-bold fs-5 mt-1" style={{ color: "var(--success-foreground)" }}>
-                  ₹{transactions.reduce((total, txn) => total + (txn.amount || 0), 0)}
-                </div>
-              </Col>
+      </div>
 
-              {/* Remaining */}
-              <Col md={4}>
-                <small className="text-muted">Amount Remaining</small>
-                <div className="fw-bold fs-5 mt-1" style={{ color: "var(--destructive)" }}>
-                  ₹{Math.max((Number(amount) || 0) - transactions.reduce((total, txn) => total + (txn.amount || 0), 0), 0)}
-                </div>
-              </Col>
-            </Row>
-          </Card.Body>
-        </Card>
-
-
-        {/* User Info */}
-        <Card
-          className="mb-4 shadow-sm border-0"
-          style={{
-            background: "var(--card)",
-            color: "var(--card-foreground)",
-            borderRadius: "12px",
-          }}
-        >
-          {/* Header */}
-          <Card.Header
-            className="d-flex align-items-center gap-2 fw-semibold"
-            style={{
-              background: "var(--secondary)",
-              color: "var(--secondary-foreground)",
-              borderBottom: "1px solid var(--border)",
-            }}
-          >
-            <i className="bi bi-person-badge fs-5" style={{ color: "var(--accent)" }} />
-            User Information
-          </Card.Header>
-
-          {/* Body */}
-          <Card.Body>
-            <Row className="gy-4 align-items-start">
-              {/* Profile */}
-              <Col md={3} className="text-center">
-                <Image
-                  src={user?.profile || "https://via.placeholder.com/150"}
-                  roundedCircle
-                  width={120}
-                  height={120}
-                  alt="User Profile"
-                  style={{
-                    border: "3px solid var(--secondary)",
-                    background: "var(--muted)",
-                    cursor: "pointer",
-                  }}
-                  onClick={() => navigate(`/admin/client-detail/${user._id}`)}
-                />
-                <div
-                  className="mt-2 fw-semibold"
-                  style={{ color: "var(--text-strong)" }}
-                >
-                  {user?.name || "—"}
-                </div>
-              </Col>
-
-              {/* Details */}
-              <Col md={9}>
-                <Row className="gy-3">
-                  <Col md={6}>
-                    <small className="text-muted">Email</small>
-                    <div className="fw-semibold">{user?.email || "—"}</div>
-                  </Col>
-
-                  <Col md={6}>
-                    <small className="text-muted">Client ID (CID)</small>
-                    <div className="fw-semibold">{user?.cid || "—"}</div>
-                  </Col>
-
-                  <Col md={6}>
-                    <small className="text-muted">Phone</small>
-                    <div className="fw-semibold">{user?.phoneNo || "—"}</div>
-                  </Col>
-
-                  <Col md={6}>
-                    <small className="text-muted">Firm Name</small>
-                    <div className="fw-semibold">{user?.firmName || "—"}</div>
-                  </Col>
-
-                  <Col md={12}>
-                    <small className="text-muted">Address</small>
-                    <div className="fw-semibold" style={{ color: "var(--text-muted)" }}>
-                      {user?.address || "—"}
-                    </div>
-                  </Col>
-
-                  <Col md={6}>
-                    <small className="text-muted">Bank Name</small>
-                    <div className="fw-semibold">{user?.bankName || "—"}</div>
-                  </Col>
-
-                  <Col md={6}>
-                    <small className="text-muted">Account No</small>
-                    <div className="fw-semibold">{user?.accountNo || "—"}</div>
-                  </Col>
-
-                  <Col md={6}>
-                    <small className="text-muted">IFSC Code</small>
-                    <div className="fw-semibold">{user?.ifscCode || "—"}</div>
-                  </Col>
-
-                  <Col md={6}>
-                    <small className="text-muted">UPI</small>
-                    <div className="fw-semibold">{user?.upi || "—"}</div>
-                  </Col>
-
-                  <Col md={6}>
-                    <small className="text-muted">GST No</small>
-                    <div className="fw-semibold">{user?.gstno || "—"}</div>
-                  </Col>
-                </Row>
-              </Col>
-            </Row>
-          </Card.Body>
-        </Card>
-
-      </Container>
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </>
   );
 }

@@ -1,528 +1,395 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Image, Spinner, Tab, Tabs, Table, Form, Button } from 'react-bootstrap';
+import { Image } from 'react-bootstrap';
 import AdminHeader from '../../component/header/AdminHeader';
 import { getUserFullDetails } from '../../services/userServices';
 import dummyUser from '../../assets/images/dummyUser.jpeg';
 import { backend_url } from '../../store/keyStore';
-import { FaUser, FaEnvelope, FaPhoneAlt, FaArrowLeft } from "react-icons/fa";
 import {
-    FaBuilding,
-    FaUniversity,
-    FaHashtag,
-    FaRegClock,
-    FaCheckCircle,
-    FaIdCard,
-    FaMoneyCheckAlt,
-    FaQrcode
-} from "react-icons/fa";
-import {
-    FaFileInvoice,
-    FaFilePdf,
-    FaClipboardList,
-    FaTimesCircle,
-    FaHourglassHalf
+  FaUser, FaEnvelope, FaPhoneAlt, FaArrowLeft, FaUniversity, FaIdCard,
+  FaMoneyCheckAlt, FaFileInvoice, FaFilePdf, FaClipboardList,
+  FaCheckCircle, FaTimesCircle, FaHourglassHalf, FaExclamationTriangle,
 } from "react-icons/fa";
 
+// ── Shared styles ─────────────────────────────────────────────────────────────
+const cardStyle = {
+  background: 'var(--card)', borderRadius: 14, border: '1px solid var(--border)',
+  boxShadow: '0 2px 10px var(--shadow-color)', overflow: 'hidden', marginBottom: 16,
+};
+const titleBarStyle = {
+  borderBottom: '1px solid var(--border)', padding: '13px 20px',
+  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap',
+};
+const iconBadgeStyle = {
+  width: 32, height: 32, borderRadius: 8, background: 'var(--warning)',
+  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+};
+const sectionTitleStyle = { fontSize: 14, fontWeight: 700, color: 'var(--text-strong)' };
+const labelStyle = {
+  fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
+  textTransform: 'uppercase', letterSpacing: '0.05em',
+};
+const gridStyle = {
+  display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16,
+};
 
+function Section({ icon: Icon, title, right, children }) {
+  return (
+    <div style={cardStyle}>
+      <div style={titleBarStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={iconBadgeStyle}><Icon size={15} color="var(--primary)" /></div>
+          <div style={sectionTitleStyle}>{title}</div>
+        </div>
+        {right}
+      </div>
+      <div style={{ padding: '16px 20px' }}>{children}</div>
+    </div>
+  );
+}
+
+function Field({ label, value, full, color }) {
+  return (
+    <div style={{ gridColumn: full ? '1 / -1' : 'auto', minWidth: 0 }}>
+      <div style={labelStyle}>{label}</div>
+      <div style={{ fontSize: 14, fontWeight: 600, marginTop: 3, color: color || 'var(--text-strong)', wordBreak: 'break-word' }}>
+        {value === 0 || value ? value : '-'}
+      </div>
+    </div>
+  );
+}
+
+const billStatusMeta = (status) => {
+  switch (status) {
+    case 'Paid':
+    case 'Completed': return { bg: 'var(--success)', color: 'var(--success-foreground)' };
+    case 'Reject':
+    case 'Rejected': return { bg: '#fde8e6', color: 'var(--destructive)' };
+    case 'Sanctioned': return { bg: '#dbeafe', color: '#1e40af' };
+    default: return { bg: 'var(--warning)', color: 'var(--warning-foreground)' };
+  }
+};
+const payStatusMeta = (status) => {
+  switch (status) {
+    case 'Paid': return { bg: 'var(--success)', color: 'var(--success-foreground)', Icon: FaCheckCircle };
+    case 'Rejected': return { bg: '#fde8e6', color: 'var(--destructive)', Icon: FaTimesCircle };
+    case 'Sanctioned': return { bg: '#dbeafe', color: '#1e40af', Icon: FaCheckCircle };
+    default: return { bg: 'var(--warning)', color: 'var(--warning-foreground)', Icon: FaHourglassHalf };
+  }
+};
+
+const thStyle = {
+  padding: '10px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700,
+  color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap',
+};
+const tdStyle = { padding: '11px 12px', whiteSpace: 'nowrap' };
+
+const TABS = [
+  { key: 'bills', label: 'Bills', icon: FaFileInvoice },
+  { key: 'payments', label: 'Payments', icon: FaMoneyCheckAlt },
+  { key: 'future1', label: 'Future Option 1', icon: FaClipboardList },
+  { key: 'future2', label: 'Future Option 2', icon: FaClipboardList },
+];
 
 export default function ClientDetailAdminPage() {
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const [userData, setUserData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [updating, setUpdating] = useState(false);
-    const [cid, setCid] = useState('');
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
+  const [cid, setCid] = useState('');
+  const [activeTab, setActiveTab] = useState('bills');
 
-    const handleCidUpdate = async (userId) => {
-        try {
-            setUpdating(true);
+  const handleCidUpdate = async (userId) => {
+    try {
+      setUpdating(true);
+      const response = await fetch(`${backend_url}/update-cid/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cid }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update CID');
+      }
+      alert('CID updated successfully');
+    } catch (error) {
+      console.error("CID update failed:", error);
+      alert(error.message);
+    } finally {
+      setUpdating(false);
+    }
+  };
 
-            const response = await fetch(`${backend_url}/update-cid/${userId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ cid }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to update CID');
-            }
-
-            alert('CID updated successfully');
-        } catch (error) {
-            console.error("CID update failed:", error);
-            alert(error.message);
-        } finally {
-            setUpdating(false);
-        }
+  useEffect(() => {
+    const fetchClient = async () => {
+      try {
+        const data = await getUserFullDetails(id);
+        setUserData(data);
+      } catch (error) {
+        console.error("Failed to fetch client data", error);
+      } finally {
+        setLoading(false);
+      }
     };
+    fetchClient();
+  }, [id]);
 
-
-    useEffect(() => {
-        const fetchClient = async () => {
-            try {
-                const data = await getUserFullDetails(id);
-                setUserData(data);
-            } catch (error) {
-                console.error("Failed to fetch client data", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchClient();
-    }, [id]);
-
-    useEffect(() => {
-        if (userData?.user?.cid) {
-            setCid(userData.user.cid);
-        }
-    }, [userData]);
-
-
-    if (loading) {
-        return (
-            <>
-                <AdminHeader />
-                <Container className="text-center py-5">
-                    <Spinner animation="border" variant="primary" />
-                    <p className="mt-3 text-muted">Loading client details...</p>
-                </Container>
-            </>
-        );
+  useEffect(() => {
+    if (userData?.user?.cid) {
+      setCid(userData.user.cid);
     }
+  }, [userData]);
 
-    if (!userData) {
-        return (
-            <>
-                <AdminHeader />
-                <Container className="py-5 text-center">
-                    <p className="text-danger">No data found for this client.</p>
-                </Container>
-            </>
-        );
-    }
+  const Spin = ({ size = 32 }) => (
+    <span style={{
+      display: 'inline-block', width: size, height: size,
+      border: '3px solid var(--border)', borderTopColor: 'var(--accent)',
+      borderRadius: '50%', animation: 'spin 1s linear infinite',
+    }} />
+  );
 
-    const { user, bills = [], payments = [] } = userData;
-
+  if (loading) {
     return (
-        <>
-            <AdminHeader />
-            <Container
-                fluid
-                className="my-4 p-4"
-                style={{ backgroundColor: "var(--background)", borderRadius: "15px" }}
-            >
-                {/* Profile Overview */}
-                {/* Profile Overview */}
-                <Card
-                    className="mb-4 border-0"
-                    style={{
-                        backgroundColor: "var(--card)",
-                        color: "var(--card-foreground)",
-                        borderRadius: "14px",
-                        boxShadow: "0 4px 12px var(--shadow-color)"
-                    }}
-                >
-                    <Card.Body>
-                        <Row className="align-items-center gy-3">
-                            {/* Profile Image */}
-                            <Col md="auto" className="text-center">
-                                <div
-                                    style={{
-                                        padding: "4px",
-                                        borderRadius: "50%",
-                                        backgroundColor: "var(--secondary)",
-                                        display: "inline-block"
-                                    }}
-                                >
-                                    <Image
-                                        src={user.profile || dummyUser}
-                                        roundedCircle
-                                        width={96}
-                                        height={96}
-                                        alt="Profile"
-                                        style={{
-                                            objectFit: "cover",
-                                            border: "2px solid var(--border)"
-                                        }}
-                                    />
-                                </div>
-                            </Col>
-
-                            {/* User Info */}
-                            <Col>
-                                <h4
-                                    className="mb-1 fw-semibold d-flex align-items-center gap-2"
-                                    style={{ color: "var(--text-strong)" }}
-                                >
-                                    <FaUser style={{ color: "var(--accent)" }} />
-                                    {user.name}
-                                </h4>
-
-                                <div
-                                    className="d-flex align-items-center gap-2 small mb-1"
-                                    style={{ color: "var(--text-muted)" }}
-                                >
-                                    <FaEnvelope />
-                                    {user.email}
-                                </div>
-
-                                <div
-                                    className="d-flex align-items-center gap-2 small"
-                                    style={{ color: "var(--text-muted)" }}
-                                >
-                                    <FaPhoneAlt />
-                                    {user.phoneNo || "-"}
-                                </div>
-                            </Col>
-
-                            {/* Back Button */}
-                            <Col md="auto">
-                                <Button
-                                    size="sm"
-                                    onClick={() => navigate(-1)}
-                                    style={{
-                                        backgroundColor: "var(--secondary)",
-                                        color: "var(--secondary-foreground)",
-                                        border: "1px solid var(--border)",
-                                        borderRadius: "8px"
-                                    }}
-                                >
-                                    <FaArrowLeft className="me-1" />
-                                    Back
-                                </Button>
-                            </Col>
-                        </Row>
-                    </Card.Body>
-                </Card>
-
-
-                {/* Detailed Info + Tabs */}
-                <Card
-                    className="mb-4 border-0"
-                    style={{
-                        backgroundColor: "var(--card)",
-                        color: "var(--card-foreground)",
-                        borderRadius: "14px",
-                        boxShadow: "0 4px 12px var(--shadow-color)"
-                    }}
-                >
-                    <Card.Body>
-                        <Row className="gy-4">
-                            {/* Left Column – Bank Details */}
-                            <Col md={6}>
-                                <div className="fw-semibold mb-3" style={{ color: "var(--text-strong)" }}>
-                                    <FaUniversity className="me-2" style={{ color: "var(--accent)" }} />
-                                    Bank & Firm Details
-                                </div>
-
-                                <ul className="list-unstyled mb-0 small">
-                                    <li className="d-flex align-items-center gap-2 mb-2">
-                                        <FaBuilding className="text-muted" />
-                                        <span><strong>Firm:</strong> {user.firmName || "-"}</span>
-                                    </li>
-
-                                    <li className="d-flex align-items-center gap-2 mb-2">
-                                        <FaMoneyCheckAlt className="text-muted" />
-                                        <span><strong>Account No:</strong> {user.accountNo || "-"}</span>
-                                    </li>
-
-                                    <li className="d-flex align-items-center gap-2 mb-2">
-                                        <FaUniversity className="text-muted" />
-                                        <span><strong>Bank:</strong> {user.bankName || "-"}</span>
-                                    </li>
-
-                                    <li className="d-flex align-items-center gap-2 mb-2">
-                                        <FaHashtag className="text-muted" />
-                                        <span><strong>IFSC:</strong> {user.ifscCode || "-"}</span>
-                                    </li>
-
-                                    <li className="d-flex align-items-center gap-2">
-                                        <FaQrcode className="text-muted" />
-                                        <span><strong>UPI:</strong> {user.upi || "-"}</span>
-                                    </li>
-                                </ul>
-                            </Col>
-
-                            {/* Right Column – Compliance & System Info */}
-                            <Col md={6}>
-                                <div className="fw-semibold mb-3" style={{ color: "var(--text-strong)" }}>
-                                    <FaIdCard className="me-2" style={{ color: "var(--accent)" }} />
-                                    Compliance & System Info
-                                </div>
-
-                                <ul className="list-unstyled mb-3 small">
-                                    <li className="d-flex align-items-center gap-2 mb-2">
-                                        <FaIdCard className="text-muted" />
-                                        <span><strong>GST No:</strong> {user.gstno || "-"}</span>
-                                    </li>
-
-                                    <li className="d-flex align-items-center gap-2 mb-2">
-                                        <FaRegClock className="text-muted" />
-                                        <span>
-                                            <strong>Last Login:</strong>{" "}
-                                            {user.lastlogin
-                                                ? new Date(user.lastlogin).toLocaleString()
-                                                : "-"}
-                                        </span>
-                                    </li>
-
-                                    {/* CID Update */}
-                                    <li className="d-flex align-items-center gap-2 mb-2">
-                                        <strong className="me-2">CID:</strong>
-
-                                        <Form.Control
-                                            type="text"
-                                            value={cid}
-                                            onChange={(e) => setCid(e.target.value)}
-                                            size="sm"
-                                            style={{
-                                                maxWidth: "160px",
-                                                backgroundColor: "var(--input)",
-                                                borderColor: "var(--border)"
-                                            }}
-                                        />
-
-                                        <Button
-                                            size="sm"
-                                            onClick={() => handleCidUpdate(user._id)}
-                                            disabled={updating}
-                                            style={{
-                                                backgroundColor: "var(--primary)",
-                                                color: "var(--primary-foreground)",
-                                                border: "none"
-                                            }}
-                                        >
-                                            {updating ? "Updating..." : "Update"}
-                                        </Button>
-                                    </li>
-
-                                    {/* Verification */}
-                                    <li className="d-flex align-items-center gap-2">
-                                        <strong>Verified:</strong>
-                                        <span
-                                            className="px-2 py-1 rounded-pill small"
-                                            style={{
-                                                backgroundColor: user.isverified
-                                                    ? "var(--success)"
-                                                    : "var(--warning)",
-                                                color: user.isverified
-                                                    ? "var(--success-foreground)"
-                                                    : "var(--warning-foreground)"
-                                            }}
-                                        >
-                                            {user.isverified ? "Yes" : "No"}
-                                        </span>
-                                    </li>
-                                </ul>
-                            </Col>
-                        </Row>
-                    </Card.Body>
-                </Card>
-
-                {/* Tab View for Bills & Payments */}
-                <Tabs
-                    defaultActiveKey="bills"
-                    className="mb-4"
-                    fill
-                    style={{
-                        backgroundColor: "var(--secondary)",
-                        borderRadius: "12px",
-                        padding: "6px"
-                    }}
-                >
-                    {/* Bills Tab */}
-                    <Tab
-                        eventKey="bills"
-                        title={
-                            <span className="d-flex align-items-center gap-2">
-                                <FaFileInvoice /> Bills
-                            </span>
-                        }
-                    >
-                        <Card
-                            className="border-0 shadow-sm"
-                            style={{ backgroundColor: "var(--card)" }}
-                        >
-                            <Card.Body>
-                                {bills.length === 0 ? (
-                                    <p className="text-muted">No bills submitted.</p>
-                                ) : (
-                                    <div className="table-responsive">
-                                        <Table hover className="align-middle small">
-                                            <thead style={{ background: "var(--muted)" }}>
-                                                <tr className="text-uppercase text-muted small">
-                                                    <th>Firm</th>
-                                                    <th>Work Area</th>
-                                                    <th>LOA</th>
-                                                    <th>Invoice</th>
-                                                    <th>Amount</th>
-                                                    <th>Status</th>
-                                                    <th>Submitted</th>
-                                                    <th>PDF</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {bills.map(bill => {
-                                                    const statusColor =
-                                                        bill.paymentStatus === "Paid"
-                                                            ? "var(--success)"
-                                                            : bill.paymentStatus === "Rejected"
-                                                                ? "var(--destructive)"
-                                                                : "var(--warning)";
-
-                                                    return (
-                                                        <tr key={bill._id}>
-                                                            <td className="fw-semibold">{bill.firmName}</td>
-                                                            <td>{bill.workArea}</td>
-                                                            <td>{bill.loaNo}</td>
-                                                            <td>{bill.invoiceNo}</td>
-                                                            <td className="fw-semibold">₹{bill.amount}</td>
-                                                            <td>
-                                                                <span
-                                                                    className="px-2 py-1 rounded-pill small"
-                                                                    style={{
-                                                                        backgroundColor: statusColor,
-                                                                        color: "var(--card-foreground)"
-                                                                    }}
-                                                                >
-                                                                    {bill.paymentStatus}
-                                                                </span>
-                                                            </td>
-                                                            <td className="text-muted">
-                                                                {new Date(bill.submittedAt).toLocaleDateString()}
-                                                            </td>
-                                                            <td>
-                                                                <a
-                                                                    href={bill.pdfurl}
-                                                                    target="_blank"
-                                                                    rel="noreferrer"
-                                                                    className="d-inline-flex align-items-center gap-1"
-                                                                    style={{ color: "var(--accent)" }}
-                                                                >
-                                                                    <FaFilePdf /> View
-                                                                </a>
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </Table>
-                                    </div>
-                                )}
-                            </Card.Body>
-                        </Card>
-                    </Tab>
-
-
-                    {/* Payments Tab */}
-                    <Tab
-                        eventKey="payments"
-                        title={
-                            <span className="d-flex align-items-center gap-2">
-                                <FaMoneyCheckAlt /> Payments
-                            </span>
-                        }
-                    >
-                        <Card
-                            className="border-0 shadow-sm"
-                            style={{ backgroundColor: "var(--card)" }}
-                        >
-                            <Card.Body>
-                                {payments.length === 0 ? (
-                                    <p className="text-muted">No payments available.</p>
-                                ) : (
-                                    <div className="table-responsive">
-                                        <Table hover className="align-middle small">
-                                            <thead style={{ background: "var(--muted)" }}>
-                                                <tr className="text-uppercase text-muted small">
-                                                    <th>Tender</th>
-                                                    <th>Amount</th>
-                                                    <th>Status</th>
-                                                    <th>Type</th>
-                                                    <th>Mode</th>
-                                                    <th>Submitted</th>
-                                                    <th>Proof</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {payments.map(payment => {
-                                                    const statusBadge =
-                                                        payment.status === "Paid"
-                                                            ? { bg: "var(--success)", icon: <FaCheckCircle /> }
-                                                            : payment.status === "Rejected"
-                                                                ? { bg: "var(--destructive)", icon: <FaTimesCircle /> }
-                                                                : { bg: "var(--warning)", icon: <FaHourglassHalf /> };
-
-                                                    return (
-                                                        <tr key={payment._id}>
-                                                            <td className="fw-semibold">{payment.tender}</td>
-                                                            <td className="fw-semibold">₹{payment.amount}</td>
-                                                            <td>
-                                                                <span
-                                                                    className="px-2 py-1 rounded-pill d-inline-flex align-items-center gap-1 small"
-                                                                    style={{
-                                                                        backgroundColor: statusBadge.bg,
-                                                                        color: "var(--card-foreground)"
-                                                                    }}
-                                                                >
-                                                                    {statusBadge.icon} {payment.status}
-                                                                </span>
-                                                            </td>
-                                                            <td>{payment.paymentType}</td>
-                                                            <td>{payment.paymentMode || "-"}</td>
-                                                            <td className="text-muted">
-                                                                {new Date(payment.submittedAt).toLocaleDateString()}
-                                                            </td>
-                                                            <td>
-                                                                {payment.image ? (
-                                                                    <a
-                                                                        href={payment.image}
-                                                                        target="_blank"
-                                                                        rel="noreferrer"
-                                                                        style={{ color: "var(--accent)" }}
-                                                                    >
-                                                                        View
-                                                                    </a>
-                                                                ) : (
-                                                                    "-"
-                                                                )}
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </Table>
-                                    </div>
-                                )}
-                            </Card.Body>
-                        </Card>
-                    </Tab>
-
-                    {/* Future Tab 1 */}
-                    <Tab eventKey="future1" title="Future Option 1">
-                        <Card className="shadow-sm">
-                            <Card.Body>
-                                <p className="text-muted">Coming soon...</p>
-                            </Card.Body>
-                        </Card>
-                    </Tab>
-
-                    {/* Future Tab 2 */}
-                    <Tab eventKey="future2" title="Future Option 2">
-                        <Card className="shadow-sm">
-                            <Card.Body>
-                                <p className="text-muted">Coming soon...</p>
-                            </Card.Body>
-                        </Card>
-                    </Tab>
-                </Tabs>
-            </Container>
-        </>
+      <>
+        <AdminHeader />
+        <div style={{ textAlign: 'center', padding: '60px 0', fontFamily: 'system-ui, sans-serif' }}>
+          <Spin />
+          <p style={{ color: 'var(--text-muted)', marginTop: 12 }}>Loading client details…</p>
+        </div>
+        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+      </>
     );
+  }
+
+  if (!userData) {
+    return (
+      <>
+        <AdminHeader />
+        <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--destructive)', fontFamily: 'system-ui, sans-serif' }}>
+          <FaExclamationTriangle size={28} color="var(--destructive)" />
+          <p style={{ marginTop: 10 }}>No data found for this client.</p>
+        </div>
+      </>
+    );
+  }
+
+  const { user, bills = [], payments = [] } = userData;
+  const fmt = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
+
+  return (
+    <>
+      <AdminHeader />
+
+      <div style={{
+        padding: '0 2px', fontFamily: 'system-ui, -apple-system, sans-serif',
+        color: 'var(--foreground)', background: 'var(--background)', minHeight: '100vh',
+      }}>
+
+        {/* ── Profile Overview ── */}
+        <div style={cardStyle}>
+          <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ padding: 4, borderRadius: '50%', background: 'var(--secondary)', flexShrink: 0 }}>
+              <Image src={user.profile || dummyUser} roundedCircle width={92} height={92} alt="Profile"
+                style={{ objectFit: 'cover', border: '2px solid var(--border)' }} />
+            </div>
+
+            <div style={{ flex: '1 1 240px', minWidth: 0 }}>
+              <h4 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <FaUser size={16} color="var(--accent)" /> {user.name}
+              </h4>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, color: 'var(--text-muted)', marginTop: 6 }}>
+                <FaEnvelope size={12} color="var(--text-muted)" /> {user.email}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
+                <FaPhoneAlt size={12} color="var(--text-muted)" /> {user.phoneNo || '-'}
+              </div>
+            </div>
+
+            <button onClick={() => navigate(-1)}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 16px', borderRadius: 8,
+                border: '1px solid var(--border)', background: 'var(--secondary)', color: 'var(--secondary-foreground)',
+                fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0,
+              }}>
+              <FaArrowLeft size={12} color="var(--secondary-foreground)" /> Back
+            </button>
+          </div>
+        </div>
+
+        {/* ── Bank & Firm Details ── */}
+        <Section icon={FaUniversity} title="Bank & Firm Details">
+          <div style={gridStyle}>
+            <Field label="Firm" value={user.firmName} />
+            <Field label="Account No" value={user.accountNo} />
+            <Field label="Bank" value={user.bankName} />
+            <Field label="IFSC" value={user.ifscCode} />
+            <Field label="UPI" value={user.upi} />
+          </div>
+        </Section>
+
+        {/* ── Compliance & System Info ── */}
+        <Section icon={FaIdCard} title="Compliance & System Info"
+          right={
+            <span style={{
+              padding: '3px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700,
+              background: user.isverified ? 'var(--success)' : 'var(--warning)',
+              color: user.isverified ? 'var(--success-foreground)' : 'var(--warning-foreground)',
+            }}>
+              {user.isverified ? 'Verified' : 'Not Verified'}
+            </span>
+          }>
+          <div style={gridStyle}>
+            <Field label="GST No" value={user.gstno} />
+            <Field label="Last Login" value={user.lastlogin ? new Date(user.lastlogin).toLocaleString() : '-'} />
+            <Field label="Verified" value={user.isverified ? 'Yes' : 'No'} color={user.isverified ? 'var(--success-foreground)' : 'var(--warning-foreground)'} />
+          </div>
+
+          {/* CID Update */}
+          <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+            <label style={{ ...labelStyle, display: 'block', marginBottom: 6 }}>Client ID (CID)</label>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <input
+                type="text"
+                value={cid}
+                onChange={(e) => setCid(e.target.value)}
+                style={{
+                  flex: '0 1 220px', minWidth: 160, background: 'var(--input)', color: 'var(--foreground)',
+                  border: '1px solid var(--border)', borderRadius: 8, padding: '9px 12px', fontSize: 14, outline: 'none',
+                }}
+              />
+              <button onClick={() => handleCidUpdate(user._id)} disabled={updating}
+                style={{
+                  padding: '9px 18px', borderRadius: 8, border: 'none',
+                  background: 'var(--primary)', color: 'var(--primary-foreground)',
+                  fontSize: 13, fontWeight: 600, cursor: updating ? 'not-allowed' : 'pointer', opacity: updating ? 0.7 : 1,
+                }}>
+                {updating ? 'Updating…' : 'Update'}
+              </button>
+            </div>
+          </div>
+        </Section>
+
+        {/* ── Tabs ── */}
+        <div style={cardStyle}>
+          {/* Tab bar */}
+          <div style={{ display: 'flex', gap: 4, padding: 6, background: 'var(--secondary)', flexWrap: 'wrap' }}>
+            {TABS.map(({ key, label, icon: Icon }) => {
+              const active = activeTab === key;
+              return (
+                <button key={key} onClick={() => setActiveTab(key)}
+                  style={{
+                    flex: '1 1 auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                    padding: '9px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                    background: active ? 'var(--card)' : 'transparent',
+                    color: active ? 'var(--primary)' : 'var(--secondary-foreground)',
+                    fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap',
+                    boxShadow: active ? '0 1px 4px var(--shadow-color)' : 'none',
+                    transition: 'background .15s, color .15s',
+                  }}>
+                  <Icon size={13} color={active ? 'var(--primary)' : 'var(--secondary-foreground)'} /> {label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Tab content */}
+          <div style={{ padding: '16px 20px' }}>
+
+            {/* Bills */}
+            {activeTab === 'bills' && (
+              bills.length === 0 ? (
+                <p style={{ color: 'var(--text-muted)', margin: 0 }}>No bills submitted.</p>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', minWidth: 800, borderCollapse: 'collapse', fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ background: 'var(--muted)', borderBottom: '2px solid var(--border)' }}>
+                        {['Firm', 'Work Area', 'LOA', 'Invoice', 'Amount', 'Status', 'Submitted', 'PDF'].map(h => <th key={h} style={thStyle}>{h}</th>)}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bills.map(bill => {
+                        const { bg, color } = billStatusMeta(bill.paymentStatus);
+                        return (
+                          <tr key={bill._id} style={{ borderBottom: '1px solid var(--border)' }}>
+                            <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--text-strong)' }}>{bill.firmName}</td>
+                            <td style={{ ...tdStyle, color: 'var(--text-muted)' }}>{bill.workArea}</td>
+                            <td style={tdStyle}>{bill.loaNo}</td>
+                            <td style={tdStyle}>{bill.invoiceNo}</td>
+                            <td style={{ ...tdStyle, fontWeight: 700, color: 'var(--text-strong)' }}>{fmt(bill.amount)}</td>
+                            <td style={tdStyle}>
+                              <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: bg, color }}>
+                                {bill.paymentStatus}
+                              </span>
+                            </td>
+                            <td style={{ ...tdStyle, color: 'var(--text-muted)' }}>{new Date(bill.submittedAt).toLocaleDateString()}</td>
+                            <td style={tdStyle}>
+                              <a href={bill.pdfurl} target="_blank" rel="noreferrer"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--accent)', fontWeight: 600, textDecoration: 'none' }}>
+                                <FaFilePdf size={13} color="var(--accent)" /> View
+                              </a>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            )}
+
+            {/* Payments */}
+            {activeTab === 'payments' && (
+              payments.length === 0 ? (
+                <p style={{ color: 'var(--text-muted)', margin: 0 }}>No payments available.</p>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', minWidth: 760, borderCollapse: 'collapse', fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ background: 'var(--muted)', borderBottom: '2px solid var(--border)' }}>
+                        {['Tender', 'Amount', 'Status', 'Type', 'Mode', 'Submitted', 'Proof'].map(h => <th key={h} style={thStyle}>{h}</th>)}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {payments.map(payment => {
+                        const { bg, color, Icon } = payStatusMeta(payment.status);
+                        return (
+                          <tr key={payment._id} style={{ borderBottom: '1px solid var(--border)' }}>
+                            <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--text-strong)' }}>{payment.tender}</td>
+                            <td style={{ ...tdStyle, fontWeight: 700, color: 'var(--text-strong)' }}>{fmt(payment.amount)}</td>
+                            <td style={tdStyle}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: bg, color }}>
+                                <Icon size={10} color={color} /> {payment.status}
+                              </span>
+                            </td>
+                            <td style={tdStyle}>{payment.paymentType}</td>
+                            <td style={tdStyle}>{payment.paymentMode || '-'}</td>
+                            <td style={{ ...tdStyle, color: 'var(--text-muted)' }}>{new Date(payment.submittedAt).toLocaleDateString()}</td>
+                            <td style={tdStyle}>
+                              {payment.image ? (
+                                <a href={payment.image} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)', fontWeight: 600, textDecoration: 'none' }}>View</a>
+                              ) : '-'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            )}
+
+            {/* Future tabs */}
+            {(activeTab === 'future1' || activeTab === 'future2') && (
+              <p style={{ color: 'var(--text-muted)', margin: 0 }}>Coming soon…</p>
+            )}
+
+          </div>
+        </div>
+      </div>
+
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+    </>
+  );
 }

@@ -1,525 +1,646 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Container, Row, Col, Table, Button, Form,
-  InputGroup, Dropdown, Pagination, Badge, Collapse, Card
-} from 'react-bootstrap';
-import {
-  FaSearch, FaFilter, FaEllipsisV, FaEye,
-  FaFileInvoice, FaRupeeSign, FaExclamationTriangle,
-  FaCheckCircle, FaTimesCircle, FaUser, FaSortAmountDownAlt, FaClipboardList,
-  FaClock,
+  FaFileExport, FaFileInvoice, FaFileInvoiceDollar, FaRupeeSign,
+  FaUser, FaClipboardList, FaClock, FaCheckCircle, FaExclamationTriangle,
 } from 'react-icons/fa';
-
+import { FiSearch, FiX, FiArrowRight } from 'react-icons/fi';
 import AdminHeader from '../../component/header/AdminHeader';
-import StaffHeader from "../../component/header/StaffHeader";
+import StaffHeader from '../../component/header/StaffHeader';
 import { getAllPayments } from '../../services/paymentService';
 import { getTransactionsByPaymentId } from '../../services/transactionService';
-import dummyuser from "../../assets/images/dummyUser.jpeg"
 import { useNavigate } from 'react-router-dom';
 import PayPrmodel from '../../component/models/PayPrModel';
 import { useAuthStore } from '../../store/authStore';
 
-const statusMap = {
-  Pending: { color: '#f4b400', textColor: '#000' },
-  Paid: { color: '#34a853', textColor: '#fff' },
-  Overdue: { color: '#ea4335', textColor: '#fff' },
-  Sanctioned: { color: '#4285f4', textColor: '#fff' },
-  Rejected: { color: '#9e9e9e', textColor: '#000' },
+// ── Hardcoded icon colors ─────────────────────────────────────────────────────
+const C = {
+  primary: '#6b3e2b',
+  accent: '#b95a52',
+  success: '#225b31',
+  destructive: '#c94a3a',
+  muted: '#8b7b74',
+  warning: '#4a1f18',
+};
+
+// ── Status badge meta ─────────────────────────────────────────────────────────
+const statusMeta = (status) => {
+  switch (status) {
+    case 'Paid':
+    case 'Completed':
+      return { bg: 'var(--success)', color: 'var(--success-foreground)', label: status };
+    case 'Sanctioned':
+      return { bg: '#dbeafe', color: '#1e40af', label: 'Sanctioned' };
+    case 'Pending':
+      return { bg: 'var(--warning)', color: 'var(--warning-foreground)', label: 'Pending' };
+    case 'Overdue':
+      return { bg: '#fde8e6', color: C.destructive, label: 'Overdue' };
+    case 'Reject':
+    case 'Rejected':
+      return { bg: 'var(--secondary)', color: 'var(--secondary-foreground)', label: 'Rejected' };
+    default:
+      return { bg: 'var(--secondary)', color: 'var(--secondary-foreground)', label: status || '—' };
+  }
+};
+
+const StatusBadge = ({ status }) => {
+  const { bg, color, label } = statusMeta(status);
+  return (
+    <span style={{
+      display: 'inline-block', padding: '3px 10px', borderRadius: 20,
+      fontSize: 11, fontWeight: 700, background: bg, color, letterSpacing: '0.03em',
+    }}>
+      {label}
+    </span>
+  );
+};
+
+// ── Shared styles ─────────────────────────────────────────────────────────────
+const labelStyle = {
+  fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
+  textTransform: 'uppercase', letterSpacing: '0.05em',
+};
+
+const controlStyle = {
+  border: '1px solid var(--border)', borderRadius: 8,
+  padding: '8px 12px', fontSize: 13, color: 'var(--foreground)',
+  background: 'var(--input)', outline: 'none', boxSizing: 'border-box',
 };
 
 export default function PaymentRequestListAdmin() {
   const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortAsc, setSortAsc] = useState(true);
-  const navigate = useNavigate();
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState("asc"); // matches original default (oldest first)
+
   const [showPayModal, setShowPayModal] = useState(false);
   const [selectedPaymentId, setSelectedPaymentId] = useState(null);
-  const { user } = useAuthStore()
+
+  // Trail state (preserved from original)
   const [expandedPaymentId, setExpandedPaymentId] = useState(null);
   const [transactionData, setTransactionData] = useState({});
+
+  const { user } = useAuthStore();
+  const navigate = useNavigate();
+
+  const getHeaderComponent = () => {
+    switch (user?.role) {
+      case 'admin': return <AdminHeader />;
+      case 'staff': return <StaffHeader />;
+      default: return <AdminHeader />;
+    }
+  };
 
   useEffect(() => {
     const fetchPayments = async () => {
       try {
         const data = await getAllPayments();
-        setPayments(data);
+        setPayments(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Failed to fetch payments:', err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchPayments();
   }, []);
 
-  const getHeaderComponent = () => {
-    switch (user?.role) {
-      case 'admin':
-        return <AdminHeader />;
-      case 'staff':
-        return <StaffHeader />;
-      default:
-        return <AdminHeader />; // fallback
-    }
-  };
-
+  // Trail toggle (preserved from original, available for detail expansion)
   const toggleTrail = async (paymentId) => {
     if (expandedPaymentId === paymentId) {
       setExpandedPaymentId(null);
     } else {
       setExpandedPaymentId(paymentId);
-      // Fetch transaction data if not already loaded
       if (!transactionData[paymentId]) {
         try {
           const transactions = await getTransactionsByPaymentId(paymentId);
-          setTransactionData(prev => ({
-            ...prev,
-            [paymentId]: transactions
-          }));
+          setTransactionData(prev => ({ ...prev, [paymentId]: transactions }));
         } catch (error) {
           console.error('Error fetching transactions:', error);
-          setTransactionData(prev => ({
-            ...prev,
-            [paymentId]: []
-          }));
+          setTransactionData(prev => ({ ...prev, [paymentId]: [] }));
         }
       }
     }
   };
 
-  // Filter payments based on search term
-  const filteredPayments = payments.filter((p) => {
-    const term = searchTerm.toLowerCase();
-    return (
-      (p.user?.name || "").toLowerCase().includes(term) ||
-      (p.tender || "").toLowerCase().includes(term) ||
-      (p.amount?.toString() || "").toLowerCase().includes(term) ||
-      (p.expenseNo || "").toLowerCase().includes(term) ||
-      (p.status || "").toLowerCase().includes(term) ||
-      (p.submittedAt?.slice(0, 10) || "").toLowerCase().includes(term)
-    );
-  });
+  // Filter
+  const filteredPayments = payments
+    .filter((p) => {
+      const term = searchTerm.toLowerCase();
+      const matchesSearch =
+        (p.user?.name || "").toLowerCase().includes(term) ||
+        (p.tender || "").toLowerCase().includes(term) ||
+        (p.amount?.toString() || "").toLowerCase().includes(term) ||
+        (p.expenseNo || "").toLowerCase().includes(term) ||
+        (p.status || "").toLowerCase().includes(term) ||
+        (p.submittedAt?.slice(0, 10) || "").toLowerCase().includes(term);
+      const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.submittedAt);
+      const dateB = new Date(b.submittedAt);
+      return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    });
 
-  // Sort by request date
-  const sortedPayments = [...filteredPayments].sort((a, b) => {
-    const dateA = new Date(a.submittedAt);
-    const dateB = new Date(b.submittedAt);
-    return sortAsc ? dateA - dateB : dateB - dateA;
-  });
+  // ── Stat amounts & counts ─────────────────────────────────────────────────
+  const amt = (p) => Number(p.amount) || 0;
+  const pendingP = payments.filter(p => p.status === 'Pending');
+  const paidP    = payments.filter(p => p.status === 'Paid');
+  const overdueP = payments.filter(p => p.status === 'Overdue');
+
+  const totalAmount   = payments.reduce((s, p) => s + amt(p), 0);
+  const pendingAmount = pendingP.reduce((s, p) => s + amt(p), 0);
+  const paidAmount    = paidP.reduce((s, p) => s + amt(p), 0);
+  const overdueAmount = overdueP.reduce((s, p) => s + amt(p), 0);
 
   return (
     <>
       {getHeaderComponent()}
-      <Container
-        fluid
-        style={{ backgroundColor: 'var(--background)', minHeight: '100vh', borderRadius: "15px" }}
-        className="py-4 px-4 my-3"
-      >
-        {/* Summary Cards */}
-        <Row className="mb-4 g-3">
-          {[
-            {
-              label: 'Total Requests',
-              value: payments.length,
-              icon: <FaClipboardList />
-            },
-            {
-              label: 'Pending',
-              value: payments.filter(p => p.status === 'Pending').length,
-              icon: <FaClock />
-            },
-            {
-              label: 'Paid',
-              value: payments.filter(p => p.status === 'Paid').length,
-              icon: <FaCheckCircle />
-            },
-            {
-              label: 'Overdue',
-              value: payments.filter(p => p.status === 'Overdue').length,
-              icon: <FaExclamationTriangle />
-            }
-          ].map((item, i) => (
-            <Col key={i} md={3} sm={6}>
-              <div
-                className="h-100 d-flex align-items-center justify-content-between"
-                style={{
-                  backgroundColor: 'var(--card)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '18px',
-                  padding: '16px 18px',
-                  boxShadow: '0 6px 14px var(--shadow-color)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                {/* Left Content */}
-                <div>
-                  <div
-                    className="small"
-                    style={{
-                      color: 'var(--text-muted)',
-                      marginBottom: '6px'
-                    }}
-                  >
-                    {item.label}
-                  </div>
 
-                  <div
-                    className="fw-semibold"
-                    style={{
-                      fontSize: '1.8rem',
-                      color: 'var(--primary)'
-                    }}
-                  >
-                    {item.value}
-                  </div>
+      <div style={{
+        padding: '0 2px',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        color: 'var(--foreground)',
+        background: 'var(--background)',
+        minHeight: '100vh',
+      }}>
+
+        {/* ── Page card ── */}
+        <div style={{
+          background: 'var(--card)',
+          borderRadius: 14,
+          border: '1px solid var(--border)',
+          boxShadow: '0 2px 10px var(--shadow-color)',
+          overflow: 'hidden',
+          marginBottom: 16,
+        }}>
+
+          {/* ── Title bar ── */}
+          <div style={{
+            borderBottom: '1px solid var(--border)',
+            padding: '14px 20px',
+            display: 'flex', alignItems: 'center',
+            justifyContent: 'space-between', flexWrap: 'wrap', gap: 10,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{
+                width: 34, height: 34, borderRadius: 8,
+                background: 'var(--warning)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <FaClipboardList size={16} color={C.primary} />
+              </div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-strong)', lineHeight: 1.2 }}>
+                  Payment Requests
                 </div>
-
-                {/* Icon */}
-                <div
-                  className="d-flex align-items-center justify-content-center"
-                  style={{
-                    width: '42px',
-                    height: '42px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--primary)',
-                    color: 'var(--primary-foreground)',
-                    fontSize: '1.2rem'
-                  }}
-                >
-                  {item.icon}
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+                  Review and process payment requests from all clients
                 </div>
               </div>
-            </Col>
-          ))}
-        </Row>
+            </div>
+            <span style={{
+              fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
+              background: 'var(--muted)', padding: '4px 12px', borderRadius: 20,
+            }}>
+              {payments.length} total
+            </span>
+          </div>
 
+          <div style={{ padding: '16px 20px' }}>
 
+            {/* ── Stat cards (amount headline, count chip) ── */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+              gap: 12, marginBottom: 16,
+            }}>
+              {[
+                { label: 'Total amount', amount: totalAmount, count: payments.length, color: C.primary, bg: 'var(--secondary)', noun: 'request' },
+                { label: 'Pending', amount: pendingAmount, count: pendingP.length, color: C.warning, bg: 'var(--warning)', noun: 'request' },
+                { label: 'Paid', amount: paidAmount, count: paidP.length, color: C.success, bg: 'var(--success)', noun: 'request' },
+                { label: 'Overdue', amount: overdueAmount, count: overdueP.length, color: C.destructive, bg: '#fde8e6', noun: 'request' },
+              ].map(({ label, amount, count, color, bg, noun }) => (
+                <div key={label} style={{
+                  background: bg, borderRadius: 10,
+                  padding: '12px 14px', border: '1px solid var(--border)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                    <div style={{ ...labelStyle, color }}>{label}</div>
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, color,
+                      background: 'rgba(255,255,255,0.55)',
+                      padding: '2px 8px', borderRadius: 20,
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {count} {count === 1 ? noun : noun + 's'}
+                    </span>
+                  </div>
+                  <div style={{
+                    fontSize: 20, fontWeight: 700, color, marginTop: 6,
+                    display: 'flex', alignItems: 'center', gap: 1, wordBreak: 'break-word',
+                  }}>
+                    <FaRupeeSign size={14} color={color} />
+                    {amount.toLocaleString('en-IN')}
+                  </div>
+                </div>
+              ))}
+            </div>
 
+            {/* ── Search / filter bar ── */}
+            <div style={{
+              background: 'var(--card)',
+              border: '1px solid var(--border)',
+              borderRadius: 12, padding: '14px 16px',
+              marginBottom: 14,
+              boxShadow: '0 2px 8px var(--shadow-color)',
+            }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
 
-        {/* Search and Filters */}
-        <Row className="mb-3 align-items-center">
-          {/* Search */}
-          <Col md={6}>
-            <InputGroup
-              style={{
-                borderRadius: '999px',
-                overflow: 'hidden',
-                boxShadow: '0 4px 12px var(--shadow-color)'
-              }}
-            >
-              <InputGroup.Text
-                style={{
-                  backgroundColor: 'var(--card)',
-                  color: 'var(--accent)',
-                  border: '1px solid var(--border)',
-                  borderRight: 'none',
-                  paddingLeft: '16px'
-                }}
-              >
-                <FaSearch />
-              </InputGroup.Text>
+                {/* Search */}
+                <div style={{ flex: '1 1 260px', minWidth: 200 }}>
+                  <label style={{ ...labelStyle, display: 'block', marginBottom: 5 }}>Search</label>
+                  <div style={{ position: 'relative' }}>
+                    <FiSearch size={14} color={C.muted} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)' }} />
+                    <input
+                      type="text"
+                      placeholder="Search user, tender, amount, expense no, status…"
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                      style={{ ...controlStyle, width: '100%', height: 38, paddingLeft: 33, paddingRight: searchTerm ? 32 : 12 }}
+                    />
+                    {searchTerm && (
+                      <FiX size={14} color={C.muted} onClick={() => setSearchTerm('')}
+                        style={{ position: 'absolute', right: 11, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }} />
+                    )}
+                  </div>
+                </div>
 
-              <Form.Control
-                placeholder="Search by user, tender, amount, expense no, status, date..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  backgroundColor: 'var(--input)',
-                  border: '1px solid var(--border)',
-                  borderLeft: 'none',
-                  color: 'var(--foreground)',
-                  padding: '10px 14px',
-                  fontSize: '0.9rem'
-                }}
-              />
-            </InputGroup>
-          </Col>
-
-          {/* Actions */}
-          <Col md={6} className="d-flex justify-content-end gap-2">
-
-            {/* Filter */}
-            <Button
-              variant="light"
-              style={{
-                backgroundColor: 'var(--card)',
-                border: '1px solid var(--border)',
-                color: 'var(--primary)',
-                borderRadius: '999px',
-                padding: '8px 16px',
-                fontSize: '0.85rem',
-                boxShadow: '0 4px 10px var(--shadow-color)'
-              }}
-            >
-              <FaFilter className="me-2" />
-              Status
-            </Button>
-
-            {/* Sort */}
-            <Button
-              onClick={() => setSortAsc(!sortAsc)}
-              style={{
-                backgroundColor: 'var(--card)',
-                border: '1px solid var(--border)',
-                color: 'var(--primary)',
-                borderRadius: '999px',
-                padding: '8px 16px',
-                fontSize: '0.85rem',
-                boxShadow: '0 4px 10px var(--shadow-color)'
-              }}
-            >
-              <FaSortAmountDownAlt className="me-2" />
-              Date
-              <span style={{ marginLeft: '6px', fontSize: '0.75rem' }}>
-                {sortAsc ? '↑' : '↓'}
-              </span>
-            </Button>
-
-          </Col>
-        </Row>
-
-
-        {/* Payment Table */}
-        <div className="table-responsive">
-          <Table
-            hover
-            responsive
-            className="shadow-sm small"
-            style={{
-              backgroundColor: 'var(--card)',
-              border: '0px solid var(--border)',
-              borderRadius: '18px',
-              minWidth: '1300px',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            {/* TABLE HEAD */}
-            <thead
-              style={{
-                backgroundColor: 'var(--card)',
-                color: 'var(--text-strong)',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              <tr className="small text-uppercase">
-                <th>S.No</th>
-                <th>User</th>
-                {/* <th>Uploaded By</th> */}
-                <th>Tender</th>
-                <th>Amount</th>
-                <th>Expense No</th>
-                <th>Status</th>
-                <th>Request Date</th>
-                <th>Reference Mode</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-
-            {/* TABLE BODY */}
-            <tbody>
-              {sortedPayments.length > 0 ? (
-                sortedPayments.map((d, i) => {
-                  const status = d.status || 'Pending';
-
-                  const statusIcon =
-                    status === 'Paid' || status === 'Sanctioned'
-                      ? <FaCheckCircle className="me-1" />
-                      : status === 'Rejected' || status === 'Overdue'
-                        ? <FaTimesCircle className="me-1" />
-                        : <FaExclamationTriangle className="me-1" />;
-
-                  const statusColor =
-                    status === 'Paid' || status === 'Sanctioned'
-                      ? 'var(--success)'
-                      : status === 'Rejected' || status === 'Overdue'
-                        ? 'var(--destructive)'
-                        : 'var(--warning)';
-
-                  const statusTextColor =
-                    status === 'Paid' || status === 'Sanctioned'
-                      ? 'var(--success-foreground)'
-                      : status === 'Rejected' || status === 'Overdue'
-                        ? 'var(--destructive-foreground)'
-                        : 'var(--warning-foreground)';
-
-                  const payDisabled = status === 'Rejected';
-
-                  return (
-                    <tr key={d._id || i}>
-                      {/* S.NO */}
-                      <td>
-                        <div
-                          className="rounded-circle d-inline-flex align-items-center justify-content-center"
-                          style={{
-                            backgroundColor: 'var(--muted)',
-                            color: 'var(--text-strong)',
-                            width: '30px',
-                            height: '30px',
-                            fontSize: '0.9rem'
-                          }}
-                        >
-                          {i + 1}
-                        </div>
-                      </td>
-
-                      {/* USER (PROFILE + NAME) */}
-                      <td>
-                        <div className="d-flex align-items-center gap-2">
-                          {d.user?.profile ? (
-                            <img
-                              src={d.user.profile}
-                              alt={d.user.name}
-                              style={{
-                                width: '28px',
-                                height: '28px',
-                                borderRadius: '50%',
-                                objectFit: 'cover',
-                                border: '1px solid var(--border)'
-                              }}
-                            />
-                          ) : (
-                            <div
-                              className="d-flex align-items-center justify-content-center"
-                              style={{
-                                width: '28px',
-                                height: '28px',
-                                borderRadius: '50%',
-                                backgroundColor: 'var(--muted)',
-                                color: 'var(--text-muted)',
-                                fontSize: '0.8rem'
-                              }}
-                            >
-                              <FaUser />
-                            </div>
-                          )}
-                          <span>{d.user?.name || '—'}</span>
-                        </div>
-                      </td>
-
-                      {/* UPLOADED BY */}
-                      {/* <td>{d.user?.name || '—'}</td> */}
-
-                      {/* TENDER */}
-                      <td>{d.tender || '—'}</td>
-
-                      {/* AMOUNT */}
-                      <td style={{ fontWeight: 500 }}>
-                        {d.amount ? `₹${d.amount}` : '—'}
-                      </td>
-
-                      {/* EXPENSE NO */}
-                      <td>{d.expenseNo || '—'}</td>
-
-                      {/* STATUS */}
-                      <td>
-                        <span
-                          className="badge"
-                          style={{
-                            backgroundColor: statusColor,
-                            color: statusTextColor
-                          }}
-                        >
-                          {statusIcon} {status}
-                        </span>
-                      </td>
-
-                      {/* DATE */}
-                      <td>{d.submittedAt?.slice(0, 10) || '—'}</td>
-
-                      {/* REF MODE */}
-                      <td>{d.refMode || '—'}</td>
-
-                      {/* ACTIONS */}
-                      <td>
-                        <div className="d-flex align-items-center gap-2">
-                          {/* View Invoice */}
-                          <Button
-                            variant="outline-secondary"
-                            size="sm"
-                            href={d.image}
-                            target="_blank"
-                            title="View Invoice"
-                            style={{
-                              borderColor: 'var(--border)',
-                              color: 'var(--secondary-foreground)'
-                            }}
-                          >
-                            <FaFileInvoice />
-                          </Button>
-
-                          {/* Pay */}
-                          <Button
-                            size="sm"
-                            disabled={payDisabled}
-                            style={{
-                              backgroundColor: payDisabled
-                                ? 'var(--muted)'
-                                : 'var(--primary)',
-                              color: payDisabled
-                                ? 'var(--muted-foreground)'
-                                : 'var(--primary-foreground)',
-                              border: 'none'
-                            }}
-                            onClick={() => {
-                              setSelectedPaymentId(d._id);
-                              setShowPayModal(true);
-                            }}
-                          >
-                            <FaRupeeSign className="me-1" /> Pay
-                          </Button>
-
-                          {/* More */}
-                          <FaEllipsisV
-                            title="More options"
-                            style={{
-                              cursor: 'pointer',
-                              color: 'var(--text-muted)',
-                              fontSize: '0.9rem'
-                            }}
-                            onClick={() =>
-                              navigate(`/${user.role}/payment-request/${d._id}`)
-                            }
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td
-                    colSpan="10"
-                    className="text-center py-3"
-                    style={{ color: 'var(--text-muted)' }}
+                {/* Status filter */}
+                <div style={{ flex: '0 0 160px' }}>
+                  <label style={{ ...labelStyle, display: 'block', marginBottom: 5 }}>Status</label>
+                  <select
+                    value={statusFilter}
+                    onChange={e => setStatusFilter(e.target.value)}
+                    style={{ ...controlStyle, width: '100%', height: 38, cursor: 'pointer' }}
                   >
-                    No results found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </Table>
+                    <option value="all">All Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Sanctioned">Sanctioned</option>
+                    <option value="Overdue">Overdue</option>
+                    <option value="Rejected">Rejected</option>
+                  </select>
+                </div>
 
+                {/* Sort */}
+                <div style={{ flex: '0 0 170px' }}>
+                  <label style={{ ...labelStyle, display: 'block', marginBottom: 5 }}>Sort by</label>
+                  <select
+                    value={sortOrder}
+                    onChange={e => setSortOrder(e.target.value)}
+                    style={{ ...controlStyle, width: '100%', height: 38, cursor: 'pointer' }}
+                  >
+                    <option value="desc">Newest first</option>
+                    <option value="asc">Oldest first</option>
+                  </select>
+                </div>
 
+                {/* Reset */}
+                <button
+                  onClick={() => { setSearchTerm(''); setStatusFilter('all'); setSortOrder('asc'); }}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    height: 38, padding: '0 16px', borderRadius: 8,
+                    border: '1px solid var(--border)',
+                    background: 'var(--secondary)', color: 'var(--secondary-foreground)',
+                    fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--secondary-hover)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'var(--secondary)'}
+                >
+                  <FiX size={14} color="var(--secondary-foreground)" /> Reset
+                </button>
+              </div>
+
+              <div style={{
+                marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--border)',
+                fontSize: 12, color: 'var(--text-muted)',
+              }}>
+                Showing <strong style={{ color: 'var(--text-strong)' }}>{filteredPayments.length}</strong> of{' '}
+                <strong style={{ color: 'var(--text-strong)' }}>{payments.length}</strong> requests
+              </div>
+            </div>
+
+            {/* ── Loading spinner ── */}
+            {loading && (
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <span style={{
+                  display: 'inline-block', width: 32, height: 32,
+                  border: '3px solid var(--border)',
+                  borderTopColor: C.accent, borderRadius: '50%',
+                  animation: 'spin 1s linear infinite',
+                }} />
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 10 }}>Loading requests…</div>
+              </div>
+            )}
+
+            {/* ── Empty state ── */}
+            {!loading && filteredPayments.length === 0 && (
+              <div style={{
+                textAlign: 'center', padding: '48px 20px',
+                background: 'var(--muted)', borderRadius: 12,
+                border: '1px solid var(--border)',
+              }}>
+                <FaFileInvoiceDollar size={32} color={C.muted} style={{ marginBottom: 12 }} />
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-strong)', marginBottom: 4 }}>No requests found</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                  {searchTerm || statusFilter !== 'all'
+                    ? 'Try adjusting your search or filters.'
+                    : 'No payment requests have been submitted yet.'}
+                </div>
+              </div>
+            )}
+
+            {/* ── Desktop table ── */}
+            {!loading && filteredPayments.length > 0 && (
+              <div className="d-none d-md-block" style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', minWidth: 1100, borderCollapse: 'collapse', fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ background: 'var(--muted)', borderBottom: '2px solid var(--border)' }}>
+                      {['#', 'User', 'Tender', 'Amount', 'Expense No', 'Status', 'Date', 'Ref. Mode', 'Document', 'Actions'].map(h => (
+                        <th key={h} style={{
+                          padding: '10px 14px', textAlign: 'left',
+                          fontSize: 11, fontWeight: 700,
+                          color: 'var(--text-muted)', textTransform: 'uppercase',
+                          letterSpacing: '0.05em', whiteSpace: 'nowrap',
+                        }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredPayments.map((d, i) => {
+                      const payDisabled = d.status === 'Rejected';
+                      return (
+                        <tr key={d._id || i} style={{ borderBottom: '1px solid var(--border)', transition: 'background .15s' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--muted)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        >
+                          {/* # */}
+                          <td style={{ padding: '11px 14px' }}>
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                              width: 26, height: 26, borderRadius: '50%',
+                              background: 'var(--secondary)', color: 'var(--secondary-foreground)',
+                              fontWeight: 700, fontSize: 11,
+                            }}>{i + 1}</span>
+                          </td>
+
+                          {/* User */}
+                          <td style={{ padding: '11px 14px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              {d.user?.profile ? (
+                                <img src={d.user.profile} alt={d.user.name}
+                                  style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border)', flexShrink: 0 }} />
+                              ) : (
+                                <span style={{
+                                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                  width: 28, height: 28, borderRadius: '50%',
+                                  background: 'var(--muted)', color: 'var(--text-muted)', flexShrink: 0,
+                                }}>
+                                  <FaUser size={12} color={C.muted} />
+                                </span>
+                              )}
+                              <span style={{ maxWidth: 130, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                title={d.user?.name}>
+                                {d.user?.name || '—'}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Tender */}
+                          <td style={{ padding: '11px 14px', color: 'var(--text-strong)', fontWeight: 600, maxWidth: 150 }}>
+                            <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={d.tender}>
+                              {d.tender || '—'}
+                            </div>
+                          </td>
+
+                          {/* Amount */}
+                          <td style={{ padding: '11px 14px', fontWeight: 700, color: 'var(--text-strong)' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                              <FaRupeeSign size={11} color={C.accent} />
+                              {d.amount ? Number(d.amount).toLocaleString('en-IN') : '—'}
+                            </span>
+                          </td>
+
+                          {/* Expense No */}
+                          <td style={{ padding: '11px 14px', color: 'var(--text-muted)', fontSize: 12 }}>
+                            {d.expenseNo || '—'}
+                          </td>
+
+                          {/* Status */}
+                          <td style={{ padding: '11px 14px' }}>
+                            <StatusBadge status={d.status} />
+                          </td>
+
+                          {/* Date */}
+                          <td style={{ padding: '11px 14px', color: 'var(--text-muted)', fontSize: 12, whiteSpace: 'nowrap' }}>
+                            {d.submittedAt?.slice(0, 10) || '—'}
+                          </td>
+
+                          {/* Ref Mode */}
+                          <td style={{ padding: '11px 14px', color: 'var(--text-muted)', fontSize: 12 }}>
+                            {d.refMode || '—'}
+                          </td>
+
+                          {/* Document */}
+                          <td style={{ padding: '11px 14px', textAlign: 'center' }}>
+                            {d.image ? (
+                              <a href={d.image} target="_blank" rel="noopener noreferrer"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: C.accent, fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
+                                <FaFileInvoice size={14} color={C.accent} /> View
+                              </a>
+                            ) : <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>—</span>}
+                          </td>
+
+                          {/* Actions */}
+                          <td style={{ padding: '11px 14px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <button
+                                disabled={payDisabled}
+                                onClick={() => { setSelectedPaymentId(d._id); setShowPayModal(true); }}
+                                style={{
+                                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                                  padding: '6px 12px', borderRadius: 7, border: 'none',
+                                  background: payDisabled ? 'var(--muted)' : 'var(--primary)',
+                                  color: payDisabled ? 'var(--muted-foreground)' : '#fff',
+                                  fontSize: 12, fontWeight: 600,
+                                  cursor: payDisabled ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap',
+                                }}
+                              >
+                                <FaRupeeSign size={11} color={payDisabled ? C.muted : '#fff'} /> Pay
+                              </button>
+                              <button
+                                onClick={() => navigate(`/${user?.role}/payment-request/${d._id}`)}
+                                style={{
+                                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                                  padding: '6px 12px', borderRadius: 7,
+                                  border: '1px solid var(--border)',
+                                  background: 'var(--secondary)', color: 'var(--secondary-foreground)',
+                                  fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+                                }}
+                              >
+                                Details <FiArrowRight size={12} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* ── Mobile cards ── */}
+            {!loading && filteredPayments.length > 0 && (
+              <div className="d-md-none">
+                {filteredPayments.map((d, i) => {
+                  const payDisabled = d.status === 'Rejected';
+                  return (
+                    <div key={d._id || i} style={{
+                      background: 'var(--card)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 12, padding: '14px 16px',
+                      marginBottom: 12,
+                      boxShadow: '0 2px 8px var(--shadow-color)',
+                    }}>
+                      {/* Header row */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          {d.user?.profile ? (
+                            <img src={d.user.profile} alt={d.user.name}
+                              style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border)', flexShrink: 0 }} />
+                          ) : (
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                              width: 32, height: 32, borderRadius: '50%',
+                              background: 'var(--muted)', color: 'var(--text-muted)', flexShrink: 0,
+                            }}>
+                              <FaUser size={13} color={C.muted} />
+                            </span>
+                          )}
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-strong)', lineHeight: 1.2 }}>
+                              {d.user?.name || '—'}
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+                              Expense: {d.expenseNo || '—'}
+                            </div>
+                          </div>
+                        </div>
+                        <StatusBadge status={d.status} />
+                      </div>
+
+                      {/* Data grid */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px', marginBottom: 10 }}>
+                        {[
+                          { label: 'Tender', value: d.tender || '—' },
+                          {
+                            label: 'Amount', value: (
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <FaRupeeSign size={10} color={C.accent} />
+                                {d.amount ? Number(d.amount).toLocaleString('en-IN') : '—'}
+                              </span>
+                            )
+                          },
+                          { label: 'Date', value: d.submittedAt?.slice(0, 10) || '—' },
+                          { label: 'Ref. mode', value: d.refMode || '—' },
+                          {
+                            label: 'Document', value: d.image ? (
+                              <a href={d.image} target="_blank" rel="noopener noreferrer"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: C.accent, fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
+                                <FaFileInvoice size={13} color={C.accent} /> View
+                              </a>
+                            ) : <span style={{ color: 'var(--text-muted)' }}>—</span>
+                          },
+                        ].map(({ label, value }) => (
+                          <div key={label}>
+                            <div style={{ ...labelStyle, marginBottom: 2 }}>{label}</div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-strong)', wordBreak: 'break-word' }}>{value}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Action buttons */}
+                      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                        <button
+                          disabled={payDisabled}
+                          onClick={() => { setSelectedPaymentId(d._id); setShowPayModal(true); }}
+                          style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                            flex: 1, padding: '9px', borderRadius: 8, border: 'none',
+                            background: payDisabled ? 'var(--muted)' : 'var(--primary)',
+                            color: payDisabled ? 'var(--muted-foreground)' : '#fff',
+                            fontSize: 13, fontWeight: 600,
+                            cursor: payDisabled ? 'not-allowed' : 'pointer',
+                          }}
+                        >
+                          <FaRupeeSign size={12} color={payDisabled ? C.muted : '#fff'} /> Pay
+                        </button>
+                        <button
+                          onClick={() => navigate(`/${user?.role}/payment-request/${d._id}`)}
+                          style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                            flex: 1, padding: '9px', borderRadius: 8,
+                            border: '1px solid var(--primary)',
+                            background: 'transparent', color: C.primary,
+                            fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                          }}
+                        >
+                          Details <FiArrowRight size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* ── Footer actions ── */}
+            {!loading && (
+              <div style={{
+                display: 'flex', justifyContent: 'space-between',
+                alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 10,
+              }}>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                  Showing 1 to {filteredPayments.length} of {payments.length} entries
+                </span>
+                <button
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '8px 14px', borderRadius: 8,
+                    border: '1px solid var(--border)',
+                    background: 'var(--secondary)', color: 'var(--secondary-foreground)',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                  }}
+                >
+                  <FaFileExport size={11} color={C.muted} /> Export
+                </button>
+              </div>
+            )}
+
+          </div>
         </div>
+      </div>
 
-        {/* Pagination */}
-        <Row className="mt-2">
-          <Col className="text-muted small">
-            Showing {sortedPayments.length} of {payments.length} entries
-          </Col>
-          <Col className="text-end">
-            <Pagination className="mb-0 justify-content-end">
-              <Pagination.Prev />
-              <Pagination.Item active>1</Pagination.Item>
-              <Pagination.Next />
-            </Pagination>
-          </Col>
-        </Row>
-      </Container>
+      <PayPrmodel show={showPayModal} onHide={() => setShowPayModal(false)} id={selectedPaymentId} />
 
-      <PayPrmodel
-        show={showPayModal}
-        onHide={() => setShowPayModal(false)}
-        id={selectedPaymentId}
-      />
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        select option { background: var(--input); color: var(--foreground); }
+      `}</style>
     </>
   );
 }

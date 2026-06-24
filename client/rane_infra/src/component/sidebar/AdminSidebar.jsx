@@ -1,478 +1,273 @@
-// AdminSidebar.jsx
-// Styled exactly like ClientSidebar but with ALL Admin routes
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
-  FaChevronDown,
-  FaChevronUp,
-  FaSignOutAlt,
-  FaLayerGroup,
-  FaBars,
-  FaTimes,
-  FaArrowAltCircleRight,
-} from "react-icons/fa";
+  FaSignOutAlt, FaChevronDown, FaBars, FaTimes, FaLayerGroup,
+} from 'react-icons/fa';
 import {
-  FiHome,
-  FiFileText,
-  FiUsers,
-  FiBell,
-  FiSettings,
-  FiHelpCircle,
-  FiSend,
-  FiDollarSign,
-  FiFolder,
-  FiClipboard
-
-} from "react-icons/fi";
-
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuthStore } from "../../store/authStore";
-import LogoutModal from "../models/LogoutModal";
+  FiHome, FiFileText, FiUsers, FiBell, FiSettings, FiHelpCircle,
+  FiSend, FiDollarSign, FiFolder, FiClipboard,
+} from 'react-icons/fi';
 import dummyUser from "../../assets/images/dummyUser.jpeg";
-import "../../assets/utility/color_codes.css";
+import { useAuthStore } from '../../store/authStore';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import LogoutModal from '../models/LogoutModal';
 
-const AdminSidebar = ({ isOpen = true, onCollapse }) => {
+// ── Navigation config: single source of truth (ALL admin routes) ────────────
+const NAV = [
+  { type: 'link', label: 'Home', icon: FiHome, to: '/admin' },
+  { type: 'link', label: 'Bills', icon: FiFileText, to: '/admin/bill' },
+  { type: 'link', label: 'Payment Request', icon: FiDollarSign, to: '/admin/payment-request' },
+  {
+    type: 'group', key: 'client', label: 'Client', icon: FiUsers, items: [
+      { label: 'All Client', to: '/admin/all-client' },
+      { label: 'Add new Client', to: '/admin/under-dev' },
+    ],
+  },
+  {
+    type: 'group', key: 'agreement', label: 'Agreement', icon: FiClipboard, items: [
+      { label: 'Push Agreement', to: '/admin/agreement/push' },
+      { label: 'Track agreements', to: '/admin/agreement/track' },
+    ],
+  },
+  {
+    type: 'group', key: 'dfs', label: 'DFS', icon: FiFolder, items: [
+      { label: 'Document assigned to me', to: '/admin/dfsrequest' },
+    ],
+  },
+  {
+    type: 'group', key: 'push', label: 'Push Document', icon: FiSend, items: [
+      { label: 'Push New', to: '/admin/push-document' },
+      { label: 'By Me', to: '/admin/push-document/by-me' },
+    ],
+  },
+  {
+    type: 'group', key: 'salary', label: 'Salary', icon: FiDollarSign, items: [
+      { label: 'Pay Salary', to: '/admin/salary/all-client-list' },
+    ],
+  },
+  { type: 'link', label: 'Notifications', icon: FiBell, to: '/admin/notifications' },
+  {
+    type: 'group', key: 'important', label: 'Important Routes', icon: FaLayerGroup, items: [
+      { label: 'All User Details', to: '/admin/danger/all-user' },
+      { label: 'All DFS Details', to: '/admin/danger/all-dfs' },
+      { label: 'All Documents', to: '/admin/danger/all-documents' },
+    ],
+  },
+  { type: 'link', label: 'Setting', icon: FiSettings, to: '/admin/setting' },
+  { type: 'link', label: 'Help', icon: FiHelpCircle, to: '/admin/under-dev' },
+];
+
+const AdminSidebar = ({ isOpen = true, toggleSidebar, onCollapse }) => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
-
   const [openDropdown, setOpenDropdown] = useState(null);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
-  /* ---------- Sync with parent ---------- */
   useEffect(() => {
-    setIsSidebarCollapsed(false);
-    onCollapse?.(false);
+    setCollapsed(false);
+    if (onCollapse) onCollapse(false);
   }, []);
 
+  // Auto-open the group that contains the active route
   useEffect(() => {
-    onCollapse?.(isSidebarCollapsed);
+    const active = NAV.find(n => n.type === 'group' && n.items.some(i => i.to === location.pathname));
+    if (active) setOpenDropdown(active.key);
   }, [location.pathname]);
 
-  const toggleSidebar = () => {
-    const val = !isSidebarCollapsed;
-    setIsSidebarCollapsed(val);
-    onCollapse?.(val);
+  const setCollapseState = (val) => {
+    setCollapsed(val);
+    if (onCollapse) onCollapse(val);
   };
 
-  const toggleDropdown = (key) => {
-    if (isSidebarCollapsed) {
-      setIsSidebarCollapsed(false);
-      onCollapse?.(false);
-      setTimeout(() => {
-        setOpenDropdown(key);
-      }, 300);
+  const toggleDropdown = (key) => setOpenDropdown(prev => (prev === key ? null : key));
+
+  const isActive = (to) => location.pathname === to;
+  const isGroupActive = (items) => items.some(i => location.pathname === i.to);
+
+  // Expand sidebar first if collapsed, then run the action
+  const expandThen = (fn) => {
+    if (collapsed) {
+      setCollapseState(false);
+      setTimeout(fn, 280);
     } else {
-      setOpenDropdown((prev) => (prev === key ? null : key));
+      fn();
     }
   };
 
-
-  /* ---------- Styles (same as ClientSidebar) ---------- */
-  const iconStyle = {
-    fontSize: "1.1rem",
-    minWidth: "22px",
-    textAlign: "center",
-    marginRight: "8px",
-  };
-
-  const sidebarItemStyle = {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    padding: "6px 12px",
-    textDecoration: "none",
-    borderRadius: "10px",
-    cursor: "pointer",
-    transition: "background-color 0.3s ease, color 0.3s ease",
-    color: "var(--sidebar-foreground)",
-  };
-
-  const submenuStyle = (open) => ({
-    maxHeight: open ? "500px" : "0",
-    overflow: "hidden",
-    transition: "all 0.4s ease",
-    marginLeft: "22px",
-    fontSize: "0.9rem",
-  });
-
-  const hoverIn = (e) => {
-    e.currentTarget.style.backgroundColor = "var(--client-btn-bg)";
-    e.currentTarget.style.color = "var(--client-btn-text)";
-  };
-
-  const hoverOut = (e) => {
-    e.currentTarget.style.backgroundColor = "transparent";
-    e.currentTarget.style.color = "var(--sidebar-foreground)";
-  };
-
   return (
-    <div
-      className=" p-3 mt-3 d-flex flex-column"
-      style={{
-        width: isSidebarCollapsed ? "70px" : "260px",
-        minHeight: "100vh",
-        backgroundColor: "var(--sidebar)",
-        transition: "width 0.3s ease",
-        overflowY: "auto",
-        overflowX: "hidden",
-        borderRadius: "15px",
-        zIndex: 1050,
-        display: isOpen ? "flex" : "none",
-      }}
-    >
+    <>
+      <style>{`
+        .cl-sidebar { font-family: system-ui, -apple-system, sans-serif; }
+        .cl-sidebar .nav-item-btn {
+          display:flex; align-items:center; gap:10px; width:100%;
+          padding:9px 12px; border:none; background:transparent; border-radius:10px;
+          cursor:pointer; text-align:left; text-decoration:none;
+          color:var(--sidebar-foreground); font-size:0.92rem; font-weight:500;
+          transition:background .2s ease, color .2s ease;
+        }
+        .cl-sidebar .nav-item-btn:hover:not(.active){ background:var(--secondary); color:var(--primary); }
+        .cl-sidebar .nav-item-btn:hover:not(.active) .nav-ico{ color:var(--primary); }
+        .cl-sidebar .nav-item-btn.active{ background:var(--primary); color:var(--primary-foreground); font-weight:600; }
+        .cl-sidebar .nav-item-btn.active .nav-ico{ color:var(--primary-foreground); }
+        .cl-sidebar .nav-item-btn.parent-active{ color:var(--primary); }
+        .cl-sidebar .nav-item-btn.parent-active .nav-ico{ color:var(--primary); }
+        .cl-sidebar .nav-ico{ font-size:1.05rem; min-width:22px; text-align:center; color:var(--accent); flex-shrink:0; transition:color .2s ease; }
+        .cl-sidebar .lbl{ white-space:nowrap; overflow:hidden; flex:1; }
+        .cl-sidebar .chev{ font-size:.72rem; flex-shrink:0; opacity:.65; transition:transform .3s ease; }
+        .cl-sidebar .chev.open{ transform:rotate(180deg); }
+        .cl-sidebar .submenu{ overflow:hidden; transition:max-height .35s ease; margin:2px 0 4px 18px; border-left:1.5px solid var(--border); padding-left:8px; display:flex; flex-direction:column; gap:2px; }
+        .cl-sidebar .sub-item{ display:flex; align-items:center; gap:9px; padding:7px 10px; border-radius:8px; font-size:0.84rem; font-weight:500; color:var(--secondary-foreground); text-decoration:none; transition:background .2s ease, color .2s ease; }
+        .cl-sidebar .sub-item:hover:not(.active){ background:var(--secondary); color:var(--primary); }
+        .cl-sidebar .sub-item.active{ background:var(--secondary); color:var(--primary); font-weight:600; }
+        .cl-sidebar .sub-dot{ width:6px; height:6px; border-radius:50%; background:var(--muted-foreground); flex-shrink:0; transition:background .2s ease; }
+        .cl-sidebar .sub-item:hover .sub-dot, .cl-sidebar .sub-item.active .sub-dot{ background:var(--accent); }
+        .cl-sidebar .nav-scroll{ flex:1; overflow-y:auto; overflow-x:hidden; padding-right:3px; display:flex; flex-direction:column; gap:3px; }
+        .cl-sidebar .nav-scroll::-webkit-scrollbar{ width:6px; }
+        .cl-sidebar .nav-scroll::-webkit-scrollbar-thumb{ background:var(--border); border-radius:3px; }
+        .cl-sidebar .nav-scroll::-webkit-scrollbar-track{ background:transparent; }
+        .cl-sidebar.collapsed .nav-item-btn{ justify-content:center; padding:11px 0; }
+        .cl-sidebar.collapsed .lbl, .cl-sidebar.collapsed .chev{ display:none; }
+        .cl-sidebar .logout-btn:hover{ background:var(--warning); color:var(--warning-foreground); }
+        .cl-sidebar .logout-btn:hover .nav-ico{ color:var(--destructive); }
+      `}</style>
 
-
-      {/* Toggle */}
       <div
-        className={`d-flex ${isSidebarCollapsed ? "justify-content-center" : "justify-content-end"
-          }`}
+        className={`cl-sidebar vh-100 d-flex flex-column ${collapsed ? 'collapsed' : ''}`}
+        style={{
+          width: collapsed ? '72px' : '260px',
+          zIndex: 1050,
+          backgroundColor: 'var(--card)',
+          borderRight: '1px solid var(--border)',
+          boxShadow: '2px 0 12px var(--shadow-color)',
+          display: isOpen ? 'flex' : 'none',
+          transition: 'width 0.3s ease',
+          overflow: 'hidden',
+          minHeight: '100vh',
+          padding: '14px 12px',
+          color: 'var(--sidebar-foreground)',
+        }}
       >
-        <button
-          onClick={toggleSidebar}
-          className="btn p-0"
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: 8,
-            background: "var(--client-btn-bg)",
-            color: "#fff",
-          }}
-        >
-          {isSidebarCollapsed ? <FaBars /> : <FaTimes />}
-        </button>
-      </div>
 
-      {/* Profile */}
-      {!isSidebarCollapsed && (
-        <div className="text-center mb-3">
-          <img
-            src={user?.profile || dummyUser}
-            alt="Admin"
-            className="rounded-circle mb-2"
-            style={{ width: 80, height: 80, objectFit: "cover" }}
-            onClick={() => navigate("/admin")}
-          />
-          <div className="fw-semibold">{user?.name}</div>
-          <div className="text-muted">CID • {user?.cid}</div>
-          <hr />
+        {/* ── Toggle ── */}
+        <div className={`d-flex ${collapsed ? 'justify-content-center' : 'justify-content-end'} mb-2`}>
+          <button
+            onClick={() => setCollapseState(!collapsed)}
+            aria-label={collapsed ? 'Show sidebar' : 'Hide sidebar'}
+            title={collapsed ? 'Show sidebar' : 'Hide sidebar'}
+            className="d-flex align-items-center justify-content-center"
+            style={{
+              backgroundColor: 'var(--primary)',
+              color: 'var(--primary-foreground, #ffffff)',
+              width: 34, height: 34, minWidth: 34, padding: 0,
+              borderRadius: 8, border: 'none', cursor: 'pointer', lineHeight: 0,
+              transition: 'background-color 0.25s ease',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--primary-hover)')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--primary)')}
+          >
+            {collapsed
+              ? <FaBars size={16} color="#ffffff" />
+              : <FaTimes size={16} color="#ffffff" />}
+          </button>
         </div>
-      )}
 
-      {/* ----------- MAIN LINKS ----------- */}
-
-      <Link to="/admin" style={{ textDecoration: "none" }}>
-        <div
-          style={sidebarItemStyle}
-          onMouseEnter={hoverIn}
-          onMouseLeave={hoverOut}
-          className={`d-flex ${isSidebarCollapsed ? "justify-content-center" : ""
-            }`}
-        >
-          <FiHome style={iconStyle} />
-          {!isSidebarCollapsed && "Home"}
-        </div>
-      </Link>
-
-      <Link to="/admin/bill" style={{ textDecoration: "none" }}>
-        <div
-          style={sidebarItemStyle}
-          onMouseEnter={hoverIn}
-          onMouseLeave={hoverOut}
-          className={`d-flex ${isSidebarCollapsed ? "justify-content-center" : ""
-            }`}
-        >
-          <FiFileText style={iconStyle} />
-          {!isSidebarCollapsed && "Bills"}
-        </div>
-      </Link>
-
-      <Link to="/admin/payment-request" style={{ textDecoration: "none" }}>
-        <div
-          style={sidebarItemStyle}
-          onMouseEnter={hoverIn}
-          onMouseLeave={hoverOut}
-          className={`d-flex ${isSidebarCollapsed ? "justify-content-center" : ""
-            }`}
-        >
-          <FiDollarSign style={iconStyle} />
-          {!isSidebarCollapsed && "Payment Request"}
-        </div>
-      </Link>
-
-      {/* ----------- CLIENT ----------- */}
-      <div
-        style={sidebarItemStyle}
-        onClick={() => toggleDropdown("client")}
-        onMouseEnter={hoverIn}
-        onMouseLeave={hoverOut}
-        className={`d-flex ${isSidebarCollapsed ? "justify-content-center" : "justify-content-between"
-          }`}
-      >
-        <div>
-          <FiUsers style={iconStyle} />
-          {!isSidebarCollapsed && "Client"}
-        </div>
-        {!isSidebarCollapsed &&
-          (openDropdown === "client" ? <FaChevronUp /> : <FaChevronDown />)}
-      </div>
-      <div style={submenuStyle(openDropdown === "client")}>
-        {!isSidebarCollapsed && (
-          <>
-            <Link to="/admin/all-client" style={{ textDecoration: "none" }}>
-              <div style={sidebarItemStyle}>All Client</div>
-            </Link>
-            <Link to="/admin/under-dev" style={{ textDecoration: "none" }}>
-              <div style={sidebarItemStyle}>Add new Client</div>
-            </Link>
-          </>
+        {/* ── Profile ── */}
+        {!collapsed && (
+          <div className="text-center mb-3">
+            <img
+              src={user?.profile || dummyUser}
+              alt="Profile"
+              className="rounded-circle mb-2"
+              style={{
+                width: 76, height: 76, objectFit: 'cover', cursor: 'pointer',
+                border: '2px solid var(--primary)', transition: 'transform 0.25s ease',
+              }}
+              onClick={() => navigate('/admin')}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.06)')}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+            />
+            <div style={{ fontSize: '0.98rem', fontWeight: 600, color: 'var(--text-strong)' }}>
+              {user?.name || 'Admin Name'}
+            </div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--muted-foreground)', marginTop: 1 }}>
+              CID • {user?.cid || 'AD-0000'}
+            </div>
+            <hr style={{ borderTop: '1px solid var(--border)', opacity: 0.7, margin: '0.9rem 0.5rem 0' }} />
+          </div>
         )}
-      </div>
-      {/* ----------- Agreement ----------- */}
-      <div
-        style={sidebarItemStyle}
-        onClick={() => toggleDropdown("agreement")}
-        onMouseEnter={hoverIn}
-        onMouseLeave={hoverOut}
-        className={`d-flex ${isSidebarCollapsed ? "justify-content-center" : "justify-content-between"
-          }`}
-      >
-        <div>
-          <FiClipboard style={iconStyle} />
-          {!isSidebarCollapsed && "agreement"}
-        </div>
-        {!isSidebarCollapsed &&
-          (openDropdown === "agreement" ? <FaChevronUp /> : <FaChevronDown />)}
-      </div>
-      <div style={submenuStyle(openDropdown === "agreement")}>
-        {!isSidebarCollapsed && (
-          <>
-            <Link to="/admin/agreement/push" style={{ textDecoration: "none" }}>
-              <div style={sidebarItemStyle} >Push  Agreement</div>
-            </Link>
-            <Link to="/admin/agreement/track" style={{ textDecoration: "none" }}>
-              <div style={sidebarItemStyle}>Track agreements</div>
-            </Link>
-          </>
-        )}
-      </div>
 
+        {/* ── Scrollable nav ── */}
+        <div className="nav-scroll">
+          {NAV.map((item) => {
+            const Icon = item.icon;
 
+            // Single link
+            if (item.type === 'link') {
+              return (
+                <Link
+                  key={item.to + item.label}
+                  to={item.to}
+                  title={collapsed ? item.label : undefined}
+                  className={`nav-item-btn ${isActive(item.to) ? 'active' : ''}`}
+                  onClick={(e) => { if (collapsed) { e.preventDefault(); expandThen(() => navigate(item.to)); } }}
+                >
+                  <Icon className="nav-ico" />
+                  <span className="lbl">{item.label}</span>
+                </Link>
+              );
+            }
 
-      {/* ----------- DFS ----------- */}
-      <div
-        style={sidebarItemStyle}
-        onClick={() => toggleDropdown("dfs")}
-        onMouseEnter={hoverIn}
-        onMouseLeave={hoverOut}
-        className={`d-flex ${isSidebarCollapsed
-          ? "justify-content-center"
-          : "justify-content-between"
-          }`}
-      >
-        <div>
-          <FiFolder style={iconStyle} />
-          {!isSidebarCollapsed && "DFS"}
-        </div>
+            // Dropdown group
+            const groupActive = isGroupActive(item.items);
+            const open = openDropdown === item.key && !collapsed;
+            return (
+              <div key={item.key}>
+                <button
+                  type="button"
+                  title={collapsed ? item.label : undefined}
+                  className={`nav-item-btn ${groupActive && !open ? 'parent-active' : ''}`}
+                  onClick={() => expandThen(() => toggleDropdown(item.key))}
+                >
+                  <Icon className="nav-ico" />
+                  <span className="lbl">{item.label}</span>
+                  <FaChevronDown className={`chev ${open ? 'open' : ''}`} />
+                </button>
 
-        {!isSidebarCollapsed &&
-          (openDropdown === "dfs" ? <FaChevronUp /> : <FaChevronDown />)}
-      </div>
-
-      <div style={submenuStyle(openDropdown === "dfs")}>
-        {!isSidebarCollapsed && (
-          <>
-            <Link to="/admin/dfsrequest" style={{ textDecoration: "none" }}>
-              <div style={sidebarItemStyle}>
-                Document assigned to me
+                <div className="submenu" style={{ maxHeight: open ? `${item.items.length * 44 + 8}px` : 0 }}>
+                  {item.items.map((sub) => (
+                    <Link
+                      key={sub.to}
+                      to={sub.to}
+                      className={`sub-item ${isActive(sub.to) ? 'active' : ''}`}
+                    >
+                      <span className="sub-dot" />
+                      {sub.label}
+                    </Link>
+                  ))}
+                </div>
               </div>
-            </Link>
-          </>
-        )}
+            );
+          })}
+        </div>
+
+        {/* ── Logout (pinned) ── */}
+        <div style={{ paddingTop: 8, marginTop: 6, borderTop: '1px solid var(--border)' }}>
+          <button
+            type="button"
+            title={collapsed ? 'Logout' : undefined}
+            className="nav-item-btn logout-btn"
+            onClick={() => expandThen(() => setShowLogoutModal(true))}
+          >
+            <FaSignOutAlt className="nav-ico" />
+            <span className="lbl">Logout</span>
+          </button>
+        </div>
       </div>
 
-
-      {!isSidebarCollapsed && (
-        <div style={submenuStyle(openDropdown === "dfs")}>
-          <Link to="/admin/dfsrequest" style={{ textDecoration: "none" }}>
-            <div style={sidebarItemStyle}>
-              Document assigned to me
-            </div>
-          </Link>
-        </div>
-      )}
-
-
-
-      {/* ----------- PUSH DOCUMENT ----------- */}
-      <div
-        style={sidebarItemStyle}
-        onClick={() => toggleDropdown("push")}
-        onMouseEnter={hoverIn}
-        onMouseLeave={hoverOut}
-        className={`d-flex ${isSidebarCollapsed ? "justify-content-center" : "justify-content-between"
-          }`}
-      >
-        <div>
-          <FiSend style={iconStyle} />
-          {!isSidebarCollapsed && "Push Document"}
-        </div>
-        {!isSidebarCollapsed &&
-          (openDropdown === "push" ? <FaChevronUp /> : <FaChevronDown />)}
-      </div>
-      {!isSidebarCollapsed && (
-        <div style={submenuStyle(openDropdown === "push")}>
-          <Link to="/admin/push-document">
-            <div style={sidebarItemStyle}>
-              <FaArrowAltCircleRight style={iconStyle} /> Push New
-            </div>
-          </Link>
-          <Link to="/admin/push-document/by-me">
-            <div style={sidebarItemStyle}>
-              <FaArrowAltCircleRight style={iconStyle} /> By Me
-            </div>
-          </Link>
-        </div>
-      )}
-
-      {/* ----------- SALARY ----------- */}
-      <div
-        style={sidebarItemStyle}
-        onClick={() => toggleDropdown("salary")}
-        onMouseEnter={hoverIn}
-        onMouseLeave={hoverOut}
-        className={`d-flex ${isSidebarCollapsed
-          ? "justify-content-center"
-          : "justify-content-between"
-          }`}
-      >
-        <div>
-          <FiDollarSign style={iconStyle} />
-          {!isSidebarCollapsed && "Salary"}
-        </div>
-
-        {!isSidebarCollapsed &&
-          (openDropdown === "salary" ? <FaChevronUp /> : <FaChevronDown />)}
-      </div>
-
-      <div style={submenuStyle(openDropdown === "salary")}>
-        {!isSidebarCollapsed && (
-          <>
-            <Link
-              to="/admin/salary/all-client-list"
-              style={{ textDecoration: "none" }}
-            >
-              <div style={sidebarItemStyle}>
-                Pay Salary
-              </div>
-            </Link>
-          </>
-        )}
-      </div>
-
-
-      {/* ----------- NOTIFICATIONS ----------- */}
-      <Link to="/admin/notifications" style={{ textDecoration: "none" }}>
-        <div
-          style={sidebarItemStyle}
-          onMouseEnter={hoverIn}
-          onMouseLeave={hoverOut}
-          className={`d-flex ${isSidebarCollapsed ? "justify-content-center" : ""
-            }`}
-        >
-          <FiBell style={iconStyle} />
-          {!isSidebarCollapsed && "Notifications"}
-        </div>
-      </Link>
-
-      {/* ----------- IMPORTANT ROUTES ----------- */}
-      <div
-        style={sidebarItemStyle}
-        onClick={() => toggleDropdown("important")}
-        onMouseEnter={hoverIn}
-        onMouseLeave={hoverOut}
-        className={`d-flex ${isSidebarCollapsed
-            ? "justify-content-center"
-            : "justify-content-between"
-          }`}
-      >
-        <div>
-          <FaLayerGroup style={iconStyle} />
-          {!isSidebarCollapsed && "Important Routes"}
-        </div>
-
-        {!isSidebarCollapsed &&
-          (openDropdown === "important" ? <FaChevronUp /> : <FaChevronDown />)}
-      </div>
-
-      <div style={submenuStyle(openDropdown === "important")}>
-        {!isSidebarCollapsed && (
-          <>
-            <Link to="/admin/danger/all-user" style={{ textDecoration: "none" }}>
-              <div style={sidebarItemStyle}>All User Details</div>
-            </Link>
-
-            <Link to="/admin/danger/all-dfs" style={{ textDecoration: "none" }}>
-              <div style={sidebarItemStyle}>All DFS Details</div>
-            </Link>
-
-            <Link to="/admin/danger/all-documents" style={{ textDecoration: "none" }}>
-              <div style={sidebarItemStyle}>All Documents</div>
-            </Link>
-          </>
-        )}
-      </div>
-
-
-
-      {/* ----------- SETTINGS ----------- */}
-      <Link to="/admin/setting" style={{ textDecoration: "none" }}>
-        <div
-          style={sidebarItemStyle}
-          onMouseEnter={hoverIn}
-          onMouseLeave={hoverOut}
-          className={`d-flex ${isSidebarCollapsed ? "justify-content-center" : ""
-            }`}
-        >
-          <FiSettings style={iconStyle} />
-          {!isSidebarCollapsed && "Setting"}
-        </div>
-      </Link>
-
-      {/* ----------- HELP ----------- */}
-      <Link to="/admin/under-dev" style={{ textDecoration: "none" }}>
-        <div
-          style={sidebarItemStyle}
-          onMouseEnter={hoverIn}
-          onMouseLeave={hoverOut}
-          className={`d-flex ${isSidebarCollapsed ? "justify-content-center" : ""
-            }`}
-        >
-          <FiHelpCircle style={iconStyle} />
-          {!isSidebarCollapsed && "Help"}
-        </div>
-      </Link>
-
-      {/* ----------- LOGOUT ----------- */}
-      <div
-        className="mt-auto"
-        style={sidebarItemStyle}
-        onMouseEnter={hoverIn}
-        onMouseLeave={hoverOut}
-        onClick={() => setShowLogoutModal(true)}
-      >
-        <FaSignOutAlt style={iconStyle} />
-        {!isSidebarCollapsed && "Logout"}
-      </div>
-
-      <LogoutModal
-        show={showLogoutModal}
-        onClose={() => setShowLogoutModal(false)}
-      />
-    </div>
+      <LogoutModal show={showLogoutModal} onClose={() => setShowLogoutModal(false)} />
+    </>
   );
 };
 
 export default AdminSidebar;
-
