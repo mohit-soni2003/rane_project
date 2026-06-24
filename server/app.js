@@ -69,6 +69,7 @@ app.use("/dashboard",require("./src/routes/dashboardroutes")) // give all detais
 app.use("/notification",require("./src/routes/notificationRoutes"))
 app.use("/paynote", require("./src/routes/paynoteroutes"))
 app.use("/sor", require("./src/routes/sor.routes")) // give all detais relaed to dashboard
+app.use("/project", require("./src/routes/project.route")) // give all detais relaed to dashboard
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

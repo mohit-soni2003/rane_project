@@ -44,6 +44,11 @@ const NAV = [
       { label: 'Pay Salary', to: '/admin/salary/all-client-list' },
     ],
   },
+  {
+    type: 'group', key: 'project_management', label: 'Project Management', icon: FiDollarSign, items: [
+      { label: 'Create Project', to: '/admin/project/create' },
+    ],
+  },
   { type: 'link', label: 'Notifications', icon: FiBell, to: '/admin/notifications' },
   {
     type: 'group', key: 'important', label: 'Important Routes', icon: FaLayerGroup, items: [

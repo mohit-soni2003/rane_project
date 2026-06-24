@@ -66,6 +66,7 @@ import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage.jsx";
 import AgreementTableListAll from "./pages/admin/AgreementTableListAll.jsx";
 import SingleAgreementDetails from "./pages/admin/SingleAgreementDetails.jsx";
 import SorDetailsAdmin from "./pages/admin/SorPage.jsx";
+import CreateProject from "./pages/admin/CreateProject.jsx";
 
 
 import StaffLayout from "./Layout/StaffLayout.jsx";
@@ -222,6 +223,7 @@ function App() {
           <Route path="notifications" element={<AdminNotificationsPage />} />
           <Route path="under-dev" element={<UnderDevPage />} />
           <Route path="sor-details" element={<SorDetailsAdmin />} />
+          <Route path="project/create" element={<CreateProject />} />
         </Route>
 
         {/* ---------Staff route------------ */}
