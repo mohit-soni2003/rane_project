@@ -14,7 +14,27 @@ app.use(cookieParser())
 const corsOptions = {
   origin: FRONTEND_ORIGIN_URL,  // Your frontend URL
   credentials: true,  // Allow cookies to be sent
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "Cookie", "X-Requested-With"],
 };
+
+app.use((req, res, next) => {
+  const requestOrigin = req.headers.origin;
+
+  if (requestOrigin && requestOrigin === FRONTEND_ORIGIN_URL) {
+    res.header("Access-Control-Allow-Origin", requestOrigin);
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Methods", corsOptions.methods.join(","));
+    res.header("Access-Control-Allow-Headers", corsOptions.allowedHeaders.join(","));
+    res.header("Vary", "Origin");
+  }
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
 
 
 
@@ -71,6 +91,10 @@ app.use("/paynote", require("./src/routes/paynoteroutes"))
 app.use("/sor", require("./src/routes/sor.routes")) // give all detais relaed to dashboard
 app.use("/project", require("./src/routes/project.route")) // give all detais relaed to dashboard
 // Start the server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+if (require.main === module && !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
