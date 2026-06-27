@@ -37,4 +37,29 @@ router.post("/create", verifyToken, adminOnly, async (req, res) => {
         });
     }
 });
+router.get("/all", verifyToken, allUsers, async (req, res) => {
+    try {
+        const projects = await projectService.getAllProjects();
+
+        return res.status(200).json({
+            success: true,
+            message: "Projects retrieved successfully.",
+            data: projects,
+        });
+    } catch (error) {
+        return res.status(400).json({
+            success: false,
+            message: error.message,
+        });
+    }
+});
+
+router.get("/pending", verifyToken, async (req, res) => {
+    try {
+        const projects = await projectService.getPendingForAuthority(req.userId);
+        return res.status(200).json({ success: true, data: projects });
+    } catch (error) {
+        return res.status(400).json({ success: false, message: error.message });
+    }
+});
 module.exports = router;

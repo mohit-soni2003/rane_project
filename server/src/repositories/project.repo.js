@@ -1,4 +1,6 @@
 const Project = require("./../models/projects.model");
+const User = require("./../models/usermodel");
+const Task = require("./../models/task.model");
 
 /* ============================================================
  *  PROJECT REPOSITORY
@@ -28,6 +30,35 @@ async function getById(id) {
 // Get by the human-readable projectId string.
 async function getByProjectId(projectId) {
     return Project.findOne({ projectId });
+}
+
+// Get every project, newest first, with all reference fields populated.
+async function getAllProjects() {
+    return Project.find()
+        .sort({ createdAt: -1 })
+        // top-level user references
+        .populate("createdBy")
+        .populate("currentAuthority")
+        .populate("projectManager")
+        // approval trail -> who acted
+        .populate("approvals.actor")
+        // teams -> lead, members, creator
+        .populate("teams.lead")
+        .populate("teams.members")
+        .populate("teams.createdBy")
+        // documents -> uploader
+        .populate("documents.uploadedBy")
+        // linked tasks (and the users on each task)
+        .populate({
+            path: "tasks",
+            populate: [
+                { path: "allottedTo" },
+                { path: "allottedBy" },
+                { path: "completion.submittedBy" },
+                { path: "verifiedBy" }
+            ]
+        })
+        .lean();
 }
 
 // Get a project with its references populated (people, teams, tasks).
@@ -84,8 +115,32 @@ async function search(term) {
 async function getPendingForAuthority(userId) {
     return Project.find({
         currentAuthority: userId,
-        status: { $in: ["pending", "returned"] }
-    }).sort({ updatedAt: -1 });
+        // status: { $in: ["pending", "returned"] }
+    })
+        .sort({ updatedAt: -1 })
+        // top-level user references
+        .populate("createdBy")
+        .populate("currentAuthority")
+        .populate("projectManager")
+        // approval trail -> who acted
+        .populate("approvals.actor")
+        // teams -> lead, members, creator
+        .populate("teams.lead")
+        .populate("teams.members")
+        .populate("teams.createdBy")
+        // documents -> uploader
+        .populate("documents.uploadedBy")
+        // linked tasks (and the users on each task)
+        .populate({
+            path: "tasks",
+            populate: [
+                { path: "allottedTo" },
+                { path: "allottedBy" },
+                { path: "completion.submittedBy" },
+                { path: "verifiedBy" }
+            ]
+        })
+        .lean();
 }
 
 // Projects sitting at a given stage.
@@ -227,9 +282,9 @@ async function getTeamsByVertical(id, vertical) {
     return project.teams.filter((t) => t.vertical === vertical);
 }
 
-/* ---------------------------------------------------------- */
-/*  TASKS (link / unlink — keeps the project.tasks array sync) */
-/* ---------------------------------------------------------- */
+// /* ---------------------------------------------------------- */
+// /*  TASKS (link / unlink — keeps the project.tasks array sync) */
+// /* ---------------------------------------------------------- */
 
 async function linkTask(id, taskId) {
     return Project.findByIdAndUpdate(
@@ -313,6 +368,7 @@ module.exports = {
     createProject,
     getById,
     getByProjectId,
+    getAllProjects,
     getByIdPopulated,
     getWithTasks,
     list,

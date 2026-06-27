@@ -216,6 +216,9 @@ export default function CreateProject() {
     });
     payload.pendingAmount = pendingAmount;
 
+    // Current authority = the user creating the project
+    if (user?._id) payload.currentAuthority = user._id;
+
     // Location (only non-empty fields)
     const loc = {};
     Object.entries(location).forEach(([k, v]) => {

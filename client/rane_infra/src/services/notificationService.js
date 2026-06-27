@@ -1,121 +1,93 @@
+// services/notificationService.js
 import { backend_url } from "../store/keyStore";
 
 export const getNotifications = async (page = 1, limit = 20, unreadOnly = false) => {
   try {
     const params = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-      unreadOnly: unreadOnly.toString()
+      page: String(page),
+      limit: String(limit),
+      unreadOnly: String(unreadOnly),
     });
 
-    const response = await fetch(`${backend_url}/notifications?${params}`, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const res = await fetch(`${backend_url}/notification?${params}`, {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
     });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to fetch notifications.");
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Failed to fetch notifications');
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Error fetching notifications:', error);
-    throw error;
+    return {
+      notifications: data.notifications || [],
+      pagination: data.pagination || {},
+      unreadCount: data.unreadCount ?? 0,
+    };
+  } catch (err) {
+    console.error("Error in getNotifications:", err);
+    throw err;
   }
 };
 
 export const getUnreadNotificationCount = async () => {
   try {
-    const response = await fetch(`${backend_url}/notifications/unread-count`, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const res = await fetch(`${backend_url}/notification/unread-count`, {
+      method: "GET",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
     });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Failed to fetch unread count');
-    }
-
-    return data.unreadCount;
-  } catch (error) {
-    console.error('Error fetching unread count:', error);
-    return 0;
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to fetch unread count.");
+    return data.unreadCount ?? 0;
+  } catch (err) {
+    console.error("Error in getUnreadNotificationCount:", err);
+    throw err;
   }
 };
 
 export const markNotificationAsRead = async (notificationId) => {
   try {
-    const response = await fetch(`${backend_url}/notifications/${notificationId}/read`, {
-      method: 'PUT',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const res = await fetch(`${backend_url}/notification/${notificationId}/read`, {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
     });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Failed to mark notification as read');
-    }
-
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to mark notification as read.");
     return data.notification;
-  } catch (error) {
-    console.error('Error marking notification as read:', error);
-    throw error;
+  } catch (err) {
+    console.error("Error in markNotificationAsRead:", err);
+    throw err;
   }
 };
 
 export const markAllNotificationsAsRead = async () => {
   try {
-    const response = await fetch(`${backend_url}/notifications/mark-all-read`, {
-      method: 'PUT',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const res = await fetch(`${backend_url}/notification/mark-all-read`, {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
     });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Failed to mark all notifications as read');
-    }
-
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to mark all notifications as read.");
     return data;
-  } catch (error) {
-    console.error('Error marking all notifications as read:', error);
-    throw error;
+  } catch (err) {
+    console.error("Error in markAllNotificationsAsRead:", err);
+    throw err;
   }
 };
 
 export const deleteNotification = async (notificationId) => {
   try {
-    const response = await fetch(`${backend_url}/notifications/${notificationId}`, {
-      method: 'DELETE',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const res = await fetch(`${backend_url}/notification/${notificationId}`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
     });
-
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.message || 'Failed to delete notification');
-    }
-
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to delete notification.");
     return true;
-  } catch (error) {
-    console.error('Error deleting notification:', error);
-    throw error;
+  } catch (err) {
+    console.error("Error in deleteNotification:", err);
+    throw err;
   }
 };

@@ -67,6 +67,8 @@ import AgreementTableListAll from "./pages/admin/AgreementTableListAll.jsx";
 import SingleAgreementDetails from "./pages/admin/SingleAgreementDetails.jsx";
 import SorDetailsAdmin from "./pages/admin/SorPage.jsx";
 import CreateProject from "./pages/admin/CreateProject.jsx";
+import ListallProject from "./pages/admin/ListallProject.jsx";
+import PendingProject from "./pages/admin/PendingProject.jsx";
 
 
 import StaffLayout from "./Layout/StaffLayout.jsx";
@@ -224,6 +226,8 @@ function App() {
           <Route path="under-dev" element={<UnderDevPage />} />
           <Route path="sor-details" element={<SorDetailsAdmin />} />
           <Route path="project/create" element={<CreateProject />} />
+          <Route path="project/list" element={<ListallProject />} />
+          <Route path="project/pending" element={<PendingProject />} />
         </Route>
 
         {/* ---------Staff route------------ */}

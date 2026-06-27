@@ -1,112 +1,156 @@
-import React, { useState, useRef } from "react";
-import AdminHeader from "../../component/header/AdminHeader";
-import { createAgreement } from "../../services/agreement";
-import { CLOUD_NAME, UPLOAD_PRESET } from "../../store/keyStore";
+import React, { useState, useRef } from 'react';
 import {
-  FaFileAlt, FaUserTie, FaCalendarAlt, FaFileUpload, FaFileSignature,
-  FaCheckCircle, FaExclamationTriangle, FaArrowRight, FaTimes,
-} from "react-icons/fa";
+  FaFileSignature, FaUserTie, FaFileAlt, FaFileUpload,
+  FaCalendarAlt, FaFilePdf, FaCheckCircle, FaTimes,
+} from 'react-icons/fa';
+import { FiRefreshCw, FiSend, FiX } from 'react-icons/fi';
+import AdminHeader from '../../component/header/AdminHeader';
+import { createAgreement } from '../../services/agreement';
+import { CLOUD_NAME, UPLOAD_PRESET } from '../../store/keyStore';
 
+// ── Hardcoded icon colors (never rely on CSS var inheritance for icons) ──────
+const C = {
+  primary: '#6b3e2b',
+  accent: '#b95a52',
+  success: '#225b31',
+  destructive: '#c94a3a',
+  muted: '#8b7b74',
+  warning: '#4a1f18',
+};
+
+// ── Shared styles ─────────────────────────────────────────────────────────────
 const labelStyle = {
-  fontSize: 12, fontWeight: 600, color: 'var(--text-strong)',
-  display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6,
+  fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
+  display: 'block', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.05em',
+};
+const controlStyle = {
+  width: '100%', border: '1px solid var(--border)', borderRadius: 8,
+  padding: '9px 12px', fontSize: 13.5, color: 'var(--foreground)',
+  background: 'var(--input)', outline: 'none', boxSizing: 'border-box',
+};
+const cardStyle = {
+  background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12,
+  padding: '16px 18px', marginBottom: 14, boxShadow: '0 2px 8px var(--shadow-color)',
+};
+const sectionHeaderStyle = { display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 };
+const sectionTitleStyle = { fontWeight: 700, fontSize: 13, color: 'var(--text-strong)' };
+const sectionSubtitleStyle = { fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 };
+const gridTwo = {
+  display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12,
+};
+const optionalTagStyle = {
+  fontSize: 9.5, fontWeight: 600, color: 'var(--text-muted)', background: 'var(--muted)',
+  border: '1px solid var(--border)', borderRadius: 20, padding: '1px 7px',
+  marginLeft: 6, textTransform: 'none', letterSpacing: 0, verticalAlign: 1,
 };
 
 export default function PushAgreement() {
   const [form, setForm] = useState({
-    title: "",
-    description: "",
-    clientId: "",
-    fileUrl: "",
-    expiryDate: "",
+    title: '', description: '', clientId: '', fileUrl: '', expiryDate: '',
   });
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [file, setFile] = useState(null);
-  const [focused, setFocused] = useState("");
-  const fileInputRef = useRef(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
+  const fileInputRef = useRef();
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
+  // Progress — required fields: clientId (30) + title (30) + file (40)
+  const progress = (() => {
+    let s = 0;
+    if (form.clientId.trim()) s += 30;
+    if (form.title.trim()) s += 30;
+    if (file) s += 40;
+    return Math.min(s, 100);
+  })();
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    if (!form.title || !form.clientId || !file) {
-      setError("Title, Client ID, and file are required.");
+  const handleFileSelect = (f) => {
+    if (!f) return;
+    const fileSizeMB = f.size / 1024 / 1024;
+    if (fileSizeMB > 10) {
+      setMessage({ type: 'error', text: 'File size exceeds the 10 MB limit.' });
       return;
     }
-
-    try {
-      setLoading(true);
-
-      // 1. Upload file first
-      const uploadedFileUrl = await uploadToCloudinary();
-
-      // 2. Send agreement data with fileUrl
-      await createAgreement({
-        ...form,
-        fileUrl: uploadedFileUrl,
-      });
-
-      setSuccess("Agreement pushed successfully.");
-      setForm({
-        title: "",
-        description: "",
-        clientId: "",
-        fileUrl: "",
-        expiryDate: "",
-      });
-      setFile(null);
-    } catch (err) {
-      setError(err.message || "Failed to push agreement.");
-    } finally {
-      setLoading(false);
-    }
+    setFile(f);
+    setMessage({ type: '', text: '' });
   };
 
   const uploadToCloudinary = async () => {
-    if (!file) throw new Error("Please select a file");
-
-    const fileSizeMB = file.size / 1024 / 1024;
-    if (fileSizeMB > 10) {
-      throw new Error("File size must be under 10MB");
-    }
-
+    if (!file) throw new Error('Please select a file.');
     const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", UPLOAD_PRESET);
-
+    formData.append('file', file);
+    formData.append('upload_preset', UPLOAD_PRESET);
     const res = await fetch(
       `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,
-      { method: "POST", body: formData }
+      { method: 'POST', body: formData }
     );
-
-    if (!res.ok) {
-      throw new Error("File upload failed");
-    }
-
+    if (!res.ok) throw new Error('File upload failed.');
     const data = await res.json();
     return data.secure_url;
   };
 
-  const inputStyle = (name) => ({
-    width: '100%', boxSizing: 'border-box',
-    background: 'var(--input)', color: 'var(--foreground)',
-    border: `1px solid ${focused === name ? 'var(--primary)' : 'var(--border)'}`,
-    borderRadius: 8, padding: '10px 12px', fontSize: 14, outline: 'none',
-    boxShadow: focused === name ? '0 0 0 3px var(--accent-ring)' : 'none',
-    transition: 'border-color .15s, box-shadow .15s', fontFamily: 'inherit',
-  });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage({ type: '', text: '' });
+
+    if (!form.title || !form.clientId || !file) {
+      setMessage({ type: 'error', text: 'Title, client user ID, and a file are required.' });
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const uploadedFileUrl = await uploadToCloudinary();
+      await createAgreement({ ...form, fileUrl: uploadedFileUrl });
+      handleClear();
+      setMessage({ type: 'success', text: 'Agreement pushed successfully.' });
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to push agreement: ' + (err.message || 'Unknown error') });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleClear = () => {
+    setForm({ title: '', description: '', clientId: '', fileUrl: '', expiryDate: '' });
+    setFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    setMessage({ type: '', text: '' });
+  };
+
+  const fileSize = file
+    ? file.size / 1024 > 1024
+      ? (file.size / 1048576).toFixed(1) + ' MB'
+      : Math.round(file.size / 1024) + ' KB'
+    : '';
+
+  // ── Message banner ───────────────────────────────────────────────────────
+  const MessageBanner = () => {
+    if (!message.text) return null;
+    const isSuccess = message.type === 'success';
+    const isWarning = message.type === 'warning';
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'flex-start', gap: 10,
+        padding: '10px 14px', borderRadius: 8, marginBottom: 14,
+        background: isSuccess ? 'var(--success)' : isWarning ? 'var(--warning)' : '#fde8e6',
+        border: `1px solid ${isSuccess ? '#b6dfc4' : isWarning ? '#e8b4ab' : '#f5b8b2'}`,
+        fontSize: 13, color: isSuccess ? C.success : isWarning ? C.warning : C.destructive,
+      }}>
+        {isSuccess
+          ? <FaCheckCircle size={14} color={C.success} style={{ marginTop: 1, flexShrink: 0 }} />
+          : <FaTimes size={14} color={isWarning ? C.warning : C.destructive} style={{ marginTop: 1, flexShrink: 0 }} />}
+        <span style={{ flex: 1 }}>{message.text}</span>
+        <FaTimes size={12} color={C.muted}
+          style={{ cursor: 'pointer', marginTop: 1, flexShrink: 0 }}
+          onClick={() => setMessage({ type: '', text: '' })} />
+      </div>
+    );
+  };
 
   return (
     <>
@@ -126,159 +170,196 @@ export default function PushAgreement() {
           {/* ── Title bar ── */}
           <div style={{
             borderBottom: '1px solid var(--border)', padding: '14px 20px',
-            display: 'flex', alignItems: 'center', gap: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10,
           }}>
-            <div style={{
-              width: 34, height: 34, borderRadius: 8, background: 'var(--warning)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{
+                width: 34, height: 34, borderRadius: 8, background: 'var(--warning)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <FaFileSignature size={16} color={C.primary} />
+              </div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-strong)', lineHeight: 1.2 }}>
+                  Push Agreement
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+                  Upload and assign an agreement to a client
+                </div>
+              </div>
+            </div>
+            <span style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              fontSize: 11, color: 'var(--text-muted)',
+              padding: '4px 10px', background: 'var(--muted)', borderRadius: 20, fontWeight: 600,
             }}>
-              <FaFileSignature size={16} color="var(--primary)" />
-            </div>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-strong)', lineHeight: 1.2 }}>
-                Push Agreement
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
-                Upload and assign an agreement to a client
-              </div>
-            </div>
+              <FaCheckCircle size={11} color={C.accent} /> {progress}% complete
+            </span>
           </div>
 
+          {/* ── Form body ── */}
           <div style={{ padding: '18px 20px' }}>
 
-            {/* Alerts */}
-            {error && (
+            {/* Progress strip */}
+            <div style={{ height: 4, background: 'var(--border)', borderRadius: 99, overflow: 'hidden', marginBottom: 16 }}>
               <div style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                background: 'var(--destructive-bg)', border: '1px solid var(--destructive-border)',
-                borderRadius: 8, padding: '10px 12px', marginBottom: 16, fontSize: 13, color: 'var(--destructive)',
-              }}>
-                <FaExclamationTriangle size={14} color="var(--destructive)" style={{ flexShrink: 0 }} />
-                <span>{error}</span>
-              </div>
-            )}
-            {success && (
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                background: 'var(--success)', border: '1px solid var(--success-border)',
-                borderRadius: 8, padding: '10px 12px', marginBottom: 16, fontSize: 13, color: 'var(--success-foreground)',
-              }}>
-                <FaCheckCircle size={14} color="var(--success-foreground)" style={{ flexShrink: 0 }} />
-                <span>{success}</span>
-              </div>
-            )}
+                height: '100%', width: `${progress}%`,
+                background: 'var(--accent)', borderRadius: 99, transition: 'width .35s ease',
+              }} />
+            </div>
 
-            {/* Form */}
+            <MessageBanner />
+
             <form onSubmit={handleSubmit}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px 20px' }}>
-                {/* Client ID */}
-                <div>
-                  <label style={labelStyle}>
-                    <FaUserTie size={12} color="var(--accent)" /> Client User ID
-                  </label>
-                  <input
-                    type="text" name="clientId" placeholder="Enter client user ID"
-                    value={form.clientId} onChange={handleChange}
-                    onFocus={() => setFocused('clientId')} onBlur={() => setFocused('')}
-                    style={inputStyle('clientId')}
-                  />
-                </div>
 
-                {/* Title */}
-                <div>
-                  <label style={labelStyle}>
-                    <FaFileAlt size={12} color="var(--accent)" /> Agreement Title
-                  </label>
-                  <input
-                    type="text" name="title" placeholder="Enter agreement title"
-                    value={form.title} onChange={handleChange}
-                    onFocus={() => setFocused('title')} onBlur={() => setFocused('')}
-                    style={inputStyle('title')}
-                  />
+              {/* ── Agreement details card ── */}
+              <div style={cardStyle}>
+                <div style={sectionHeaderStyle}>
+                  <FaFileAlt size={14} color={C.accent} />
+                  <span style={sectionTitleStyle}>Agreement details</span>
                 </div>
+                <p style={sectionSubtitleStyle}>Who the agreement is for and what it covers.</p>
 
-                {/* Description (full width) */}
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={labelStyle}>Description</label>
-                  <textarea
-                    name="description" rows="3" placeholder="Optional description"
-                    value={form.description} onChange={handleChange}
-                    onFocus={() => setFocused('description')} onBlur={() => setFocused('')}
-                    style={{ ...inputStyle('description'), resize: 'vertical' }}
-                  />
-                </div>
-
-                {/* File Upload (full width) */}
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={labelStyle}>
-                    <FaFileUpload size={12} color="var(--accent)" /> Upload Agreement File
-                  </label>
-                  <div
-                    onClick={() => fileInputRef.current.click()}
-                    style={{
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8,
-                      padding: '30px 16px', borderRadius: 10, cursor: 'pointer', textAlign: 'center',
-                      border: `1.5px dashed ${file ? 'var(--primary)' : 'var(--border)'}`,
-                      background: file ? 'var(--secondary)' : 'var(--muted)',
-                      transition: 'border-color .15s, background .15s',
-                    }}
-                  >
-                    <div style={{
-                      width: 44, height: 44, borderRadius: '50%', background: 'var(--warning)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <FaFileAlt size={18} color="var(--primary)" />
-                    </div>
-                    {file ? (
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-strong)', maxWidth: 380, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {file.name}
-                        </span>
-                        <FaTimes size={13} color="var(--text-muted)" title="Remove file"
-                          onClick={(e) => { e.stopPropagation(); setFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-                          style={{ cursor: 'pointer' }} />
-                      </div>
-                    ) : (
-                      <>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-strong)' }}>Click to upload PDF</span>
-                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Maximum file size 10MB</span>
-                      </>
-                    )}
+                <div style={{ ...gridTwo, marginBottom: 12 }}>
+                  <div>
+                    <label style={labelStyle}>
+                      <FaUserTie size={10} style={{ marginRight: 4, verticalAlign: -1 }} />
+                      Client user ID *
+                    </label>
+                    <input
+                      type="text" name="clientId" value={form.clientId} onChange={handleChange}
+                      placeholder="Enter client user ID" required style={controlStyle}
+                    />
                   </div>
-                  <input type="file" accept=".pdf" ref={fileInputRef} hidden onChange={handleFileChange} />
+                  <div>
+                    <label style={labelStyle}>
+                      <FaFileAlt size={10} style={{ marginRight: 4, verticalAlign: -1 }} />
+                      Agreement title *
+                    </label>
+                    <input
+                      type="text" name="title" value={form.title} onChange={handleChange}
+                      placeholder="e.g. Annual Maintenance Contract" required style={controlStyle}
+                    />
+                  </div>
                 </div>
 
-                {/* Expiry Date */}
                 <div>
                   <label style={labelStyle}>
-                    <FaCalendarAlt size={12} color="var(--accent)" /> Expiry Date
+                    Description <span style={optionalTagStyle}>Optional</span>
                   </label>
-                  <input
-                    type="date" name="expiryDate"
-                    value={form.expiryDate} onChange={handleChange}
-                    onFocus={() => setFocused('expiryDate')} onBlur={() => setFocused('')}
-                    style={inputStyle('expiryDate')}
+                  <textarea
+                    name="description" rows={3} value={form.description} onChange={handleChange}
+                    placeholder="Add any context or terms summary for this agreement…"
+                    style={{ ...controlStyle, resize: 'vertical', minHeight: 84, lineHeight: 1.5 }}
                   />
                 </div>
               </div>
 
-              {/* Submit */}
-              <button
-                type="submit" disabled={loading}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  marginTop: 22, padding: '12px 36px', borderRadius: 8, border: 'none',
-                  background: 'var(--primary)', color: 'var(--primary-foreground)',
-                  fontSize: 14, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.8 : 1,
-                  transition: 'background .15s',
-                }}
-                onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = 'var(--primary-hover)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--primary)'; }}
-              >
-                {loading
-                  ? <><span style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }} /> Submitting…</>
-                  : <>Push Agreement <FaArrowRight size={13} color="var(--primary-foreground)" /></>}
-              </button>
+              {/* ── Validity card ── */}
+              <div style={cardStyle}>
+                <div style={sectionHeaderStyle}>
+                  <FaCalendarAlt size={14} color={C.accent} />
+                  <span style={sectionTitleStyle}>Validity</span>
+                </div>
+                <p style={sectionSubtitleStyle}>Set when this agreement expires. Leave blank if it doesn't expire.</p>
+
+                <div style={gridTwo}>
+                  <div>
+                    <label style={labelStyle}>
+                      Expiry date <span style={optionalTagStyle}>Optional</span>
+                    </label>
+                    <input
+                      type="date" name="expiryDate" value={form.expiryDate} onChange={handleChange}
+                      style={{ ...controlStyle, cursor: 'pointer' }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* ── File upload card ── */}
+              <div style={cardStyle}>
+                <div style={sectionHeaderStyle}>
+                  <FaFileUpload size={14} color={C.accent} />
+                  <span style={sectionTitleStyle}>Attach agreement document</span>
+                </div>
+                <p style={sectionSubtitleStyle}>Upload the agreement in PDF format (max 10 MB).</p>
+
+                <label
+                  htmlFor="agreementFileUpload"
+                  onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={e => { e.preventDefault(); setDragOver(false); handleFileSelect(e.dataTransfer.files[0]); }}
+                  style={{
+                    display: 'block', textAlign: 'center', cursor: 'pointer',
+                    border: `2px dashed ${dragOver ? 'var(--accent)' : 'var(--border)'}`,
+                    borderRadius: 10, padding: '26px 16px',
+                    background: dragOver ? 'var(--secondary)' : 'var(--muted)',
+                    transition: 'border-color .2s, background .2s',
+                  }}
+                >
+                  <FaFileUpload size={28} color={C.muted} style={{ marginBottom: 8 }} />
+                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--secondary-foreground)' }}>
+                    Tap to browse or drag &amp; drop
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
+                    PDF · max 10 MB
+                  </div>
+                  <input
+                    type="file" id="agreementFileUpload" accept=".pdf" ref={fileInputRef}
+                    onChange={e => handleFileSelect(e.target.files[0])} style={{ display: 'none' }}
+                  />
+                </label>
+
+                {file && (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 9,
+                    background: 'var(--secondary)', border: '1px solid var(--border)',
+                    borderRadius: 8, padding: '9px 12px', marginTop: 10,
+                  }}>
+                    <FaFilePdf size={17} color={C.accent} style={{ flexShrink: 0 }} />
+                    <span style={{
+                      fontSize: 13, fontWeight: 500, color: 'var(--foreground)',
+                      flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>
+                      {file.name}
+                    </span>
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{fileSize}</span>
+                    <FiX size={16}
+                      onClick={() => { setFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                      style={{ cursor: 'pointer', color: C.muted, flexShrink: 0 }} />
+                  </div>
+                )}
+              </div>
+
+              {/* ── Actions ── */}
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                <button
+                  type="button" onClick={handleClear} disabled={submitting}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '9px 16px', borderRadius: 8, border: '1px solid var(--border)',
+                    background: 'var(--secondary)', color: 'var(--secondary-foreground)',
+                    fontSize: 13, fontWeight: 600, cursor: submitting ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <FiX size={14} /> Clear form
+                </button>
+                <button
+                  type="submit" disabled={submitting}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 7,
+                    padding: '9px 20px', borderRadius: 8, border: 'none',
+                    background: 'var(--primary)', color: '#fff',
+                    fontSize: 13, fontWeight: 600,
+                    cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.7 : 1,
+                  }}
+                >
+                  {submitting
+                    ? <><FiRefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} /> Submitting…</>
+                    : <><FiSend size={14} /> Push agreement</>}
+                </button>
+              </div>
+
             </form>
           </div>
         </div>
@@ -287,6 +368,7 @@ export default function PushAgreement() {
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         input::placeholder, textarea::placeholder { color: var(--text-muted); opacity: 0.7; }
+        select option { background: var(--input); color: var(--foreground); }
       `}</style>
     </>
   );
