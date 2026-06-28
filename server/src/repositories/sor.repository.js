@@ -1,4 +1,4 @@
-const SorItem = require("../models/SorItem.model");
+const SorItem = require("../models/sorItem.model");
 
 // ─── helper: sort items by item_number numerically ─────────────────────────
 const sortByItemNumber = (items) => {
