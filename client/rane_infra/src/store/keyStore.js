@@ -1,4 +1,4 @@
-const backend_url = "https://rane-project-server.vercel.app"
+const backend_url = "https://rane-project-kbt1.vercel.app"
 
 const UPLOAD_PRESET= "rane_infra1"
 const CLOUD_NAME= "drl3qqrq3"//rane
