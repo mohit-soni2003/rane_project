@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const sorService = require("../services/sor.service");
+const sorService = require("../services/Sor.service");
 const verifyToken = require("../middleware/verifyToken");
 const verifyRole = require("../middleware/verifyRole");
 
