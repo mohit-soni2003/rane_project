@@ -51,7 +51,6 @@ const NAV = [
       { label: 'Pending Projects', to: '/admin/project/pending' },
     ],
   },
-  { type: 'link', label: 'Notifications', icon: FiBell, to: '/admin/notifications' },
   {
     type: 'group', key: 'important', label: 'Important Routes', icon: FaLayerGroup, items: [
       { label: 'All User Details', to: '/admin/danger/all-user' },
@@ -59,6 +58,8 @@ const NAV = [
       { label: 'All Documents', to: '/admin/danger/all-documents' },
     ],
   },
+  { type: 'link', label: 'Notifications', icon: FiBell, to: '/admin/notifications' },
+  { type: 'link', label: 'SOR', icon: FiBell, to: '/admin/sor-details' },
   { type: 'link', label: 'Setting', icon: FiSettings, to: '/admin/setting' },
   { type: 'link', label: 'Help', icon: FiHelpCircle, to: '/admin/under-dev' },
 ];

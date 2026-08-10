@@ -161,7 +161,8 @@ const projectSchema = new mongoose.Schema({
             "CFO",
             "CEO",
             "DIRECTOR",
-            "COMPLETED"
+            "COMPLETED",
+            "OTHER"
         ],
         default: "ADMIN"
     },
@@ -189,7 +190,7 @@ const projectSchema = new mongoose.Schema({
     approvals: [{
         stage: {
             type: String,
-            enum: ["ADMIN", "COO", "CFO", "CEO", "DIRECTOR"]
+            enum: ["ADMIN", "COO", "CFO", "CEO", "DIRECTOR", "UNKNOWN"]
         },
         actor: {
             type: mongoose.Schema.Types.ObjectId,
@@ -197,7 +198,7 @@ const projectSchema = new mongoose.Schema({
         },
         action: {
             type: String,
-            enum: ["approved", "returned", "rejected"]
+            enum: ["approved", "returned", "rejected", "pending"]
         },
         remark: String,
         signatureUrl: String,        // digital signature artifact
@@ -220,6 +221,14 @@ const projectSchema = new mongoose.Schema({
     // TEAM REFERENCE
 
     projectManager: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    },
+    siteEngineer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    },
+    safetyEngineer: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     },
@@ -311,6 +320,79 @@ const projectSchema = new mongoose.Schema({
 
     completionDate: {
         type: Date
+    },
+
+    cooOperations: {
+
+        siteInspection: {
+            status: {
+                type: String,
+                enum: ["pending", "in_progress", "completed", "not_required"],
+                default: "pending"
+            },
+            date: Date,
+            remark: String,
+            completedBy: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User"
+            }
+        },
+
+        resourceAssessment: {
+            status: {
+                type: String,
+                enum: ["pending", "in_progress", "completed", "not_required"],
+                default: "pending"
+            },
+            date: Date,
+            remark: String,
+            completedBy: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User"
+            }
+        },
+
+        manpowerAssessment: {
+            status: {
+                type: String,
+                enum: ["pending", "in_progress", "completed", "not_required"],
+                default: "pending"
+            },
+            date: Date,
+            remark: String,
+            completedBy: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User"
+            }
+        },
+
+        execution: {
+            status: {
+                type: String,
+                enum: ["pending", "in_progress", "completed", "not_required"],
+                default: "pending"
+            },
+            date: Date,
+            remark: String,
+            completedBy: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User"
+            }
+        },
+
+        riskAssessment: {
+            status: {
+                type: String,
+                enum: ["pending", "in_progress", "completed", "not_required"],
+                default: "pending"
+            },
+            date: Date,
+            remark: String,
+            completedBy: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User"
+            }
+        }
     },
 },
     {

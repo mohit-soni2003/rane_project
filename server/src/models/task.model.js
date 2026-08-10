@@ -7,7 +7,7 @@ const taskSchema = new mongoose.Schema({
         ref: "Project",
         required: true
     },
-
+ 
     // OPTIONAL TEAM LINK (which vertical's team this task belongs to)
 
     vertical: {
@@ -106,7 +106,7 @@ const taskSchema = new mongoose.Schema({
     verifiedAt: {
         type: Date
     },
-
+    
     completedAt: {
         type: Date
     },

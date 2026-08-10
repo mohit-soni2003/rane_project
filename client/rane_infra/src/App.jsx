@@ -42,6 +42,7 @@ import AgreementForAction from "./pages/client/AgreementForAction.jsx";
 import ClosedAgreement from "./pages/client/ClosedAgreement.jsx";
 import AgreementView from "./pages/client/AgreementView.jsx";
 import SorDetails from "./pages/client/SorDetails.jsx";
+import SingleProjectDetail from "./pages/admin/SIngleProjectDetail.jsx";
 
 import AdminLayout from "./Layout/AdminLayout";
 import HomePageAdmin from "./pages/admin/HomePageAdmin.jsx";
@@ -228,6 +229,7 @@ function App() {
           <Route path="project/create" element={<CreateProject />} />
           <Route path="project/list" element={<ListallProject />} />
           <Route path="project/pending" element={<PendingProject />} />
+          <Route path="project/pending/:id" element={<SingleProjectDetail />} />
         </Route>
 
         {/* ---------Staff route------------ */}

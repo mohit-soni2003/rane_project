@@ -10,7 +10,7 @@ module.exports = {
   
 
     // FRONTEND_ORIGIN_URL:"https://www.raneandsons.in", //depreciated
-    FRONTEND_ORIGIN_URL:"https://raneandsons.com",
+    // FRONTEND_ORIGIN_URL:"https://raneandsons.com",
     // FRONTEND_ORIGIN_URL:"https://rane-project.vercel.app",
 
     MONGO_URL:"mongodb+srv://ranesons11:SEycv5RPk65Y1xOY@cluster0.et6jd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
@@ -20,7 +20,14 @@ module.exports = {
 
  
     WHATSAPP_SENDER_ID:806889779184384,
-    WHATSAPP_TOKEN:"EAATA4Nh865MBP7gdP86COBNJrEZCPtYSd5dkwlKK7Ld1LfYwjequsZCFMhdWRStV8BNyUbPk87XmYlGo53VfhQh0sig5BqvMJSrVdscySqmjZBmZAvENhLW76Mv7KvBu2KmsBjNZBmj8N6MawzMlQKb8uVMgMA1sIMVNJTQrYKDOX62ZAgkgwOCBFK0zCiwa7d7FwB25245shnFe9ZBY18N27rZBue5hUywEAhfRXnjFFj36hrkFNA5ukOLLSQZDZD"
+    // WHATSAPP_TOKEN:"EAATA4Nh865MBP7gdP86COBNJrEZCPtYSd5dkwlKK7Ld1LfYwjequsZCFMhdWRStV8BNyUbPk87XmYlGo53VfhQh0sig5BqvMJSrVdscySqmjZBmZAvENhLW76Mv7KvBu2KmsBjNZBmj8N6MawzMlQKb8uVMgMA1sIMVNJTQrYKDOX62ZAgkgwOCBFK0zCiwa7d7FwB25245shnFe9ZBY18N27rZBue5hUywEAhfRXnjFFj36hrkFNA5ukOLLSQZDZD"
+
+
+    ADMIN:"67b497c8ef3b0e7038185a8a",
+    COO:"67c9909bc280740ca7f1773f",
+    CEO:"67b4c4abb36f6b32e92d349b",
+    CFO:"67cb1207fa73eb6d58eada84",
+    DIRECTOR:"67c19623537eefafa075ff53",
 }
  
 // SENDER_MAIL:"ranesons11@gmail.com",
