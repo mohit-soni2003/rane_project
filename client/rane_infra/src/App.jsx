@@ -69,7 +69,9 @@ import SingleAgreementDetails from "./pages/admin/SingleAgreementDetails.jsx";
 import SorDetailsAdmin from "./pages/admin/SorPage.jsx";
 import CreateProject from "./pages/admin/CreateProject.jsx";
 import ListallProject from "./pages/admin/ListallProject.jsx";
-import PendingProject from "./pages/admin/PendingProject.jsx";
+import PendingProject from "./pages/admin/PendingProject.jsx"; // to be removed later
+import ProjectAssignedToMe from "./pages/admin/ProjectAssignedToMe.jsx";
+import EditProjectDetail from "./pages/admin/EditProjectDetail.jsx"
 
 
 import StaffLayout from "./Layout/StaffLayout.jsx";
@@ -187,7 +189,7 @@ function App() {
           <Route path="agreement/closed" element={<ClosedAgreement />} />
           <Route path="agreement/view/:id" element={<AgreementView />} />
           <Route path="sor" element={<SorDetails />} />
-        </Route> 
+        </Route>
 
         {/* ---------Admin Route ---------- */}
         <Route
@@ -211,8 +213,8 @@ function App() {
           <Route path="push-document" element={<PushDocumentAdminPage />} />
           <Route path="push-document/by-me" element={<MyPushedDocument />} />
           <Route path="agreement/push" element={<PushAgreement />} />
-          <Route path="agreement/track" element={<AgreementTableListAll/>} />
-          <Route path="agreement/track/:id" element={<SingleAgreementDetails/>} />
+          <Route path="agreement/track" element={<AgreementTableListAll />} />
+          <Route path="agreement/track/:id" element={<SingleAgreementDetails />} />
           <Route path="all-client" element={<ClientsListAdminPage />} />
           <Route path="client-detail/:id" element={<ClientDetailAdminPage />} />
           <Route path="dfsrequest" element={<DfsRequest />} />
@@ -228,8 +230,9 @@ function App() {
           <Route path="sor-details" element={<SorDetailsAdmin />} />
           <Route path="project/create" element={<CreateProject />} />
           <Route path="project/list" element={<ListallProject />} />
-          <Route path="project/pending" element={<PendingProject />} />
-          <Route path="project/pending/:id" element={<SingleProjectDetail />} />
+          <Route path="project/assigned-to-me" element={<ProjectAssignedToMe />} />
+          <Route path="project/:id" element={<SingleProjectDetail />} />
+          <Route path="project/edit/:id" element={<EditProjectDetail />} />
         </Route>
 
         {/* ---------Staff route------------ */}
@@ -266,9 +269,13 @@ function App() {
           <Route path="salary" element={<SalaryPage />} />
           <Route path="setting" element={<Setting />} />
           <Route path="under-dev" element={<UnderDevPage />} />
+          <Route path="project/pending" element={<PendingProject />} />
+          <Route path="project/pending/:id" element={<SingleProjectDetail />} />
+
+
         </Route>
 
-       
+
       </Routes>
     </BrowserRouter>
   );

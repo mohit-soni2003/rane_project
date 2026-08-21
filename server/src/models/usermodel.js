@@ -87,6 +87,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "client"             //user , admin , staff
     },
+    tag :{
+        type: String,
+        enum: ["admin", "ceo", "cto", "cfo", "coo", "director"]
+    },
     resetPasswordToken: String,
     resetPasswordExpiresAt: Date,
     VerificationToken: String,

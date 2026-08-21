@@ -43,8 +43,8 @@ app.use((req, res, next) => {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));  // Handle OPTIONS preflight requests
 app.use(express.json());
-expireAgreementsJob();
-startExpiryJob();
+// expireAgreementsJob();
+// startExpiryJob();
 
 
 // Define a port for the server

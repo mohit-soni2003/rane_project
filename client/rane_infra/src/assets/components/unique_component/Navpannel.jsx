@@ -282,8 +282,8 @@ function Navpannel() {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuthStore();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [scrolled, setScrolled]               = useState(false);
-  const [drawerOpen, setDrawerOpen]           = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   /* Inject styles */
   useEffect(() => {
@@ -316,14 +316,14 @@ function Navpannel() {
   }, []);
 
   const getDashboardPath = (role) => {
-    if (role === "admin")  return "/admin";
+    if (role === "admin") return "/admin";
     if (role === "client") return "/client";
-    if (role === "staff")  return "/staff";
+    if (role === "staff") return "/staff";
     return "/";
   };
 
   const closeDrawer = () => setDrawerOpen(false);
-  const isLoggedIn  = isAuthenticated && user?.isverified;
+  const isLoggedIn = isAuthenticated && user?.isverified;
 
   return (
     <>
@@ -333,9 +333,9 @@ function Navpannel() {
 
           {/* Brand — same as original */}
           <Link to="/" className="rnav-brand">
-            <img src="/logo.webp" alt="Logo" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
+            <img src="/logo.jpeg" alt="Logo" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
             <div>
-              <span className="rnav-brand-name">RANE &amp; RANE'S SONS</span>
+              <span className="rnav-brand-name">RANE &amp; SONS PVT. LTD.</span>
               <span className="rnav-brand-sub">Construction &amp; Infrastructure</span>
             </div>
           </Link>

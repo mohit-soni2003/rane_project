@@ -13,7 +13,8 @@ module.exports = {
     // FRONTEND_ORIGIN_URL:"https://raneandsons.com",
     // FRONTEND_ORIGIN_URL:"https://rane-project.vercel.app",
 
-    MONGO_URL:"mongodb+srv://ranesons11:SEycv5RPk65Y1xOY@cluster0.et6jd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
+    // MONGO_URL:"mongodb+srv://ranesons11:SEycv5RPk65Y1xOY@cluster0.et6jd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
+    MONGO_URL:"mongodb://localhost:27017/",
     MAIL_PASS:"acby zvfn pury saoa",//rane  SEycv5RPk65Y1xOY
     SENDER_MAIL:"noreply.rsems@gmail.com",
     jwt_secret: "Mohit1234",

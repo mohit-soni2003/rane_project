@@ -48,7 +48,7 @@ const NAV = [
     type: 'group', key: 'project_management', label: 'Project Management', icon: FiDollarSign, items: [
       { label: 'Create Project', to: '/admin/project/create' },
       { label: 'List Projects', to: '/admin/project/list' },
-      { label: 'Pending Projects', to: '/admin/project/pending' },
+      { label: 'Assigned To Me', to: '/admin/project/assigned-to-me' },
     ],
   },
   {
