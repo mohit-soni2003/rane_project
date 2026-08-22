@@ -4,6 +4,8 @@ import {
     FaProjectDiagram, FaMapMarkedAlt, FaSitemap, FaRupeeSign,
     FaFileAlt, FaUserShield, FaClipboardCheck, FaTimesCircle,
     FaTrain, FaIndustry, FaSave, FaPlus, FaPaperPlane, FaExternalLinkAlt,
+    FaBoxes, FaTrash, FaTasks, FaUserCircle, FaUsers, FaCheckCircle, FaShieldAlt,
+    FaChevronRight, FaSearch,
 } from 'react-icons/fa';
 import { FiRefreshCw } from 'react-icons/fi';
 import { CLOUD_NAME, UPLOAD_PRESET } from '../../store/keyStore';
@@ -16,8 +18,11 @@ import {
     updateProjectStatus,
     addProjectDocument,
     getUsersList,
-    forwardProject
+    forwardProject,
+    addItems,
+    getProjectItems,
 } from '../../services/project.service.js';
+import { getTasksByProject, createTask } from '../../services/task.service.js';
 
 const C = {
     primary: '#6b3e2b',
@@ -51,6 +56,9 @@ const BIDDING_POSITIONS = ['below', 'above', 'at_par'];
 const DOCUMENT_TYPES = ['tender_document', 'loa', 'agreement', 'boq', 'drawings', 'nit'];
 const PROJECT_STATUSES = ['draft', 'in_progress', 'pending', 'L2', 'L3', 'not_allotted', 'completed'];
 const FORWARD_ACTIONS = ['approved', 'returned', 'rejected', 'pending'];
+
+// Unit options — matches the Item schema's unit enum
+const UNIT_OPTIONS = ['Each', 'Meter', 'Set', 'Rmt', 'kg'];
 
 const prettify = (v) =>
     typeof v === 'string' ? v.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : '—';
@@ -108,6 +116,12 @@ const saveButtonStyle = (busy) => ({
     cursor: busy ? 'not-allowed' : 'pointer', marginTop: 16, opacity: busy ? 0.7 : 1,
 });
 
+const secondaryButtonStyle = {
+    display: 'flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 8,
+    border: '1px solid var(--border)', background: 'var(--secondary)', color: 'var(--secondary-foreground)',
+    fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
+};
+
 const badgeStyle = (bg, fg) => ({
     display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600,
     background: bg, color: fg, borderRadius: 20, padding: '3px 10px', whiteSpace: 'nowrap',
@@ -127,6 +141,22 @@ const errorTag = {
     display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600,
     color: C.destructive, marginLeft: 12,
 };
+
+// Materials table styles
+const tableWrapStyle = { overflowX: 'auto' };
+const tableStyle = { width: '100%', borderCollapse: 'collapse', fontSize: 12.5, minWidth: 950 };
+const thStyle = {
+    textAlign: 'left', padding: '8px 8px', fontSize: 10.5, fontWeight: 700,
+    color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em',
+    borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap',
+};
+const thRightStyle = { ...thStyle, textAlign: 'right' };
+const tdStyle = { padding: '6px 8px', borderBottom: '1px solid var(--border)', verticalAlign: 'middle' };
+const cellInputStyle = {
+    ...controlStyle, padding: '6px 8px', fontSize: 12.5, minWidth: 80,
+};
+const cellInputWideStyle = { ...cellInputStyle, minWidth: 140 };
+const totalRowStyle = { fontWeight: 700, color: 'var(--text-strong)', background: 'var(--input)' };
 
 function Field({ label, htmlFor, children }) {
     return (
@@ -789,7 +819,306 @@ function DocumentsModule({ project, onUpdated }) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   MODULE 7 — Forward Project → PATCH /v1/forward/:projectId
+   MODULE 7 — Materials → GET /:projectId/items (list) + POST /:projectId/items (bulk add)
+   No profitLossPercent field here — that calc logic is added later.
+   ══════════════════════════════════════════════════════════════════════════ */
+const emptyRow = () => ({
+    itemNo: '', name: '', description: '', unit: '',
+    railwayRate: '', ourRate: '', marketRate: '', quantity: '', installation: '',
+});
+
+function MaterialsModule({ project }) {
+    const [savedItems, setSavedItems] = useState([]);
+    const [loadingItems, setLoadingItems] = useState(true);
+    const [loadError, setLoadError] = useState('');
+
+    const [rows, setRows] = useState([emptyRow()]);
+    const [saving, setSaving] = useState(false);
+    const [saved, setSaved] = useState(false);
+    const [error, setError] = useState('');
+
+    const loadItems = async () => {
+        setLoadingItems(true);
+        setLoadError('');
+        try {
+            const data = await getProjectItems(project._id);
+            setSavedItems(Array.isArray(data) ? data : []);
+        } catch (err) {
+            setLoadError(err.message || 'Failed to load items');
+        } finally {
+            setLoadingItems(false);
+        }
+    };
+
+    useEffect(() => {
+        loadItems();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [project._id]);
+
+    const handleRowChange = (index, field, value) => {
+        setRows((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
+        setSaved(false);
+        setError('');
+    };
+
+    const addRow = () => setRows((prev) => [...prev, emptyRow()]);
+
+    const removeRow = (index) => setRows((prev) => prev.filter((_, i) => i !== index));
+
+    // Client-side preview only — the backend's own total calc doesn't run
+    // on bulk insert, so this is just for the person to see before saving.
+    const rowTotal = (row) => {
+        const ourRate = Number(row.ourRate) || 0;
+        const quantity = Number(row.quantity) || 0;
+        const installation = Number(row.installation) || 0;
+        return (ourRate * quantity) + installation;
+    };
+
+    const draftTotal = rows.reduce((sum, row) => sum + rowTotal(row), 0);
+    const savedTotal = savedItems.reduce((sum, it) => sum + (Number(it.total) || 0), 0);
+
+    const handleSave = async () => {
+        setError('');
+        setSaved(false);
+
+        const validRows = rows.filter((r) => r.itemNo || r.name);
+
+        if (validRows.length === 0) {
+            setError('Add at least one item with an Item No. and Name.');
+            return;
+        }
+
+        for (let i = 0; i < validRows.length; i++) {
+            if (!validRows[i].itemNo) {
+                setError(`Row ${i + 1} is missing Item No.`);
+                return;
+            }
+            if (!validRows[i].name) {
+                setError(`Row ${i + 1} is missing Name.`);
+                return;
+            }
+        }
+
+        setSaving(true);
+        try {
+            const payload = validRows.map((r) => ({
+                itemNo: r.itemNo,
+                name: r.name,
+                description: r.description || undefined,
+                unit: r.unit || undefined,
+                railwayRate: r.railwayRate === '' ? undefined : Number(r.railwayRate),
+                ourRate: r.ourRate === '' ? undefined : Number(r.ourRate),
+                marketRate: r.marketRate === '' ? undefined : Number(r.marketRate),
+                quantity: r.quantity === '' ? undefined : Number(r.quantity),
+                installation: r.installation === '' ? undefined : Number(r.installation),
+            }));
+
+            await addItems(project._id, payload);
+            await loadItems();
+            setRows([emptyRow()]);
+            setSaved(true);
+        } catch (err) {
+            setError(err.message || 'Failed to save items');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <Module
+            id="materials"
+            icon={<FaBoxes size={13} color={C.accent} />}
+            title="Materials"
+            extra={<span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{savedItems.length} saved</span>}
+        >
+            {/* ── Already saved items ── */}
+            {loadingItems && <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 14 }}>Loading items…</div>}
+            {!loadingItems && loadError && <div style={{ fontSize: 13, color: C.destructive, marginBottom: 14 }}>{loadError}</div>}
+
+            {!loadingItems && !loadError && savedItems.length > 0 && (
+                <div style={{ marginBottom: 18 }}>
+                    <div style={tableWrapStyle}>
+                        <table style={tableStyle}>
+                            <thead>
+                                <tr>
+                                    <th style={thStyle}>Item No.</th>
+                                    <th style={thStyle}>Name</th>
+                                    <th style={thStyle}>Description</th>
+                                    <th style={thStyle}>Unit</th>
+                                    <th style={thRightStyle}>Railway Rate</th>
+                                    <th style={thRightStyle}>Our Rate</th>
+                                    <th style={thRightStyle}>Market Rate</th>
+                                    <th style={thRightStyle}>Qty</th>
+                                    <th style={thRightStyle}>Installation</th>
+                                    <th style={thRightStyle}>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {savedItems.map((it, i) => (
+                                    <tr key={it._id || i}>
+                                        <td style={tdStyle}>{it.itemNo || '—'}</td>
+                                        <td style={tdStyle}>{it.name || '—'}</td>
+                                        <td style={tdStyle}>{it.description || '—'}</td>
+                                        <td style={tdStyle}>{it.unit || '—'}</td>
+                                        <td style={{ ...tdStyle, textAlign: 'right' }}>{it.railwayRate ?? '—'}</td>
+                                        <td style={{ ...tdStyle, textAlign: 'right' }}>{it.ourRate ?? '—'}</td>
+                                        <td style={{ ...tdStyle, textAlign: 'right' }}>{it.marketRate ?? '—'}</td>
+                                        <td style={{ ...tdStyle, textAlign: 'right' }}>{it.quantity ?? '—'}</td>
+                                        <td style={{ ...tdStyle, textAlign: 'right' }}>{it.installation ?? '—'}</td>
+                                        <td style={{ ...tdStyle, textAlign: 'right' }}>{it.total ?? '—'}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                            <tfoot>
+                                <tr style={totalRowStyle}>
+                                    <td style={tdStyle} colSpan={9}>Total</td>
+                                    <td style={{ ...tdStyle, textAlign: 'right' }}>{savedTotal}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {!loadingItems && !loadError && savedItems.length === 0 && (
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 14 }}>No items added yet.</div>
+            )}
+
+            {/* ── Add new items ── */}
+            <div style={subHeaderStyle}>Add items</div>
+            <div style={tableWrapStyle}>
+                <table style={tableStyle}>
+                    <thead>
+                        <tr>
+                            <th style={thStyle}>Item No.</th>
+                            <th style={thStyle}>Name</th>
+                            <th style={thStyle}>Description</th>
+                            <th style={thStyle}>Unit</th>
+                            <th style={thRightStyle}>Railway Rate</th>
+                            <th style={thRightStyle}>Our Rate</th>
+                            <th style={thRightStyle}>Market Rate</th>
+                            <th style={thRightStyle}>Qty</th>
+                            <th style={thRightStyle}>Installation</th>
+                            <th style={thRightStyle}>Total</th>
+                            <th style={thStyle}></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {rows.map((row, i) => (
+                            <tr key={i}>
+                                <td style={tdStyle}>
+                                    <input
+                                        type="text" value={row.itemNo}
+                                        onChange={(e) => handleRowChange(i, 'itemNo', e.target.value)}
+                                        style={cellInputStyle}
+                                    />
+                                </td>
+                                <td style={tdStyle}>
+                                    <input
+                                        type="text" value={row.name}
+                                        onChange={(e) => handleRowChange(i, 'name', e.target.value)}
+                                        style={cellInputWideStyle}
+                                    />
+                                </td>
+                                <td style={tdStyle}>
+                                    <input
+                                        type="text" value={row.description}
+                                        onChange={(e) => handleRowChange(i, 'description', e.target.value)}
+                                        style={cellInputWideStyle}
+                                    />
+                                </td>
+                                <td style={tdStyle}>
+                                    <select
+                                        value={row.unit}
+                                        onChange={(e) => handleRowChange(i, 'unit', e.target.value)}
+                                        style={{ ...cellInputStyle, cursor: 'pointer' }}
+                                    >
+                                        <option value="">Select</option>
+                                        {UNIT_OPTIONS.map((u) => <option key={u} value={u}>{u}</option>)}
+                                    </select>
+                                </td>
+                                <td style={tdStyle}>
+                                    <input
+                                        type="number" value={row.railwayRate}
+                                        onChange={(e) => handleRowChange(i, 'railwayRate', e.target.value)}
+                                        style={cellInputStyle}
+                                    />
+                                </td>
+                                <td style={tdStyle}>
+                                    <input
+                                        type="number" value={row.ourRate}
+                                        onChange={(e) => handleRowChange(i, 'ourRate', e.target.value)}
+                                        style={cellInputStyle}
+                                    />
+                                </td>
+                                <td style={tdStyle}>
+                                    <input
+                                        type="number" value={row.marketRate}
+                                        onChange={(e) => handleRowChange(i, 'marketRate', e.target.value)}
+                                        style={cellInputStyle}
+                                    />
+                                </td>
+                                <td style={tdStyle}>
+                                    <input
+                                        type="number" value={row.quantity}
+                                        onChange={(e) => handleRowChange(i, 'quantity', e.target.value)}
+                                        style={cellInputStyle}
+                                    />
+                                </td>
+                                <td style={tdStyle}>
+                                    <input
+                                        type="number" value={row.installation}
+                                        onChange={(e) => handleRowChange(i, 'installation', e.target.value)}
+                                        style={cellInputStyle}
+                                    />
+                                </td>
+                                <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>
+                                    {rowTotal(row)}
+                                </td>
+                                <td style={tdStyle}>
+                                    <button
+                                        type="button"
+                                        onClick={() => removeRow(i)}
+                                        disabled={rows.length === 1}
+                                        style={{
+                                            border: 'none', background: 'transparent',
+                                            color: rows.length === 1 ? 'var(--text-muted)' : C.destructive,
+                                            cursor: rows.length === 1 ? 'not-allowed' : 'pointer', padding: 4,
+                                        }}
+                                        title="Remove row"
+                                    >
+                                        <FaTrash size={12} />
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                    <tfoot>
+                        <tr style={totalRowStyle}>
+                            <td style={tdStyle} colSpan={9}>Total (draft)</td>
+                            <td style={{ ...tdStyle, textAlign: 'right' }}>{draftTotal}</td>
+                            <td style={tdStyle}></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+                <button type="button" onClick={addRow} style={secondaryButtonStyle}>
+                    <FaPlus size={11} /> Add row
+                </button>
+                <button onClick={handleSave} disabled={saving} style={{ ...saveButtonStyle(saving), marginTop: 0 }}>
+                    <FaSave size={12} /> {saving ? 'Saving…' : 'Save items'}
+                </button>
+                {saved && <span style={savedTag}>Saved</span>}
+                {error && <span style={errorTag}>{error}</span>}
+            </div>
+        </Module>
+    );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MODULE 8 — Forward Project → PATCH /v1/forward/:projectId
    ══════════════════════════════════════════════════════════════════════════ */
 function ForwardModule({ project, onUpdated }) {
     const [users, setUsers] = useState([]);
@@ -904,6 +1233,382 @@ function ForwardModule({ project, onUpdated }) {
     );
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   MODULE 9 — Project Tasks → GET /task/project/:projectId (list)
+                              + POST /task/create (add)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+const TASK_PRIORITIES = ['low', 'medium', 'high', 'urgent'];
+
+const taskStatusStyle = (status) => {
+    const map = {
+        pending: { bg: 'var(--muted)', fg: 'var(--text-muted)' },
+        in_progress: { bg: 'var(--info)', fg: 'var(--info-foreground)' },
+        submitted: { bg: 'var(--amber)', fg: 'var(--amber-foreground)' },
+        completed: { bg: 'var(--success)', fg: 'var(--success-foreground)' },
+        overdue: { bg: 'var(--destructive-bg)', fg: 'var(--destructive)' },
+        rejected: { bg: 'var(--destructive-bg)', fg: 'var(--destructive)' },
+    };
+    return map[status] || { bg: 'var(--muted)', fg: 'var(--text-muted)' };
+};
+
+const taskPriorityStyle = (priority) => {
+    const map = {
+        low: { bg: 'var(--muted)', fg: 'var(--text-muted)' },
+        medium: { bg: 'var(--info)', fg: 'var(--info-foreground)' },
+        high: { bg: 'var(--warning)', fg: 'var(--warning-foreground)' },
+        urgent: { bg: 'var(--destructive-bg)', fg: 'var(--destructive)' },
+    };
+    return map[priority] || { bg: 'var(--muted)', fg: 'var(--text-muted)' };
+};
+
+const formatDate = (d) => {
+    if (!d) return '—';
+    const date = new Date(d);
+    if (Number.isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const emptyTaskForm = () => ({
+    title: '',
+    description: '',
+    priority: 'medium',
+    deadline: '',
+    startDate: '',
+    allottedTo: [],       // array of selected user _ids
+    relatedDocuments: [], // array of selected project document _ids
+});
+
+function TasksModule({ project, onBrowseTask }) {
+    const [tasks, setTasks] = useState([]);
+    const [loadingTasks, setLoadingTasks] = useState(true);
+    const [loadError, setLoadError] = useState('');
+
+    const [users, setUsers] = useState([]);
+    const [loadingUsers, setLoadingUsers] = useState(false);
+    const [usersError, setUsersError] = useState('');
+    const [userSearch, setUserSearch] = useState('');
+
+    const [showForm, setShowForm] = useState(false);
+    const [form, setForm] = useState(emptyTaskForm());
+    const [creating, setCreating] = useState(false);
+    const [created, setCreated] = useState(false);
+    const [formError, setFormError] = useState('');
+
+    const loadTasks = async () => {
+        setLoadingTasks(true);
+        setLoadError('');
+        try {
+            const data = await getTasksByProject(project._id);
+            setTasks(Array.isArray(data) ? data : []);
+        } catch (err) {
+            setLoadError(err.message || 'Failed to load tasks');
+        } finally {
+            setLoadingTasks(false);
+        }
+    };
+
+    useEffect(() => {
+        loadTasks();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [project._id]);
+
+    // Users are only fetched the first time the create form is opened —
+    // no point loading the picker list until it's actually needed.
+    const openForm = async () => {
+        setShowForm(true);
+        setCreated(false);
+        setFormError('');
+        if (users.length > 0 || loadingUsers) return;
+        setLoadingUsers(true);
+        setUsersError('');
+        try {
+            const data = await getUsersList();
+            setUsers(Array.isArray(data) ? data : []);
+        } catch (err) {
+            setUsersError(err.message || 'Failed to load users');
+        } finally {
+            setLoadingUsers(false);
+        }
+    };
+
+    const userLabel = (u) => `${u.name || 'Unnamed'} (${u.cid || 'N/A'}) [${prettify(u.role) || u.role}]`;
+
+    // Client-side only — filters the already-fetched user list by name as
+    // the person types. No extra request; fine up to the ~50-user scale
+    // this picker is meant for.
+    const filteredUsers = users.filter((u) =>
+        (u.name || '').toLowerCase().includes(userSearch.trim().toLowerCase())
+    );
+
+    const handleFieldChange = (e) => {
+        setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+        setCreated(false);
+        setFormError('');
+    };
+
+    const handleMultiSelect = (field, e) => {
+        const values = Array.from(e.target.selectedOptions, (opt) => opt.value);
+        setForm((prev) => ({ ...prev, [field]: values }));
+        setCreated(false);
+        setFormError('');
+    };
+
+    const handleCreate = async () => {
+        if (!form.title.trim()) {
+            setFormError('Task name is required.');
+            return;
+        }
+        if (form.allottedTo.length === 0) {
+            setFormError('Allot the task to at least one user.');
+            return;
+        }
+        if (!form.deadline) {
+            setFormError('Deadline is required.');
+            return;
+        }
+
+        setCreating(true);
+        setFormError('');
+        setCreated(false);
+        try {
+            await createTask({
+                projectId: project._id,
+                relatedDocuments: form.relatedDocuments,
+                title: form.title,
+                description: form.description || undefined,
+                priority: form.priority,
+                allottedTo: form.allottedTo,
+                startDate: form.startDate || undefined,
+                deadline: form.deadline,
+            });
+            await loadTasks();
+            setCreated(true);
+            setForm(emptyTaskForm());
+            setShowForm(false);
+        } catch (err) {
+            setFormError(err.message || 'Failed to create task');
+        } finally {
+            setCreating(false);
+        }
+    };
+
+    return (
+        <Module
+            id="tasks"
+            icon={<FaTasks size={13} color={C.accent} />}
+            title="Tasks"
+            extra={<span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{tasks.length} task{tasks.length === 1 ? '' : 's'}</span>}
+        >
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+                <button type="button" onClick={openForm} style={secondaryButtonStyle}>
+                    <FaPlus size={11} /> Add task
+                </button>
+            </div>
+
+            {/* ── Create task form ── */}
+            {showForm && (
+                <div style={{ ...subCardStyle, marginBottom: 16 }}>
+                    <div style={subHeaderStyle}>New task</div>
+                    <div style={gridTwo}>
+                        <Field label="Task name" htmlFor="taskTitle">
+                            <input
+                                id="taskTitle" type="text" name="title" value={form.title}
+                                onChange={handleFieldChange} style={controlStyle}
+                            />
+                        </Field>
+                        <Field label="Priority" htmlFor="taskPriority">
+                            <select
+                                id="taskPriority" name="priority" value={form.priority}
+                                onChange={handleFieldChange} style={{ ...controlStyle, cursor: 'pointer' }}
+                            >
+                                {TASK_PRIORITIES.map((p) => <option key={p} value={p}>{prettify(p)}</option>)}
+                            </select>
+                        </Field>
+                        <Field label="Start date" htmlFor="taskStartDate">
+                            <input
+                                id="taskStartDate" type="date" name="startDate" value={form.startDate}
+                                onChange={handleFieldChange} style={{ ...controlStyle, cursor: 'pointer' }}
+                            />
+                        </Field>
+                        <Field label="Deadline" htmlFor="taskDeadline">
+                            <input
+                                id="taskDeadline" type="date" name="deadline" value={form.deadline}
+                                onChange={handleFieldChange} style={{ ...controlStyle, cursor: 'pointer' }}
+                            />
+                        </Field>
+                    </div>
+
+                    <div style={{ marginTop: 12 }}>
+                        <Field label="Description" htmlFor="taskDescription">
+                            <textarea
+                                id="taskDescription" name="description" rows={2} value={form.description}
+                                onChange={handleFieldChange} style={{ ...controlStyle, resize: 'vertical' }}
+                            />
+                        </Field>
+                    </div>
+
+                    <div style={{ ...gridTwo, marginTop: 12 }}>
+                        <Field label="Allotted to" htmlFor="taskAllottedTo">
+                            <div style={{ position: 'relative', marginBottom: 6 }}>
+                                <FaSearch
+                                    size={11} color={C.muted}
+                                    style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Search users by name…"
+                                    value={userSearch}
+                                    onChange={(e) => setUserSearch(e.target.value)}
+                                    disabled={loadingUsers || !!usersError}
+                                    style={{ ...controlStyle, paddingLeft: 28 }}
+                                />
+                            </div>
+                            <select
+                                id="taskAllottedTo" multiple value={form.allottedTo}
+                                onChange={(e) => handleMultiSelect('allottedTo', e)}
+                                disabled={loadingUsers || !!usersError}
+                                style={{ ...controlStyle, cursor: loadingUsers ? 'not-allowed' : 'pointer', minHeight: 90 }}
+                            >
+                                {filteredUsers.map((u) => (
+                                    <option key={u._id} value={u._id}>{userLabel(u)}</option>
+                                ))}
+                            </select>
+                            <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 4 }}>
+                                {loadingUsers
+                                    ? 'Loading users…'
+                                    : usersError
+                                        ? usersError
+                                        : `${filteredUsers.length} of ${users.length} shown — Ctrl/Cmd + click to select multiple`}
+                            </div>
+                        </Field>
+
+                        <Field label="Related documents (optional)" htmlFor="taskDocuments">
+                            <select
+                                id="taskDocuments" multiple value={form.relatedDocuments}
+                                onChange={(e) => handleMultiSelect('relatedDocuments', e)}
+                                disabled={!project.documents || project.documents.length === 0}
+                                style={{ ...controlStyle, cursor: 'pointer', minHeight: 90 }}
+                            >
+                                {(project.documents || []).map((doc) => (
+                                    <option key={doc._id} value={doc._id}>{doc.name} ({prettify(doc.documentType)})</option>
+                                ))}
+                            </select>
+                            <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 4 }}>
+                                {(!project.documents || project.documents.length === 0)
+                                    ? 'No documents on this project yet'
+                                    : 'Ctrl/Cmd + click to select multiple'}
+                            </div>
+                        </Field>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
+                        <button onClick={handleCreate} disabled={creating} style={{ ...saveButtonStyle(creating), marginTop: 12 }}>
+                            <FaSave size={12} /> {creating ? 'Creating…' : 'Create task'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => { setShowForm(false); setForm(emptyTaskForm()); setFormError(''); setUserSearch(''); }}
+                            style={{ ...secondaryButtonStyle, marginTop: 12 }}
+                        >
+                            Cancel
+                        </button>
+                        {formError && <span style={errorTag}>{formError}</span>}
+                    </div>
+                </div>
+            )}
+
+            {created && <div style={{ ...savedTag, marginLeft: 0, marginBottom: 10 }}>Task created</div>}
+
+            {/* ── Task list ── */}
+            {loadingTasks && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Loading tasks…</div>}
+            {!loadingTasks && loadError && <div style={{ fontSize: 13, color: C.destructive }}>{loadError}</div>}
+
+            {!loadingTasks && !loadError && tasks.length === 0 && (
+                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No tasks created for this project yet.</div>
+            )}
+
+            {!loadingTasks && !loadError && tasks.length > 0 && (
+                <div style={tableWrapStyle}>
+                    <table style={tableStyle}>
+                        <thead>
+                            <tr>
+                                <th style={thStyle}>S.No</th>
+                                <th style={thStyle}>Name</th>
+                                <th style={thStyle}>Priority</th>
+                                <th style={thStyle}>Allotted By</th>
+                                <th style={thStyle}>Status</th>
+                                <th style={thStyle}>Users</th>
+                                <th style={thStyle}>Docs</th>
+                                <th style={thStyle}>Completion Date</th>
+                                <th style={thStyle}>Verified Date</th>
+                                <th style={thStyle}></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {tasks.map((t, i) => {
+                                const pStyle = taskPriorityStyle(t.priority);
+                                const sStyle = taskStatusStyle(t.status);
+                                return (
+                                    <tr key={t._id}>
+                                        <td style={tdStyle}>{i + 1}</td>
+                                        <td style={tdStyle}>{t.title || '—'}</td>
+                                        <td style={tdStyle}>
+                                            <span style={badgeStyle(pStyle.bg, pStyle.fg)}>{prettify(t.priority)}</span>
+                                        </td>
+                                        <td style={tdStyle}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                <FaUserCircle size={14} color={C.muted} />
+                                                {t.allottedBy?.name || '—'}
+                                            </div>
+                                        </td>
+                                        <td style={tdStyle}>
+                                            <span style={badgeStyle(sStyle.bg, sStyle.fg)}>{prettify(t.status)}</span>
+                                        </td>
+                                        <td style={tdStyle}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                                <FaUsers size={12} color={C.muted} />
+                                                {t.allottedTo?.length || 0}
+                                            </div>
+                                        </td>
+                                        <td style={tdStyle}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                                <FaFileAlt size={12} color={C.muted} />
+                                                {t.relatedDocuments?.length || 0}
+                                            </div>
+                                        </td>
+                                        <td style={tdStyle}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                                <FaCheckCircle size={12} color={t.completedAt ? C.success : C.muted} />
+                                                {formatDate(t.completedAt)}
+                                            </div>
+                                        </td>
+                                        <td style={tdStyle}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                                <FaShieldAlt size={12} color={t.verifiedAt ? C.success : C.muted} />
+                                                {formatDate(t.verifiedAt)}
+                                            </div>
+                                        </td>
+                                        <td style={tdStyle}>
+                                            <button
+                                                type="button"
+                                                onClick={() => onBrowseTask && onBrowseTask(t._id)}
+                                                style={{ ...secondaryButtonStyle, padding: '6px 12px', fontSize: 11.5 }}
+                                            >
+                                                View <FaChevronRight size={10} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </Module>
+    );
+}
+
 /* ── section registry (quick-jump nav) ───────────────────────────────────── */
 
 const SECTIONS = [
@@ -911,8 +1616,10 @@ const SECTIONS = [
     { id: 'location', label: 'Location', icon: <FaMapMarkedAlt size={12} /> },
     { id: 'advance', label: 'Advance', icon: <FaSitemap size={12} /> },
     { id: 'financial', label: 'Financial', icon: <FaRupeeSign size={12} /> },
+    { id: 'materials', label: 'Materials', icon: <FaBoxes size={12} /> },
     { id: 'status', label: 'Status', icon: <FaClipboardCheck size={12} /> },
     { id: 'documents', label: 'Documents', icon: <FaFileAlt size={12} /> },
+    { id: 'tasks', label: 'Tasks', icon: <FaTasks size={12} /> },
     { id: 'forward', label: 'Forward', icon: <FaUserShield size={12} /> },
 ];
 
@@ -957,6 +1664,12 @@ export default function EditProjectDetail() {
 
     const scrollToSection = (sectionId) => {
         document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    // TODO: wire to the real task-detail route once its exact path is defined,
+    // e.g. navigate(`../task/${taskId}`)
+    const handleBrowseTask = (taskId) => {
+        console.log('Browse task', taskId);
     };
 
     return (
@@ -1018,9 +1731,12 @@ export default function EditProjectDetail() {
                     <LocationModule project={p} onUpdated={handleProjectUpdated} />
                     <AdvanceDetailsModule project={p} onUpdated={handleProjectUpdated} />
                     <FinancialDetailsModule project={p} onUpdated={handleProjectUpdated} />
+                    <MaterialsModule project={p} />
                     <StatusModule project={p} onUpdated={handleProjectUpdated} />
                     <DocumentsModule project={p} onUpdated={handleProjectUpdated} />
-                    <ForwardModule project={p} onUpdated={handleProjectUpdated} />                </>
+                    <TasksModule project={p} onBrowseTask={handleBrowseTask} />
+                    <ForwardModule project={p} onUpdated={handleProjectUpdated} />
+                </>
             )}
 
             {!loading && !error && !p && (

@@ -49,6 +49,7 @@ const NAV = [
       { label: 'Create Project', to: '/admin/project/create' },
       { label: 'List Projects', to: '/admin/project/list' },
       { label: 'Assigned To Me', to: '/admin/project/assigned-to-me' },
+      { label: 'Task ', to: '/admin/project/task/list' },
     ],
   },
   {

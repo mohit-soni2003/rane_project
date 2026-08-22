@@ -4,7 +4,8 @@ import {
     FaProjectDiagram, FaMapMarkedAlt, FaSitemap, FaRupeeSign,
     FaFileAlt, FaUserShield, FaClipboardCheck, FaExternalLinkAlt,
     FaClock, FaInfoCircle, FaCheckCircle, FaTimesCircle, FaUndo,
-    FaTrain, FaIndustry, FaCalendarAlt,
+    FaTrain, FaIndustry, FaCalendarAlt, FaBoxes, FaTasks, FaUserCircle,
+    FaUsers, FaShieldAlt, FaEye,
 } from 'react-icons/fa';
 import { FiRefreshCw } from 'react-icons/fi';
 import { backend_url } from '../../store/keyStore';
@@ -88,6 +89,43 @@ const actionBadgeStyle = (action) => {
     return map[action] || { bg: 'var(--muted)', fg: 'var(--text-muted)' };
 };
 
+// task overall status -> badge colors (mirrors EditProjectDetail's TasksModule)
+const taskStatusStyle = (status) => {
+    const map = {
+        pending: { bg: 'var(--muted)', fg: 'var(--text-muted)' },
+        in_progress: { bg: 'var(--info)', fg: 'var(--info-foreground)' },
+        submitted: { bg: 'var(--amber)', fg: 'var(--amber-foreground)' },
+        completed: { bg: 'var(--success)', fg: 'var(--success-foreground)' },
+        overdue: { bg: 'var(--destructive-bg)', fg: 'var(--destructive)' },
+        rejected: { bg: 'var(--destructive-bg)', fg: 'var(--destructive)' },
+    };
+    return map[status] || { bg: 'var(--muted)', fg: 'var(--text-muted)' };
+};
+
+const taskPriorityStyle = (priority) => {
+    const map = {
+        low: { bg: 'var(--muted)', fg: 'var(--text-muted)' },
+        medium: { bg: 'var(--info)', fg: 'var(--info-foreground)' },
+        high: { bg: 'var(--warning)', fg: 'var(--warning-foreground)' },
+        urgent: { bg: 'var(--destructive-bg)', fg: 'var(--destructive)' },
+    };
+    return map[priority] || { bg: 'var(--muted)', fg: 'var(--text-muted)' };
+};
+
+// Compares today against the task's deadline (calendar-day precision).
+// Future deadline -> "N days left". Past deadline -> "N days overdue".
+const deadlineDiff = (deadline) => {
+    if (!deadline) return { label: '—', color: C.muted };
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const deadlineDay = new Date(deadline);
+    deadlineDay.setHours(0, 0, 0, 0);
+    const diffDays = Math.round((deadlineDay.getTime() - startOfToday.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays > 0) return { label: `${diffDays} day${diffDays === 1 ? '' : 's'} left`, color: diffDays <= 2 ? C.warning : C.success };
+    if (diffDays === 0) return { label: 'Due today', color: C.warning };
+    return { label: `${Math.abs(diffDays)} day${Math.abs(diffDays) === 1 ? '' : 's'} overdue`, color: C.destructive };
+};
+
 /* ── shared styles ────────────────────────────────────────────────────────── */
 
 // Each section is now its OWN card, not one continuous block —
@@ -142,6 +180,40 @@ const navPillStyle = (active) => ({
     transition: 'background .15s, color .15s, border-color .15s',
 });
 
+// Table styles for the Materials / Tasks sections
+const tableWrapStyle = { overflowX: 'auto' };
+
+const tableStyle = {
+    width: '100%', borderCollapse: 'collapse', fontSize: 12.5, minWidth: 900,
+};
+
+const thStyle = {
+    textAlign: 'left', padding: '8px 10px', fontSize: 10.5, fontWeight: 700,
+    color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em',
+    borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap',
+};
+
+const thRightStyle = { ...thStyle, textAlign: 'right' };
+
+const tdStyle = {
+    padding: '8px 10px', borderBottom: '1px solid var(--border)',
+    color: 'var(--foreground)', whiteSpace: 'nowrap',
+};
+
+const tdWrapStyle = { ...tdStyle, whiteSpace: 'normal', minWidth: 160 };
+
+const tdRightStyle = { ...tdStyle, textAlign: 'right' };
+
+const totalRowStyle = {
+    fontWeight: 700, color: 'var(--text-strong)', background: 'var(--input)',
+};
+
+const viewButtonStyle = {
+    display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8,
+    border: '1px solid var(--border)', background: 'var(--secondary)', color: 'var(--secondary-foreground)',
+    fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
+};
+
 function Field({ label, children }) {
     return (
         <div>
@@ -178,18 +250,28 @@ const SECTIONS = [
     { id: 'location', label: 'Location', icon: <FaMapMarkedAlt size={12} /> },
     { id: 'advance', label: 'Advance', icon: <FaSitemap size={12} /> },
     { id: 'financial', label: 'Financial', icon: <FaRupeeSign size={12} /> },
+    { id: 'materials', label: 'Materials', icon: <FaBoxes size={12} /> },
     { id: 'documents', label: 'Documents', icon: <FaFileAlt size={12} /> },
+    { id: 'tasks', label: 'Tasks', icon: <FaTasks size={12} /> },
     { id: 'approvals', label: 'Approvals', icon: <FaUserShield size={12} /> },
     { id: 'timeline', label: 'Timeline', icon: <FaCalendarAlt size={12} /> },
 ];
 
 /* ── main component ──────────────────────────────────────────────────────── */
 
-export default function SingleProjectDetail() {
+export default function SingleProjectDetail({ onViewTask } = {}) {
     const { id } = useParams();
     const [p, setP] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    const [items, setItems] = useState([]);
+    const [itemsLoading, setItemsLoading] = useState(true);
+    const [itemsError, setItemsError] = useState('');
+
+    const [tasks, setTasks] = useState([]);
+    const [tasksLoading, setTasksLoading] = useState(true);
+    const [tasksError, setTasksError] = useState('');
 
     const fetchProject = async () => {
         setLoading(true);
@@ -219,14 +301,81 @@ export default function SingleProjectDetail() {
         }
     };
 
+    // NOTE: the items route lives at /project/:projectId/items (no /v1
+    // prefix) in the backend as currently written — matching that here.
+    const fetchItems = async () => {
+        setItemsLoading(true);
+        setItemsError('');
+        try {
+            const token = useAuthStore.getState()?.token;
+            const res = await fetch(`${backend_url}/project/${id}/items`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                credentials: 'include',
+            });
+
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(json.message || 'Failed to load items');
+            }
+
+            const data = json.data !== undefined ? json.data : json;
+            setItems(Array.isArray(data) ? data : []);
+        } catch (err) {
+            setItemsError(err.message || 'Failed to load items');
+        } finally {
+            setItemsLoading(false);
+        }
+    };
+
+    // Tasks route lives at /task/project/:projectId (its own router,
+    // not nested under /project) — matching that here the same way
+    // fetchItems matches the items route's own path shape.
+    const fetchTasks = async () => {
+        setTasksLoading(true);
+        setTasksError('');
+        try {
+            const token = useAuthStore.getState()?.token;
+            const res = await fetch(`${backend_url}/task/project/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                credentials: 'include',
+            });
+
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(json.message || 'Failed to load tasks');
+            }
+
+            const data = json.data !== undefined ? json.data : json;
+            setTasks(Array.isArray(data) ? data : []);
+        } catch (err) {
+            setTasksError(err.message || 'Failed to load tasks');
+        } finally {
+            setTasksLoading(false);
+        }
+    };
+
     useEffect(() => {
-        if (id) fetchProject();
+        if (id) {
+            fetchProject();
+            fetchItems();
+            fetchTasks();
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const scrollToSection = (sectionId) => {
         document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
+
+    const itemsTotal = items.reduce((sum, it) => sum + (Number(it.total) || 0), 0);
 
     return (
         <>
@@ -405,7 +554,75 @@ export default function SingleProjectDetail() {
                             </div>
                         </Module>
 
-                        {/* ── 5. Documents ── */}
+                        {/* ── 5. Materials ── */}
+                        <Module
+                            id="materials"
+                            icon={<FaBoxes size={13} color={C.accent} />}
+                            title="Materials"
+                            extra={<span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{items.length} item{items.length === 1 ? '' : 's'}</span>}
+                        >
+                            {itemsLoading && (
+                                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Loading items…</div>
+                            )}
+
+                            {!itemsLoading && itemsError && (
+                                <div style={{ fontSize: 13, color: C.destructive }}>{itemsError}</div>
+                            )}
+
+                            {!itemsLoading && !itemsError && items.length === 0 && (
+                                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No items added yet.</div>
+                            )}
+
+                            {!itemsLoading && !itemsError && items.length > 0 && (
+                                <div style={tableWrapStyle}>
+                                    <table style={tableStyle}>
+                                        <thead>
+                                            <tr>
+                                                <th style={thStyle}>Item No.</th>
+                                                <th style={thStyle}>Name</th>
+                                                <th style={thStyle}>Description</th>
+                                                <th style={thStyle}>Unit</th>
+                                                <th style={thRightStyle}>Railway Rate</th>
+                                                <th style={thRightStyle}>Our Rate</th>
+                                                <th style={thRightStyle}>Market Rate</th>
+                                                <th style={thRightStyle}>Qty</th>
+                                                <th style={thRightStyle}>Installation</th>
+                                                <th style={thRightStyle}>Total</th>
+                                                <th style={thRightStyle}>Profit/Loss %</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {items.map((it, i) => (
+                                                <tr key={it._id || i}>
+                                                    <td style={tdStyle}>{dash(it.itemNo)}</td>
+                                                    <td style={tdWrapStyle}>{dash(it.name)}</td>
+                                                    <td style={tdWrapStyle}>{dash(it.description)}</td>
+                                                    <td style={tdStyle}>{prettify(it.unit)}</td>
+                                                    <td style={tdRightStyle}>{formatCurrency(it.railwayRate)}</td>
+                                                    <td style={tdRightStyle}>{formatCurrency(it.ourRate)}</td>
+                                                    <td style={tdRightStyle}>{formatCurrency(it.marketRate)}</td>
+                                                    <td style={tdRightStyle}>{dash(it.quantity)}</td>
+                                                    <td style={tdRightStyle}>{formatCurrency(it.installation)}</td>
+                                                    <td style={tdRightStyle}>{formatCurrency(it.total)}</td>
+                                                    <td style={tdRightStyle}>
+                                                        {it.profitLossPercent || it.profitLossPercent === 0 ? `${it.profitLossPercent}%` : '—'}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr style={totalRowStyle}>
+                                                <td style={tdStyle} colSpan={9}>Total</td>
+                                                <td style={tdRightStyle}>{formatCurrency(itemsTotal)}</td>
+                                                <td style={tdRightStyle}></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            )}
+                        </Module>
+
+                        {/* ── 6. Documents ── */}
                         <Module
                             id="documents"
                             icon={<FaFileAlt size={13} color={C.accent} />}
@@ -439,7 +656,110 @@ export default function SingleProjectDetail() {
                             )}
                         </Module>
 
-                        {/* ── 6. Approvals ── */}
+                        {/* ── 7. Tasks ── */}
+                        <Module
+                            id="tasks"
+                            icon={<FaTasks size={13} color={C.accent} />}
+                            title="Tasks"
+                            extra={<span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{tasks.length} task{tasks.length === 1 ? '' : 's'}</span>}
+                        >
+                            {tasksLoading && (
+                                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Loading tasks…</div>
+                            )}
+
+                            {!tasksLoading && tasksError && (
+                                <div style={{ fontSize: 13, color: C.destructive }}>{tasksError}</div>
+                            )}
+
+                            {!tasksLoading && !tasksError && tasks.length === 0 && (
+                                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No tasks created for this project yet.</div>
+                            )}
+
+                            {!tasksLoading && !tasksError && tasks.length > 0 && (
+                                <div style={tableWrapStyle}>
+                                    <table style={tableStyle}>
+                                        <thead>
+                                            <tr>
+                                                <th style={thStyle}>S.No</th>
+                                                <th style={thStyle}>Name</th>
+                                                <th style={thStyle}>Priority</th>
+                                                <th style={thStyle}>Allotted By</th>
+                                                <th style={thStyle}>Status</th>
+                                                <th style={thStyle}>Users</th>
+                                                <th style={thStyle}>Docs</th>
+                                                <th style={thStyle}>Completion Date</th>
+                                                <th style={thStyle}>Verified Date</th>
+                                                <th style={thStyle}>Time Left / Overdue</th>
+                                                <th style={thStyle}></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {tasks.map((t, i) => {
+                                                const pStyle = taskPriorityStyle(t.priority);
+                                                const sStyle = taskStatusStyle(t.status);
+                                                const dl = deadlineDiff(t.deadline);
+                                                return (
+                                                    <tr key={t._id || i}>
+                                                        <td style={tdStyle}>{i + 1}</td>
+                                                        <td style={tdWrapStyle}>{dash(t.title)}</td>
+                                                        <td style={tdStyle}>
+                                                            <span style={badgeStyle(pStyle.bg, pStyle.fg)}>{prettify(t.priority)}</span>
+                                                        </td>
+                                                        <td style={tdStyle}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                                <FaUserCircle size={14} color={C.muted} />
+                                                                {userLabel(t.allottedBy)}
+                                                            </div>
+                                                        </td>
+                                                        <td style={tdStyle}>
+                                                            <span style={badgeStyle(sStyle.bg, sStyle.fg)}>{prettify(t.status)}</span>
+                                                        </td>
+                                                        <td style={tdStyle}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                                                <FaUsers size={12} color={C.muted} />
+                                                                {t.allottedTo?.length || 0}
+                                                            </div>
+                                                        </td>
+                                                        <td style={tdStyle}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                                                <FaFileAlt size={12} color={C.muted} />
+                                                                {t.relatedDocuments?.length || 0}
+                                                            </div>
+                                                        </td>
+                                                        <td style={tdStyle}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                                                <FaCheckCircle size={12} color={t.completedAt ? C.success : C.muted} />
+                                                                {formatDate(t.completedAt)}
+                                                            </div>
+                                                        </td>
+                                                        <td style={tdStyle}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                                                <FaShieldAlt size={12} color={t.verifiedAt ? C.success : C.muted} />
+                                                                {formatDate(t.verifiedAt)}
+                                                            </div>
+                                                        </td>
+                                                        <td style={tdStyle}>
+                                                            <span style={{ color: dl.color, fontWeight: 600 }}>{dl.label}</span>
+                                                        </td>
+                                                        <td style={tdStyle}>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => onViewTask && onViewTask(t._id)}
+                                                                style={viewButtonStyle}
+                                                            >
+                                                                <FaEye size={11} /> View
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </Module>
+
+                        {/* ── 8. Approvals ── */}
                         <Module id="approvals" icon={<FaUserShield size={13} color={C.accent} />} title="Approvals">
                             <div style={gridTwo}>
                                 <Field label="Current authority">{userLabel(p.currentAuthority)}</Field>
@@ -476,7 +796,7 @@ export default function SingleProjectDetail() {
                             )}
                         </Module>
 
-                        {/* ── 7. Timeline ── */}
+                        {/* ── 9. Timeline ── */}
                         <Module id="timeline" icon={<FaCalendarAlt size={13} color={C.accent} />} title="Timeline">
                             <div style={gridTwo}>
                                 <Field label="Start date">{formatDate(p.startDate)}</Field>

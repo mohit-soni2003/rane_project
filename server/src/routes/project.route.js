@@ -7,6 +7,7 @@ const verifyRole = require("../middleware/verifyRole");
 const Project = require("../models/projects.model");
 const User = require("../models/usermodel");
 const Task = require("../models/task.model");
+const Item = require("../models/item.model");
 const {
     ADMIN,
     COO,
@@ -457,9 +458,6 @@ router.patch("/v1/status/:projectId", verifyToken, async (req, res) => {
     }
 });
 
-// Requires the User model to look up the actor's stage tag
-// const User = require("../models/user.model");
-
 // ─────────────────────────────────────────────────────────────────────────────
 // FORWARD PROJECT (approve / return / reject / pending)
 // Body expected: action, remark, nextAuthority
@@ -767,6 +765,131 @@ router.get("/users/list", verifyToken, async (req, res) => {
             success: true,
             message: "Users retrieved successfully.",
             data: users
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+
+    }
+});
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ADD ITEMS (BULK) FOR A PROJECT
+// Body expected: { items: [ { itemNo, name, description, unit, railwayRate,
+//                             ourRate, marketRate, quantity, installation,
+//                             profitLossPercent }, ... ] }
+// itemNo and name are required per item - everything else is optional.
+// ─────────────────────────────────────────────────────────────────────────────
+
+router.post("/:projectId/items", verifyToken, allUsers, async (req, res) => {
+    try {
+
+        const { projectId } = req.params;
+        const { items } = req.body;
+
+        if (!Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Items must be a non-empty array."
+            });
+        }
+
+        const project = await Project.findById(projectId);
+
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                message: "Project not found."
+            });
+        }
+
+
+        // Validate each item before inserting any
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+
+            if (!item.itemNo) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Item at index ${i} is missing itemNo.`
+                });
+            }
+
+            if (!item.name) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Item at index ${i} is missing name.`
+                });
+            }
+
+            
+        }
+
+        const itemsToInsert = items.map((item) => ({
+            project: projectId,
+            itemNo: item.itemNo,
+            name: item.name,
+            description: item.description,
+            unit: item.unit,
+            railwayRate: item.railwayRate,
+            ourRate: item.ourRate,
+            marketRate: item.marketRate,
+            quantity: item.quantity,
+            installation: item.installation,
+            profitLossPercent: item.profitLossPercent,
+            createdBy: req.userId
+        }));
+
+        const createdItems = await Item.insertMany(itemsToInsert);
+
+        return res.status(201).json({
+            success: true,
+            message: "Items added successfully.",
+            data: createdItems
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+
+    }
+});
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET ALL ITEMS FOR A PROJECT
+// ─────────────────────────────────────────────────────────────────────────────
+
+router.get("/:projectId/items", verifyToken, allUsers, async (req, res) => {
+    try {
+
+        const { projectId } = req.params;
+
+        const project = await Project.findById(projectId);
+
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                message: "Project not found."
+            });
+        }
+
+        const items = await Item.find({ project: projectId })
+            .populate("createdBy", "name email profile")
+            .sort({ createdAt: 1 });
+
+        return res.status(200).json({
+            success: true,
+            message: "Items retrieved successfully.",
+            data: items
         });
 
     } catch (error) {

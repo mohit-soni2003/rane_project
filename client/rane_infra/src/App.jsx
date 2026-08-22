@@ -72,6 +72,8 @@ import ListallProject from "./pages/admin/ListallProject.jsx";
 import PendingProject from "./pages/admin/PendingProject.jsx"; // to be removed later
 import ProjectAssignedToMe from "./pages/admin/ProjectAssignedToMe.jsx";
 import EditProjectDetail from "./pages/admin/EditProjectDetail.jsx"
+import MyTaskList from "./pages/admin/MyTaskList.jsx";
+import SingleTaskDetail from "./pages/admin/SingleTaskDetail.jsx";
 
 
 import StaffLayout from "./Layout/StaffLayout.jsx";
@@ -233,6 +235,8 @@ function App() {
           <Route path="project/assigned-to-me" element={<ProjectAssignedToMe />} />
           <Route path="project/:id" element={<SingleProjectDetail />} />
           <Route path="project/edit/:id" element={<EditProjectDetail />} />
+          <Route path="project/task/list" element={<MyTaskList />} />
+          <Route path="project/task/:id" element={<SingleTaskDetail />} />
         </Route>
 
         {/* ---------Staff route------------ */}

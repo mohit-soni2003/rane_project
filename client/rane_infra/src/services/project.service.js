@@ -253,3 +253,46 @@ export async function getUsersList() {
   }
   return data.data;
 }
+
+// ─────────────────────────────────────────────────────────────────
+// ADD ITEMS (BULK) — matches POST /:projectId/items
+// NOTE: this route is NOT under /v1 in what you shared (unlike every
+// other route here) — double check that's intentional before using
+// this as-is; change the path below to /v1/${projectMongoId}/items
+// if it should match the rest.
+// Body: { items: [{ itemNo, name, description, unit, railwayRate,
+//                    ourRate, marketRate, quantity, installation,
+//                    profitLossPercent }, ...] }
+// itemNo and name are required per item.
+// ─────────────────────────────────────────────────────────────────
+export async function addItems(projectMongoId, items) {
+  const res = await fetch(`${backend_url}/project/${projectMongoId}/items`, {
+    method: 'POST',
+    headers: authHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ items }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.message || 'Failed to add items');
+  }
+  return data.data;
+}
+ 
+// ─────────────────────────────────────────────────────────────────
+// GET ALL ITEMS FOR A PROJECT — matches GET /:projectId/items
+// NOTE: same /v1 caveat as addItems above.
+// Populates createdBy (name, email, profile).
+// ─────────────────────────────────────────────────────────────────
+export async function getProjectItems(projectMongoId) {
+  const res = await fetch(`${backend_url}/project/${projectMongoId}/items`, {
+    method: 'GET',
+    headers: authHeaders(),
+    credentials: 'include',
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.message || 'Failed to load items');
+  }
+  return data.data;
+}

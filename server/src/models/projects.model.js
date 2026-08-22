@@ -32,7 +32,7 @@ const approvalSchema = new mongoose.Schema(
     {
         stage: {
             type: String,
-            enum: ["ADMIN", "CEO", "CTO", "CFO", "COO", "DIRECTOR","OTHER"],
+            enum: ["ADMIN", "CEO", "CTO", "CFO", "COO", "DIRECTOR", "OTHER"],
             default: "ADMIN",
             required: true
         },
@@ -216,6 +216,12 @@ const projectSchema = new mongoose.Schema(
                 billNumber: String
             }
         },
+
+        // taksk //-----
+        tasks: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Task"
+        }],
 
         /* ---------------------------------------------------------- */
         /* 6. PROJECT MANAGEMENT                                     */
