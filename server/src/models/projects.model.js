@@ -56,6 +56,33 @@ const approvalSchema = new mongoose.Schema(
 );
 
 /* ------------------------------------------------------------------ */
+/*  SUB-SCHEMA: Cost estimation line item                             */
+/*  Lives inside financials.bidding — a free-form list of estimated   */
+/*  costs (name + amount).                                            */
+/* ------------------------------------------------------------------ */
+const costEstimationSchema = new mongoose.Schema(
+    {
+        name: { type: String, required: true },
+        amount: { type: Number, required: true }
+    },
+    { _id: true }
+);
+
+/* ------------------------------------------------------------------ */
+/*  SUB-SCHEMA: Security deposit recovery entry                       */
+/*  Lives inside financials.security_deposit.cust — one recovery      */
+/*  line per bill.                                                    */
+/* ------------------------------------------------------------------ */
+const securityDepositCustSchema = new mongoose.Schema(
+    {
+        billNo: { type: String, required: true },
+        recoveryPercent: { type: Number, required: true },
+        amount: { type: Number, required: true }
+    },
+    { _id: true }
+);
+
+/* ------------------------------------------------------------------ */
 /*  MAIN SCHEMA: Project                                              */
 /* ------------------------------------------------------------------ */
 const projectSchema = new mongoose.Schema(
@@ -209,11 +236,73 @@ const projectSchema = new mongoose.Schema(
             penalty: { type: Number, default: 0 },
             penaltyTicketNo: String,
 
+            /* ---------------------------------------------------- */
+            /* NEW: financials.penalty — 4 fields requested,        */
+            /* grouped together in their own nested object          */
+            /* (existing flat penalty / penaltyTicketNo above are   */
+            /* untouched).                                          */
+            /* ---------------------------------------------------- */
+            penaltyDetails: {
+                amount: { type: Number, default: 0 },
+                ticketNo: String,
+                ticketDate: Date,
+                delayDays: { type: Number, default: 0 }
+            },
+
+            /* ---------------------------------------------------- */
+            /* NEW: financials.security_deposit — 3 fields          */
+            /* requested; cust is an array of per-bill recoveries.  */
+            /* ---------------------------------------------------- */
+            security_deposit: {
+                amount: { type: Number, default: 0 },
+                percentage: { type: Number, default: 0 },
+                cust: [securityDepositCustSchema]
+            },
+
+            /* ---------------------------------------------------- */
+            /* NEW: financials.pg — all 9 fields requested, grouped */
+            /* together in their own nested object (existing flat  */
+            /* pgAmount / actualPgAmount / pgMaturityDate /         */
+            /* pgMaturityInterest / depositAccountNo above are      */
+            /* untouched).                                          */
+            /* ---------------------------------------------------- */
+            pg: {
+                amountRailway: { type: Number, default: 0 },
+                amountSubmitted: { type: Number, default: 0 },
+                createDate: Date,
+                maturityDate: Date,
+                interest: { type: Number, default: 0 },
+                maturityAmount: { type: Number, default: 0 },
+                name: String,
+                depositAccountNo: String,
+                bankBranch: String
+            },
+
             recoveryAtContractEnd: {
                 billAmount: { type: Number, default: 0 },
                 recoveryAmount: { type: Number, default: 0 },
                 recoveryDesc: String,
                 billNumber: String
+            },
+
+            /* ---------------------------------------------------- */
+            /* NEW: financials.bidding — all 6 fields requested,    */
+            /* grouped together in their own nested object.         */
+            /* ---------------------------------------------------- */
+            bidding: {
+                emdAmount: { type: Number, default: 0 },
+                advertisedValue: { type: Number, default: 0 },
+                status: {
+                    type: String,
+                    enum: ["paid", "unpaid", "exempted"],
+                    default: "unpaid"
+                },
+                biddingPosition: {
+                    type: String,
+                    enum: ["below", "above", "at_par"]
+                },
+                biddingPercentage: { type: Number, default: 0 },
+                costEstimation: [costEstimationSchema]
             }
         },
 

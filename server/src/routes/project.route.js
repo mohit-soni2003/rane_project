@@ -901,6 +901,415 @@ router.get("/:projectId/items", verifyToken, allUsers, async (req, res) => {
 
     }
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UPDATE FINANCIALS.BIDDING DETAILS
+// Body: { bidding: { emdAmount, advertisedValue, status, biddingPosition,
+//         biddingPercentage } }
+// All fields optional — only provided keys are updated. Does NOT touch
+// financials.costEstimation — use the dedicated add-one-at-a-time route below.
+// ─────────────────────────────────────────────────────────────────────────────
+
+router.patch("/v1/financials/bidding/:projectId", verifyToken, adminOnly, async (req, res) => {
+    try {
+
+        const { projectId } = req.params;
+        const { bidding } = req.body;
+
+        const validStatuses = ["paid", "unpaid", "exempted"];
+        const validPositions = ["below", "above", "at_par"];
+        const clean = (v) => (v === '' ? undefined : v);
+
+        const project = await Project.findById(projectId);
+
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                message: "Project not found."
+            });
+        }
+
+        if (bidding && typeof bidding === 'object') {
+
+            const {
+                emdAmount,
+                advertisedValue,
+                status,
+                biddingPosition,
+                biddingPercentage
+            } = bidding;
+
+            if (status !== undefined && status !== '' && !validStatuses.includes(status)) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Invalid status. Must be one of: ${validStatuses.join(", ")}.`
+                });
+            }
+
+            if (biddingPosition !== undefined && biddingPosition !== '' && !validPositions.includes(biddingPosition)) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Invalid biddingPosition. Must be one of: ${validPositions.join(", ")}.`
+                });
+            }
+
+            if (!project.financials) project.financials = {};
+            if (!project.financials.bidding) project.financials.bidding = {};
+            const b = project.financials.bidding;
+
+            if (emdAmount !== undefined) b.emdAmount = emdAmount;
+            if (advertisedValue !== undefined) b.advertisedValue = advertisedValue;
+            if (status !== undefined) b.status = clean(status);
+            if (biddingPosition !== undefined) b.biddingPosition = clean(biddingPosition);
+            if (biddingPercentage !== undefined) b.biddingPercentage = biddingPercentage;
+        }
+
+        await project.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Bidding details updated successfully.",
+            data: project
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ADD ONE COST ESTIMATION ENTRY
+// Body expected: { name, amount } — accepts exactly one entry per call,
+// pushed onto financials.bidding.costEstimation[].
+// ─────────────────────────────────────────────────────────────────────────────
+
+router.post("/v1/financials/bidding/:projectId/cost-estimation", verifyToken, adminOnly, async (req, res) => {
+    try {
+
+        const { projectId } = req.params;
+        const { name, amount } = req.body;
+
+        if (!name) {
+            return res.status(400).json({
+                success: false,
+                message: "Cost name is required."
+            });
+        }
+
+        if (amount === undefined || amount === null || amount === '') {
+            return res.status(400).json({
+                success: false,
+                message: "Cost amount is required."
+            });
+        }
+
+        if (Number.isNaN(Number(amount))) {
+            return res.status(400).json({
+                success: false,
+                message: "Cost amount must be a number."
+            });
+        }
+
+        const project = await Project.findById(projectId);
+
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                message: "Project not found."
+            });
+        }
+
+        if (!project.financials) project.financials = {};
+        if (!project.financials.bidding) project.financials.bidding = {};
+        if (!project.financials.bidding.costEstimation) project.financials.bidding.costEstimation = [];
+
+        const entry = { name, amount: Number(amount) };
+
+        project.financials.bidding.costEstimation.push(entry);
+
+        await project.save();
+
+        return res.status(201).json({
+            success: true,
+            message: "Cost estimation entry added successfully.",
+            data: project.financials.bidding.costEstimation
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UPDATE FINANCIALS.PG DETAILS
+// Body: { pg: { amountRailway, amountSubmitted, createDate, maturityDate,
+//         interest, maturityAmount, name, depositAccountNo, bankBranch } }
+// All fields optional — only provided keys are updated.
+// ─────────────────────────────────────────────────────────────────────────────
+
+router.patch("/v1/financials/pg/:projectId", verifyToken, adminOnly, async (req, res) => {
+    try {
+
+        const { projectId } = req.params;
+        const { pg } = req.body;
+
+        const project = await Project.findById(projectId);
+
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                message: "Project not found."
+            });
+        }
+
+        if (pg && typeof pg === 'object') {
+
+            const {
+                amountRailway,
+                amountSubmitted,
+                createDate,
+                maturityDate,
+                interest,
+                maturityAmount,
+                name,
+                depositAccountNo,
+                bankBranch
+            } = pg;
+
+            if (!project.financials) project.financials = {};
+            if (!project.financials.pg) project.financials.pg = {};
+            const p = project.financials.pg;
+
+            if (amountRailway !== undefined) p.amountRailway = amountRailway;
+            if (amountSubmitted !== undefined) p.amountSubmitted = amountSubmitted;
+            if (createDate !== undefined) p.createDate = createDate;
+            if (maturityDate !== undefined) p.maturityDate = maturityDate;
+            if (interest !== undefined) p.interest = interest;
+            if (maturityAmount !== undefined) p.maturityAmount = maturityAmount;
+            if (name !== undefined) p.name = name;
+            if (depositAccountNo !== undefined) p.depositAccountNo = depositAccountNo;
+            if (bankBranch !== undefined) p.bankBranch = bankBranch;
+        }
+
+        await project.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "PG details updated successfully.",
+            data: project
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UPDATE FINANCIALS.PENALTYDETAILS
+// Body: { penaltyDetails: { amount, ticketNo, ticketDate, delayDays } }
+// All fields optional — only provided keys are updated. Does NOT touch the
+// existing flat financials.penalty / financials.penaltyTicketNo fields.
+// ─────────────────────────────────────────────────────────────────────────────
+
+router.patch("/v1/financials/penalty/:projectId", verifyToken, adminOnly, async (req, res) => {
+    try {
+
+        const { projectId } = req.params;
+        const { penaltyDetails } = req.body;
+
+        const project = await Project.findById(projectId);
+
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                message: "Project not found."
+            });
+        }
+
+        if (penaltyDetails && typeof penaltyDetails === 'object') {
+
+            const { amount, ticketNo, ticketDate, delayDays } = penaltyDetails;
+
+            if (!project.financials) project.financials = {};
+            if (!project.financials.penaltyDetails) project.financials.penaltyDetails = {};
+            const pd = project.financials.penaltyDetails;
+
+            if (amount !== undefined) pd.amount = amount;
+            if (ticketNo !== undefined) pd.ticketNo = ticketNo;
+            if (ticketDate !== undefined) pd.ticketDate = ticketDate;
+            if (delayDays !== undefined) pd.delayDays = delayDays;
+        }
+
+        await project.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Penalty details updated successfully.",
+            data: project
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UPDATE FINANCIALS.SECURITY_DEPOSIT (amount, percentage)
+// Body: { securityDeposit: { amount, percentage } }
+// All fields optional — only provided keys are updated. Does NOT touch
+// security_deposit.cust — use the dedicated add-one-at-a-time route below.
+// ─────────────────────────────────────────────────────────────────────────────
+
+router.patch("/v1/financials/security-deposit/:projectId", verifyToken, adminOnly, async (req, res) => {
+    try {
+
+        const { projectId } = req.params;
+        const { securityDeposit } = req.body;
+
+        const project = await Project.findById(projectId);
+
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                message: "Project not found."
+            });
+        }
+
+        if (securityDeposit && typeof securityDeposit === 'object') {
+
+            const { amount, percentage } = securityDeposit;
+
+            if (!project.financials) project.financials = {};
+            if (!project.financials.security_deposit) project.financials.security_deposit = {};
+            const sd = project.financials.security_deposit;
+
+            if (amount !== undefined) sd.amount = amount;
+            if (percentage !== undefined) sd.percentage = percentage;
+        }
+
+        await project.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Security deposit details updated successfully.",
+            data: project
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ADD ONE SECURITY DEPOSIT CUST ENTRY
+// Body expected: { billNo, recoveryPercent, amount } — accepts exactly one
+// entry per call, pushed onto financials.security_deposit.cust[].
+// ─────────────────────────────────────────────────────────────────────────────
+
+router.post("/v1/financials/security-deposit/:projectId/cust", verifyToken, adminOnly, async (req, res) => {
+    try {
+
+        const { projectId } = req.params;
+        const { billNo, recoveryPercent, amount } = req.body;
+
+        if (!billNo) {
+            return res.status(400).json({
+                success: false,
+                message: "Bill No. is required."
+            });
+        }
+
+        if (recoveryPercent === undefined || recoveryPercent === null || recoveryPercent === '') {
+            return res.status(400).json({
+                success: false,
+                message: "Recovery % is required."
+            });
+        }
+
+        if (amount === undefined || amount === null || amount === '') {
+            return res.status(400).json({
+                success: false,
+                message: "Amount is required."
+            });
+        }
+
+        if (Number.isNaN(Number(recoveryPercent))) {
+            return res.status(400).json({
+                success: false,
+                message: "Recovery % must be a number."
+            });
+        }
+
+        if (Number.isNaN(Number(amount))) {
+            return res.status(400).json({
+                success: false,
+                message: "Amount must be a number."
+            });
+        }
+
+        const project = await Project.findById(projectId);
+
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                message: "Project not found."
+            });
+        }
+
+        if (!project.financials) project.financials = {};
+        if (!project.financials.security_deposit) project.financials.security_deposit = {};
+        if (!project.financials.security_deposit.cust) project.financials.security_deposit.cust = [];
+
+        const entry = {
+            billNo,
+            recoveryPercent: Number(recoveryPercent),
+            amount: Number(amount)
+        };
+
+        project.financials.security_deposit.cust.push(entry);
+
+        await project.save();
+
+        return res.status(201).json({
+            success: true,
+            message: "Security deposit entry added successfully.",
+            data: project.financials.security_deposit.cust
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+
+    }
+});
 module.exports = router;
 
 
