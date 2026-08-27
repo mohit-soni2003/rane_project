@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
     FaProjectDiagram, FaMapMarkedAlt, FaSitemap, FaRupeeSign,
     FaFileAlt, FaUserShield, FaClipboardCheck, FaExternalLinkAlt,
     FaClock, FaInfoCircle, FaCheckCircle, FaTimesCircle, FaUndo,
     FaTrain, FaIndustry, FaCalendarAlt, FaBoxes, FaTasks, FaUserCircle,
-    FaUsers, FaShieldAlt, FaEye,
+    FaUsers, FaShieldAlt, FaEye, FaGavel, FaLandmark, FaExclamationTriangle, FaPiggyBank,
+    FaBuilding,
 } from 'react-icons/fa';
 import { FiRefreshCw } from 'react-icons/fi';
 import { backend_url } from '../../store/keyStore';
@@ -19,6 +20,32 @@ const C = {
     destructive: '#c94a3a',
     muted: '#8b7b74',
     warning: '#4a1f18',
+};
+
+/* ── static entity details ────────────────────────────────────────────────
+   These do NOT come from the project document — they're fixed details
+   about the two entities a project can run "under". Edit the placeholder
+   values below (GST/Address) once you have them; nothing else needs to
+   change to update what's displayed.
+   ────────────────────────────────────────────────────────────────────── */
+const ENTITY_DETAILS = {
+    company: {
+        label: 'Company',
+        name: 'Rane and Sons Private Limited',
+        fields: [
+            { label: 'CIN', value: 'TODO: add CIN' },
+            { label: 'GST', value: 'TODO: add GST number' },
+            { label: 'Address', value: 'TODO: add registered address' },
+        ],
+    },
+    firm: {
+        label: 'Firm',
+        name: 'Rane and Sons',
+        fields: [
+            { label: 'GST No.', value: 'TODO: add GST number' },
+            { label: 'Address', value: 'TODO: add address' },
+        ],
+    },
 };
 
 /* ── helpers ──────────────────────────────────────────────────────────────── */
@@ -250,6 +277,10 @@ const SECTIONS = [
     { id: 'location', label: 'Location', icon: <FaMapMarkedAlt size={12} /> },
     { id: 'advance', label: 'Advance', icon: <FaSitemap size={12} /> },
     { id: 'financial', label: 'Financial', icon: <FaRupeeSign size={12} /> },
+    { id: 'bidding', label: 'Bidding', icon: <FaGavel size={12} /> },
+    { id: 'pg', label: 'Advanced Financial', icon: <FaLandmark size={12} /> },
+    { id: 'penalty', label: 'Penalty', icon: <FaExclamationTriangle size={12} /> },
+    { id: 'security-deposit', label: 'Security Deposit', icon: <FaPiggyBank size={12} /> },
     { id: 'materials', label: 'Materials', icon: <FaBoxes size={12} /> },
     { id: 'documents', label: 'Documents', icon: <FaFileAlt size={12} /> },
     { id: 'tasks', label: 'Tasks', icon: <FaTasks size={12} /> },
@@ -257,10 +288,175 @@ const SECTIONS = [
     { id: 'timeline', label: 'Timeline', icon: <FaCalendarAlt size={12} /> },
 ];
 
+/* ══════════════════════════════════════════════════════════════════════════
+   MODULE — Bidding Financials (read-only)
+   ══════════════════════════════════════════════════════════════════════════ */
+function BiddingFinancialsModule({ project }) {
+    const bidding = project.financials?.bidding || {};
+    const costEstimationList = bidding.costEstimation || [];
+    const costTotal = costEstimationList.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+
+    return (
+        <Module
+            id="bidding"
+            icon={<FaGavel size={13} color={C.accent} />}
+            title="Bidding Financials"
+        >
+            <div style={gridTwo}>
+                <Field label="EMD amount">{formatCurrency(bidding.emdAmount)}</Field>
+                <Field label="Advertised value">{formatCurrency(bidding.advertisedValue)}</Field>
+                <Field label="EMD status">{prettify(bidding.status)}</Field>
+                <Field label="Bidding position">{prettify(bidding.biddingPosition)}</Field>
+                <Field label="Bidding percentage">{bidding.biddingPercentage || bidding.biddingPercentage === 0 ? `${bidding.biddingPercentage}%` : '—'}</Field>
+            </div>
+
+            <div style={subHeaderStyle}>
+                Cost estimation ({costEstimationList.length})
+            </div>
+
+            {costEstimationList.length > 0 ? (
+                <div style={tableWrapStyle}>
+                    <table style={tableStyle}>
+                        <thead>
+                            <tr>
+                                <th style={thStyle}>Cost Name</th>
+                                <th style={thRightStyle}>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {costEstimationList.map((c, i) => (
+                                <tr key={c._id || i}>
+                                    <td style={tdWrapStyle}>{dash(c.name)}</td>
+                                    <td style={tdRightStyle}>{formatCurrency(c.amount)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                        <tfoot>
+                            <tr style={totalRowStyle}>
+                                <td style={tdStyle}>Total</td>
+                                <td style={tdRightStyle}>{formatCurrency(costTotal)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            ) : (
+                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No cost estimation entries yet.</div>
+            )}
+        </Module>
+    );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MODULE — Advanced Financial Details / PG (read-only)
+   ══════════════════════════════════════════════════════════════════════════ */
+function PgFinancialsModule({ project }) {
+    const pg = project.financials?.pg || {};
+
+    return (
+        <Module id="pg" icon={<FaLandmark size={13} color={C.accent} />} title="Advanced Financial Details">
+            <div style={gridTwo}>
+                <Field label="PG amount (railway)">{formatCurrency(pg.amountRailway)}</Field>
+                <Field label="PG amount submitted">{formatCurrency(pg.amountSubmitted)}</Field>
+                <Field label="PG create date">{formatDate(pg.createDate)}</Field>
+                <Field label="Maturity date">{formatDate(pg.maturityDate)}</Field>
+                <Field label="Interest">{formatCurrency(pg.interest)}</Field>
+                <Field label="Maturity amount">{formatCurrency(pg.maturityAmount)}</Field>
+                <Field label="Name">{dash(pg.name)}</Field>
+                <Field label="Deposit account no.">{dash(pg.depositAccountNo)}</Field>
+                <Field label="Bank branch">{dash(pg.bankBranch)}</Field>
+            </div>
+        </Module>
+    );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MODULE — Penalty Details (read-only)
+   ══════════════════════════════════════════════════════════════════════════ */
+function PenaltyFinancialsModule({ project }) {
+    const penaltyDetails = project.financials?.penaltyDetails || {};
+
+    return (
+        <Module id="penalty" icon={<FaExclamationTriangle size={13} color={C.accent} />} title="Penalty Details">
+            <div style={gridTwo}>
+                <Field label="Amount">{formatCurrency(penaltyDetails.amount)}</Field>
+                <Field label="Ticket No.">{dash(penaltyDetails.ticketNo)}</Field>
+                <Field label="Ticket date">{formatDate(penaltyDetails.ticketDate)}</Field>
+                <Field label="Delay days">{dash(penaltyDetails.delayDays)}</Field>
+            </div>
+        </Module>
+    );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MODULE — Security Deposit (read-only)
+   ══════════════════════════════════════════════════════════════════════════ */
+function SecurityDepositFinancialsModule({ project }) {
+    const sd = project.financials?.security_deposit || {};
+    const custList = sd.cust || [];
+
+    // NEW: total recovered so far (sum of the per-bill recovery entries)
+    // and what's left of the overall SD amount after those recoveries.
+    const custTotal = custList.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+    const sdAmount = Number(sd.amount) || 0;
+    const remaining = sdAmount - custTotal;
+
+    return (
+        <Module
+            id="security-deposit"
+            icon={<FaPiggyBank size={13} color={C.accent} />}
+            title="Security Deposit"
+            extra={<span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{custList.length} entr{custList.length === 1 ? 'y' : 'ies'}</span>}
+        >
+            <div style={gridTwo}>
+                <Field label="SD amount">{formatCurrency(sd.amount)}</Field>
+                <Field label="SD %">{sd.percentage || sd.percentage === 0 ? `${sd.percentage}%` : '—'}</Field>
+                <Field label="Total recovered">{formatCurrency(custTotal)}</Field>
+                <Field label="Remaining SD">{formatCurrency(remaining)}</Field>
+            </div>
+
+            <div style={subHeaderStyle}>
+                Previous SD entries ({custList.length})
+            </div>
+
+            {custList.length > 0 ? (
+                <div style={tableWrapStyle}>
+                    <table style={tableStyle}>
+                        <thead>
+                            <tr>
+                                <th style={thStyle}>Bill No.</th>
+                                <th style={thRightStyle}>Recovery %</th>
+                                <th style={thRightStyle}>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {custList.map((c, i) => (
+                                <tr key={c._id || i}>
+                                    <td style={tdStyle}>{dash(c.billNo)}</td>
+                                    <td style={tdRightStyle}>{c.recoveryPercent || c.recoveryPercent === 0 ? `${c.recoveryPercent}%` : '—'}</td>
+                                    <td style={tdRightStyle}>{formatCurrency(c.amount)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                        <tfoot>
+                            <tr style={totalRowStyle}>
+                                <td style={tdStyle} colSpan={2}>Total recovered</td>
+                                <td style={tdRightStyle}>{formatCurrency(custTotal)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            ) : (
+                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No SD entries added yet.</div>
+            )}
+        </Module>
+    );
+}
+
 /* ── main component ──────────────────────────────────────────────────────── */
 
-export default function SingleProjectDetail({ onViewTask } = {}) {
+export default function SingleProjectDetail() {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [p, setP] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -415,6 +611,7 @@ export default function SingleProjectDetail({ onViewTask } = {}) {
                 const isPsu = p.department === 'psu';
                 const f = p.financials || {};
                 const recovery = f.recoveryAtContractEnd || {};
+                const entity = ENTITY_DETAILS[p.projectUnder];
 
                 return (
                     <>
@@ -457,14 +654,32 @@ export default function SingleProjectDetail({ onViewTask } = {}) {
                                 <Field label="Project name">{dash(p.projectName)}</Field>
                                 <Field label="Status">{prettify(p.status)}</Field>
                                 <Field label="Created by">{userLabel(p.createdBy)}</Field>
+                                <Field label="Project under">{prettify(p.projectUnder)}</Field>
                             </div>
                             <div style={{ marginTop: 10 }}>
                                 <Field label="Description">{dash(p.description)}</Field>
                             </div>
+
+                            {/* Static entity details — fixed info about the selected
+                                company/firm, not stored on the project document. */}
+                            {entity && (
+                                <>
+                                    <div style={subHeaderStyle}>
+                                        <FaBuilding size={12} color={C.accent} /> {entity.label} details
+                                    </div>
+                                    <div style={gridTwo}>
+                                        <Field label={`${entity.label} name`}>{entity.name}</Field>
+                                        {entity.fields.map((f) => (
+                                            <Field key={f.label} label={f.label}>{f.value}</Field>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
                         </Module>
 
-                        {/* ── 2. Location Details ── */}
-                        <Module id="location" icon={<FaMapMarkedAlt size={13} color={C.accent} />} title="Location Details">
+                        {/* ── 2. Location ── */}
+                        <Module id="location" icon={<FaMapMarkedAlt size={13} color={C.accent} />} title="Location">
+                            <div style={subHeaderStyle}>Site location</div>
                             <div style={gridTwo}>
                                 <Field label="State">{dash(p.location?.state)}</Field>
                                 <Field label="City">{dash(p.location?.city)}</Field>
@@ -473,6 +688,17 @@ export default function SingleProjectDetail({ onViewTask } = {}) {
                             </div>
                             <div style={{ marginTop: 10 }}>
                                 <Field label="Site address">{dash(p.location?.siteAddress)}</Field>
+                            </div>
+
+                            <div style={subHeaderStyle}>Headquarter location</div>
+                            <div style={gridTwo}>
+                                <Field label="State">{dash(p.headquarterLocation?.state)}</Field>
+                                <Field label="City">{dash(p.headquarterLocation?.city)}</Field>
+                                <Field label="District">{dash(p.headquarterLocation?.district)}</Field>
+                                <Field label="Pincode">{dash(p.headquarterLocation?.pincode)}</Field>
+                            </div>
+                            <div style={{ marginTop: 10 }}>
+                                <Field label="Site address">{dash(p.headquarterLocation?.siteAddress)}</Field>
                             </div>
                         </Module>
 
@@ -487,6 +713,34 @@ export default function SingleProjectDetail({ onViewTask } = {}) {
                                 <Field label="Expenditure type">{prettify(p.expenditureType)}</Field>
                                 <Field label="Ranking order for bid">{prettify(p.rankingOrderForBid)}</Field>
                             </div>
+
+                            <div style={subHeaderStyle}>Client / tender / contract</div>
+                            <div style={gridTwo}>
+                                <Field label="Client name">{dash(p.clientName)}</Field>
+                                <Field label="Tender No.">{dash(p.tenderNo)}</Field>
+                                <Field label="LOA No.">{dash(p.loaNo)}</Field>
+                                <Field label="Agreement No.">{dash(p.agreementNo)}</Field>
+                                <Field label="LOA date">{formatDate(p.loaDate)}</Field>
+                                <Field label="Tender total amount">{formatCurrency(p.tenderTotalAmount)}</Field>
+                                <Field label="LOA amount">{formatCurrency(p.loaAmount)}</Field>
+                                <Field label="Contractor name">{dash(p.contractorName)}</Field>
+                                <Field label="Contractor code">{dash(p.contractorCode)}</Field>
+                                <Field label="TCA">{dash(p.tca)}</Field>
+                                <Field label="TAA">{dash(p.taa)}</Field>
+                            </div>
+
+                            <div style={subHeaderStyle}>
+                                <FaUsers size={12} color={C.accent} /> Joint venture members ({p.jointVentureMembers?.length || 0})
+                            </div>
+                            {p.jointVentureMembers && p.jointVentureMembers.length ? (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                                    {p.jointVentureMembers.map((m, i) => (
+                                        <span key={i} style={badgeStyle('var(--secondary)', 'var(--secondary-foreground)')}>{m}</span>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No joint venture members added.</div>
+                            )}
 
                             {isRailway && (
                                 <>
@@ -554,7 +808,19 @@ export default function SingleProjectDetail({ onViewTask } = {}) {
                             </div>
                         </Module>
 
-                        {/* ── 5. Materials ── */}
+                        {/* ── 5. Bidding Financials ── */}
+                        <BiddingFinancialsModule project={p} />
+
+                        {/* ── 5b. Advanced Financial Details (PG) ── */}
+                        <PgFinancialsModule project={p} />
+
+                        {/* ── 5c. Penalty Details ── */}
+                        <PenaltyFinancialsModule project={p} />
+
+                        {/* ── 5d. Security Deposit ── */}
+                        <SecurityDepositFinancialsModule project={p} />
+
+                        {/* ── 6. Materials ── */}
                         <Module
                             id="materials"
                             icon={<FaBoxes size={13} color={C.accent} />}
@@ -744,7 +1010,7 @@ export default function SingleProjectDetail({ onViewTask } = {}) {
                                                         <td style={tdStyle}>
                                                             <button
                                                                 type="button"
-                                                                onClick={() => onViewTask && onViewTask(t._id)}
+                                                                onClick={() => navigate(`../task/${t._id}`)}
                                                                 style={viewButtonStyle}
                                                             >
                                                                 <FaEye size={11} /> View

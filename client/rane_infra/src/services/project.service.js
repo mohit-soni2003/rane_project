@@ -35,15 +35,15 @@ export async function createProject({ projectId, projectName, description }) {
 // ─────────────────────────────────────────────────────────────────
 // UPDATE BASIC PROJECT DETAILS — matches PATCH /v1/basic-details/:projectId
 // projectMongoId is the Mongo _id (Project.findById).
-// Body: { projectName, description } — send only the fields you want
-// to change, both are optional on the backend.
+// Body: { projectName, description, projectUnder } — send only the
+// fields you want to change, all are optional on the backend.
 // ─────────────────────────────────────────────────────────────────
-export async function updateBasicDetails(projectMongoId, { projectName, description } = {}) {
+export async function updateBasicDetails(projectMongoId, { projectName, description, projectUnder } = {}) {
   const res = await fetch(`${backend_url}/project/v1/basic-details/${projectMongoId}`, {
     method: 'PATCH',
     headers: authHeaders(),
     credentials: 'include',
-    body: JSON.stringify({ projectName, description }),
+    body: JSON.stringify({ projectName, description, projectUnder }),
   });
   const data = await res.json();
   if (!res.ok || !data.success) {
@@ -78,7 +78,10 @@ export async function addProjectDocument(projectMongoId, { name, url, documentTy
 // PATCH /v1/advance-details/:projectId
 // Body may include any of: projectType, tenderType, department,
 // contractType, biddingType, expenditureType, rankingOrderForBid,
-// zone, subDepartment, circle, division, psuName
+// zone, subDepartment, circle, division, psuName, clientName,
+// tenderNo, loaNo, agreementNo, loaDate, tenderTotalAmount,
+// loaAmount, contractorName, contractorCode, tca, taa,
+// jointVentureMembers
 // Nothing is required on the backend — send only what you have; this
 // works both the first time (create) and on later edits (update).
 // ─────────────────────────────────────────────────────────────────
@@ -95,7 +98,6 @@ export async function updateAdvanceDetails(projectMongoId, advanceDetails = {}) 
   }
   return data.data;
 }
-
 // ─────────────────────────────────────────────────────────────────
 // LIST PROJECTS — matches GET /v1/list
 // Optional query params: status, scope ("mine" | "all")
@@ -194,19 +196,22 @@ export async function getProjectById(projectMongoId) {
     throw new Error(data.message || 'Failed to load project');
   }
   return data.data;
-}// ─────────────────────────────────────────────────────────────────
-// UPDATE LOCATION — matches PATCH /v1/location/:projectId
-// Body: { location: { state, city, district, pincode, siteAddress } }
-// NOTE: this route doesn't exist in your route file yet — add it
-// following the same findById + conditional-field pattern as
-// basic-details / advance-details before wiring this in production.
+}
+
 // ─────────────────────────────────────────────────────────────────
-export async function updateLocation(projectMongoId, location = {}) {
+// UPDATE LOCATION — matches PATCH /v1/location/:projectId
+// Body: {
+//   location: { state, city, district, pincode, siteAddress },
+//   headquarterLocation: { state, city, district, pincode, siteAddress }
+// }
+// Both are optional — send either, both, or neither.
+// ─────────────────────────────────────────────────────────────────
+export async function updateLocation(projectMongoId, location = {}, headquarterLocation = {}) {
   const res = await fetch(`${backend_url}/project/v1/location/${projectMongoId}`, {
     method: 'PATCH',
     headers: authHeaders(),
     credentials: 'include',
-    body: JSON.stringify({ location }),
+    body: JSON.stringify({ location, headquarterLocation }),
   });
   const data = await res.json();
   if (!res.ok || !data.success) {
@@ -214,7 +219,6 @@ export async function updateLocation(projectMongoId, location = {}) {
   }
   return data.data;
 }
-
 // ─────────────────────────────────────────────────────────────────
 // UPDATE FINANCIAL DETAILS — matches PATCH /v1/financials/:projectId
 // Body: { financials: { ...top-level fields, recoveryAtContractEnd: {...} } }
@@ -232,6 +236,130 @@ export async function updateFinancials(projectMongoId, financials = {}) {
   const data = await res.json();
   if (!res.ok || !data.success) {
     throw new Error(data.message || 'Failed to update financial details');
+  }
+  return data.data;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// UPDATE BIDDING DETAILS — matches PATCH /v1/financials/bidding/:projectId
+// Body: { bidding: { emdAmount, advertisedValue, status, biddingPosition,
+//         biddingPercentage } }
+// All fields optional — send only what you want to change. status must
+// be one of: paid, unpaid, exempted. biddingPosition must be one of:
+// below, above, at_par. Does NOT touch costEstimation — use
+// addCostEstimation for that.
+// ─────────────────────────────────────────────────────────────────
+export async function updateBiddingDetails(projectMongoId, bidding = {}) {
+  const res = await fetch(`${backend_url}/project/v1/financials/bidding/${projectMongoId}`, {
+    method: 'PATCH',
+    headers: authHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ bidding }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.message || 'Failed to update bidding details');
+  }
+  return data.data;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ADD ONE COST ESTIMATION ENTRY — matches
+// POST /v1/financials/bidding/:projectId/cost-estimation
+// Body: { name, amount } — both required, accepts exactly one entry
+// per call. Returns the full updated costEstimation array.
+// ─────────────────────────────────────────────────────────────────
+export async function addCostEstimation(projectMongoId, { name, amount }) {
+  const res = await fetch(`${backend_url}/project/v1/financials/bidding/${projectMongoId}/cost-estimation`, {
+    method: 'POST',
+    headers: authHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ name, amount }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.message || 'Failed to add cost estimation entry');
+  }
+  return data.data;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// UPDATE PG DETAILS — matches PATCH /v1/financials/pg/:projectId
+// Body: { pg: { amountRailway, amountSubmitted, createDate, maturityDate,
+//         interest, maturityAmount, name, depositAccountNo, bankBranch } }
+// All fields optional — send only what you want to change.
+// ─────────────────────────────────────────────────────────────────
+export async function updatePgDetails(projectMongoId, pg = {}) {
+  const res = await fetch(`${backend_url}/project/v1/financials/pg/${projectMongoId}`, {
+    method: 'PATCH',
+    headers: authHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ pg }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.message || 'Failed to update PG details');
+  }
+  return data.data;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// UPDATE PENALTY DETAILS — matches PATCH /v1/financials/penalty/:projectId
+// Body: { penaltyDetails: { amount, ticketNo, ticketDate, delayDays } }
+// All fields optional — send only what you want to change. Does NOT
+// touch the existing flat financials.penalty / penaltyTicketNo fields.
+// ─────────────────────────────────────────────────────────────────
+export async function updatePenaltyDetails(projectMongoId, penaltyDetails = {}) {
+  const res = await fetch(`${backend_url}/project/v1/financials/penalty/${projectMongoId}`, {
+    method: 'PATCH',
+    headers: authHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ penaltyDetails }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.message || 'Failed to update penalty details');
+  }
+  return data.data;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// UPDATE SECURITY DEPOSIT DETAILS (amount, percentage) — matches
+// PATCH /v1/financials/security-deposit/:projectId
+// Body: { securityDeposit: { amount, percentage } }
+// All fields optional — send only what you want to change. Does NOT
+// touch security_deposit.cust — use addSecurityDepositCust for that.
+// ─────────────────────────────────────────────────────────────────
+export async function updateSecurityDepositDetails(projectMongoId, securityDeposit = {}) {
+  const res = await fetch(`${backend_url}/project/v1/financials/security-deposit/${projectMongoId}`, {
+    method: 'PATCH',
+    headers: authHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ securityDeposit }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.message || 'Failed to update security deposit details');
+  }
+  return data.data;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ADD ONE SECURITY DEPOSIT CUST ENTRY — matches
+// POST /v1/financials/security-deposit/:projectId/cust
+// Body: { billNo, recoveryPercent, amount } — all required, accepts
+// exactly one entry per call. Returns the full updated cust array.
+// ─────────────────────────────────────────────────────────────────
+export async function addSecurityDepositCust(projectMongoId, { billNo, recoveryPercent, amount }) {
+  const res = await fetch(`${backend_url}/project/v1/financials/security-deposit/${projectMongoId}/cust`, {
+    method: 'POST',
+    headers: authHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ billNo, recoveryPercent, amount }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.message || 'Failed to add security deposit entry');
   }
   return data.data;
 }
@@ -278,7 +406,7 @@ export async function addItems(projectMongoId, items) {
   }
   return data.data;
 }
- 
+
 // ─────────────────────────────────────────────────────────────────
 // GET ALL ITEMS FOR A PROJECT — matches GET /:projectId/items
 // NOTE: same /v1 caveat as addItems above.
@@ -293,6 +421,28 @@ export async function getProjectItems(projectMongoId) {
   const data = await res.json();
   if (!res.ok || !data.success) {
     throw new Error(data.message || 'Failed to load items');
+  }
+  return data.data;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// UPDATE TIMELINE — matches PATCH /v1/timeline/:projectId
+// Body: { startDate, estimatedCompletionDate, endDate } — all optional,
+// send only the fields you want to change.
+// NOTE: this route doesn't exist in your route file yet — add it
+// following the same findById + conditional-field pattern as
+// basic-details / location before wiring this in production.
+// ─────────────────────────────────────────────────────────────────
+export async function updateTimeline(projectMongoId, { startDate, estimatedCompletionDate, endDate } = {}) {
+  const res = await fetch(`${backend_url}/project/v1/timeline/${projectMongoId}`, {
+    method: 'PATCH',
+    headers: authHeaders(),
+    credentials: 'include',
+    body: JSON.stringify({ startDate, estimatedCompletionDate, endDate }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.message || 'Failed to update timeline');
   }
   return data.data;
 }

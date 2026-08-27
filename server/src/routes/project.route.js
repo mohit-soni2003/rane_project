@@ -83,7 +83,7 @@ router.post("/v1/create", verifyToken, adminOnly, async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UPDATE BASIC PROJECT DETAILS
-// Body may include: projectName, description
+// Body may include: projectName, description, projectUnder
 // projectId is intentionally NOT editable here — it's a unique identifier
 // set at creation time. If you need to allow renaming it, add a dedicated
 // check for uniqueness before applying it.
@@ -93,7 +93,7 @@ router.patch("/v1/basic-details/:projectId", verifyToken, adminOnly, async (req,
     try {
 
         const { projectId } = req.params;
-        const { projectName, description } = req.body;
+        const { projectName, description, projectUnder } = req.body;
 
         const project = await Project.findById(projectId);
 
@@ -115,6 +115,11 @@ router.patch("/v1/basic-details/:projectId", verifyToken, adminOnly, async (req,
         }
 
         if (description !== undefined) project.description = description;
+
+        // Enum field: convert empty string to undefined so Mongoose treats
+        // it as "clear the field" instead of trying to validate "" against
+        // the enum list (which always fails).
+        if (projectUnder !== undefined) project.projectUnder = projectUnder === '' ? undefined : projectUnder;
 
         await project.save();
 
@@ -220,7 +225,9 @@ router.post("/v1/:projectId/document", verifyToken, allUsers, async (req, res) =
 // CREATE / UPDATE ADVANCED PROJECT DETAILS
 // Body may include any of: projectType, tenderType, department, contractType,
 // biddingType, expenditureType, rankingOrderForBid, zone, subDepartment,
-// circle, division, psuName
+// circle, division, psuName, clientName, tenderNo, loaNo, agreementNo,
+// loaDate, tenderTotalAmount, loaAmount, contractorName, contractorCode,
+// tca, taa, jointVentureMembers
 // Only the fields present in the request body are set - nothing required,
 // works the first time (create) and on every subsequent call (update).
 // ─────────────────────────────────────────────────────────────────────────────
@@ -242,7 +249,19 @@ router.patch("/v1/advance-details/:projectId", verifyToken, adminOnly, async (re
             subDepartment,
             circle,
             division,
-            psuName
+            psuName,
+            clientName,
+            tenderNo,
+            loaNo,
+            agreementNo,
+            loaDate,
+            tenderTotalAmount,
+            loaAmount,
+            contractorName,
+            contractorCode,
+            tca,
+            taa,
+            jointVentureMembers
         } = req.body;
 
         const project = await Project.findById(projectId);
@@ -271,6 +290,29 @@ router.patch("/v1/advance-details/:projectId", verifyToken, adminOnly, async (re
         if (circle !== undefined) project.circle = clean(circle);
         if (division !== undefined) project.division = division; // free text, no enum — fine as ""
         if (psuName !== undefined) project.psuName = clean(psuName);
+
+        // NEW: Advance Details fields — all free text/number/date, no enum
+        // validation, so no need to run them through clean().
+        if (clientName !== undefined) project.clientName = clientName;
+        if (tenderNo !== undefined) project.tenderNo = tenderNo;
+        if (loaNo !== undefined) project.loaNo = loaNo;
+        if (agreementNo !== undefined) project.agreementNo = agreementNo;
+        if (loaDate !== undefined) project.loaDate = loaDate === '' ? undefined : loaDate;
+        if (tenderTotalAmount !== undefined) project.tenderTotalAmount = tenderTotalAmount;
+        if (loaAmount !== undefined) project.loaAmount = loaAmount;
+        if (contractorName !== undefined) project.contractorName = contractorName;
+        if (contractorCode !== undefined) project.contractorCode = contractorCode;
+        if (tca !== undefined) project.tca = tca;
+        if (taa !== undefined) project.taa = taa;
+
+        // jointVentureMembers is an array of strings — accept the array as-is
+        // when it's actually an array (replaces the whole list, same as how
+        // a form would resubmit it).
+        if (jointVentureMembers !== undefined) {
+            project.jointVentureMembers = Array.isArray(jointVentureMembers)
+                ? jointVentureMembers
+                : [];
+        }
 
         await project.save();
 
@@ -620,15 +662,19 @@ router.get("/v1/:projectId", verifyToken, allUsers, async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UPDATE LOCATION
-// Body: { location: { state, city, district, pincode, siteAddress } }
-// All fields optional — only provided keys are updated.
+// Body: {
+//   location: { state, city, district, pincode, siteAddress },
+//   headquarterLocation: { state, city, district, pincode, siteAddress }
+// }
+// All fields optional — only provided keys are updated. Both objects are
+// optional too; send either, both, or neither.
 // ─────────────────────────────────────────────────────────────────────────────
 
 router.patch("/v1/location/:projectId", verifyToken, adminOnly, async (req, res) => {
     try {
 
         const { projectId } = req.params;
-        const { location } = req.body;
+        const { location, headquarterLocation } = req.body;
 
         const project = await Project.findById(projectId);
 
@@ -647,6 +693,18 @@ router.patch("/v1/location/:projectId", verifyToken, adminOnly, async (req, res)
             if (district !== undefined) project.location.district = district;
             if (pincode !== undefined) project.location.pincode = pincode;
             if (siteAddress !== undefined) project.location.siteAddress = siteAddress;
+        }
+
+        // NEW: headquarterLocation — same shape and same update logic as
+        // location above, just a separate field on the document.
+        if (headquarterLocation && typeof headquarterLocation === 'object') {
+            const { state, city, district, pincode, siteAddress } = headquarterLocation;
+            if (!project.headquarterLocation) project.headquarterLocation = {};
+            if (state !== undefined) project.headquarterLocation.state = state;
+            if (city !== undefined) project.headquarterLocation.city = city;
+            if (district !== undefined) project.headquarterLocation.district = district;
+            if (pincode !== undefined) project.headquarterLocation.pincode = pincode;
+            if (siteAddress !== undefined) project.headquarterLocation.siteAddress = siteAddress;
         }
 
         await project.save();
@@ -827,7 +885,7 @@ router.post("/:projectId/items", verifyToken, allUsers, async (req, res) => {
                 });
             }
 
-            
+
         }
 
         const itemsToInsert = items.map((item) => ({
@@ -1299,6 +1357,49 @@ router.post("/v1/financials/security-deposit/:projectId/cust", verifyToken, admi
             success: true,
             message: "Security deposit entry added successfully.",
             data: project.financials.security_deposit.cust
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UPDATE TIMELINE
+// Body: { startDate, estimatedCompletionDate, endDate }
+// All fields optional — only provided keys are updated.
+// ─────────────────────────────────────────────────────────────────────────────
+
+router.patch("/v1/timeline/:projectId", verifyToken, adminOnly, async (req, res) => {
+    try {
+
+        const { projectId } = req.params;
+        const { startDate, estimatedCompletionDate, endDate } = req.body;
+
+        const project = await Project.findById(projectId);
+
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                message: "Project not found."
+            });
+        }
+
+        if (startDate !== undefined) project.startDate = startDate || undefined;
+        if (estimatedCompletionDate !== undefined) project.estimatedCompletionDate = estimatedCompletionDate || undefined;
+        if (endDate !== undefined) project.endDate = endDate || undefined;
+
+        await project.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Timeline updated successfully.",
+            data: project
         });
 
     } catch (error) {

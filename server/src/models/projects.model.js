@@ -107,9 +107,28 @@ const projectSchema = new mongoose.Schema(
         },
 
         /* ---------------------------------------------------------- */
+        /* NEW: which entity this project is being executed under.   */
+        /* ---------------------------------------------------------- */
+        projectUnder: {
+            type: String,
+            enum: ["company", "firm"]
+        },
+
+        /* ---------------------------------------------------------- */
         /* 2. LOCATION OF PROJECT                                    */
         /* ---------------------------------------------------------- */
         location: {
+            state: { type: String },
+            city: { type: String },
+            district: { type: String },
+            pincode: { type: String },
+            siteAddress: { type: String }
+        },
+
+        /* ---------------------------------------------------------- */
+        /* NEW: headquarter location — same shape as location above.  */
+        /* ---------------------------------------------------------- */
+        headquarterLocation: {
             state: { type: String },
             city: { type: String },
             district: { type: String },
@@ -170,6 +189,25 @@ const projectSchema = new mongoose.Schema(
             type: String,
             enum: ["low_to_high", "high_to_low"],
         },
+
+        /* ---------------------------------------------------------- */
+        /* NEW: 11 fields requested for the Advance Details section.  */
+        /* Grouped together right here so they're easy to find/edit.  */
+        /* jointVentureMembers is an array — one or more members can  */
+        /* be added from the form.                                    */
+        /* ---------------------------------------------------------- */
+        clientName: { type: String },
+        tenderNo: { type: String, trim: true },
+        loaNo: { type: String, trim: true },
+        agreementNo: { type: String, trim: true },
+        loaDate: { type: Date },
+        tenderTotalAmount: { type: Number, default: 0 },
+        loaAmount: { type: Number, default: 0 },
+        contractorName: { type: String },
+        contractorCode: { type: String, trim: true },
+        tca: { type: String, trim: true },
+        taa: { type: String, trim: true },
+        jointVentureMembers: [{ type: String, trim: true }],
 
         /* -- RAILWAY-ONLY -- */
         zone: {

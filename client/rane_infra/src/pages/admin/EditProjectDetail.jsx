@@ -5,7 +5,8 @@ import {
     FaFileAlt, FaUserShield, FaClipboardCheck, FaTimesCircle,
     FaTrain, FaIndustry, FaSave, FaPlus, FaPaperPlane, FaExternalLinkAlt,
     FaBoxes, FaTrash, FaTasks, FaUserCircle, FaUsers, FaCheckCircle, FaShieldAlt,
-    FaChevronRight, FaSearch,
+    FaChevronRight, FaSearch, FaGavel, FaLandmark, FaExclamationTriangle, FaPiggyBank,
+    FaCalendarAlt,
 } from 'react-icons/fa';
 import { FiRefreshCw } from 'react-icons/fi';
 import { CLOUD_NAME, UPLOAD_PRESET } from '../../store/keyStore';
@@ -21,6 +22,13 @@ import {
     forwardProject,
     addItems,
     getProjectItems,
+    updateBiddingDetails,
+    addCostEstimation,
+    updatePgDetails,
+    updatePenaltyDetails,
+    updateSecurityDepositDetails,
+    addSecurityDepositCust,
+    updateTimeline,
 } from '../../services/project.service.js';
 import { getTasksByProject, createTask } from '../../services/task.service.js';
 
@@ -59,6 +67,9 @@ const FORWARD_ACTIONS = ['approved', 'returned', 'rejected', 'pending'];
 
 // Unit options — matches the Item schema's unit enum
 const UNIT_OPTIONS = ['Each', 'Meter', 'Set', 'Rmt', 'kg'];
+
+// Matches the Project schema's projectUnder enum
+const PROJECT_UNDER_OPTIONS = ['company', 'firm'];
 
 const prettify = (v) =>
     typeof v === 'string' ? v.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : '—';
@@ -194,6 +205,7 @@ function BasicDetailsModule({ project, onUpdated }) {
     const [form, setForm] = useState({
         projectName: project.projectName || '',
         description: project.description || '',
+        projectUnder: project.projectUnder || '',
     });
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -231,6 +243,15 @@ function BasicDetailsModule({ project, onUpdated }) {
                         id="projectName" type="text" name="projectName" value={form.projectName}
                         onChange={handleChange} style={controlStyle}
                     />
+                </Field>
+                <Field label="Project under" htmlFor="projectUnder">
+                    <select
+                        id="projectUnder" name="projectUnder" value={form.projectUnder}
+                        onChange={handleChange} style={{ ...controlStyle, cursor: 'pointer' }}
+                    >
+                        <option value="">Select</option>
+                        {PROJECT_UNDER_OPTIONS.map((o) => <option key={o} value={o}>{prettify(o)}</option>)}
+                    </select>
                 </Field>
             </div>
             <div style={{ marginTop: 12 }}>
@@ -274,6 +295,17 @@ function LocationModule({ project, onUpdated }) {
         pincode: project.location?.pincode || '',
         siteAddress: project.location?.siteAddress || '',
     });
+
+    // NEW: headquarter location — same shape as location above, kept as
+    // its own form state since it's a separate field on the project.
+    const [hqForm, setHqForm] = useState({
+        state: project.headquarterLocation?.state || '',
+        city: project.headquarterLocation?.city || '',
+        district: project.headquarterLocation?.district || '',
+        pincode: project.headquarterLocation?.pincode || '',
+        siteAddress: project.headquarterLocation?.siteAddress || '',
+    });
+
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
     const [error, setError] = useState('');
@@ -284,12 +316,18 @@ function LocationModule({ project, onUpdated }) {
         setError('');
     };
 
+    const handleHqChange = (e) => {
+        setHqForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+        setSaved(false);
+        setError('');
+    };
+
     const handleSave = async () => {
         setSaving(true);
         setSaved(false);
         setError('');
         try {
-            const updated = await updateLocation(project._id, form);
+            const updated = await updateLocation(project._id, form, hqForm);
             onUpdated(updated);
             setSaved(true);
         } catch (err) {
@@ -300,7 +338,8 @@ function LocationModule({ project, onUpdated }) {
     };
 
     return (
-        <Module id="location" icon={<FaMapMarkedAlt size={13} color={C.accent} />} title="Location Details">
+        <Module id="location" icon={<FaMapMarkedAlt size={13} color={C.accent} />} title="Location">
+            <div style={subHeaderStyle}>Site location</div>
             <div style={gridTwo}>
                 <Field label="State" htmlFor="state">
                     <select
@@ -329,6 +368,38 @@ function LocationModule({ project, onUpdated }) {
                     />
                 </Field>
             </div>
+
+            {/* NEW: headquarter location — same field set as site location */}
+            <div style={subHeaderStyle}>Headquarter location</div>
+            <div style={gridTwo}>
+                <Field label="State" htmlFor="hqState">
+                    <select
+                        id="hqState" name="state" value={hqForm.state}
+                        onChange={handleHqChange} style={{ ...controlStyle, cursor: 'pointer' }}
+                    >
+                        <option value="">Select state</option>
+                        {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                </Field>
+                <Field label="City" htmlFor="hqCity">
+                    <input id="hqCity" type="text" name="city" value={hqForm.city} onChange={handleHqChange} style={controlStyle} />
+                </Field>
+                <Field label="District" htmlFor="hqDistrict">
+                    <input id="hqDistrict" type="text" name="district" value={hqForm.district} onChange={handleHqChange} style={controlStyle} />
+                </Field>
+                <Field label="Pincode" htmlFor="hqPincode">
+                    <input id="hqPincode" type="text" name="pincode" value={hqForm.pincode} onChange={handleHqChange} style={controlStyle} />
+                </Field>
+            </div>
+            <div style={{ marginTop: 12 }}>
+                <Field label="Site address" htmlFor="hqSiteAddress">
+                    <textarea
+                        id="hqSiteAddress" name="siteAddress" rows={2} value={hqForm.siteAddress}
+                        onChange={handleHqChange} style={{ ...controlStyle, resize: 'vertical' }}
+                    />
+                </Field>
+            </div>
+
             <button onClick={handleSave} disabled={saving} style={saveButtonStyle(saving)}>
                 <FaSave size={12} /> {saving ? 'Saving…' : 'Save location'}
             </button>
@@ -355,7 +426,26 @@ function AdvanceDetailsModule({ project, onUpdated }) {
         circle: project.circle || '',
         division: project.division || '',
         psuName: project.psuName || '',
+        // NEW: client / tender / contract fields
+        clientName: project.clientName || '',
+        tenderNo: project.tenderNo || '',
+        loaNo: project.loaNo || '',
+        agreementNo: project.agreementNo || '',
+        loaDate: project.loaDate ? project.loaDate.slice(0, 10) : '',
+        tenderTotalAmount: project.tenderTotalAmount ?? '',
+        loaAmount: project.loaAmount ?? '',
+        contractorName: project.contractorName || '',
+        contractorCode: project.contractorCode || '',
+        tca: project.tca || '',
+        taa: project.taa || '',
     });
+
+    // NEW: joint venture members — a simple string array, edited as a
+    // "type a name, hit Add" list rather than a plain text field so it
+    // matches the schema shape (array of strings) exactly.
+    const [jvMembers, setJvMembers] = useState(project.jointVentureMembers || []);
+    const [jvInput, setJvInput] = useState('');
+
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
     const [error, setError] = useState('');
@@ -374,12 +464,41 @@ function AdvanceDetailsModule({ project, onUpdated }) {
         setError('');
     };
 
+    const addJvMember = () => {
+        const name = jvInput.trim();
+        if (!name) return;
+        setJvMembers((prev) => [...prev, name]);
+        setJvInput('');
+        setSaved(false);
+        setError('');
+    };
+
+    const removeJvMember = (index) => {
+        setJvMembers((prev) => prev.filter((_, i) => i !== index));
+        setSaved(false);
+        setError('');
+    };
+
+    const handleJvKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addJvMember();
+        }
+    };
+
     const handleSave = async () => {
         setSaving(true);
         setSaved(false);
         setError('');
         try {
-            const updated = await updateAdvanceDetails(project._id, form);
+            const payload = {
+                ...form,
+                tenderTotalAmount: form.tenderTotalAmount === '' ? undefined : Number(form.tenderTotalAmount),
+                loaAmount: form.loaAmount === '' ? undefined : Number(form.loaAmount),
+                loaDate: form.loaDate || undefined,
+                jointVentureMembers: jvMembers,
+            };
+            const updated = await updateAdvanceDetails(project._id, payload);
             onUpdated(updated);
             setSaved(true);
         } catch (err) {
@@ -434,6 +553,83 @@ function AdvanceDetailsModule({ project, onUpdated }) {
                         {RANKING_ORDERS.map((r) => <option key={r} value={r}>{prettify(r)}</option>)}
                     </select>
                 </Field>
+            </div>
+
+            {/* NEW: client / tender / contract fields */}
+            <div style={subHeaderStyle}>Client / tender / contract</div>
+            <div style={gridTwo}>
+                <Field label="Client name" htmlFor="clientName">
+                    <input id="clientName" type="text" name="clientName" value={form.clientName} onChange={handleChange} style={controlStyle} />
+                </Field>
+                <Field label="Tender No." htmlFor="tenderNo">
+                    <input id="tenderNo" type="text" name="tenderNo" value={form.tenderNo} onChange={handleChange} style={controlStyle} />
+                </Field>
+                <Field label="LOA No." htmlFor="loaNo">
+                    <input id="loaNo" type="text" name="loaNo" value={form.loaNo} onChange={handleChange} style={controlStyle} />
+                </Field>
+                <Field label="Agreement No." htmlFor="agreementNo">
+                    <input id="agreementNo" type="text" name="agreementNo" value={form.agreementNo} onChange={handleChange} style={controlStyle} />
+                </Field>
+                <Field label="LOA date" htmlFor="loaDate">
+                    <input id="loaDate" type="date" name="loaDate" value={form.loaDate} onChange={handleChange} style={{ ...controlStyle, cursor: 'pointer' }} />
+                </Field>
+                <Field label="Tender total amount" htmlFor="tenderTotalAmount">
+                    <input id="tenderTotalAmount" type="number" name="tenderTotalAmount" value={form.tenderTotalAmount} onChange={handleChange} style={controlStyle} />
+                </Field>
+                <Field label="LOA amount" htmlFor="loaAmount">
+                    <input id="loaAmount" type="number" name="loaAmount" value={form.loaAmount} onChange={handleChange} style={controlStyle} />
+                </Field>
+                <Field label="Contractor name" htmlFor="contractorName">
+                    <input id="contractorName" type="text" name="contractorName" value={form.contractorName} onChange={handleChange} style={controlStyle} />
+                </Field>
+                <Field label="Contractor code" htmlFor="contractorCode">
+                    <input id="contractorCode" type="text" name="contractorCode" value={form.contractorCode} onChange={handleChange} style={controlStyle} />
+                </Field>
+                <Field label="TCA" htmlFor="tca">
+                    <input id="tca" type="text" name="tca" value={form.tca} onChange={handleChange} style={controlStyle} />
+                </Field>
+                <Field label="TAA" htmlFor="taa">
+                    <input id="taa" type="text" name="taa" value={form.taa} onChange={handleChange} style={controlStyle} />
+                </Field>
+            </div>
+
+            {/* NEW: joint venture members — add/remove list */}
+            <div style={subHeaderStyle}>
+                <FaUsers size={12} color={C.accent} /> Joint venture members ({jvMembers.length})
+            </div>
+
+            {jvMembers.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                    {jvMembers.map((m, i) => (
+                        <span key={i} style={{ ...badgeStyle('var(--secondary)', 'var(--secondary-foreground)'), gap: 8 }}>
+                            {m}
+                            <FaTrash
+                                size={10}
+                                style={{ cursor: 'pointer' }}
+                                color={C.destructive}
+                                onClick={() => removeJvMember(i)}
+                                title="Remove"
+                            />
+                        </span>
+                    ))}
+                </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', maxWidth: 420 }}>
+                <div style={{ flex: 1 }}>
+                    <Field label="Add member" htmlFor="jvMemberInput">
+                        <input
+                            id="jvMemberInput" type="text" value={jvInput}
+                            onChange={(e) => setJvInput(e.target.value)}
+                            onKeyDown={handleJvKeyDown}
+                            placeholder="Member / firm name"
+                            style={controlStyle}
+                        />
+                    </Field>
+                </div>
+                <button type="button" onClick={addJvMember} style={{ ...secondaryButtonStyle, height: 38 }}>
+                    <FaPlus size={11} /> Add
+                </button>
             </div>
 
             {isRailway && (
@@ -641,6 +837,559 @@ function FinancialDetailsModule({ project, onUpdated }) {
             </button>
             {saved && <span style={savedTag}>Saved</span>}
             {error && <span style={errorTag}>{error}</span>}
+        </Module>
+    );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MODULE 4B — Bidding Financials
+   PATCH /v1/financials/bidding/:projectId  (updateBiddingDetails)
+   POST  /v1/financials/bidding/:projectId/cost-estimation (addCostEstimation, one at a time)
+   ══════════════════════════════════════════════════════════════════════════ */
+const BIDDING_STATUSES = ['unpaid', 'paid', 'exempted'];
+
+function BiddingFinancialsModule({ project, onRefresh }) {
+    const bidding = project.financials?.bidding || {};
+
+    const [form, setForm] = useState({
+        emdAmount: bidding.emdAmount ?? '',
+        advertisedValue: bidding.advertisedValue ?? '',
+        status: bidding.status || 'unpaid',
+        biddingPosition: bidding.biddingPosition || '',
+        biddingPercentage: bidding.biddingPercentage ?? '',
+    });
+    const [saving, setSaving] = useState(false);
+    const [saved, setSaved] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleChange = (e) => {
+        setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+        setSaved(false);
+        setError('');
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        setSaved(false);
+        setError('');
+        try {
+            await updateBiddingDetails(project._id, {
+                emdAmount: form.emdAmount === '' ? undefined : Number(form.emdAmount),
+                advertisedValue: form.advertisedValue === '' ? undefined : Number(form.advertisedValue),
+                status: form.status || undefined,
+                biddingPosition: form.biddingPosition || undefined,
+                biddingPercentage: form.biddingPercentage === '' ? undefined : Number(form.biddingPercentage),
+            });
+            await onRefresh();
+            setSaved(true);
+        } catch (err) {
+            setError(err.message || 'Failed to save');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    // ── expense / cost estimation table — added one entry at a time ──
+    const [costName, setCostName] = useState('');
+    const [costAmount, setCostAmount] = useState('');
+    const [addingCost, setAddingCost] = useState(false);
+    const [costAdded, setCostAdded] = useState(false);
+    const [costError, setCostError] = useState('');
+
+    const handleAddCost = async () => {
+        setCostAdded(false);
+        if (!costName.trim()) {
+            setCostError('Cost name is required.');
+            return;
+        }
+        if (costAmount === '' || Number.isNaN(Number(costAmount))) {
+            setCostError('Enter a valid amount.');
+            return;
+        }
+        setAddingCost(true);
+        setCostError('');
+        try {
+            await addCostEstimation(project._id, { name: costName, amount: Number(costAmount) });
+            await onRefresh();
+            setCostName('');
+            setCostAmount('');
+            setCostAdded(true);
+        } catch (err) {
+            setCostError(err.message || 'Failed to add expense');
+        } finally {
+            setAddingCost(false);
+        }
+    };
+
+    const costEstimationList = bidding.costEstimation || [];
+    const costTotal = costEstimationList.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+
+    return (
+        <Module id="bidding" icon={<FaGavel size={13} color={C.accent} />} title="Bidding Financials">
+            <div style={gridTwo}>
+                <Field label="EMD amount" htmlFor="emdAmount">
+                    <input
+                        id="emdAmount" type="number" name="emdAmount" value={form.emdAmount}
+                        onChange={handleChange} style={controlStyle}
+                    />
+                </Field>
+                <Field label="Advertised value" htmlFor="advertisedValue">
+                    <input
+                        id="advertisedValue" type="number" name="advertisedValue" value={form.advertisedValue}
+                        onChange={handleChange} style={controlStyle}
+                    />
+                </Field>
+                <Field label="EMD status" htmlFor="biddingStatus">
+                    <select
+                        id="biddingStatus" name="status" value={form.status}
+                        onChange={handleChange} style={{ ...controlStyle, cursor: 'pointer' }}
+                    >
+                        {BIDDING_STATUSES.map((s) => <option key={s} value={s}>{prettify(s)}</option>)}
+                    </select>
+                </Field>
+                <Field label="Bidding position" htmlFor="biddingPos">
+                    <select
+                        id="biddingPos" name="biddingPosition" value={form.biddingPosition}
+                        onChange={handleChange} style={{ ...controlStyle, cursor: 'pointer' }}
+                    >
+                        <option value="">Select position</option>
+                        {BIDDING_POSITIONS.map((b) => <option key={b} value={b}>{prettify(b)}</option>)}
+                    </select>
+                </Field>
+                <Field label="Bidding percentage" htmlFor="biddingPct">
+                    <input
+                        id="biddingPct" type="number" name="biddingPercentage" value={form.biddingPercentage}
+                        onChange={handleChange} style={controlStyle}
+                    />
+                </Field>
+            </div>
+
+            <button onClick={handleSave} disabled={saving} style={saveButtonStyle(saving)}>
+                <FaSave size={12} /> {saving ? 'Saving…' : 'Save bidding details'}
+            </button>
+            {saved && <span style={savedTag}>Saved</span>}
+            {error && <span style={errorTag}>{error}</span>}
+
+            <div style={subHeaderStyle}>Expenses / cost estimation ({costEstimationList.length})</div>
+
+            {costEstimationList.length > 0 ? (
+                <div style={tableWrapStyle}>
+                    <table style={tableStyle}>
+                        <thead>
+                            <tr>
+                                <th style={thStyle}>Cost Name</th>
+                                <th style={thRightStyle}>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {costEstimationList.map((c, i) => (
+                                <tr key={c._id || i}>
+                                    <td style={tdStyle}>{c.name || '—'}</td>
+                                    <td style={{ ...tdStyle, textAlign: 'right' }}>{c.amount ?? '—'}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                        <tfoot>
+                            <tr style={totalRowStyle}>
+                                <td style={tdStyle}>Total</td>
+                                <td style={{ ...tdStyle, textAlign: 'right' }}>{costTotal}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            ) : (
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 14 }}>No expenses added yet.</div>
+            )}
+
+            <div style={{ ...gridTwo, marginTop: 12 }}>
+                <Field label="Cost name" htmlFor="costName">
+                    <input
+                        id="costName" type="text" value={costName}
+                        onChange={(e) => { setCostName(e.target.value); setCostError(''); setCostAdded(false); }}
+                        style={controlStyle}
+                    />
+                </Field>
+                <Field label="Amount" htmlFor="costAmount">
+                    <input
+                        id="costAmount" type="number" value={costAmount}
+                        onChange={(e) => { setCostAmount(e.target.value); setCostError(''); setCostAdded(false); }}
+                        style={controlStyle}
+                    />
+                </Field>
+            </div>
+
+            <button onClick={handleAddCost} disabled={addingCost} style={{ ...saveButtonStyle(addingCost), marginTop: 12 }}>
+                <FaPlus size={12} /> {addingCost ? 'Adding…' : 'Add expense'}
+            </button>
+            {costAdded && <span style={savedTag}>Added</span>}
+            {costError && <span style={errorTag}>{costError}</span>}
+        </Module>
+    );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MODULE 4C — Advanced Financial Details (PG) → PATCH /v1/financials/pg/:projectId
+   ══════════════════════════════════════════════════════════════════════════ */
+function PgDetailsModule({ project, onRefresh }) {
+    const pg = project.financials?.pg || {};
+
+    const [form, setForm] = useState({
+        amountRailway: pg.amountRailway ?? '',
+        amountSubmitted: pg.amountSubmitted ?? '',
+        createDate: pg.createDate ? pg.createDate.slice(0, 10) : '',
+        maturityDate: pg.maturityDate ? pg.maturityDate.slice(0, 10) : '',
+        interest: pg.interest ?? '',
+        maturityAmount: pg.maturityAmount ?? '',
+        name: pg.name || '',
+        depositAccountNo: pg.depositAccountNo || '',
+        bankBranch: pg.bankBranch || '',
+    });
+    const [saving, setSaving] = useState(false);
+    const [saved, setSaved] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleChange = (e) => {
+        setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+        setSaved(false);
+        setError('');
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        setSaved(false);
+        setError('');
+        try {
+            await updatePgDetails(project._id, {
+                amountRailway: form.amountRailway === '' ? undefined : Number(form.amountRailway),
+                amountSubmitted: form.amountSubmitted === '' ? undefined : Number(form.amountSubmitted),
+                createDate: form.createDate || undefined,
+                maturityDate: form.maturityDate || undefined,
+                interest: form.interest === '' ? undefined : Number(form.interest),
+                maturityAmount: form.maturityAmount === '' ? undefined : Number(form.maturityAmount),
+                name: form.name || undefined,
+                depositAccountNo: form.depositAccountNo || undefined,
+                bankBranch: form.bankBranch || undefined,
+            });
+            await onRefresh();
+            setSaved(true);
+        } catch (err) {
+            setError(err.message || 'Failed to save');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <Module id="pg" icon={<FaLandmark size={13} color={C.accent} />} title="Advanced Financial Details">
+            <div style={gridTwo}>
+                <Field label="PG amount (railway)" htmlFor="amountRailway">
+                    <input
+                        id="amountRailway" type="number" name="amountRailway" value={form.amountRailway}
+                        onChange={handleChange} style={controlStyle}
+                    />
+                </Field>
+                <Field label="PG amount submitted" htmlFor="amountSubmitted">
+                    <input
+                        id="amountSubmitted" type="number" name="amountSubmitted" value={form.amountSubmitted}
+                        onChange={handleChange} style={controlStyle}
+                    />
+                </Field>
+                <Field label="PG create date" htmlFor="createDate">
+                    <input
+                        id="createDate" type="date" name="createDate" value={form.createDate}
+                        onChange={handleChange} style={{ ...controlStyle, cursor: 'pointer' }}
+                    />
+                </Field>
+                <Field label="Maturity date" htmlFor="maturityDate">
+                    <input
+                        id="maturityDate" type="date" name="maturityDate" value={form.maturityDate}
+                        onChange={handleChange} style={{ ...controlStyle, cursor: 'pointer' }}
+                    />
+                </Field>
+                <Field label="Interest" htmlFor="interest">
+                    <input
+                        id="interest" type="number" name="interest" value={form.interest}
+                        onChange={handleChange} style={controlStyle}
+                    />
+                </Field>
+                <Field label="Maturity amount" htmlFor="maturityAmount">
+                    <input
+                        id="maturityAmount" type="number" name="maturityAmount" value={form.maturityAmount}
+                        onChange={handleChange} style={controlStyle}
+                    />
+                </Field>
+                <Field label="Name" htmlFor="pgName">
+                    <input
+                        id="pgName" type="text" name="name" value={form.name}
+                        onChange={handleChange} style={controlStyle}
+                    />
+                </Field>
+                <Field label="Deposit account no." htmlFor="pgDepositAccountNo">
+                    <input
+                        id="pgDepositAccountNo" type="text" name="depositAccountNo" value={form.depositAccountNo}
+                        onChange={handleChange} style={controlStyle}
+                    />
+                </Field>
+                <Field label="Bank branch" htmlFor="bankBranch">
+                    <input
+                        id="bankBranch" type="text" name="bankBranch" value={form.bankBranch}
+                        onChange={handleChange} style={controlStyle}
+                    />
+                </Field>
+            </div>
+
+            <button onClick={handleSave} disabled={saving} style={saveButtonStyle(saving)}>
+                <FaSave size={12} /> {saving ? 'Saving…' : 'Save PG details'}
+            </button>
+            {saved && <span style={savedTag}>Saved</span>}
+            {error && <span style={errorTag}>{error}</span>}
+        </Module>
+    );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MODULE 4D — Penalty Details → PATCH /v1/financials/penalty/:projectId
+   ══════════════════════════════════════════════════════════════════════════ */
+function PenaltyDetailsModule({ project, onRefresh }) {
+    const penaltyDetails = project.financials?.penaltyDetails || {};
+
+    const [form, setForm] = useState({
+        amount: penaltyDetails.amount ?? '',
+        ticketNo: penaltyDetails.ticketNo || '',
+        ticketDate: penaltyDetails.ticketDate ? penaltyDetails.ticketDate.slice(0, 10) : '',
+        delayDays: penaltyDetails.delayDays ?? '',
+    });
+    const [saving, setSaving] = useState(false);
+    const [saved, setSaved] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleChange = (e) => {
+        setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+        setSaved(false);
+        setError('');
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        setSaved(false);
+        setError('');
+        try {
+            await updatePenaltyDetails(project._id, {
+                amount: form.amount === '' ? undefined : Number(form.amount),
+                ticketNo: form.ticketNo || undefined,
+                ticketDate: form.ticketDate || undefined,
+                delayDays: form.delayDays === '' ? undefined : Number(form.delayDays),
+            });
+            await onRefresh();
+            setSaved(true);
+        } catch (err) {
+            setError(err.message || 'Failed to save');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <Module id="penalty" icon={<FaExclamationTriangle size={13} color={C.accent} />} title="Penalty Details">
+            <div style={gridTwo}>
+                <Field label="Amount" htmlFor="penaltyDetailsAmount">
+                    <input
+                        id="penaltyDetailsAmount" type="number" name="amount" value={form.amount}
+                        onChange={handleChange} style={controlStyle}
+                    />
+                </Field>
+                <Field label="Ticket No." htmlFor="penaltyTicketNoDetail">
+                    <input
+                        id="penaltyTicketNoDetail" type="text" name="ticketNo" value={form.ticketNo}
+                        onChange={handleChange} style={controlStyle}
+                    />
+                </Field>
+                <Field label="Ticket date" htmlFor="penaltyTicketDate">
+                    <input
+                        id="penaltyTicketDate" type="date" name="ticketDate" value={form.ticketDate}
+                        onChange={handleChange} style={{ ...controlStyle, cursor: 'pointer' }}
+                    />
+                </Field>
+                <Field label="Delay days" htmlFor="delayDays">
+                    <input
+                        id="delayDays" type="number" name="delayDays" value={form.delayDays}
+                        onChange={handleChange} style={controlStyle}
+                    />
+                </Field>
+            </div>
+
+            <button onClick={handleSave} disabled={saving} style={saveButtonStyle(saving)}>
+                <FaSave size={12} /> {saving ? 'Saving…' : 'Save penalty details'}
+            </button>
+            {saved && <span style={savedTag}>Saved</span>}
+            {error && <span style={errorTag}>{error}</span>}
+        </Module>
+    );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MODULE 4E — Security Deposit
+   PATCH /v1/financials/security-deposit/:projectId (updateSecurityDepositDetails)
+   POST  /v1/financials/security-deposit/:projectId/cust (addSecurityDepositCust, one at a time)
+   ══════════════════════════════════════════════════════════════════════════ */
+function SecurityDepositModule({ project, onRefresh }) {
+    const sd = project.financials?.security_deposit || {};
+
+    const [form, setForm] = useState({
+        amount: sd.amount ?? '',
+        percentage: sd.percentage ?? '',
+    });
+    const [saving, setSaving] = useState(false);
+    const [saved, setSaved] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleChange = (e) => {
+        setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+        setSaved(false);
+        setError('');
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        setSaved(false);
+        setError('');
+        try {
+            await updateSecurityDepositDetails(project._id, {
+                amount: form.amount === '' ? undefined : Number(form.amount),
+                percentage: form.percentage === '' ? undefined : Number(form.percentage),
+            });
+            await onRefresh();
+            setSaved(true);
+        } catch (err) {
+            setError(err.message || 'Failed to save');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    // ── previous SD entries — added one at a time via their own route ──
+    const [billNo, setBillNo] = useState('');
+    const [recoveryPercent, setRecoveryPercent] = useState('');
+    const [custAmount, setCustAmount] = useState('');
+    const [addingCust, setAddingCust] = useState(false);
+    const [custAdded, setCustAdded] = useState(false);
+    const [custError, setCustError] = useState('');
+
+    const handleAddCust = async () => {
+        setCustAdded(false);
+        if (!billNo.trim()) {
+            setCustError('Bill No. is required.');
+            return;
+        }
+        if (recoveryPercent === '' || Number.isNaN(Number(recoveryPercent))) {
+            setCustError('Enter a valid recovery %.');
+            return;
+        }
+        if (custAmount === '' || Number.isNaN(Number(custAmount))) {
+            setCustError('Enter a valid amount.');
+            return;
+        }
+        setAddingCust(true);
+        setCustError('');
+        try {
+            await addSecurityDepositCust(project._id, {
+                billNo,
+                recoveryPercent: Number(recoveryPercent),
+                amount: Number(custAmount),
+            });
+            await onRefresh();
+            setBillNo('');
+            setRecoveryPercent('');
+            setCustAmount('');
+            setCustAdded(true);
+        } catch (err) {
+            setCustError(err.message || 'Failed to add entry');
+        } finally {
+            setAddingCust(false);
+        }
+    };
+
+    const custList = sd.cust || [];
+
+    return (
+        <Module id="security-deposit" icon={<FaPiggyBank size={13} color={C.accent} />} title="Security Deposit">
+            <div style={gridTwo}>
+                <Field label="SD amount" htmlFor="sdAmount">
+                    <input
+                        id="sdAmount" type="number" name="amount" value={form.amount}
+                        onChange={handleChange} style={controlStyle}
+                    />
+                </Field>
+                <Field label="SD %" htmlFor="sdPercentage">
+                    <input
+                        id="sdPercentage" type="number" name="percentage" value={form.percentage}
+                        onChange={handleChange} style={controlStyle}
+                    />
+                </Field>
+            </div>
+
+            <button onClick={handleSave} disabled={saving} style={saveButtonStyle(saving)}>
+                <FaSave size={12} /> {saving ? 'Saving…' : 'Save SD details'}
+            </button>
+            {saved && <span style={savedTag}>Saved</span>}
+            {error && <span style={errorTag}>{error}</span>}
+
+            <div style={subHeaderStyle}>Previous SD entries ({custList.length})</div>
+
+            {custList.length > 0 ? (
+                <div style={tableWrapStyle}>
+                    <table style={tableStyle}>
+                        <thead>
+                            <tr>
+                                <th style={thStyle}>Bill No.</th>
+                                <th style={thRightStyle}>Recovery %</th>
+                                <th style={thRightStyle}>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {custList.map((c, i) => (
+                                <tr key={c._id || i}>
+                                    <td style={tdStyle}>{c.billNo || '—'}</td>
+                                    <td style={{ ...tdStyle, textAlign: 'right' }}>{c.recoveryPercent ?? '—'}</td>
+                                    <td style={{ ...tdStyle, textAlign: 'right' }}>{c.amount ?? '—'}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            ) : (
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 14 }}>No SD entries added yet.</div>
+            )}
+
+            <div style={{ ...gridTwo, marginTop: 12 }}>
+                <Field label="Bill No." htmlFor="sdBillNo">
+                    <input
+                        id="sdBillNo" type="text" value={billNo}
+                        onChange={(e) => { setBillNo(e.target.value); setCustError(''); setCustAdded(false); }}
+                        style={controlStyle}
+                    />
+                </Field>
+                <Field label="Recovery %" htmlFor="sdRecoveryPercent">
+                    <input
+                        id="sdRecoveryPercent" type="number" value={recoveryPercent}
+                        onChange={(e) => { setRecoveryPercent(e.target.value); setCustError(''); setCustAdded(false); }}
+                        style={controlStyle}
+                    />
+                </Field>
+                <Field label="Amount" htmlFor="sdCustAmount">
+                    <input
+                        id="sdCustAmount" type="number" value={custAmount}
+                        onChange={(e) => { setCustAmount(e.target.value); setCustError(''); setCustAdded(false); }}
+                        style={controlStyle}
+                    />
+                </Field>
+            </div>
+
+            <button onClick={handleAddCust} disabled={addingCust} style={{ ...saveButtonStyle(addingCust), marginTop: 12 }}>
+                <FaPlus size={12} /> {addingCust ? 'Adding…' : 'Add SD entry'}
+            </button>
+            {custAdded && <span style={savedTag}>Added</span>}
+            {custError && <span style={errorTag}>{custError}</span>}
         </Module>
     );
 }
@@ -1113,6 +1862,80 @@ function MaterialsModule({ project }) {
                 {saved && <span style={savedTag}>Saved</span>}
                 {error && <span style={errorTag}>{error}</span>}
             </div>
+        </Module>
+    );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MODULE 7B — Timeline → PATCH /v1/timeline/:projectId
+   NOTE: this route doesn't exist in your route file yet — add it
+   following the same findById + conditional-field pattern as
+   basic-details / location before wiring this in production.
+   ══════════════════════════════════════════════════════════════════════════ */
+function TimelineModule({ project, onUpdated }) {
+    const [form, setForm] = useState({
+        startDate: project.startDate ? project.startDate.slice(0, 10) : '',
+        estimatedCompletionDate: project.estimatedCompletionDate ? project.estimatedCompletionDate.slice(0, 10) : '',
+        endDate: project.endDate ? project.endDate.slice(0, 10) : '',
+    });
+    const [saving, setSaving] = useState(false);
+    const [saved, setSaved] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleChange = (e) => {
+        setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+        setSaved(false);
+        setError('');
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        setSaved(false);
+        setError('');
+        try {
+            const payload = {
+                startDate: form.startDate || undefined,
+                estimatedCompletionDate: form.estimatedCompletionDate || undefined,
+                endDate: form.endDate || undefined,
+            };
+            const updated = await updateTimeline(project._id, payload);
+            onUpdated(updated);
+            setSaved(true);
+        } catch (err) {
+            setError(err.message || 'Failed to save');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <Module id="timeline" icon={<FaCalendarAlt size={13} color={C.accent} />} title="Timeline">
+            <div style={gridTwo}>
+                <Field label="Start date" htmlFor="startDate">
+                    <input
+                        id="startDate" type="date" name="startDate" value={form.startDate}
+                        onChange={handleChange} style={{ ...controlStyle, cursor: 'pointer' }}
+                    />
+                </Field>
+                <Field label="Estimated completion date" htmlFor="estimatedCompletionDate">
+                    <input
+                        id="estimatedCompletionDate" type="date" name="estimatedCompletionDate" value={form.estimatedCompletionDate}
+                        onChange={handleChange} style={{ ...controlStyle, cursor: 'pointer' }}
+                    />
+                </Field>
+                <Field label="End date" htmlFor="endDate">
+                    <input
+                        id="endDate" type="date" name="endDate" value={form.endDate}
+                        onChange={handleChange} style={{ ...controlStyle, cursor: 'pointer' }}
+                    />
+                </Field>
+            </div>
+
+            <button onClick={handleSave} disabled={saving} style={saveButtonStyle(saving)}>
+                <FaSave size={12} /> {saving ? 'Saving…' : 'Save timeline'}
+            </button>
+            {saved && <span style={savedTag}>Saved</span>}
+            {error && <span style={errorTag}>{error}</span>}
         </Module>
     );
 }
@@ -1616,10 +2439,15 @@ const SECTIONS = [
     { id: 'location', label: 'Location', icon: <FaMapMarkedAlt size={12} /> },
     { id: 'advance', label: 'Advance', icon: <FaSitemap size={12} /> },
     { id: 'financial', label: 'Financial', icon: <FaRupeeSign size={12} /> },
+    { id: 'bidding', label: 'Bidding', icon: <FaGavel size={12} /> },
+    { id: 'pg', label: 'Advanced Financial', icon: <FaLandmark size={12} /> },
+    { id: 'penalty', label: 'Penalty', icon: <FaExclamationTriangle size={12} /> },
+    { id: 'security-deposit', label: 'Security Deposit', icon: <FaPiggyBank size={12} /> },
     { id: 'materials', label: 'Materials', icon: <FaBoxes size={12} /> },
     { id: 'status', label: 'Status', icon: <FaClipboardCheck size={12} /> },
     { id: 'documents', label: 'Documents', icon: <FaFileAlt size={12} /> },
     { id: 'tasks', label: 'Tasks', icon: <FaTasks size={12} /> },
+    { id: 'timeline', label: 'Timeline', icon: <FaCalendarAlt size={12} /> },
     { id: 'forward', label: 'Forward', icon: <FaUserShield size={12} /> },
 ];
 
@@ -1731,10 +2559,15 @@ export default function EditProjectDetail() {
                     <LocationModule project={p} onUpdated={handleProjectUpdated} />
                     <AdvanceDetailsModule project={p} onUpdated={handleProjectUpdated} />
                     <FinancialDetailsModule project={p} onUpdated={handleProjectUpdated} />
+                    <BiddingFinancialsModule project={p} onRefresh={fetchProject} />
+                    <PgDetailsModule project={p} onRefresh={fetchProject} />
+                    <PenaltyDetailsModule project={p} onRefresh={fetchProject} />
+                    <SecurityDepositModule project={p} onRefresh={fetchProject} />
                     <MaterialsModule project={p} />
                     <StatusModule project={p} onUpdated={handleProjectUpdated} />
                     <DocumentsModule project={p} onUpdated={handleProjectUpdated} />
                     <TasksModule project={p} onBrowseTask={handleBrowseTask} />
+                    <TimelineModule project={p} onUpdated={handleProjectUpdated} />
                     <ForwardModule project={p} onUpdated={handleProjectUpdated} />
                 </>
             )}

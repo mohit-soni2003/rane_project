@@ -122,18 +122,18 @@ const GLOBAL_STYLES = `
 `;
 
 const departments = [
-  { name: "Rane & Rane's Sons",      logo: "/logos/home.jpg" },
-  { name: "Rane's Infrastructure",   logo: "/logos/infrawebp.jpg" },
-  { name: "Rane's Logistic",         logo: "/logos/logistics.jpg" },
-  { name: "Malwa Agency",            logo: "/logos/malwa.jpg" },
-  { name: "Rane's Pharmeceuticals",  logo: "/logos/pharma.jpg" },
+  { name: "Rane and Son's Pvt. Ltd.", logo: "/logos/home.jpg" },
+  { name: "Rane's Infrastructure", logo: "/logos/infrawebp.jpg" },
+  { name: "Rane's Logistic", logo: "/logos/logistics.jpg" },
+  { name: "Malwa Agency", logo: "/logos/malwa.jpg" },
+  { name: "Rane's Pharmeceuticals", logo: "/logos/pharma.jpg" },
 ];
 
 const stats = [
-  { value: 5,   suffix: "+", label: "Years of Experience" },
+  { value: 5, suffix: "+", label: "Years of Experience" },
   { value: 120, suffix: "+", label: "Projects Completed" },
-  { value: 4,   suffix: "",  label: "States Covered" },
-  { value: 98,  suffix: "%", label: "Client Satisfaction" },
+  { value: 4, suffix: "", label: "States Covered" },
+  { value: 98, suffix: "%", label: "Client Satisfaction" },
 ];
 
 /* ─── Typewriter hook ─── */
@@ -227,7 +227,7 @@ function TrackDivider({ color = "#e2790020" }) {
     <div style={{ width: "100%", overflow: "hidden", lineHeight: 0 }}>
       <svg viewBox="0 0 800 30" width="100%" height="30" preserveAspectRatio="none" aria-hidden="true">
         {/* Rails */}
-        <line x1="0" y1="8"  x2="800" y2="8"  stroke={color} strokeWidth="2.5" />
+        <line x1="0" y1="8" x2="800" y2="8" stroke={color} strokeWidth="2.5" />
         <line x1="0" y1="22" x2="800" y2="22" stroke={color} strokeWidth="2.5" />
         {/* Animated sleepers */}
         <g className="rail-sleeper" strokeDasharray="40 40" strokeWidth="4">
@@ -267,6 +267,7 @@ function useReveal(threshold = 0.15) {
 }
 
 export default function LandingPage() {
+  const [recogRef, recogVis] = useReveal();
   /* Inject global styles once */
   useEffect(() => {
     const el = document.createElement("style");
@@ -283,13 +284,13 @@ export default function LandingPage() {
   ]);
 
   /* Section refs */
-  const [aboutRef, aboutVis]   = useReveal();
+  const [aboutRef, aboutVis] = useReveal();
   const [expertRef, expertVis] = useReveal();
-  const [dirRef, dirVis]       = useReveal();
-  const [deptRef, deptVis]     = useReveal();
-  const [statRef, statVis]     = useReveal(0.3);
+  const [dirRef, dirVis] = useReveal();
+  const [deptRef, deptVis] = useReveal();
+  const [statRef, statVis] = useReveal(0.3);
   const [contactRef, contactVis] = useReveal();
-  const [docRef, docVis]       = useReveal();
+  const [docRef, docVis] = useReveal();
 
   /* Contact form state */
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", description: "" });
@@ -298,7 +299,7 @@ export default function LandingPage() {
 
   const handleFormChange = (e) => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
-  
+
   const handleFormSubmit = (e) => {
     e.preventDefault();
     setSubmitted(true);
@@ -309,11 +310,11 @@ export default function LandingPage() {
   };
 
   const documents = [
-    { name: "Rane GST Certificate",                           file: "/documents/Rane GST Certificate.pdf" },
-    { name: "Drugs Sale Licence",                             file: "/documents/Drugs Sale Licence_.pdf" },
-    { name: "Udyam Registration Certificate",                 file: "/documents/Udyam_Registration_Certificate.pdf" },
-    { name: "Business Conditions for Labor Contractors",      file: "/documents/Business Conditions for Labor Contractors.pdf" },
-    { name: "GUMASTA",                                        file: "/documents/GUMASTA.pdf" },
+    { name: "Rane GST Certificate", file: "/documents/Rane GST Certificate.pdf" },
+    { name: "Drugs Sale Licence", file: "/documents/Drugs Sale Licence_.pdf" },
+    { name: "Udyam Registration Certificate", file: "/documents/Udyam_Registration_Certificate.pdf" },
+    { name: "Business Conditions for Labor Contractors", file: "/documents/Business Conditions for Labor Contractors.pdf" },
+    { name: "GUMASTA", file: "/documents/GUMASTA.pdf" },
     { name: "Business Terms and Conditions for Goods Supply", file: "/documents/Business Terms and Conditions for Goods Supply.pdf" },
   ];
 
@@ -402,7 +403,7 @@ export default function LandingPage() {
                   marginBottom: "16px",
                 }}
               >
-                RANE AND<br />RANE'S SONS
+                RANE AND<br />SON'S PRIVATE LIMITED
               </h1>
 
               {/* Typewriter line */}
@@ -570,7 +571,7 @@ export default function LandingPage() {
                 </h2>
                 <div style={{ width: "40px", height: "3px", background: "var(--primary-orange)", marginBottom: "18px", borderRadius: "2px" }} />
                 <p className="text-muted" style={{ lineHeight: "1.8", fontSize: "0.98rem" }}>
-                  With over 5 years of experience in Railway construction, RANE &amp; RANE'S SONS has become a trusted
+                  With over 5 years of experience in Railway construction, RANE AND SON'S PRIVATE LIMITED has become a trusted
                   name in the field of construction. Our team of experts has the knowledge, skills, and expertise
                   to handle any project, big or small.
                 </p>
@@ -613,67 +614,171 @@ export default function LandingPage() {
 
       <TrackDivider color="#e2790020" />
 
-      {/* ════════ DIRECTOR ════════ */}
+      {/* ════════ DIRECTORS ════════ */}
       <section className="py-5 text-center bg-white" ref={dirRef}>
         <div className={`container reveal${dirVis ? " visible" : ""}`}>
           <span style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "2.5px", textTransform: "uppercase", color: "var(--primary-orange)" }}>
             Leadership
           </span>
-          <h2 className="fw-bold mt-2 mb-4" style={{ fontSize: "1.7rem", color: "#1e293b" }}>Meet the Director</h2>
+          <h2 className="fw-bold mt-2 mb-4" style={{ fontSize: "1.7rem", color: "#1e293b" }}>Meet Our Directors</h2>
 
-          <div
-            style={{
-              display: "inline-block",
-              background: "#fff",
-              borderRadius: "16px",
-              padding: "40px 48px",
-              boxShadow: "0 4px 28px rgba(0,0,0,0.08)",
-              border: "1px solid rgba(0,0,0,0.06)",
-              maxWidth: "440px",
-              width: "100%",
-            }}
-          >
-            <img
-              src="/images/rane.webp"
-              alt="Tejprakash Rane"
-              className="rounded-circle shadow director-photo"
-              style={{ width: "110px", height: "110px", objectFit: "cover", marginBottom: "20px" }}
-            />
-            <h3 className="fw-bold text-dark mb-1" style={{ fontSize: "1.4rem" }}>Tejprakash Rane</h3>
-            <h5 className="fw-semibold mb-1" style={{ color: "var(--primary-orange)", fontSize: "1rem" }}>Director</h5>
-            <p className="text-dark fw-medium mb-2 mt-1" style={{ fontSize: "0.9rem" }}>RANE AND RANE'S SONS</p>
-
-            {/* Divider */}
-            <div style={{ width: "40px", height: "2px", background: "var(--primary-orange)", margin: "12px auto", opacity: 0.5, borderRadius: "1px" }} />
-
-            <p className="text-muted mb-1" style={{ fontSize: "0.88rem", lineHeight: "1.6" }}>
-              Former District Coordinator, National Commission for Scheduled Castes
-            </p>
-            <p className="text-muted mb-4" style={{ fontSize: "0.88rem", lineHeight: "1.6" }}>
-              Former Executive Council Member, Maharishi Panini Sanskrit Evam Vaidik Vishwavidyalaya, Ujjain
-            </p>
-
-            <a href="#contactus" style={{ textDecoration: "none" }}>
-              <button
-                className="btn fw-semibold text-white"
+          <Row className="justify-content-center g-4">
+            {/* ── Director 1: Tejprakash Rane ── */}
+            <Col md={6} lg={5}>
+              <div
                 style={{
-                  background: "var(--primary-orange)",
-                  padding: "10px 30px",
-                  borderRadius: "8px",
-                  border: "none",
-                  fontSize: "0.95rem",
-                  transition: "all 0.25s ease",
+                  background: "#fff",
+                  borderRadius: "16px",
+                  padding: "40px 32px",
+                  boxShadow: "0 4px 28px rgba(0,0,0,0.08)",
+                  border: "1px solid rgba(0,0,0,0.06)",
+                  height: "100%",
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = "var(--primary-orange-hover)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "var(--primary-orange)"; e.currentTarget.style.transform = "translateY(0)"; }}
               >
-                Get in Touch
-              </button>
-            </a>
-          </div>
+                <img
+                  src="/images/rane.webp"
+                  alt="Tejprakash Rane"
+                  className="rounded-circle shadow director-photo"
+                  style={{ width: "110px", height: "110px", objectFit: "cover", marginBottom: "20px" }}
+                />
+                <h3 className="fw-bold text-dark mb-1" style={{ fontSize: "1.4rem" }}>Tejprakash Rane</h3>
+                <h5 className="fw-semibold mb-1" style={{ color: "var(--primary-orange)", fontSize: "1rem" }}>Director</h5>
+                <p className="text-dark fw-medium mb-2 mt-1" style={{ fontSize: "0.9rem" }}>RANE AND SON'S PRIVATE LIMITED</p>
+
+                <div style={{ width: "40px", height: "2px", background: "var(--primary-orange)", margin: "12px auto", opacity: 0.5, borderRadius: "1px" }} />
+
+                <p className="text-muted mb-1" style={{ fontSize: "0.88rem", lineHeight: "1.6" }}>
+                  Former District Coordinator, National Commission for Scheduled Castes
+                </p>
+                <p className="text-muted mb-4" style={{ fontSize: "0.88rem", lineHeight: "1.6" }}>
+                  Former Executive Council Member, Maharishi Panini Sanskrit Evam Vaidik Vishwavidyalaya, Ujjain
+                </p>
+
+                <a href="#contactus" style={{ textDecoration: "none" }}>
+                  <button
+                    className="btn fw-semibold text-white"
+                    style={{
+                      background: "var(--primary-orange)",
+                      padding: "10px 30px",
+                      borderRadius: "8px",
+                      border: "none",
+                      fontSize: "0.95rem",
+                      transition: "all 0.25s ease",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "var(--primary-orange-hover)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "var(--primary-orange)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                  >
+                    Get in Touch
+                  </button>
+                </a>
+              </div>
+            </Col>
+
+            {/* ── Director 2: Harshwardhan Rane ── */}
+            <Col md={6} lg={5}>
+              <div
+                style={{
+                  background: "#fff",
+                  borderRadius: "16px",
+                  padding: "40px 32px",
+                  boxShadow: "0 4px 28px rgba(0,0,0,0.08)",
+                  border: "1px solid rgba(0,0,0,0.06)",
+                  height: "100%",
+                }}
+              >
+                <img
+                  src="/images/rane.webp"  // TODO: swap for Harshwardhan's photo once available
+                  alt="Harshwardhan Rane"
+                  className="rounded-circle shadow director-photo"
+                  style={{ width: "110px", height: "110px", objectFit: "cover", marginBottom: "20px" }}
+                />
+                <h3 className="fw-bold text-dark mb-1" style={{ fontSize: "1.4rem" }}>Harshwardhan Rane</h3>
+                <h5 className="fw-semibold mb-1" style={{ color: "var(--primary-orange)", fontSize: "1rem" }}>Co-Director</h5>
+                <p className="text-dark fw-medium mb-2 mt-1" style={{ fontSize: "0.9rem" }}>RANE AND SON'S PRIVATE LIMITED</p>
+
+                <div style={{ width: "40px", height: "2px", background: "var(--primary-orange)", margin: "12px auto", opacity: 0.5, borderRadius: "1px" }} />
+
+                <p className="text-muted mb-1" style={{ fontSize: "0.88rem", lineHeight: "1.6" }}>
+                  Second-generation leadership carrying forward the family's railway construction legacy
+                </p>
+                <p className="text-muted mb-4" style={{ fontSize: "0.88rem", lineHeight: "1.6" }}>
+                  Oversees day-to-day project execution, site operations, and client relationships
+                </p>
+
+                <a href="#contactus" style={{ textDecoration: "none" }}>
+                  <button
+                    className="btn fw-semibold text-white"
+                    style={{
+                      background: "var(--primary-orange)",
+                      padding: "10px 30px",
+                      borderRadius: "8px",
+                      border: "none",
+                      fontSize: "0.95rem",
+                      transition: "all 0.25s ease",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "var(--primary-orange-hover)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "var(--primary-orange)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                  >
+                    Get in Touch
+                  </button>
+                </a>
+              </div>
+            </Col>
+          </Row>
         </div>
       </section>
+      <TrackDivider color="#e2790025" />
 
+      {/* ════════ RECOGNITION ════════ */}
+      <section className="py-5 bg-white" ref={recogRef}>
+        <Container>
+          <Row className="align-items-center gy-4">
+            <Col md={6}>
+              <div className={`reveal-left${recogVis ? " visible" : ""}`}>
+                <div style={{ position: "relative" }}>
+                  <img
+                    src="/images/cm-meeting.jpg"
+                    alt="Director with the Chief Minister of Madhya Pradesh"
+                    className="img-fluid rounded shadow"
+                    style={{ transition: "transform 0.4s ease", display: "block" }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.04)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "-12px",
+                      left: "-12px",
+                      width: "80px",
+                      height: "80px",
+                      background: "var(--primary-orange)",
+                      borderRadius: "8px",
+                      zIndex: -1,
+                      opacity: 0.5,
+                    }}
+                  />
+                </div>
+              </div>
+            </Col>
+            <Col md={6}>
+              <div className={`reveal-right${recogVis ? " visible" : ""}`}>
+                <span style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "2.5px", textTransform: "uppercase", color: "var(--primary-orange)" }}>
+                  Recognition
+                </span>
+                <h2 className="fw-bold mt-2 mb-3" style={{ fontSize: "1.9rem", color: "#1e293b" }}>
+                  A Moment of Pride
+                </h2>
+                <div style={{ width: "40px", height: "3px", background: "var(--primary-orange)", marginBottom: "18px", borderRadius: "2px" }} />
+                <p className="text-muted" style={{ lineHeight: "1.8", fontSize: "0.98rem" }}>
+                  Our Director recently met with the Hon'ble Chief Minister of Madhya Pradesh —
+                  a moment that reflects our continued commitment to the state's infrastructure
+                  development and our growing presence in the sector.
+                </p>
+              </div>
+            </Col>
+          </Row>
+        </Container>
+      </section>
       <TrackDivider color="#e2790025" />
 
       {/* ════════ DEPARTMENTS ════════ */}
