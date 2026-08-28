@@ -6,12 +6,13 @@ import {
     FaClock, FaInfoCircle, FaCheckCircle, FaTimesCircle, FaUndo,
     FaTrain, FaIndustry, FaCalendarAlt, FaBoxes, FaTasks, FaUserCircle,
     FaUsers, FaShieldAlt, FaEye, FaGavel, FaLandmark, FaExclamationTriangle, FaPiggyBank,
-    FaBuilding,
+    FaBuilding, FaFileInvoiceDollar,
 } from 'react-icons/fa';
 import { FiRefreshCw } from 'react-icons/fi';
 import { backend_url } from '../../store/keyStore';
 import { useAuthStore } from '../../store/authStore';
 import AdminHeader from '../../component/header/AdminHeader';
+import { getProjectBills } from '../../services/projectBillService.js';
 
 const C = {
     primary: '#6b3e2b',
@@ -282,6 +283,7 @@ const SECTIONS = [
     { id: 'penalty', label: 'Penalty', icon: <FaExclamationTriangle size={12} /> },
     { id: 'security-deposit', label: 'Security Deposit', icon: <FaPiggyBank size={12} /> },
     { id: 'materials', label: 'Materials', icon: <FaBoxes size={12} /> },
+    { id: 'bills', label: 'Bills', icon: <FaFileInvoiceDollar size={12} /> },
     { id: 'documents', label: 'Documents', icon: <FaFileAlt size={12} /> },
     { id: 'tasks', label: 'Tasks', icon: <FaTasks size={12} /> },
     { id: 'approvals', label: 'Approvals', icon: <FaUserShield size={12} /> },
@@ -469,6 +471,10 @@ export default function SingleProjectDetail() {
     const [tasksLoading, setTasksLoading] = useState(true);
     const [tasksError, setTasksError] = useState('');
 
+    const [bills, setBills] = useState([]);
+    const [billsLoading, setBillsLoading] = useState(true);
+    const [billsError, setBillsError] = useState('');
+
     const fetchProject = async () => {
         setLoading(true);
         setError('');
@@ -558,11 +564,27 @@ export default function SingleProjectDetail() {
         }
     };
 
+    // Bills route lives under /projects/bill (its own router, not nested
+    // under /project) — handled via the dedicated projectBillService.
+    const fetchBills = async () => {
+        setBillsLoading(true);
+        setBillsError('');
+        try {
+            const data = await getProjectBills(id);
+            setBills(Array.isArray(data) ? data : []);
+        } catch (err) {
+            setBillsError(err.message || 'Failed to load bills');
+        } finally {
+            setBillsLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (id) {
             fetchProject();
             fetchItems();
             fetchTasks();
+            fetchBills();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
@@ -883,6 +905,59 @@ export default function SingleProjectDetail() {
                                                 <td style={tdRightStyle}></td>
                                             </tr>
                                         </tfoot>
+                                    </table>
+                                </div>
+                            )}
+                        </Module>
+
+                        {/* ── 6b. Bills ── */}
+                        <Module
+                            id="bills"
+                            icon={<FaFileInvoiceDollar size={13} color={C.accent} />}
+                            title="Bills"
+                            extra={<span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{bills.length} bill{bills.length === 1 ? '' : 's'}</span>}
+                        >
+                            {billsLoading && (
+                                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Loading bills…</div>
+                            )}
+
+                            {!billsLoading && billsError && (
+                                <div style={{ fontSize: 13, color: C.destructive }}>{billsError}</div>
+                            )}
+
+                            {!billsLoading && !billsError && bills.length === 0 && (
+                                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No bills created for this project yet.</div>
+                            )}
+
+                            {!billsLoading && !billsError && bills.length > 0 && (
+                                <div style={tableWrapStyle}>
+                                    <table style={tableStyle}>
+                                        <thead>
+                                            <tr>
+                                                <th style={thStyle}>Bill No.</th>
+                                                <th style={thStyle}>LOA No.</th>
+                                                <th style={thRightStyle}>Gross Amount</th>
+                                                <th style={thStyle}></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {bills.map((b, i) => (
+                                                <tr key={b._id || i}>
+                                                    <td style={tdStyle}>{dash(b.billNo)}</td>
+                                                    <td style={tdStyle}>{dash(b.loaNo)}</td>
+                                                    <td style={tdRightStyle}>{formatCurrency(b.grossAmount)}</td>
+                                                    <td style={tdStyle}>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => navigate(`/admin/project/bill/${b._id}`)}
+                                                            style={viewButtonStyle}
+                                                        >
+                                                            <FaEye size={11} /> View
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
                                     </table>
                                 </div>
                             )}

@@ -1,96 +1,26 @@
 import { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'; // Includes Popper
 
 import "./App.css";
-// import Home from "./assets/Home";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Signup from "./pages/common/Signup.jsx";
-import Signin from "./pages/common/Signin.jsx";
-import VerifyEmail from "./pages/common/VerifyEmail.jsx";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-// import BillbookForm from "./assets/components/elements/BillbookForm";
-
-import AdminDashboard from "./assets/components/elements/dashboard/AdminDashboard";
-// import UserDashboard from "./assets/components/elements/dashboard/UserDashboard";
 import { useAuthStore } from "./store/authStore";
-import AdminLogin from "./assets/components/elements/AdminLogin";
-import Spinner from "react-bootstrap/esm/Spinner";
-import Maintainence from "./assets/components/unique_component/Maintainence";
-import ForgotPass from "./pages/common/ForgotPass.jsx";
-import ResetPass from "./assets/components/elements/ResetPass";
-
-import HomePageClient from "./pages/client/HomePageClient";
-import ClientLayout from "./Layout/ClientLayout";
-import UploadBillPage from "./pages/client/UploadBillPage";
-import MyBillPage from "./pages/client/MyBillPage";
-import PaymentRequestPage from "./pages/client/PaymentRequestPage";
-import SupportPage from "./pages/client/SupportPage";
-import DocumentCategory from "./pages/client/DocumentCategory";
-import Setting from "./pages/client/Setting";
-import UploadDocumentPage from "./pages/client/UploadDocumentPage";
-import SingleBillDetailsClient from "./pages/client/SingleBillDetailsClient.jsx";
-import MyPaymentRequestPage from "./pages/client/MyPaymentRequestPage.jsx";
-import ViewDocumentPage from "./pages/client/ViewDocumentPage.jsx";
-import TrackMyAllDocument from "./pages/client/TrackMyAllDocument.jsx";
-import DocumentForReview from "./pages/client/DocumentForReview.jsx"; //used to review when document assign to client by admin and staff
-import TransactionPage from "./pages/client/TransactionPage.jsx";
-import SalaryPage from "./pages/admin/SalaryPage.jsx";
-import AgreementPage from "./pages/client/AgreementPage.jsx";
-import AgreementForAction from "./pages/client/AgreementForAction.jsx";
-import ClosedAgreement from "./pages/client/ClosedAgreement.jsx";
-import AgreementView from "./pages/client/AgreementView.jsx";
-import SorDetails from "./pages/client/SorDetails.jsx";
-import SingleProjectDetail from "./pages/admin/SIngleProjectDetail.jsx";
-
-import AdminLayout from "./Layout/AdminLayout";
-import HomePageAdmin from "./pages/admin/HomePageAdmin.jsx";
-import AllBillPage from "./pages/admin/AllBillPage.jsx";
-import PaymentRequestListAdmin from "./pages/admin/PaymentRequestListAdmin.jsx";
-import PushDocumentAdminPage from "./pages/admin/PushDocumentAdminPage.jsx";
-import MyPushedDocument from "./pages/admin/MyPushedDocument.jsx";
-import ClientsListAdminPage from "./pages/admin/ClientsListAdminPage.jsx";
-import ClientDetailAdminPage from "./pages/admin/ClientDetailAdminPage.jsx";
-import PushAgreement from "./pages/admin/PushAgreement.jsx";
-import SingleBillDetailAdminPage from "./pages/admin/SingleBillDetailAdminPage.jsx";
-import AddPaynotePage from "./pages/admin/AddPaynotePage.jsx";
-import SinglePRdetailAdminPAge from "./pages/admin/SinglePRdetailAdminPAge.jsx";
-import DfsRequest from "./pages/admin/DfsRequest.jsx";
-import SingleDfsRequestDetail from "./pages/admin/SingleDfsRequestDetail.jsx";
-import ClientSalaryAll from "./pages/admin/ClientSalaryAll.jsx";
-import SingleUSerSalaryDetailAdmin from "./pages/admin/SingleUSerSalaryDetailAdmin.jsx";
-import AllUser from "./pages/admin/AllUser.jsx";
-import AllDFSRequests from "./pages/admin/AllDFSRequests.jsx";
-import AllDocuments from "./pages/admin/AllDocuments.jsx";
-import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage.jsx";
-import AgreementTableListAll from "./pages/admin/AgreementTableListAll.jsx";
-import SingleAgreementDetails from "./pages/admin/SingleAgreementDetails.jsx";
-import SorDetailsAdmin from "./pages/admin/SorPage.jsx";
-import CreateProject from "./pages/admin/CreateProject.jsx";
-import ListallProject from "./pages/admin/ListallProject.jsx";
-import PendingProject from "./pages/admin/PendingProject.jsx"; // to be removed later
-import ProjectAssignedToMe from "./pages/admin/ProjectAssignedToMe.jsx";
-import EditProjectDetail from "./pages/admin/EditProjectDetail.jsx"
-import MyTaskList from "./pages/admin/MyTaskList.jsx";
-import SingleTaskDetail from "./pages/admin/SingleTaskDetail.jsx";
-
-
-import StaffLayout from "./Layout/StaffLayout.jsx";
-import HomePageStaff from "./pages/staff/HomePageStaff.jsx";
-
-
-import MaintainencePage from "./pages/MaintainencePage.jsx";
-import UnderDevPage from "./pages/UnderDevPage.jsx";
-import LandingPage from "./pages/LandingPage.jsx";
 import Loader from "./component/animation/Loader.jsx";
 
+import { ProtectedRoute, AdminRoute, ClientRoute, StaffRoute } from "./routes/guards.jsx";
+import { publicRoutes } from "./routes/publicRoutes.jsx";
+import { clientRoutes } from "./routes/clientRoutes.jsx";
+import { adminRoutes } from "./routes/adminRoutes.jsx";
+import { staffRoutes } from "./routes/staffRoutes.jsx";
+
+import ClientLayout from "./Layout/ClientLayout";
+import AdminLayout from "./Layout/AdminLayout";
+import StaffLayout from "./Layout/StaffLayout.jsx";
 
 function App() {
-  const { checkAuth, isAuthenticated, user, role } = useAuthStore();
+  const { checkAuth } = useAuthStore();
   const [loading, setLoading] = useState(true); // State to track loading
-
-
 
   useEffect(() => {
     const authenticate = async () => {
@@ -102,62 +32,16 @@ function App() {
     authenticate();
   }, [checkAuth]);
 
-
   if (loading) {
     return <div><Loader></Loader></div>; // Display loading message while waiting for auth check
   }
 
-
-  const ProtectedRoute = ({ children }) => {
-    if (!isAuthenticated) {
-      console.log("Redirecting to Signin...");
-      return <Navigate to="/signin" replace />;
-    }
-
-    if (user && !user.isverified) {
-      console.log("Redirecting to Verify Email...");
-      return <Navigate to="/verify-email" replace />;
-    }
-
-    return children;
-  };
-  const AdminRoute = ({ children }) => {
-    if (user && role == "admin") {
-      console.log("You are admin user.");
-      return children;
-    }
-    return <Navigate to="/" replace />;
-  };
-  const ClientRoute = ({ children }) => {
-    if (user && role === "client") {
-      console.log("You are client user.");
-      return children;
-    }
-    return <Navigate to="/" replace />;
-  };
-  const StaffRoute = ({ children }) => {
-    if (user && role === "staff") {
-      console.log("You are staff user.");
-      return children;
-    }
-    return <Navigate to="/" replace />;
-  };
-
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/test" element={<LandingPage />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/signin" element={<Signin />} />
-        <Route path="/admin-login" element={<AdminLogin />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/maintain" element={<Maintainence />} />
-        <Route path="/reset-password" element={<ForgotPass />} />
-        <Route path="/reset-password-page/:id" element={<ResetPass />} />
+        {publicRoutes}
 
-
-        {/* // ---------Client Route  */}
+        {/* ---------Client Route  */}
         <Route
           path="/client"
           element={
@@ -168,29 +52,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<HomePageClient />} />
-          <Route path="home" element={<HomePageClient />} />
-          <Route path="upload-bill" element={<UploadBillPage />} />
-          <Route path="my-bill" element={<MyBillPage />} />
-          <Route path="bill/:id" element={<SingleBillDetailsClient />} />
-          <Route path="payment-request" element={<PaymentRequestPage />} />
-          <Route path="my-payment-request" element={<MyPaymentRequestPage />} />
-          <Route path="support" element={<SupportPage />} />
-          <Route path="document/category" element={<DocumentCategory />} />
-          <Route path="document/category/:docType" element={<ViewDocumentPage />} />
-          <Route path="transaction" element={<TransactionPage />} />
-          <Route path="salary" element={<SalaryPage />} />
-          <Route path="setting" element={<Setting />} />
-          <Route path="upload-document" element={<UploadDocumentPage />} />
-          <Route path="dfsrequest" element={<DfsRequest />} />
-          <Route path="track-dfs/all" element={<TrackMyAllDocument />} />
-          <Route path="dfsrequest/:id" element={<DocumentForReview />} />
-          <Route path="under-dev" element={<UnderDevPage />} />
-          <Route path="agreement" element={<AgreementPage />} />
-          <Route path="agreement/action" element={<AgreementForAction />} />
-          <Route path="agreement/closed" element={<ClosedAgreement />} />
-          <Route path="agreement/view/:id" element={<AgreementView />} />
-          <Route path="sor" element={<SorDetails />} />
+          {clientRoutes}
         </Route>
 
         {/* ---------Admin Route ---------- */}
@@ -204,39 +66,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<HomePageAdmin />} />
-          <Route path="home" element={<HomePageAdmin />} />
-          <Route path="bill" element={<AllBillPage />} />
-          <Route path="bill/:id" element={<SingleBillDetailAdminPage />} />
-          <Route path="add-paynote" element={<AddPaynotePage />} />
-          <Route path="payment-request" element={<PaymentRequestListAdmin />} />
-          <Route path="payment-request/:id" element={<SinglePRdetailAdminPAge />} />
-          <Route path="push-document/:cid" element={<PushDocumentAdminPage />} />
-          <Route path="push-document" element={<PushDocumentAdminPage />} />
-          <Route path="push-document/by-me" element={<MyPushedDocument />} />
-          <Route path="agreement/push" element={<PushAgreement />} />
-          <Route path="agreement/track" element={<AgreementTableListAll />} />
-          <Route path="agreement/track/:id" element={<SingleAgreementDetails />} />
-          <Route path="all-client" element={<ClientsListAdminPage />} />
-          <Route path="client-detail/:id" element={<ClientDetailAdminPage />} />
-          <Route path="dfsrequest" element={<DfsRequest />} />
-          <Route path="dfsrequest/:id" element={<SingleDfsRequestDetail />} />
-          <Route path="salary/all-client-list" element={<ClientSalaryAll />} />
-          <Route path="salary-detail/:clientid/:currmonth" element={<SingleUSerSalaryDetailAdmin />} />
-          <Route path="danger/all-user" element={<AllUser />} />
-          <Route path="danger/all-dfs" element={<AllDFSRequests />} />
-          <Route path="danger/all-documents" element={<AllDocuments />} />
-          <Route path="setting" element={<Setting />} />
-          <Route path="notifications" element={<AdminNotificationsPage />} />
-          <Route path="under-dev" element={<UnderDevPage />} />
-          <Route path="sor-details" element={<SorDetailsAdmin />} />
-          <Route path="project/create" element={<CreateProject />} />
-          <Route path="project/list" element={<ListallProject />} />
-          <Route path="project/assigned-to-me" element={<ProjectAssignedToMe />} />
-          <Route path="project/:id" element={<SingleProjectDetail />} />
-          <Route path="project/edit/:id" element={<EditProjectDetail />} />
-          <Route path="project/task/list" element={<MyTaskList />} />
-          <Route path="project/task/:id" element={<SingleTaskDetail />} />
+          {adminRoutes}
         </Route>
 
         {/* ---------Staff route------------ */}
@@ -250,48 +80,11 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<HomePageStaff />} />
-          <Route path="home" element={<HomePageStaff />} />
-          <Route path="bill" element={<AllBillPage />} />
-          <Route path="bill/:id" element={<SingleBillDetailAdminPage />} />
-
-          <Route path="all-client" element={<ClientsListAdminPage />} />
-          <Route path="client-detail/:id" element={<ClientDetailAdminPage />} />
-          <Route path="payment-request" element={<PaymentRequestListAdmin />} />
-          <Route path="payment-request/:id" element={<SinglePRdetailAdminPAge />} />
-
-          <Route path="request-payment" element={<PaymentRequestPage />} />
-          <Route path="my-payment-request" element={<MyPaymentRequestPage />} />
-          <Route path="dfsrequest" element={<DfsRequest />} />
-          <Route path="dfsrequest/:id" element={<SingleDfsRequestDetail />} />
-
-          <Route path="upload-document" element={<UploadDocumentPage />} />
-          <Route path="track-dfs/all" element={<TrackMyAllDocument />} />
-          <Route path="all-documents" element={<AllDocuments />} />
-          <Route path="push-document/:cid" element={<PushDocumentAdminPage />} />
-          <Route path="push-document" element={<PushDocumentAdminPage />} />
-          <Route path="salary" element={<SalaryPage />} />
-          <Route path="setting" element={<Setting />} />
-          <Route path="under-dev" element={<UnderDevPage />} />
-          <Route path="project/pending" element={<PendingProject />} />
-          <Route path="project/pending/:id" element={<SingleProjectDetail />} />
-
-
+          {staffRoutes}
         </Route>
-
-
       </Routes>
     </BrowserRouter>
   );
 }
 
 export default App;
-
-
-
-
-
-
-
-
-
