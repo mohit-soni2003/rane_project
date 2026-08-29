@@ -18,6 +18,7 @@ import {
     updateFinancials,
     updateProjectStatus,
     addProjectDocument,
+    deleteProjectDocument,
     getUsersList,
     forwardProject,
     addItems,
@@ -53,6 +54,7 @@ const CONTRACT_TYPES = ['work', 'goods', 'supply'];
 const BIDDING_TYPES = ['normal_tender', 'special_tender', 'limited_tender'];
 const EXPENDITURE_TYPES = ['capital', 'revenue'];
 const RANKING_ORDERS = ['low_to_high', 'high_to_low'];
+const BIDDING_SYSTEM_OPTIONS = ['single_packet', 'double_packet'];
 const SUB_DEPARTMENTS = [
     'engineering', 'electrical', 'mechanical', 'signal_and_telecom',
     'commercial', 'medical', 'personnel', 'operating',
@@ -62,7 +64,7 @@ const ZONES = ['cr', 'wr', 'wcr', 'ncr', 'nr', 'nwr', 'ner', 'nfr', 'er', 'ecr',
 const PSU_NAMES = ['ntpc', 'ongc', 'iocl', 'gail', 'bhel', 'sail', 'nhpc'];
 const BIDDING_POSITIONS = ['below', 'above', 'at_par'];
 const DOCUMENT_TYPES = ['tender_document', 'loa', 'agreement', 'boq', 'drawings', 'nit'];
-const PROJECT_STATUSES = ['draft', 'in_progress', 'pending', 'L2', 'L3', 'not_allotted', 'completed'];
+const PROJECT_STATUSES = ['draft', 'in_progress', 'pending', 'L1', 'L2', 'L3', 'not_allotted', 'alloted', 'completed'];
 const FORWARD_ACTIONS = ['approved', 'returned', 'rejected', 'pending'];
 
 // Unit options — matches the Item schema's unit enum
@@ -206,6 +208,7 @@ function BasicDetailsModule({ project, onUpdated }) {
         projectName: project.projectName || '',
         description: project.description || '',
         projectUnder: project.projectUnder || '',
+        tenderClosingDate: project.tenderClosingDate ? project.tenderClosingDate.slice(0, 10) : '',
     });
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -252,6 +255,12 @@ function BasicDetailsModule({ project, onUpdated }) {
                         <option value="">Select</option>
                         {PROJECT_UNDER_OPTIONS.map((o) => <option key={o} value={o}>{prettify(o)}</option>)}
                     </select>
+                </Field>
+                <Field label="Tender closing date" htmlFor="tenderClosingDate">
+                    <input
+                        id="tenderClosingDate" type="date" name="tenderClosingDate" value={form.tenderClosingDate}
+                        onChange={handleChange} style={{ ...controlStyle, cursor: 'pointer' }}
+                    />
                 </Field>
             </div>
             <div style={{ marginTop: 12 }}>
@@ -421,6 +430,8 @@ function AdvanceDetailsModule({ project, onUpdated }) {
         biddingType: project.biddingType || '',
         expenditureType: project.expenditureType || '',
         rankingOrderForBid: project.rankingOrderForBid || '',
+        biddingSystem: project.biddingSystem || '',
+        currentDateOfCompletion: project.currentDateOfCompletion ? project.currentDateOfCompletion.slice(0, 10) : '',
         zone: project.zone || '',
         subDepartment: project.subDepartment || '',
         circle: project.circle || '',
@@ -496,6 +507,7 @@ function AdvanceDetailsModule({ project, onUpdated }) {
                 tenderTotalAmount: form.tenderTotalAmount === '' ? undefined : Number(form.tenderTotalAmount),
                 loaAmount: form.loaAmount === '' ? undefined : Number(form.loaAmount),
                 loaDate: form.loaDate || undefined,
+                currentDateOfCompletion: form.currentDateOfCompletion || undefined,
                 jointVentureMembers: jvMembers,
             };
             const updated = await updateAdvanceDetails(project._id, payload);
@@ -552,6 +564,18 @@ function AdvanceDetailsModule({ project, onUpdated }) {
                         <option value="">Select order</option>
                         {RANKING_ORDERS.map((r) => <option key={r} value={r}>{prettify(r)}</option>)}
                     </select>
+                </Field>
+                <Field label="Bidding system" htmlFor="biddingSystem">
+                    <select id="biddingSystem" name="biddingSystem" value={form.biddingSystem} onChange={handleChange} style={{ ...controlStyle, cursor: 'pointer' }}>
+                        <option value="">Select system</option>
+                        {BIDDING_SYSTEM_OPTIONS.map((b) => <option key={b} value={b}>{prettify(b)}</option>)}
+                    </select>
+                </Field>
+                <Field label="Current date of completion" htmlFor="currentDateOfCompletion">
+                    <input
+                        id="currentDateOfCompletion" type="date" name="currentDateOfCompletion" value={form.currentDateOfCompletion}
+                        onChange={handleChange} style={{ ...controlStyle, cursor: 'pointer' }}
+                    />
                 </Field>
             </div>
 
@@ -847,6 +871,7 @@ function FinancialDetailsModule({ project, onUpdated }) {
    POST  /v1/financials/bidding/:projectId/cost-estimation (addCostEstimation, one at a time)
    ══════════════════════════════════════════════════════════════════════════ */
 const BIDDING_STATUSES = ['unpaid', 'paid', 'exempted'];
+const EXEMPTED_TYPES = ['startup_india', 'msme'];
 
 function BiddingFinancialsModule({ project, onRefresh }) {
     const bidding = project.financials?.bidding || {};
@@ -855,6 +880,8 @@ function BiddingFinancialsModule({ project, onRefresh }) {
         emdAmount: bidding.emdAmount ?? '',
         advertisedValue: bidding.advertisedValue ?? '',
         status: bidding.status || 'unpaid',
+        referenceId: bidding.referenceId || '',
+        exemptedType: bidding.exemptedType || '',
         biddingPosition: bidding.biddingPosition || '',
         biddingPercentage: bidding.biddingPercentage ?? '',
     });
@@ -877,6 +904,11 @@ function BiddingFinancialsModule({ project, onRefresh }) {
                 emdAmount: form.emdAmount === '' ? undefined : Number(form.emdAmount),
                 advertisedValue: form.advertisedValue === '' ? undefined : Number(form.advertisedValue),
                 status: form.status || undefined,
+                // Only the field relevant to the current status is sent —
+                // the other is explicitly cleared so stale values don't
+                // linger if the status is switched later.
+                referenceId: form.status === 'paid' ? (form.referenceId || undefined) : '',
+                exemptedType: form.status === 'exempted' ? (form.exemptedType || undefined) : '',
                 biddingPosition: form.biddingPosition || undefined,
                 biddingPercentage: form.biddingPercentage === '' ? undefined : Number(form.biddingPercentage),
             });
@@ -947,6 +979,25 @@ function BiddingFinancialsModule({ project, onRefresh }) {
                         {BIDDING_STATUSES.map((s) => <option key={s} value={s}>{prettify(s)}</option>)}
                     </select>
                 </Field>
+                {form.status === 'paid' && (
+                    <Field label="Reference ID" htmlFor="referenceId">
+                        <input
+                            id="referenceId" type="text" name="referenceId" value={form.referenceId}
+                            onChange={handleChange} style={controlStyle}
+                        />
+                    </Field>
+                )}
+                {form.status === 'exempted' && (
+                    <Field label="Exempted type" htmlFor="exemptedType">
+                        <select
+                            id="exemptedType" name="exemptedType" value={form.exemptedType}
+                            onChange={handleChange} style={{ ...controlStyle, cursor: 'pointer' }}
+                        >
+                            <option value="">Select type</option>
+                            {EXEMPTED_TYPES.map((t) => <option key={t} value={t}>{prettify(t)}</option>)}
+                        </select>
+                    </Field>
+                )}
                 <Field label="Bidding position" htmlFor="biddingPos">
                     <select
                         id="biddingPos" name="biddingPosition" value={form.biddingPosition}
@@ -1452,6 +1503,25 @@ function DocumentsModule({ project, onUpdated }) {
     const [error, setError] = useState('');
     const fileInputRef = useRef();
 
+    // Tracks which document _id is currently being deleted, so only that
+    // row shows a spinner/disabled state instead of the whole module.
+    const [deletingId, setDeletingId] = useState(null);
+    const [deleteError, setDeleteError] = useState('');
+
+    const handleDelete = async (documentId) => {
+        if (!window.confirm('Delete this document? This cannot be undone.')) return;
+        setDeletingId(documentId);
+        setDeleteError('');
+        try {
+            const updatedDocuments = await deleteProjectDocument(project._id, documentId);
+            onUpdated({ ...project, documents: updatedDocuments });
+        } catch (err) {
+            setDeleteError(err.message || 'Failed to delete document');
+        } finally {
+            setDeletingId(null);
+        }
+    };
+
     const uploadToCloudinary = async (f) => {
         const cloudFormData = new FormData();
         cloudFormData.append('file', f);
@@ -1505,6 +1575,9 @@ function DocumentsModule({ project, onUpdated }) {
             extra={<span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{project.documents?.length || 0} attached</span>}
         >
             {/* ── Already uploaded documents ── */}
+            {deleteError && (
+                <div style={{ fontSize: 12, color: C.destructive, marginBottom: 10 }}>{deleteError}</div>
+            )}
             {project.documents && project.documents.length > 0 ? (
                 <div style={{ marginBottom: 14 }}>
                     {project.documents.map((doc, i) => (
@@ -1522,6 +1595,19 @@ function DocumentsModule({ project, onUpdated }) {
                                     Open <FaExternalLinkAlt size={10} />
                                 </a>
                             )}
+                            <button
+                                type="button"
+                                onClick={() => handleDelete(doc._id)}
+                                disabled={deletingId === doc._id}
+                                title="Delete document"
+                                style={{
+                                    border: 'none', background: 'transparent', flexShrink: 0, padding: 4,
+                                    color: deletingId === doc._id ? 'var(--text-muted)' : C.destructive,
+                                    cursor: deletingId === doc._id ? 'not-allowed' : 'pointer',
+                                }}
+                            >
+                                <FaTrash size={12} />
+                            </button>
                         </div>
                     ))}
                 </div>
@@ -1614,17 +1700,18 @@ function MaterialsModule({ project }) {
 
     const removeRow = (index) => setRows((prev) => prev.filter((_, i) => i !== index));
 
-    // Client-side preview only — the backend's own total calc doesn't run
-    // on bulk insert, so this is just for the person to see before saving.
+    // Client-side only, computed from marketRate — nothing here is stored
+    // in the DB as "total"; it's derived fresh on every render, both for
+    // the draft rows being added and for the already-saved items list.
     const rowTotal = (row) => {
-        const ourRate = Number(row.ourRate) || 0;
+        const marketRate = Number(row.marketRate) || 0;
         const quantity = Number(row.quantity) || 0;
         const installation = Number(row.installation) || 0;
-        return (ourRate * quantity) + installation;
+        return (marketRate * quantity) + installation;
     };
 
     const draftTotal = rows.reduce((sum, row) => sum + rowTotal(row), 0);
-    const savedTotal = savedItems.reduce((sum, it) => sum + (Number(it.total) || 0), 0);
+    const savedTotal = savedItems.reduce((sum, it) => sum + rowTotal(it), 0);
 
     const handleSave = async () => {
         setError('');
@@ -1714,7 +1801,7 @@ function MaterialsModule({ project }) {
                                         <td style={{ ...tdStyle, textAlign: 'right' }}>{it.marketRate ?? '—'}</td>
                                         <td style={{ ...tdStyle, textAlign: 'right' }}>{it.quantity ?? '—'}</td>
                                         <td style={{ ...tdStyle, textAlign: 'right' }}>{it.installation ?? '—'}</td>
-                                        <td style={{ ...tdStyle, textAlign: 'right' }}>{it.total ?? '—'}</td>
+                                        <td style={{ ...tdStyle, textAlign: 'right' }}>{rowTotal(it)}</td>
                                     </tr>
                                 ))}
                             </tbody>

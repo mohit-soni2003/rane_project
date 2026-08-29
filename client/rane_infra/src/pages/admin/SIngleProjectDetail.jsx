@@ -94,7 +94,9 @@ const statusStyle = (status) => {
         in_progress: { bg: 'var(--info)', fg: 'var(--info-foreground)' },
         L2: { bg: 'var(--warning)', fg: 'var(--warning-foreground)' },
         L3: { bg: 'var(--warning)', fg: 'var(--warning-foreground)' },
+        L1: { bg: 'var(--warning)', fg: 'var(--warning-foreground)' },
         not_allotted: { bg: 'var(--destructive-bg)', fg: 'var(--destructive)' },
+        alloted: { bg: 'var(--success)', fg: 'var(--success-foreground)' },
         completed: { bg: 'var(--success)', fg: 'var(--success-foreground)' },
     };
     return map[status] || { bg: 'var(--muted)', fg: 'var(--text-muted)' };
@@ -251,6 +253,23 @@ function Field({ label, children }) {
     );
 }
 
+// Renders a signed amount + percent — green for profit, red for loss,
+// muted for exactly zero. `percent` is null when the cost basis is 0.
+function PLValue({ amt, percent }) {
+    const color = amt > 0 ? C.success : amt < 0 ? C.destructive : 'var(--text-muted)';
+    const sign = amt > 0 ? '+' : amt < 0 ? '−' : '';
+    return (
+        <span style={{ color, fontWeight: 600, whiteSpace: 'nowrap' }}>
+            {sign}{formatCurrency(Math.abs(amt))}
+            {percent !== null && Number.isFinite(percent) && (
+                <span style={{ fontSize: 11, marginLeft: 4, fontWeight: 600 }}>
+                    ({percent > 0 ? '+' : percent < 0 ? '−' : ''}{Math.abs(percent).toFixed(1)}%)
+                </span>
+            )}
+        </span>
+    );
+}
+
 // A "module" = one independent, self-contained card for a section.
 // Splitting this out means each section owns its own header, spacing,
 // and boundary — no shared wrapper, no borderTop dividers to manage.
@@ -308,6 +327,12 @@ function BiddingFinancialsModule({ project }) {
                 <Field label="EMD amount">{formatCurrency(bidding.emdAmount)}</Field>
                 <Field label="Advertised value">{formatCurrency(bidding.advertisedValue)}</Field>
                 <Field label="EMD status">{prettify(bidding.status)}</Field>
+                {bidding.status === 'paid' && (
+                    <Field label="Reference ID">{dash(bidding.referenceId)}</Field>
+                )}
+                {bidding.status === 'exempted' && (
+                    <Field label="Exempted type">{prettify(bidding.exemptedType)}</Field>
+                )}
                 <Field label="Bidding position">{prettify(bidding.biddingPosition)}</Field>
                 <Field label="Bidding percentage">{bidding.biddingPercentage || bidding.biddingPercentage === 0 ? `${bidding.biddingPercentage}%` : '—'}</Field>
             </div>
@@ -593,7 +618,25 @@ export default function SingleProjectDetail() {
         document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
-    const itemsTotal = items.reduce((sum, it) => sum + (Number(it.total) || 0), 0);
+    // Client-side only — nothing here is stored in the DB.
+    // "Total" = price at which we ACQUIRE items (marketRate × qty + installation).
+    // "Railway Total" = price at which we BID to the railway (ourRate × qty + installation).
+    // Profit/Loss = Railway Total (bid/sale price) − Total (acquisition cost).
+    const marketRowTotal = (it) => (Number(it?.marketRate) || 0) * (Number(it?.quantity) || 0) + (Number(it?.installation) || 0);
+    const railwayRowTotal = (it) => (Number(it?.ourRate) || 0) * (Number(it?.quantity) || 0) + (Number(it?.installation) || 0);
+
+    const rowProfitLoss = (it) => {
+        const cost = marketRowTotal(it);
+        const bid = railwayRowTotal(it);
+        const amt = bid - cost;
+        const percent = cost !== 0 ? (amt / cost) * 100 : null;
+        return { amt, percent };
+    };
+
+    const itemsTotal = items.reduce((sum, it) => sum + marketRowTotal(it), 0);
+    const itemsRailwayTotal = items.reduce((sum, it) => sum + railwayRowTotal(it), 0);
+    const itemsProfitLossSum = items.reduce((sum, it) => sum + rowProfitLoss(it).amt, 0);
+    const itemsProfitLossPercent = itemsTotal !== 0 ? (itemsProfitLossSum / itemsTotal) * 100 : null;
 
     return (
         <>
@@ -677,6 +720,7 @@ export default function SingleProjectDetail() {
                                 <Field label="Status">{prettify(p.status)}</Field>
                                 <Field label="Created by">{userLabel(p.createdBy)}</Field>
                                 <Field label="Project under">{prettify(p.projectUnder)}</Field>
+                                <Field label="Tender closing date">{formatDate(p.tenderClosingDate)}</Field>
                             </div>
                             <div style={{ marginTop: 10 }}>
                                 <Field label="Description">{dash(p.description)}</Field>
@@ -734,6 +778,8 @@ export default function SingleProjectDetail() {
                                 <Field label="Bidding type">{prettify(p.biddingType)}</Field>
                                 <Field label="Expenditure type">{prettify(p.expenditureType)}</Field>
                                 <Field label="Ranking order for bid">{prettify(p.rankingOrderForBid)}</Field>
+                                <Field label="Bidding system">{prettify(p.biddingSystem)}</Field>
+                                <Field label="Current date of completion">{formatDate(p.currentDateOfCompletion)}</Field>
                             </div>
 
                             <div style={subHeaderStyle}>Client / tender / contract</div>
@@ -875,34 +921,38 @@ export default function SingleProjectDetail() {
                                                 <th style={thRightStyle}>Market Rate</th>
                                                 <th style={thRightStyle}>Qty</th>
                                                 <th style={thRightStyle}>Installation</th>
-                                                <th style={thRightStyle}>Total</th>
-                                                <th style={thRightStyle}>Profit/Loss %</th>
+                                                <th style={thRightStyle} title="Acquisition cost — Market Rate × Qty + Installation">Total</th>
+                                                <th style={thRightStyle} title="Bid price to railway — Our Rate × Qty + Installation">Railway Total</th>
+                                                <th style={thRightStyle} title="Railway Total − Total (bid price − acquisition cost)">Profit/Loss</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {items.map((it, i) => (
-                                                <tr key={it._id || i}>
-                                                    <td style={tdStyle}>{dash(it.itemNo)}</td>
-                                                    <td style={tdWrapStyle}>{dash(it.name)}</td>
-                                                    <td style={tdWrapStyle}>{dash(it.description)}</td>
-                                                    <td style={tdStyle}>{prettify(it.unit)}</td>
-                                                    <td style={tdRightStyle}>{formatCurrency(it.railwayRate)}</td>
-                                                    <td style={tdRightStyle}>{formatCurrency(it.ourRate)}</td>
-                                                    <td style={tdRightStyle}>{formatCurrency(it.marketRate)}</td>
-                                                    <td style={tdRightStyle}>{dash(it.quantity)}</td>
-                                                    <td style={tdRightStyle}>{formatCurrency(it.installation)}</td>
-                                                    <td style={tdRightStyle}>{formatCurrency(it.total)}</td>
-                                                    <td style={tdRightStyle}>
-                                                        {it.profitLossPercent || it.profitLossPercent === 0 ? `${it.profitLossPercent}%` : '—'}
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                            {items.map((it, i) => {
+                                                const pl = rowProfitLoss(it);
+                                                return (
+                                                    <tr key={it._id || i}>
+                                                        <td style={tdStyle}>{dash(it.itemNo)}</td>
+                                                        <td style={tdWrapStyle}>{dash(it.name)}</td>
+                                                        <td style={tdWrapStyle}>{dash(it.description)}</td>
+                                                        <td style={tdStyle}>{prettify(it.unit)}</td>
+                                                        <td style={tdRightStyle}>{formatCurrency(it.railwayRate)}</td>
+                                                        <td style={tdRightStyle}>{formatCurrency(it.ourRate)}</td>
+                                                        <td style={tdRightStyle}>{formatCurrency(it.marketRate)}</td>
+                                                        <td style={tdRightStyle}>{dash(it.quantity)}</td>
+                                                        <td style={tdRightStyle}>{formatCurrency(it.installation)}</td>
+                                                        <td style={tdRightStyle}>{formatCurrency(marketRowTotal(it))}</td>
+                                                        <td style={tdRightStyle}>{formatCurrency(railwayRowTotal(it))}</td>
+                                                        <td style={tdRightStyle}><PLValue amt={pl.amt} percent={pl.percent} /></td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                         <tfoot>
                                             <tr style={totalRowStyle}>
                                                 <td style={tdStyle} colSpan={9}>Total</td>
                                                 <td style={tdRightStyle}>{formatCurrency(itemsTotal)}</td>
-                                                <td style={tdRightStyle}></td>
+                                                <td style={tdRightStyle}>{formatCurrency(itemsRailwayTotal)}</td>
+                                                <td style={tdRightStyle}><PLValue amt={itemsProfitLossSum} percent={itemsProfitLossPercent} /></td>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -949,7 +999,7 @@ export default function SingleProjectDetail() {
                                                     <td style={tdStyle}>
                                                         <button
                                                             type="button"
-                                                            onClick={() => navigate(`/admin/project/bill/${b._id}`)}
+                                                            onClick={() => navigate(`/admin/project-bill/${b._id}`)}
                                                             style={viewButtonStyle}
                                                         >
                                                             <FaEye size={11} /> View

@@ -107,6 +107,13 @@ const projectSchema = new mongoose.Schema(
         },
 
         /* ---------------------------------------------------------- */
+        /* NEW: tender closing date.                                  */
+        /* ---------------------------------------------------------- */
+        tenderClosingDate: {
+            type: Date
+        },
+
+        /* ---------------------------------------------------------- */
         /* NEW: which entity this project is being executed under.   */
         /* ---------------------------------------------------------- */
         projectUnder: {
@@ -188,6 +195,21 @@ const projectSchema = new mongoose.Schema(
         rankingOrderForBid: {
             type: String,
             enum: ["low_to_high", "high_to_low"],
+        },
+
+        /* ---------------------------------------------------------- */
+        /* NEW: bidding system — single packet or double packet.     */
+        /* ---------------------------------------------------------- */
+        biddingSystem: {
+            type: String,
+            enum: ["single_packet", "double_packet"],
+        },
+
+        /* ---------------------------------------------------------- */
+        /* NEW: current (revised) date of completion.                */
+        /* ---------------------------------------------------------- */
+        currentDateOfCompletion: {
+            type: Date
         },
 
         /* ---------------------------------------------------------- */
@@ -335,6 +357,18 @@ const projectSchema = new mongoose.Schema(
                     enum: ["paid", "unpaid", "exempted"],
                     default: "unpaid"
                 },
+                // NEW: used when status === "paid" — the payment
+                // reference/transaction id for the EMD paid.
+                referenceId: {
+                    type: String,
+                    trim: true
+                },
+                // NEW: used when status === "exempted" — which scheme
+                // the EMD exemption is being claimed under.
+                exemptedType: {
+                    type: String,
+                    enum: ["startup_india", "msme"]
+                },
                 biddingPosition: {
                     type: String,
                     enum: ["below", "above", "at_par"]
@@ -369,6 +403,8 @@ const projectSchema = new mongoose.Schema(
                 "draft",
                 "completed",
                 "not_allotted",
+                "alloted",
+                "L1",
                 "L2",
                 "L3",
                 "pending"

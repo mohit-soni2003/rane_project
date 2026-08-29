@@ -323,6 +323,9 @@ function Navpannel() {
   };
 
   const closeDrawer = () => setDrawerOpen(false);
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
   const isLoggedIn = isAuthenticated && user?.isverified;
 
   return (
@@ -332,7 +335,7 @@ function Navpannel() {
         <div className="rnav-inner">
 
           {/* Brand — same as original */}
-          <Link to="/" className="rnav-brand">
+          <Link to="/" className="rnav-brand" onClick={scrollToTop}>
             <img src="/logo.jpeg" alt="Logo" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
             <div>
               <span className="rnav-brand-name">RANE &amp; SONS PVT. LTD.</span>
@@ -340,11 +343,10 @@ function Navpannel() {
             </div>
           </Link>
 
-          {/* Desktop nav links — same routes as original */}
+          {/* Desktop nav links */}
           <ul className="rnav-links">
-            <li><Link to="/">Home</Link></li>
-            <li><Link to="/maintain">Tenders</Link></li>
-            <li><Link to="/client/upload-bill">Bill Uploads</Link></li>
+            <li><Link to="/" onClick={scrollToTop}>Home</Link></li>
+            <li><HashLink to="/#pride-moment" smooth>Gallery</HashLink></li>
             <li><HashLink to="/#documents" smooth>Documents</HashLink></li>
             <li><HashLink to="/#contactus" smooth>Contact-us</HashLink></li>
           </ul>
@@ -385,9 +387,8 @@ function Navpannel() {
         <div className="rnav-drawer-inner">
 
           <ul className="rnav-drawer-links">
-            <li><Link to="/" onClick={closeDrawer}>Home</Link></li>
-            <li><Link to="/maintain" onClick={closeDrawer}>Tenders</Link></li>
-            <li><Link to="/client/upload-bill" onClick={closeDrawer}>Bill Uploads</Link></li>
+            <li><Link to="/" onClick={() => { closeDrawer(); scrollToTop(); }}>Home</Link></li>
+            <li><HashLink to="/#pride-moment" smooth onClick={closeDrawer}>Gallery</HashLink></li>
             <li><HashLink to="/#documents" smooth onClick={closeDrawer}>Documents</HashLink></li>
             <li><HashLink to="/#contactus" smooth onClick={closeDrawer}>Contact-us</HashLink></li>
           </ul>

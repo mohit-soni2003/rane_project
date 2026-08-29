@@ -35,15 +35,15 @@ export async function createProject({ projectId, projectName, description }) {
 // ─────────────────────────────────────────────────────────────────
 // UPDATE BASIC PROJECT DETAILS — matches PATCH /v1/basic-details/:projectId
 // projectMongoId is the Mongo _id (Project.findById).
-// Body: { projectName, description, projectUnder } — send only the
-// fields you want to change, all are optional on the backend.
+// Body: { projectName, description, projectUnder, tenderClosingDate } —
+// send only the fields you want to change, all are optional on the backend.
 // ─────────────────────────────────────────────────────────────────
-export async function updateBasicDetails(projectMongoId, { projectName, description, projectUnder } = {}) {
+export async function updateBasicDetails(projectMongoId, { projectName, description, projectUnder, tenderClosingDate } = {}) {
   const res = await fetch(`${backend_url}/project/v1/basic-details/${projectMongoId}`, {
     method: 'PATCH',
     headers: authHeaders(),
     credentials: 'include',
-    body: JSON.stringify({ projectName, description, projectUnder }),
+    body: JSON.stringify({ projectName, description, projectUnder, tenderClosingDate }),
   });
   const data = await res.json();
   if (!res.ok || !data.success) {
@@ -74,14 +74,34 @@ export async function addProjectDocument(projectMongoId, { name, url, documentTy
 }
 
 // ─────────────────────────────────────────────────────────────────
+// DELETE PROJECT DOCUMENT — matches DELETE /v1/:projectId/document/:documentId
+// :projectId here is the Mongo _id (Project.findById), NOT the
+// human-readable projectId field. documentId is the document's own
+// subdocument _id (from project.documents[i]._id).
+// Returns the updated documents array.
+// ─────────────────────────────────────────────────────────────────
+export async function deleteProjectDocument(projectMongoId, documentId) {
+  const res = await fetch(`${backend_url}/project/v1/${projectMongoId}/document/${documentId}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+    credentials: 'include',
+  });
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.message || 'Failed to delete document');
+  }
+  return data.data;
+}
+
+// ─────────────────────────────────────────────────────────────────
 // CREATE / UPDATE ADVANCED PROJECT DETAILS — matches
 // PATCH /v1/advance-details/:projectId
 // Body may include any of: projectType, tenderType, department,
 // contractType, biddingType, expenditureType, rankingOrderForBid,
-// zone, subDepartment, circle, division, psuName, clientName,
-// tenderNo, loaNo, agreementNo, loaDate, tenderTotalAmount,
-// loaAmount, contractorName, contractorCode, tca, taa,
-// jointVentureMembers
+// biddingSystem, currentDateOfCompletion, zone, subDepartment, circle,
+// division, psuName, clientName, tenderNo, loaNo, agreementNo, loaDate,
+// tenderTotalAmount, loaAmount, contractorName, contractorCode, tca,
+// taa, jointVentureMembers
 // Nothing is required on the backend — send only what you have; this
 // works both the first time (create) and on later edits (update).
 // ─────────────────────────────────────────────────────────────────
@@ -242,10 +262,12 @@ export async function updateFinancials(projectMongoId, financials = {}) {
 
 // ─────────────────────────────────────────────────────────────────
 // UPDATE BIDDING DETAILS — matches PATCH /v1/financials/bidding/:projectId
-// Body: { bidding: { emdAmount, advertisedValue, status, biddingPosition,
-//         biddingPercentage } }
+// Body: { bidding: { emdAmount, advertisedValue, status, referenceId,
+//         exemptedType, biddingPosition, biddingPercentage } }
 // All fields optional — send only what you want to change. status must
-// be one of: paid, unpaid, exempted. biddingPosition must be one of:
+// be one of: paid, unpaid, exempted. referenceId is only meaningful
+// when status is "paid"; exemptedType (startup_india | msme) is only
+// meaningful when status is "exempted". biddingPosition must be one of:
 // below, above, at_par. Does NOT touch costEstimation — use
 // addCostEstimation for that.
 // ─────────────────────────────────────────────────────────────────

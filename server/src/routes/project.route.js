@@ -81,19 +81,11 @@ router.post("/v1/create", verifyToken, adminOnly, async (req, res) => {
 });
 
 
-// ─────────────────────────────────────────────────────────────────────────────
-// UPDATE BASIC PROJECT DETAILS
-// Body may include: projectName, description, projectUnder
-// projectId is intentionally NOT editable here — it's a unique identifier
-// set at creation time. If you need to allow renaming it, add a dedicated
-// check for uniqueness before applying it.
-// ─────────────────────────────────────────────────────────────────────────────
-
 router.patch("/v1/basic-details/:projectId", verifyToken, adminOnly, async (req, res) => {
     try {
 
         const { projectId } = req.params;
-        const { projectName, description, projectUnder } = req.body;
+        const { projectName, description, projectUnder, tenderClosingDate } = req.body;
 
         const project = await Project.findById(projectId);
 
@@ -121,11 +113,133 @@ router.patch("/v1/basic-details/:projectId", verifyToken, adminOnly, async (req,
         // the enum list (which always fails).
         if (projectUnder !== undefined) project.projectUnder = projectUnder === '' ? undefined : projectUnder;
 
+        // NEW: tender closing date — plain Date field, empty string clears it.
+        if (tenderClosingDate !== undefined) project.tenderClosingDate = tenderClosingDate === '' ? undefined : tenderClosingDate;
+
         await project.save();
 
         return res.status(200).json({
             success: true,
             message: "Basic project details updated successfully.",
+            data: project
+        });
+
+    } catch (error) {
+
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+
+    }
+});
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CREATE / UPDATE ADVANCED PROJECT DETAILS
+// Body may include any of: projectType, tenderType, department, contractType,
+// biddingType, expenditureType, rankingOrderForBid, biddingSystem,
+// currentDateOfCompletion, zone, subDepartment, circle, division, psuName,
+// clientName, tenderNo, loaNo, agreementNo, loaDate, tenderTotalAmount,
+// loaAmount, contractorName, contractorCode, tca, taa, jointVentureMembers
+// Only the fields present in the request body are set - nothing required,
+// works the first time (create) and on every subsequent call (update).
+// ─────────────────────────────────────────────────────────────────────────────
+
+router.patch("/v1/advance-details/:projectId", verifyToken, adminOnly, async (req, res) => {
+    try {
+
+        const { projectId } = req.params;
+
+        const {
+            projectType,
+            tenderType,
+            department,
+            contractType,
+            biddingType,
+            expenditureType,
+            rankingOrderForBid,
+            biddingSystem,
+            currentDateOfCompletion,
+            zone,
+            subDepartment,
+            circle,
+            division,
+            psuName,
+            clientName,
+            tenderNo,
+            loaNo,
+            agreementNo,
+            loaDate,
+            tenderTotalAmount,
+            loaAmount,
+            contractorName,
+            contractorCode,
+            tca,
+            taa,
+            jointVentureMembers
+        } = req.body;
+
+        const project = await Project.findById(projectId);
+
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                message: "Project not found."
+            });
+        }
+
+        // Enum fields: convert empty string to undefined so Mongoose treats
+        // it as "clear the field" instead of trying to validate "" against
+        // the enum list (which always fails).
+        const clean = (v) => (v === '' ? undefined : v);
+
+        if (projectType !== undefined) project.projectType = clean(projectType);
+        if (tenderType !== undefined) project.tenderType = clean(tenderType);
+        if (department !== undefined) project.department = clean(department);
+        if (contractType !== undefined) project.contractType = clean(contractType);
+        if (biddingType !== undefined) project.biddingType = clean(biddingType);
+        if (expenditureType !== undefined) project.expenditureType = clean(expenditureType);
+        if (rankingOrderForBid !== undefined) project.rankingOrderForBid = clean(rankingOrderForBid);
+        if (zone !== undefined) project.zone = clean(zone);
+        if (subDepartment !== undefined) project.subDepartment = clean(subDepartment);
+        if (circle !== undefined) project.circle = clean(circle);
+        if (division !== undefined) project.division = division; // free text, no enum — fine as ""
+        if (psuName !== undefined) project.psuName = clean(psuName);
+
+        // NEW: bidding system (enum — run through clean()) and current
+        // date of completion (plain Date — empty string clears it).
+        if (biddingSystem !== undefined) project.biddingSystem = clean(biddingSystem);
+        if (currentDateOfCompletion !== undefined) project.currentDateOfCompletion = currentDateOfCompletion === '' ? undefined : currentDateOfCompletion;
+
+        // NEW: Advance Details fields — all free text/number/date, no enum
+        // validation, so no need to run them through clean().
+        if (clientName !== undefined) project.clientName = clientName;
+        if (tenderNo !== undefined) project.tenderNo = tenderNo;
+        if (loaNo !== undefined) project.loaNo = loaNo;
+        if (agreementNo !== undefined) project.agreementNo = agreementNo;
+        if (loaDate !== undefined) project.loaDate = loaDate === '' ? undefined : loaDate;
+        if (tenderTotalAmount !== undefined) project.tenderTotalAmount = tenderTotalAmount;
+        if (loaAmount !== undefined) project.loaAmount = loaAmount;
+        if (contractorName !== undefined) project.contractorName = contractorName;
+        if (contractorCode !== undefined) project.contractorCode = contractorCode;
+        if (tca !== undefined) project.tca = tca;
+        if (taa !== undefined) project.taa = taa;
+
+        // jointVentureMembers is an array of strings — accept the array as-is
+        // when it's actually an array (replaces the whole list, same as how
+        // a form would resubmit it).
+        if (jointVentureMembers !== undefined) {
+            project.jointVentureMembers = Array.isArray(jointVentureMembers)
+                ? jointVentureMembers
+                : [];
+        }
+
+        await project.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Advanced project details updated successfully.",
             data: project
         });
 
@@ -220,118 +334,6 @@ router.post("/v1/:projectId/document", verifyToken, allUsers, async (req, res) =
         });
     }
 });
-
-// ─────────────────────────────────────────────────────────────────────────────
-// CREATE / UPDATE ADVANCED PROJECT DETAILS
-// Body may include any of: projectType, tenderType, department, contractType,
-// biddingType, expenditureType, rankingOrderForBid, zone, subDepartment,
-// circle, division, psuName, clientName, tenderNo, loaNo, agreementNo,
-// loaDate, tenderTotalAmount, loaAmount, contractorName, contractorCode,
-// tca, taa, jointVentureMembers
-// Only the fields present in the request body are set - nothing required,
-// works the first time (create) and on every subsequent call (update).
-// ─────────────────────────────────────────────────────────────────────────────
-
-router.patch("/v1/advance-details/:projectId", verifyToken, adminOnly, async (req, res) => {
-    try {
-
-        const { projectId } = req.params;
-
-        const {
-            projectType,
-            tenderType,
-            department,
-            contractType,
-            biddingType,
-            expenditureType,
-            rankingOrderForBid,
-            zone,
-            subDepartment,
-            circle,
-            division,
-            psuName,
-            clientName,
-            tenderNo,
-            loaNo,
-            agreementNo,
-            loaDate,
-            tenderTotalAmount,
-            loaAmount,
-            contractorName,
-            contractorCode,
-            tca,
-            taa,
-            jointVentureMembers
-        } = req.body;
-
-        const project = await Project.findById(projectId);
-
-        if (!project) {
-            return res.status(404).json({
-                success: false,
-                message: "Project not found."
-            });
-        }
-
-        // Enum fields: convert empty string to undefined so Mongoose treats
-        // it as "clear the field" instead of trying to validate "" against
-        // the enum list (which always fails).
-        const clean = (v) => (v === '' ? undefined : v);
-
-        if (projectType !== undefined) project.projectType = clean(projectType);
-        if (tenderType !== undefined) project.tenderType = clean(tenderType);
-        if (department !== undefined) project.department = clean(department);
-        if (contractType !== undefined) project.contractType = clean(contractType);
-        if (biddingType !== undefined) project.biddingType = clean(biddingType);
-        if (expenditureType !== undefined) project.expenditureType = clean(expenditureType);
-        if (rankingOrderForBid !== undefined) project.rankingOrderForBid = clean(rankingOrderForBid);
-        if (zone !== undefined) project.zone = clean(zone);
-        if (subDepartment !== undefined) project.subDepartment = clean(subDepartment);
-        if (circle !== undefined) project.circle = clean(circle);
-        if (division !== undefined) project.division = division; // free text, no enum — fine as ""
-        if (psuName !== undefined) project.psuName = clean(psuName);
-
-        // NEW: Advance Details fields — all free text/number/date, no enum
-        // validation, so no need to run them through clean().
-        if (clientName !== undefined) project.clientName = clientName;
-        if (tenderNo !== undefined) project.tenderNo = tenderNo;
-        if (loaNo !== undefined) project.loaNo = loaNo;
-        if (agreementNo !== undefined) project.agreementNo = agreementNo;
-        if (loaDate !== undefined) project.loaDate = loaDate === '' ? undefined : loaDate;
-        if (tenderTotalAmount !== undefined) project.tenderTotalAmount = tenderTotalAmount;
-        if (loaAmount !== undefined) project.loaAmount = loaAmount;
-        if (contractorName !== undefined) project.contractorName = contractorName;
-        if (contractorCode !== undefined) project.contractorCode = contractorCode;
-        if (tca !== undefined) project.tca = tca;
-        if (taa !== undefined) project.taa = taa;
-
-        // jointVentureMembers is an array of strings — accept the array as-is
-        // when it's actually an array (replaces the whole list, same as how
-        // a form would resubmit it).
-        if (jointVentureMembers !== undefined) {
-            project.jointVentureMembers = Array.isArray(jointVentureMembers)
-                ? jointVentureMembers
-                : [];
-        }
-
-        await project.save();
-
-        return res.status(200).json({
-            success: true,
-            message: "Advanced project details updated successfully.",
-            data: project
-        });
-
-    } catch (error) {
-
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        });
-
-    }
-});
-
 // ─────────────────────────────────────────────────────────────────────────────
 // GET PROJECTS (filter by status, scope to "mine" or "all")
 // Query params:
@@ -454,7 +456,9 @@ router.patch("/v1/status/:projectId", verifyToken, async (req, res) => {
             "not_allotted",
             "L2",
             "L3",
-            "pending"
+            "pending",
+            "L1",
+            "alloted"
         ];
 
         if (!status) {
@@ -1409,6 +1413,39 @@ router.patch("/v1/timeline/:projectId", verifyToken, adminOnly, async (req, res)
             message: error.message
         });
 
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DELETE PROJECT DOCUMENT
+// Removes a single document (identified by its own subdocument _id) from
+// project.documents[].
+// ─────────────────────────────────────────────────────────────────────────────
+
+router.delete("/v1/:projectId/document/:documentId", verifyToken, adminOnly, async (req, res) => {
+    try {
+        const { projectId, documentId } = req.params;
+
+        const documents = await projectService.deleteDocument(projectId, documentId);
+
+        return res.status(200).json({
+            success: true,
+            message: "Document deleted successfully.",
+            data: documents
+        });
+
+    } catch (error) {
+        if (error.name === "CastError") {
+            return res.status(404).json({
+                success: false,
+                message: "Project or document not found."
+            });
+        }
+
+        return res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message
+        });
     }
 });
 module.exports = router;

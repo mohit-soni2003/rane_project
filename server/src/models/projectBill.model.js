@@ -54,6 +54,29 @@ const recoverySchema = new mongoose.Schema(
 );
 
 /* ------------------------------------------------------------------ */
+/*  SUB-SCHEMA: Security deposit entry                                */
+/*  A list of security-deposit recovery lines applied to this bill,   */
+/*  each capturing the recovery percentage, the amount recovered, and */
+/*  an optional remark.                                               */
+/* ------------------------------------------------------------------ */
+const securityDepositSchema = new mongoose.Schema(
+    {
+        recoveryPercent: {
+            type: Number,
+            required: true
+        },
+        amount: {
+            type: Number,
+            required: true
+        },
+        remark: {
+            type: String
+        }
+    },
+    { _id: true }
+);
+
+/* ------------------------------------------------------------------ */
 /*  MAIN SCHEMA: Project_bill                                          */
 /* ------------------------------------------------------------------ */
 const projectBillSchema = new mongoose.Schema(
@@ -135,7 +158,12 @@ const projectBillSchema = new mongoose.Schema(
         /* ---------------------------------------------------------- */
         /* RECOVERY — deductions applied to this bill                */
         /* ---------------------------------------------------------- */
-        recovery: [recoverySchema]
+        recovery: [recoverySchema],
+
+        /* ---------------------------------------------------------- */
+        /* SECURITY DEPOSIT — recovery lines applied to this bill     */
+        /* ---------------------------------------------------------- */
+        securityDeposit: [securityDepositSchema]
     },
     {
         timestamps: true

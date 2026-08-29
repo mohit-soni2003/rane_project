@@ -10,10 +10,12 @@ const verifyRole = require("../middleware/verifyRole");   // adjust to your actu
 // CREATE BILL FOR A PROJECT
 // POST /v1/:projectId/bill
 // Body may include: billNo, loaNo, agrNo, loaDate, bnsAmt, adsAmt, totalAmt,
-// rebate, billAmtInclusiveGST, tax, grossAmount, tdsAmt, items, recovery
+// rebate, billAmtInclusiveGST, tax, grossAmount, tdsAmt, items, recovery,
+// securityDeposit
 // billNo is required.
 // items: [{ item, qty, rate }]  — item is the Item _id
 // recovery: [{ recoveryType, code, desc, recoveryAmt }]
+// securityDeposit: [{ recoveryPercent, amount, remark }]
 // Restricted to admin — creating a bill isn't something staff/client should do.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -45,7 +47,8 @@ router.post("/v1/:projectId/bill", verifyToken, verifyRole("admin"), async (req,
             grossAmount,
             tdsAmt,
             items,
-            recovery
+            recovery,
+            securityDeposit
         } = req.body;
 
         if (!billNo || !billNo.trim()) {
@@ -70,7 +73,8 @@ router.post("/v1/:projectId/bill", verifyToken, verifyRole("admin"), async (req,
             grossAmount,
             tdsAmt,
             items,
-            recovery
+            recovery,
+            securityDeposit
         });
 
         return res.status(201).json({

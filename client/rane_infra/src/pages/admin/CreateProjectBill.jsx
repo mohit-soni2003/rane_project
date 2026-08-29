@@ -136,6 +136,9 @@ function Module({ icon, title, extra, children }) {
 /* ── empty recovery row ──────────────────────────────────────────────────── */
 const emptyRecovery = () => ({ recoveryType: '', code: '', desc: '', recoveryAmt: '' });
 
+/* ── empty security deposit row ──────────────────────────────────────────── */
+const emptySecurityDeposit = () => ({ recoveryPercent: '', amount: '', remark: '' });
+
 export default function CreateProjectBill() {
     const navigate = useNavigate();
 
@@ -171,6 +174,9 @@ export default function CreateProjectBill() {
     // ── recovery entries ──
     const [recoveryRows, setRecoveryRows] = useState([emptyRecovery()]);
 
+    // ── security deposit entries ──
+    const [securityDepositRows, setSecurityDepositRows] = useState([emptySecurityDeposit()]);
+
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
     const [error, setError] = useState('');
@@ -194,7 +200,9 @@ export default function CreateProjectBill() {
     }, []);
 
     // Whenever a project is picked, load its items and seed each row with
-    // qty 0 and a starting rate pulled from the item's own ourRate.
+    // qty 0 and a starting rate pulled from the item's own ourRate. Also
+    // pre-fills LOA No., AGR No. and LOA date from the project's own
+    // record, since the Project model already carries these fields.
     const handleSelectProject = async (e) => {
         const projectId = e.target.value;
         setSelectedProjectId(projectId);
@@ -203,7 +211,18 @@ export default function CreateProjectBill() {
         setSaved(false);
         setError('');
 
-        if (!projectId) return;
+        if (!projectId) {
+            setForm((prev) => ({ ...prev, loaNo: '', agrNo: '', loaDate: '' }));
+            return;
+        }
+
+        const selectedProject = projects.find((p) => p._id === projectId);
+        setForm((prev) => ({
+            ...prev,
+            loaNo: selectedProject?.loaNo || '',
+            agrNo: selectedProject?.agreementNo || '',
+            loaDate: selectedProject?.loaDate ? selectedProject.loaDate.slice(0, 10) : '',
+        }));
 
         setLoadingItems(true);
         setItemsError('');
@@ -300,8 +319,22 @@ export default function CreateProjectBill() {
 
     const recoveryTotal = recoveryRows.reduce((sum, r) => sum + (Number(r.recoveryAmt) || 0), 0);
 
-    // Net payable = Gross amount - Total recoveries
-    const netPayable = (Number(form.grossAmount) || 0) - recoveryTotal;
+    // ── security deposit row helpers ──
+    const handleSecurityDepositChange = (index, field, value) => {
+        setSecurityDepositRows((prev) => prev.map((r, i) => (i === index ? { ...r, [field]: value } : r)));
+        setSaved(false);
+        setError('');
+    };
+
+    const addSecurityDepositRow = () => setSecurityDepositRows((prev) => [...prev, emptySecurityDeposit()]);
+
+    const removeSecurityDepositRow = (index) => setSecurityDepositRows((prev) => prev.filter((_, i) => i !== index));
+
+    const securityDepositTotal = securityDepositRows.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+
+    // Net payable = Gross amount - Total recoveries - Total security deposit - TDS
+    const tdsAmtNum = Number(form.tdsAmt) || 0;
+    const netPayable = (Number(form.grossAmount) || 0) - recoveryTotal - securityDepositTotal - tdsAmtNum;
 
     const handleSave = async () => {
         setError('');
@@ -336,6 +369,15 @@ export default function CreateProjectBill() {
                 recoveryAmt: Number(r.recoveryAmt),
             }));
 
+        // Only security deposit rows with both a percentage and an amount are included.
+        const securityDeposit = securityDepositRows
+            .filter((r) => r.recoveryPercent !== '' && r.amount !== '')
+            .map((r) => ({
+                recoveryPercent: Number(r.recoveryPercent),
+                amount: Number(r.amount),
+                remark: r.remark || undefined,
+            }));
+
         setSaving(true);
         try {
             const payload = {
@@ -353,6 +395,7 @@ export default function CreateProjectBill() {
                 tdsAmt: form.tdsAmt === '' ? undefined : Number(form.tdsAmt),
                 items: billedItems,
                 recovery,
+                securityDeposit,
             };
             const created = await createProjectBill(selectedProjectId, payload);
             setSaved(true);
@@ -423,6 +466,9 @@ export default function CreateProjectBill() {
                         </div>
 
                         <div style={subHeaderStyle}>LOA / agreement reference</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 10 }}>
+                            Pre-filled from the project's own record — still editable if this bill needs different values.
+                        </div>
                         <div style={gridTwo}>
                             <Field label="LOA No." htmlFor="loaNo">
                                 <input id="loaNo" type="text" name="loaNo" value={form.loaNo} onChange={handleFormChange} style={controlStyle} />
@@ -469,9 +515,6 @@ export default function CreateProjectBill() {
                                     id="grossAmount" type="number" name="grossAmount" value={form.grossAmount}
                                     onChange={handleFormChange} style={controlStyle}
                                 />
-                            </Field>
-                            <Field label="TDS amount" htmlFor="tdsAmt">
-                                <input id="tdsAmt" type="number" name="tdsAmt" value={form.tdsAmt} onChange={handleFormChange} style={controlStyle} />
                             </Field>
                         </div>
                         <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
@@ -553,12 +596,17 @@ export default function CreateProjectBill() {
                         )}
                     </Module>
 
-                    {/* ── Recovery — add multiple entries ── */}
+                    {/* ── Deductions — Recovery, Security Deposit & TDS, all cut from Gross ── */}
                     <Module
                         icon={<FaFileInvoiceDollar size={13} color={C.accent} />}
-                        title="Recovery"
-                        extra={<span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{recoveryRows.length} entr{recoveryRows.length === 1 ? 'y' : 'ies'}</span>}
+                        title="Deductions (Recovery, Security Deposit & TDS)"
                     >
+                        <div style={subHeaderStyle}>
+                            Recovery
+                            <span style={{ fontSize: 10.5, color: 'var(--text-muted)', textTransform: 'none', fontWeight: 500, letterSpacing: 0, marginLeft: 6 }}>
+                                ({recoveryRows.length} entr{recoveryRows.length === 1 ? 'y' : 'ies'})
+                            </span>
+                        </div>
                         {recoveryRows.map((row, i) => (
                             <div key={i} style={subCardStyle}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
@@ -609,20 +657,93 @@ export default function CreateProjectBill() {
                                 </div>
                             </div>
                         ))}
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6, marginBottom: 4, flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, flexWrap: 'wrap' }}>
                             <button type="button" onClick={addRecoveryRow} style={secondaryButtonStyle}>
                                 <FaPlus size={11} /> Add recovery
                             </button>
                         </div>
 
+                        <div style={subHeaderStyle}>
+                            Security Deposit
+                            <span style={{ fontSize: 10.5, color: 'var(--text-muted)', textTransform: 'none', fontWeight: 500, letterSpacing: 0, marginLeft: 6 }}>
+                                ({securityDepositRows.length} entr{securityDepositRows.length === 1 ? 'y' : 'ies'})
+                            </span>
+                        </div>
+                        {securityDepositRows.map((row, i) => (
+                            <div key={i} style={subCardStyle}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                                    <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)' }}>Entry {i + 1}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => removeSecurityDepositRow(i)}
+                                        disabled={securityDepositRows.length === 1}
+                                        style={{
+                                            border: 'none', background: 'transparent',
+                                            color: securityDepositRows.length === 1 ? 'var(--text-muted)' : C.destructive,
+                                            cursor: securityDepositRows.length === 1 ? 'not-allowed' : 'pointer', padding: 4,
+                                        }}
+                                        title="Remove entry"
+                                    >
+                                        <FaTrash size={12} />
+                                    </button>
+                                </div>
+                                <div style={gridTwo}>
+                                    <Field label="Recovery %" htmlFor={`sdRecoveryPercent-${i}`}>
+                                        <input
+                                            id={`sdRecoveryPercent-${i}`} type="number" value={row.recoveryPercent}
+                                            onChange={(e) => handleSecurityDepositChange(i, 'recoveryPercent', e.target.value)}
+                                            style={controlStyle}
+                                        />
+                                    </Field>
+                                    <Field label="Amount" htmlFor={`sdAmount-${i}`}>
+                                        <input
+                                            id={`sdAmount-${i}`} type="number" value={row.amount}
+                                            onChange={(e) => handleSecurityDepositChange(i, 'amount', e.target.value)}
+                                            style={controlStyle}
+                                        />
+                                    </Field>
+                                    <Field label="Remark" htmlFor={`sdRemark-${i}`}>
+                                        <input
+                                            id={`sdRemark-${i}`} type="text" value={row.remark}
+                                            onChange={(e) => handleSecurityDepositChange(i, 'remark', e.target.value)}
+                                            style={controlStyle}
+                                        />
+                                    </Field>
+                                </div>
+                            </div>
+                        ))}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, flexWrap: 'wrap' }}>
+                            <button type="button" onClick={addSecurityDepositRow} style={secondaryButtonStyle}>
+                                <FaPlus size={11} /> Add security deposit
+                            </button>
+                        </div>
+
+                        <div style={subHeaderStyle}>TDS</div>
+                        <div style={gridTwo}>
+                            <Field label="TDS amount" htmlFor="tdsAmt">
+                                <input id="tdsAmt" type="number" name="tdsAmt" value={form.tdsAmt} onChange={handleFormChange} style={controlStyle} />
+                            </Field>
+                        </div>
+
                         <div style={subHeaderStyle}>Summary</div>
                         <div style={summaryRowStyle}>
-                            <span style={summaryLabelStyle}>Total recoveries</span>
+                            <span style={summaryLabelStyle}>Gross amount</span>
+                            <span style={summaryValueStyle}>{formatAmt(form.grossAmount)}</span>
+                        </div>
+                        <div style={summaryRowStyle}>
+                            <span style={summaryLabelStyle}>Total recoveries (−)</span>
                             <span style={summaryValueStyle}>{formatAmt(recoveryTotal)}</span>
                         </div>
+                        <div style={summaryRowStyle}>
+                            <span style={summaryLabelStyle}>Total security deposit (−)</span>
+                            <span style={summaryValueStyle}>{formatAmt(securityDepositTotal)}</span>
+                        </div>
+                        <div style={summaryRowStyle}>
+                            <span style={summaryLabelStyle}>TDS amount (−)</span>
+                            <span style={summaryValueStyle}>{formatAmt(tdsAmtNum)}</span>
+                        </div>
                         <div style={{ ...summaryRowStyle, borderBottom: 'none' }}>
-                            <span style={summaryLabelStyle}>Net payable (Gross − Total recoveries)</span>
+                            <span style={summaryLabelStyle}>Net payable</span>
                             <span style={{ ...summaryValueStyle, color: C.success }}>{formatAmt(netPayable)}</span>
                         </div>
                     </Module>

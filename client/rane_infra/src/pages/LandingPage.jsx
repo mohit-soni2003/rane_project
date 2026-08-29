@@ -136,6 +136,15 @@ const stats = [
   { value: 98, suffix: "%", label: "Client Satisfaction" },
 ];
 
+/* ─── Recognition slider images ─── */
+const recognitionImages = [
+  { src: "/hero/mohan_yadav.jpeg", title: "With Hon'ble Chief Minister Dr. Mohan Yadav" },
+  { src: "/hero/kamal_nath.jpeg", title: "With Shri Kamal Nath" },
+  { src: "/hero/umang_singhar.jpeg", title: "With Shri Umang Singhar" },
+  { src: "/hero/jitu.jpeg", title: "With Shri Jitu Patwari" },
+  // { src: "/hero/harsh_rane.jpeg", title: "Harsh Rane" },
+];
+
 /* ─── Typewriter hook ─── */
 function useTypewriter(words, speed = 80, pause = 1600) {
   const [display, setDisplay] = useState("");
@@ -264,6 +273,123 @@ function useReveal(threshold = 0.15) {
   }, [threshold]);
 
   return [ref, visible];
+}
+
+/* ─── Recognition image slider ─── */
+const arrowBtnStyle = (side) => ({
+  position: "absolute",
+  top: "50%",
+  [side]: "10px",
+  transform: "translateY(-50%)",
+  width: "38px",
+  height: "38px",
+  borderRadius: "50%",
+  border: "none",
+  background: "rgba(255,255,255,0.85)",
+  color: "#1e293b",
+  fontSize: "1.4rem",
+  lineHeight: 1,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
+});
+
+function RecognitionSlider({ images }) {
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (paused) return;
+    const timer = setInterval(() => {
+      setIndex((i) => (i + 1) % images.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [paused, images.length]);
+
+  const goTo = (i) => setIndex(i);
+  const prev = () => setIndex((i) => (i - 1 + images.length) % images.length);
+  const next = () => setIndex((i) => (i + 1) % images.length);
+
+  return (
+    <div
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      style={{ width: "100%" }}
+    >
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          borderRadius: "14px",
+          overflow: "hidden",
+          boxShadow: "0 10px 32px rgba(0,0,0,0.14)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {images.map((img, i) => (
+          <img
+            key={i}
+            src={img.src}
+            alt={img.title}
+            style={{
+              display: i === index ? "block" : "none",
+              width: "100%",
+              maxHeight: "78vh",
+              objectFit: "contain",
+              margin: "0 auto",
+              transition: "opacity 0.4s ease",
+            }}
+          />
+        ))}
+
+        {/* Caption overlay */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "linear-gradient(0deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0) 100%)",
+            padding: "36px 24px 16px",
+            color: "#fff",
+            textAlign: "center",
+          }}
+        >
+          <div style={{ fontSize: "1rem", fontWeight: 600, letterSpacing: "0.3px" }}>
+            {images[index].title}
+          </div>
+        </div>
+
+        <button onClick={prev} aria-label="Previous" style={arrowBtnStyle("left")}>‹</button>
+        <button onClick={next} aria-label="Next" style={arrowBtnStyle("right")}>›</button>
+      </div>
+
+      {/* Dots */}
+      <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginTop: "16px" }}>
+        {images.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => goTo(i)}
+            aria-label={`Go to slide ${i + 1}`}
+            style={{
+              width: i === index ? "22px" : "8px",
+              height: "8px",
+              borderRadius: "4px",
+              border: "none",
+              background: i === index ? "var(--primary-orange)" : "#e2e8f0",
+              transition: "all 0.25s ease",
+              cursor: "pointer",
+              padding: 0,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function LandingPage() {
@@ -403,7 +529,7 @@ export default function LandingPage() {
                   marginBottom: "16px",
                 }}
               >
-                RANE AND<br />SON'S PRIVATE LIMITED
+                RANE AND SONS<br /> PRIVATE LIMITED
               </h1>
 
               {/* Typewriter line */}
@@ -687,7 +813,7 @@ export default function LandingPage() {
                 }}
               >
                 <img
-                  src="/images/rane.webp"  // TODO: swap for Harshwardhan's photo once available
+                  src="/hero/harsh_rane.jpeg"
                   alt="Harshwardhan Rane"
                   className="rounded-circle shadow director-photo"
                   style={{ width: "110px", height: "110px", objectFit: "cover", marginBottom: "20px" }}
@@ -730,96 +856,30 @@ export default function LandingPage() {
       <TrackDivider color="#e2790025" />
 
       {/* ════════ RECOGNITION ════════ */}
-      <section className="py-5 bg-white" ref={recogRef}>
-        <Container>
-          <Row className="align-items-center gy-4">
-            <Col md={6}>
-              <div className={`reveal-left${recogVis ? " visible" : ""}`}>
-                <div style={{ position: "relative" }}>
-                  <img
-                    src="/images/cm-meeting.jpg"
-                    alt="Director with the Chief Minister of Madhya Pradesh"
-                    className="img-fluid rounded shadow"
-                    style={{ transition: "transform 0.4s ease", display: "block" }}
-                    onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.04)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
-                  />
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: "-12px",
-                      left: "-12px",
-                      width: "80px",
-                      height: "80px",
-                      background: "var(--primary-orange)",
-                      borderRadius: "8px",
-                      zIndex: -1,
-                      opacity: 0.5,
-                    }}
-                  />
-                </div>
-              </div>
-            </Col>
-            <Col md={6}>
-              <div className={`reveal-right${recogVis ? " visible" : ""}`}>
-                <span style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "2.5px", textTransform: "uppercase", color: "var(--primary-orange)" }}>
-                  Recognition
-                </span>
-                <h2 className="fw-bold mt-2 mb-3" style={{ fontSize: "1.9rem", color: "#1e293b" }}>
-                  A Moment of Pride
-                </h2>
-                <div style={{ width: "40px", height: "3px", background: "var(--primary-orange)", marginBottom: "18px", borderRadius: "2px" }} />
-                <p className="text-muted" style={{ lineHeight: "1.8", fontSize: "0.98rem" }}>
-                  Our Director recently met with the Hon'ble Chief Minister of Madhya Pradesh —
-                  a moment that reflects our continued commitment to the state's infrastructure
-                  development and our growing presence in the sector.
-                </p>
-              </div>
-            </Col>
-          </Row>
-        </Container>
+      <section className="py-5 bg-white" id="pride-moment" ref={recogRef}>        <Container>
+        <div className={`reveal${recogVis ? " visible" : ""}`} style={{ textAlign: "center", marginBottom: "32px" }}>
+          <span style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "2.5px", textTransform: "uppercase", color: "var(--primary-orange)" }}>
+            Recognition
+          </span>
+          <h2 className="fw-bold mt-2 mb-2" style={{ fontSize: "1.9rem", color: "#1e293b" }}>
+            A Moment of Pride
+          </h2>
+          <div style={{ width: "40px", height: "3px", background: "var(--primary-orange)", margin: "0 auto 18px", borderRadius: "2px" }} />
+          <p className="text-muted mx-auto" style={{ lineHeight: "1.8", fontSize: "0.98rem", maxWidth: "650px" }}>
+            Our Directors have had the honour of meeting with prominent leaders of Madhya Pradesh —
+            moments that reflect our continued commitment to the state's infrastructure
+            development and our growing presence in the sector.
+          </p>
+        </div>
+
+        <div className={`reveal${recogVis ? " visible" : ""}`}>
+          <RecognitionSlider images={recognitionImages} />
+        </div>
+      </Container>
       </section>
       <TrackDivider color="#e2790025" />
 
-      {/* ════════ DEPARTMENTS ════════ */}
-      <section style={{ backgroundColor: "var(--client-component-bg-color)", padding: "70px 0" }} ref={deptRef}>
-        <div className="container text-center">
-          <div className={`reveal${deptVis ? " visible" : ""}`}>
-            <span style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "2.5px", textTransform: "uppercase", color: "var(--primary-orange)" }}>
-              Our Portfolio
-            </span>
-            <h2 className="fw-bold mt-2 mb-5" style={{ color: "#1f2937" }}>Our Departments</h2>
-          </div>
-
-          <div className="row justify-content-center stagger">
-            {departments.map((dept, idx) => (
-              <div
-                className="col-6 col-sm-4 col-md-2 mb-4"
-                key={idx}
-                style={{ "--i": idx }}
-              >
-                <div
-                  className={`dept-card bg-white shadow-sm rounded py-4 px-3 text-center h-100 reveal${deptVis ? " visible" : ""}`}
-                  style={{
-                    minWidth: "120px",
-                    cursor: "pointer",
-                    transitionDelay: `${idx * 90}ms`,
-                  }}
-                >
-                  <div className="mb-3">
-                    <img
-                      src={dept.logo}
-                      alt={dept.name}
-                      style={{ width: "52px", height: "52px", objectFit: "contain" }}
-                    />
-                  </div>
-                  <div className="fw-semibold text-dark small">{dept.name}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      
 
       <TrackDivider color="#e2790020" />
 

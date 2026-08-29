@@ -21,9 +21,10 @@ const authHeaders = () => {
 // CREATE BILL FOR A PROJECT — matches POST /v1/:projectId/bill
 // Body may include: billNo, loaNo, agrNo, loaDate, bnsAmt, adsAmt,
 // totalAmt, rebate, billAmtInclusiveGST, tax, grossAmount, tdsAmt,
-// items, recovery — billNo is required on the backend.
+// items, recovery, securityDeposit — billNo is required on the backend.
 // items: [{ item, qty, rate }] — item is the Item _id
 // recovery: [{ recoveryType, code, desc, recoveryAmt }]
+// securityDeposit: [{ recoveryPercent, amount, remark }]
 // ─────────────────────────────────────────────────────────────────
 export async function createProjectBill(projectId, billData = {}) {
   const res = await fetch(`${backend_url}/projects/bill/v1/${projectId}/bill`, {
