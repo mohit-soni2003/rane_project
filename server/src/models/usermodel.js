@@ -89,7 +89,7 @@ const userSchema = new mongoose.Schema({
     },
     tag :{
         type: String,
-        enum: ["admin", "ceo", "cto", "cfo", "coo", "director"]
+        enum: ["admin", "ceo", "cto", "cfo", "coo", "director", "site_incharge","chief_finance_head", "finance_head", "accountant","supervisor","client", "staff"],
     },
     resetPasswordToken: String,
     resetPasswordExpiresAt: Date,

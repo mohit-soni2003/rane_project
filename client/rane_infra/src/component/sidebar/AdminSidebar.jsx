@@ -51,6 +51,7 @@ const NAV = [
       { label: 'Assigned To Me', to: '/admin/project/assigned-to-me' },
       { label: 'Task ', to: '/admin/project/task/list' },
       { label: 'Create Bill', to: '/admin/project/bill/create' },
+      { label: 'Manage Permissions', to: '/admin/project/permission' },
     ],
   },
   {

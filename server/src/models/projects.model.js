@@ -271,36 +271,9 @@ const projectSchema = new mongoose.Schema(
         /* 5. FINANCIAL DETAILS                                      */
         /* ---------------------------------------------------------- */
         financials: {
-            pgAmount: { type: Number, default: 0 },
-            actualPgAmount: { type: Number, default: 0 },
-
-            tenderAmount: { type: Number, default: 0 },
-
-            biddingPosition: {
-                type: String,
-                enum: ["below", "above", "at_par"]
-            },
-            biddingPercentage: { type: Number, default: 0 },
-
-            // auto-calculated in pre-save hook from tenderAmount + biddingPosition + biddingPercentage
-            actualBiddingAmount: { type: Number, default: 0 },
-
-            pgMaturityDate: Date,
-            pgMaturityInterest: { type: Number, default: 0 },
-            rateOfInterest: { type: Number, default: 0 },
-            durationInDays: { type: Number, default: 0 },
-
-            depositAccountNo: String,
-            depositStartDate: Date,
-
-            penalty: { type: Number, default: 0 },
-            penaltyTicketNo: String,
-
             /* ---------------------------------------------------- */
-            /* NEW: financials.penalty — 4 fields requested,        */
-            /* grouped together in their own nested object          */
-            /* (existing flat penalty / penaltyTicketNo above are   */
-            /* untouched).                                          */
+            /* financials.penaltyDetails — 4 fields, grouped in     */
+            /* their own nested object.                              */
             /* ---------------------------------------------------- */
             penaltyDetails: {
                 amount: { type: Number, default: 0 },
@@ -320,11 +293,8 @@ const projectSchema = new mongoose.Schema(
             },
 
             /* ---------------------------------------------------- */
-            /* NEW: financials.pg — all 9 fields requested, grouped */
-            /* together in their own nested object (existing flat  */
-            /* pgAmount / actualPgAmount / pgMaturityDate /         */
-            /* pgMaturityInterest / depositAccountNo above are      */
-            /* untouched).                                          */
+            /* financials.pg — all 9 fields, grouped together in    */
+            /* their own nested object.                              */
             /* ---------------------------------------------------- */
             pg: {
                 amountRailway: { type: Number, default: 0 },
@@ -336,13 +306,6 @@ const projectSchema = new mongoose.Schema(
                 name: String,
                 depositAccountNo: String,
                 bankBranch: String
-            },
-
-            recoveryAtContractEnd: {
-                billAmount: { type: Number, default: 0 },
-                recoveryAmount: { type: Number, default: 0 },
-                recoveryDesc: String,
-                billNumber: String
             },
 
             /* ---------------------------------------------------- */
@@ -437,28 +400,5 @@ const projectSchema = new mongoose.Schema(
         timestamps: true
     }
 );
-
-/* ------------------------------------------------------------------ */
-/*  PRE-SAVE: auto-calculate actualBiddingAmount                      */
-/*  below  -> tenderAmount - (tenderAmount * pct / 100)                */
-/*  above  -> tenderAmount + (tenderAmount * pct / 100)                */
-/*  at_par -> tenderAmount                                             */
-/* ------------------------------------------------------------------ */
-projectSchema.pre("save", function (next) {
-    const f = this.financials;
-    if (f && f.tenderAmount != null && f.biddingPosition) {
-        const pct = f.biddingPercentage || 0;
-        const base = f.tenderAmount;
-
-        if (f.biddingPosition === "below") {
-            f.actualBiddingAmount = base - (base * pct) / 100;
-        } else if (f.biddingPosition === "above") {
-            f.actualBiddingAmount = base + (base * pct) / 100;
-        } else if (f.biddingPosition === "at_par") {
-            f.actualBiddingAmount = base;
-        }
-    }
-    next();
-});
 
 module.exports = mongoose.model("Project", projectSchema);

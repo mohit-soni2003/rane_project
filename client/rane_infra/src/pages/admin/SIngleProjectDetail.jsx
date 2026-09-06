@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-    FaProjectDiagram, FaMapMarkedAlt, FaSitemap, FaRupeeSign,
+    FaProjectDiagram, FaMapMarkedAlt, FaSitemap,
     FaFileAlt, FaUserShield, FaClipboardCheck, FaExternalLinkAlt,
     FaClock, FaInfoCircle, FaCheckCircle, FaTimesCircle, FaUndo,
     FaTrain, FaIndustry, FaCalendarAlt, FaBoxes, FaTasks, FaUserCircle,
@@ -13,6 +13,7 @@ import { backend_url } from '../../store/keyStore';
 import { useAuthStore } from '../../store/authStore';
 import AdminHeader from '../../component/header/AdminHeader';
 import { getProjectBills } from '../../services/projectBillService.js';
+import { usePermissions } from '../../component/hooks/userPermission.js';
 
 const C = {
     primary: '#6b3e2b',
@@ -293,20 +294,19 @@ function Module({ id, icon, title, extra, children }) {
 /* ── section registry (drives both nav pills and render order) ──────────── */
 
 const SECTIONS = [
-    { id: 'basic', label: 'Basic', icon: <FaProjectDiagram size={12} /> },
-    { id: 'location', label: 'Location', icon: <FaMapMarkedAlt size={12} /> },
-    { id: 'advance', label: 'Advance', icon: <FaSitemap size={12} /> },
-    { id: 'financial', label: 'Financial', icon: <FaRupeeSign size={12} /> },
-    { id: 'bidding', label: 'Bidding', icon: <FaGavel size={12} /> },
-    { id: 'pg', label: 'Advanced Financial', icon: <FaLandmark size={12} /> },
-    { id: 'penalty', label: 'Penalty', icon: <FaExclamationTriangle size={12} /> },
-    { id: 'security-deposit', label: 'Security Deposit', icon: <FaPiggyBank size={12} /> },
-    { id: 'materials', label: 'Materials', icon: <FaBoxes size={12} /> },
-    { id: 'bills', label: 'Bills', icon: <FaFileInvoiceDollar size={12} /> },
-    { id: 'documents', label: 'Documents', icon: <FaFileAlt size={12} /> },
-    { id: 'tasks', label: 'Tasks', icon: <FaTasks size={12} /> },
-    { id: 'approvals', label: 'Approvals', icon: <FaUserShield size={12} /> },
-    { id: 'timeline', label: 'Timeline', icon: <FaCalendarAlt size={12} /> },
+    { id: 'basic', label: 'Basic', icon: <FaProjectDiagram size={12} />, permSection: 'basic' },
+    { id: 'location', label: 'Location', icon: <FaMapMarkedAlt size={12} />, permSection: 'location' },
+    { id: 'advance', label: 'Advance', icon: <FaSitemap size={12} />, permSection: 'advance' },
+    { id: 'bidding', label: 'Bidding', icon: <FaGavel size={12} />, permSection: 'bidding' },
+    { id: 'pg', label: 'Advanced Financial', icon: <FaLandmark size={12} />, permSection: 'advance_financial' },
+    { id: 'penalty', label: 'Penalty', icon: <FaExclamationTriangle size={12} />, permSection: 'penalty' },
+    { id: 'security-deposit', label: 'Security Deposit', icon: <FaPiggyBank size={12} />, permSection: 'security_deposit' },
+    { id: 'materials', label: 'Materials', icon: <FaBoxes size={12} />, permSection: 'material' },
+    { id: 'bills', label: 'Bills', icon: <FaFileInvoiceDollar size={12} />, permSection: 'bill' },
+    { id: 'documents', label: 'Documents', icon: <FaFileAlt size={12} />, permSection: 'document' },
+    { id: 'tasks', label: 'Tasks', icon: <FaTasks size={12} />, permSection: 'task' },
+    { id: 'approvals', label: 'Approvals', icon: <FaUserShield size={12} />, permSection: 'approvals' },
+    { id: 'timeline', label: 'Timeline', icon: <FaCalendarAlt size={12} />, permSection: 'basic' },
 ];
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -336,6 +336,36 @@ function BiddingFinancialsModule({ project }) {
                 <Field label="Bidding position">{prettify(bidding.biddingPosition)}</Field>
                 <Field label="Bidding percentage">{bidding.biddingPercentage || bidding.biddingPercentage === 0 ? `${bidding.biddingPercentage}%` : '—'}</Field>
             </div>
+
+            {/* Computed amount — EMD amount adjusted by the bidding
+                position/percentage. Nothing here is stored; it's derived
+                fresh every render, same formula as the edit page. */}
+            {bidding.biddingPosition && (bidding.emdAmount || bidding.emdAmount === 0) && (() => {
+                const emd = Number(bidding.emdAmount) || 0;
+                const pct = Number(bidding.biddingPercentage) || 0;
+                const delta = (emd * pct) / 100;
+                const computed = bidding.biddingPosition === 'below' ? emd - delta
+                    : bidding.biddingPosition === 'above' ? emd + delta
+                    : emd;
+                const positionLabel = bidding.biddingPosition === 'below' ? 'below'
+                    : bidding.biddingPosition === 'above' ? 'above'
+                    : 'at par with';
+                return (
+                    <div style={{
+                        ...subCardStyle, display: 'flex', alignItems: 'center',
+                        justifyContent: 'space-between', flexWrap: 'wrap', gap: 8,
+                    }}>
+                        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                            {bidding.biddingPosition === 'at_par'
+                                ? 'At par with EMD amount'
+                                : `${pct || 0}% ${positionLabel} EMD amount`}
+                        </span>
+                        <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-strong)' }}>
+                            ₹{computed.toLocaleString('en-IN')}
+                        </span>
+                    </div>
+                );
+            })()}
 
             <div style={subHeaderStyle}>
                 Cost estimation ({costEstimationList.length})
@@ -487,6 +517,10 @@ export default function SingleProjectDetail() {
     const [p, setP] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    // Section-level view access for the current user on this project —
+    // sections without view access are simply not rendered below.
+    const { canView } = usePermissions(id);
 
     const [items, setItems] = useState([]);
     const [itemsLoading, setItemsLoading] = useState(true);
@@ -674,8 +708,6 @@ export default function SingleProjectDetail() {
                 const st = statusStyle(p.status);
                 const isRailway = p.department === 'indian_railway';
                 const isPsu = p.department === 'psu';
-                const f = p.financials || {};
-                const recovery = f.recoveryAtContractEnd || {};
                 const entity = ENTITY_DETAILS[p.projectUnder];
 
                 return (
@@ -704,7 +736,7 @@ export default function SingleProjectDetail() {
                             <div style={{
                                 display: 'flex', gap: 8, overflowX: 'auto', padding: '0 18px 16px',
                             }}>
-                                {SECTIONS.map((s) => (
+                                {SECTIONS.filter((s) => canView(s.permSection)).map((s) => (
                                     <span key={s.id} style={navPillStyle(false)} onClick={() => scrollToSection(s.id)}>
                                         {s.icon} {s.label}
                                     </span>
@@ -713,6 +745,7 @@ export default function SingleProjectDetail() {
                         </div>
 
                         {/* ── 1. Basic Details ── */}
+                        {canView('basic') && (
                         <Module id="basic" icon={<FaProjectDiagram size={13} color={C.accent} />} title="Basic Details">
                             <div style={gridTwo}>
                                 <Field label="Project ID">{dash(p.projectId)}</Field>
@@ -742,8 +775,10 @@ export default function SingleProjectDetail() {
                                 </>
                             )}
                         </Module>
+                        )}
 
                         {/* ── 2. Location ── */}
+                        {canView('location') && (
                         <Module id="location" icon={<FaMapMarkedAlt size={13} color={C.accent} />} title="Location">
                             <div style={subHeaderStyle}>Site location</div>
                             <div style={gridTwo}>
@@ -767,8 +802,10 @@ export default function SingleProjectDetail() {
                                 <Field label="Site address">{dash(p.headquarterLocation?.siteAddress)}</Field>
                             </div>
                         </Module>
+                        )}
 
                         {/* ── 3. Advance Project Details ── */}
+                        {canView('advance') && (
                         <Module id="advance" icon={<FaSitemap size={13} color={C.accent} />} title="Advance Project Details">
                             <div style={gridTwo}>
                                 <Field label="Project type">{prettify(p.projectType)}</Field>
@@ -835,60 +872,22 @@ export default function SingleProjectDetail() {
                                 </>
                             )}
                         </Module>
-
-                        {/* ── 4. Financial Details ── */}
-                        <Module id="financial" icon={<FaRupeeSign size={13} color={C.accent} />} title="Financial Details">
-                            <div style={gridTwo}>
-                                <Field label="Tender amount">{formatCurrency(f.tenderAmount)}</Field>
-                                <Field label="Bidding position">{prettify(f.biddingPosition)}</Field>
-                                <Field label="Bidding percentage">{f.biddingPercentage || f.biddingPercentage === 0 ? `${f.biddingPercentage}%` : '—'}</Field>
-                                <Field label="Actual bidding amount">{formatCurrency(f.actualBiddingAmount)}</Field>
-                            </div>
-
-                            <div style={subHeaderStyle}>Performance guarantee</div>
-                            <div style={gridTwo}>
-                                <Field label="PG amount">{formatCurrency(f.pgAmount)}</Field>
-                                <Field label="Actual PG amount">{formatCurrency(f.actualPgAmount)}</Field>
-                                <Field label="PG maturity date">{formatDate(f.pgMaturityDate)}</Field>
-                                <Field label="PG maturity interest">{formatCurrency(f.pgMaturityInterest)}</Field>
-                                <Field label="Rate of interest">{f.rateOfInterest || f.rateOfInterest === 0 ? `${f.rateOfInterest}%` : '—'}</Field>
-                                <Field label="Duration (days)">{dash(f.durationInDays)}</Field>
-                            </div>
-
-                            <div style={subHeaderStyle}>Deposit</div>
-                            <div style={gridTwo}>
-                                <Field label="Deposit account no.">{dash(f.depositAccountNo)}</Field>
-                                <Field label="Deposit start date">{formatDate(f.depositStartDate)}</Field>
-                            </div>
-
-                            <div style={subHeaderStyle}>Penalty</div>
-                            <div style={gridTwo}>
-                                <Field label="Penalty">{formatCurrency(f.penalty)}</Field>
-                                <Field label="Penalty ticket no.">{dash(f.penaltyTicketNo)}</Field>
-                            </div>
-
-                            <div style={subHeaderStyle}>Recovery at contract end</div>
-                            <div style={gridTwo}>
-                                <Field label="Bill amount">{formatCurrency(recovery.billAmount)}</Field>
-                                <Field label="Recovery amount">{formatCurrency(recovery.recoveryAmount)}</Field>
-                                <Field label="Bill number">{dash(recovery.billNumber)}</Field>
-                                <Field label="Recovery description">{dash(recovery.recoveryDesc)}</Field>
-                            </div>
-                        </Module>
+                        )}
 
                         {/* ── 5. Bidding Financials ── */}
-                        <BiddingFinancialsModule project={p} />
+                        {canView('bidding') && <BiddingFinancialsModule project={p} />}
 
                         {/* ── 5b. Advanced Financial Details (PG) ── */}
-                        <PgFinancialsModule project={p} />
+                        {canView('advance_financial') && <PgFinancialsModule project={p} />}
 
                         {/* ── 5c. Penalty Details ── */}
-                        <PenaltyFinancialsModule project={p} />
+                        {canView('penalty') && <PenaltyFinancialsModule project={p} />}
 
                         {/* ── 5d. Security Deposit ── */}
-                        <SecurityDepositFinancialsModule project={p} />
+                        {canView('security_deposit') && <SecurityDepositFinancialsModule project={p} />}
 
                         {/* ── 6. Materials ── */}
+                        {canView('material') && (
                         <Module
                             id="materials"
                             icon={<FaBoxes size={13} color={C.accent} />}
@@ -916,10 +915,10 @@ export default function SingleProjectDetail() {
                                                 <th style={thStyle}>Name</th>
                                                 <th style={thStyle}>Description</th>
                                                 <th style={thStyle}>Unit</th>
+                                                <th style={thRightStyle}>Qty</th>
                                                 <th style={thRightStyle}>Railway Rate</th>
                                                 <th style={thRightStyle}>Our Rate</th>
                                                 <th style={thRightStyle}>Market Rate</th>
-                                                <th style={thRightStyle}>Qty</th>
                                                 <th style={thRightStyle}>Installation</th>
                                                 <th style={thRightStyle} title="Acquisition cost — Market Rate × Qty + Installation">Total</th>
                                                 <th style={thRightStyle} title="Bid price to railway — Our Rate × Qty + Installation">Railway Total</th>
@@ -935,10 +934,10 @@ export default function SingleProjectDetail() {
                                                         <td style={tdWrapStyle}>{dash(it.name)}</td>
                                                         <td style={tdWrapStyle}>{dash(it.description)}</td>
                                                         <td style={tdStyle}>{prettify(it.unit)}</td>
+                                                        <td style={tdRightStyle}>{dash(it.quantity)}</td>
                                                         <td style={tdRightStyle}>{formatCurrency(it.railwayRate)}</td>
                                                         <td style={tdRightStyle}>{formatCurrency(it.ourRate)}</td>
                                                         <td style={tdRightStyle}>{formatCurrency(it.marketRate)}</td>
-                                                        <td style={tdRightStyle}>{dash(it.quantity)}</td>
                                                         <td style={tdRightStyle}>{formatCurrency(it.installation)}</td>
                                                         <td style={tdRightStyle}>{formatCurrency(marketRowTotal(it))}</td>
                                                         <td style={tdRightStyle}>{formatCurrency(railwayRowTotal(it))}</td>
@@ -959,8 +958,10 @@ export default function SingleProjectDetail() {
                                 </div>
                             )}
                         </Module>
+                        )}
 
                         {/* ── 6b. Bills ── */}
+                        {canView('bill') && (
                         <Module
                             id="bills"
                             icon={<FaFileInvoiceDollar size={13} color={C.accent} />}
@@ -1012,8 +1013,10 @@ export default function SingleProjectDetail() {
                                 </div>
                             )}
                         </Module>
+                        )}
 
                         {/* ── 6. Documents ── */}
+                        {canView('document') && (
                         <Module
                             id="documents"
                             icon={<FaFileAlt size={13} color={C.accent} />}
@@ -1046,8 +1049,10 @@ export default function SingleProjectDetail() {
                                 <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No documents attached.</div>
                             )}
                         </Module>
+                        )}
 
                         {/* ── 7. Tasks ── */}
+                        {canView('task') && (
                         <Module
                             id="tasks"
                             icon={<FaTasks size={13} color={C.accent} />}
@@ -1149,8 +1154,10 @@ export default function SingleProjectDetail() {
                                 </div>
                             )}
                         </Module>
+                        )}
 
                         {/* ── 8. Approvals ── */}
+                        {canView('approvals') && (
                         <Module id="approvals" icon={<FaUserShield size={13} color={C.accent} />} title="Approvals">
                             <div style={gridTwo}>
                                 <Field label="Current authority">{userLabel(p.currentAuthority)}</Field>
@@ -1186,8 +1193,10 @@ export default function SingleProjectDetail() {
                                 <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No approval actions yet.</div>
                             )}
                         </Module>
+                        )}
 
                         {/* ── 9. Timeline ── */}
+                        {canView('basic') && (
                         <Module id="timeline" icon={<FaCalendarAlt size={13} color={C.accent} />} title="Timeline">
                             <div style={gridTwo}>
                                 <Field label="Start date">{formatDate(p.startDate)}</Field>
@@ -1197,6 +1206,7 @@ export default function SingleProjectDetail() {
                                 <Field label="Last updated">{formatDateTime(p.updatedAt)}</Field>
                             </div>
                         </Module>
+                        )}
                     </>
                 );
             })()}

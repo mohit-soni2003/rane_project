@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import {
-    FaProjectDiagram, FaMapMarkedAlt, FaSitemap, FaRupeeSign,
+    FaProjectDiagram, FaMapMarkedAlt, FaSitemap,
     FaFileAlt, FaUserShield, FaClipboardCheck, FaTimesCircle,
     FaTrain, FaIndustry, FaSave, FaPlus, FaPaperPlane, FaExternalLinkAlt,
     FaBoxes, FaTrash, FaTasks, FaUserCircle, FaUsers, FaCheckCircle, FaShieldAlt,
@@ -15,7 +15,6 @@ import {
     updateBasicDetails,
     updateLocation,
     updateAdvanceDetails,
-    updateFinancials,
     updateProjectStatus,
     addProjectDocument,
     deleteProjectDocument,
@@ -32,6 +31,7 @@ import {
     updateTimeline,
 } from '../../services/project.service.js';
 import { getTasksByProject, createTask } from '../../services/task.service.js';
+import { usePermissions } from '../../component/hooks/userPermission.js';
 
 const C = {
     primary: '#6b3e2b',
@@ -183,7 +183,10 @@ function Field({ label, htmlFor, children }) {
 // A "module" = one independent, self-contained card for a section —
 // each owns its own local edit state and calls its own service directly,
 // so sections update independently without touching one another.
-function Module({ id, icon, title, extra, children }) {
+// `locked` (view-but-not-edit access) wraps the whole body in a native
+// disabled <fieldset> — one line disables every input, select, textarea
+// AND the Save button inside it, without touching each control.
+function Module({ id, icon, title, extra, locked, children }) {
     return (
         <div id={id} style={moduleCardStyle}>
             <div style={moduleBodyStyle}>
@@ -191,10 +194,25 @@ function Module({ id, icon, title, extra, children }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         {icon}
                         <span>{title}</span>
+                        {locked && (
+                            <span style={{
+                                fontSize: 10, fontWeight: 700, color: 'var(--text-muted)',
+                                background: 'var(--muted)', borderRadius: 20, padding: '2px 8px',
+                                textTransform: 'uppercase', letterSpacing: '0.03em',
+                            }}>
+                                View only
+                            </span>
+                        )}
                     </div>
                     {extra}
                 </div>
-                {children}
+                {locked ? (
+                    <fieldset disabled style={{ border: 'none', padding: 0, margin: 0, opacity: 0.65 }}>
+                        {children}
+                    </fieldset>
+                ) : (
+                    children
+                )}
             </div>
         </div>
     );
@@ -203,7 +221,7 @@ function Module({ id, icon, title, extra, children }) {
 /* ══════════════════════════════════════════════════════════════════════════
    MODULE 1 — Basic Details → PATCH /v1/basic-details/:projectId
    ══════════════════════════════════════════════════════════════════════════ */
-function BasicDetailsModule({ project, onUpdated }) {
+function BasicDetailsModule({ project, onUpdated, locked }) {
     const [form, setForm] = useState({
         projectName: project.projectName || '',
         description: project.description || '',
@@ -236,7 +254,7 @@ function BasicDetailsModule({ project, onUpdated }) {
     };
 
     return (
-        <Module id="basic" icon={<FaProjectDiagram size={13} color={C.accent} />} title="Basic Details">
+        <Module id="basic" icon={<FaProjectDiagram size={13} color={C.accent} />} title="Basic Details" locked={locked}>
             <div style={gridTwo}>
                 <Field label="Project ID">
                     <input type="text" value={project.projectId || ''} disabled style={disabledControlStyle} />
@@ -296,7 +314,7 @@ const INDIAN_STATES = [
 /* ══════════════════════════════════════════════════════════════════════════
    MODULE 2 — Location Details → PATCH /v1/location/:projectId
    ══════════════════════════════════════════════════════════════════════════ */
-function LocationModule({ project, onUpdated }) {
+function LocationModule({ project, onUpdated, locked }) {
     const [form, setForm] = useState({
         state: project.location?.state || '',
         city: project.location?.city || '',
@@ -347,7 +365,7 @@ function LocationModule({ project, onUpdated }) {
     };
 
     return (
-        <Module id="location" icon={<FaMapMarkedAlt size={13} color={C.accent} />} title="Location">
+        <Module id="location" icon={<FaMapMarkedAlt size={13} color={C.accent} />} title="Location" locked={locked}>
             <div style={subHeaderStyle}>Site location</div>
             <div style={gridTwo}>
                 <Field label="State" htmlFor="state">
@@ -421,7 +439,7 @@ function LocationModule({ project, onUpdated }) {
 /* ══════════════════════════════════════════════════════════════════════════
    MODULE 3 — Advance Project Details → PATCH /v1/advance-details/:projectId
    ══════════════════════════════════════════════════════════════════════════ */
-function AdvanceDetailsModule({ project, onUpdated }) {
+function AdvanceDetailsModule({ project, onUpdated, locked }) {
     const [form, setForm] = useState({
         projectType: project.projectType || '',
         tenderType: project.tenderType || '',
@@ -521,7 +539,7 @@ function AdvanceDetailsModule({ project, onUpdated }) {
     };
 
     return (
-        <Module id="advance" icon={<FaSitemap size={13} color={C.accent} />} title="Advance Project Details">
+        <Module id="advance" icon={<FaSitemap size={13} color={C.accent} />} title="Advance Project Details" locked={locked}>
             <div style={gridTwo}>
                 <Field label="Project type" htmlFor="projectType">
                     <select id="projectType" name="projectType" value={form.projectType} onChange={handleChange} style={{ ...controlStyle, cursor: 'pointer' }}>
@@ -709,163 +727,6 @@ function AdvanceDetailsModule({ project, onUpdated }) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   MODULE 4 — Financial Details → PATCH /v1/financials/:projectId
-   ══════════════════════════════════════════════════════════════════════════ */
-function FinancialDetailsModule({ project, onUpdated }) {
-    const f = project.financials || {};
-    const recovery = f.recoveryAtContractEnd || {};
-
-    const [form, setForm] = useState({
-        tenderAmount: f.tenderAmount ?? '',
-        biddingPosition: f.biddingPosition || '',
-        biddingPercentage: f.biddingPercentage ?? '',
-        pgAmount: f.pgAmount ?? '',
-        actualPgAmount: f.actualPgAmount ?? '',
-        pgMaturityDate: f.pgMaturityDate ? f.pgMaturityDate.slice(0, 10) : '',
-        pgMaturityInterest: f.pgMaturityInterest ?? '',
-        rateOfInterest: f.rateOfInterest ?? '',
-        durationInDays: f.durationInDays ?? '',
-        depositAccountNo: f.depositAccountNo || '',
-        depositStartDate: f.depositStartDate ? f.depositStartDate.slice(0, 10) : '',
-        penalty: f.penalty ?? '',
-        penaltyTicketNo: f.penaltyTicketNo || '',
-        recoveryBillAmount: recovery.billAmount ?? '',
-        recoveryAmount: recovery.recoveryAmount ?? '',
-        recoveryBillNumber: recovery.billNumber || '',
-        recoveryDesc: recovery.recoveryDesc || '',
-    });
-    const [saving, setSaving] = useState(false);
-    const [saved, setSaved] = useState(false);
-    const [error, setError] = useState('');
-
-    const handleChange = (e) => {
-        setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-        setSaved(false);
-        setError('');
-    };
-
-    const handleSave = async () => {
-        setSaving(true);
-        setSaved(false);
-        setError('');
-        try {
-            // Reshape flat form state back into the nested financials shape
-            const payload = {
-                tenderAmount: form.tenderAmount === '' ? undefined : Number(form.tenderAmount),
-                biddingPosition: form.biddingPosition || undefined,
-                biddingPercentage: form.biddingPercentage === '' ? undefined : Number(form.biddingPercentage),
-                pgAmount: form.pgAmount === '' ? undefined : Number(form.pgAmount),
-                actualPgAmount: form.actualPgAmount === '' ? undefined : Number(form.actualPgAmount),
-                pgMaturityDate: form.pgMaturityDate || undefined,
-                pgMaturityInterest: form.pgMaturityInterest === '' ? undefined : Number(form.pgMaturityInterest),
-                rateOfInterest: form.rateOfInterest === '' ? undefined : Number(form.rateOfInterest),
-                durationInDays: form.durationInDays === '' ? undefined : Number(form.durationInDays),
-                depositAccountNo: form.depositAccountNo || undefined,
-                depositStartDate: form.depositStartDate || undefined,
-                penalty: form.penalty === '' ? undefined : Number(form.penalty),
-                penaltyTicketNo: form.penaltyTicketNo || undefined,
-                recoveryAtContractEnd: {
-                    billAmount: form.recoveryBillAmount === '' ? undefined : Number(form.recoveryBillAmount),
-                    recoveryAmount: form.recoveryAmount === '' ? undefined : Number(form.recoveryAmount),
-                    billNumber: form.recoveryBillNumber || undefined,
-                    recoveryDesc: form.recoveryDesc || undefined,
-                },
-            };
-            const updated = await updateFinancials(project._id, payload);
-            onUpdated(updated);
-            setSaved(true);
-        } catch (err) {
-            setError(err.message || 'Failed to save');
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    return (
-        <Module id="financial" icon={<FaRupeeSign size={13} color={C.accent} />} title="Financial Details">
-            <div style={gridTwo}>
-                <Field label="Tender amount" htmlFor="tenderAmount">
-                    <input id="tenderAmount" type="number" name="tenderAmount" value={form.tenderAmount} onChange={handleChange} style={controlStyle} />
-                </Field>
-                <Field label="Bidding position" htmlFor="biddingPosition">
-                    <select id="biddingPosition" name="biddingPosition" value={form.biddingPosition} onChange={handleChange} style={{ ...controlStyle, cursor: 'pointer' }}>
-                        <option value="">Select position</option>
-                        {BIDDING_POSITIONS.map((b) => <option key={b} value={b}>{prettify(b)}</option>)}
-                    </select>
-                </Field>
-                <Field label="Bidding percentage" htmlFor="biddingPercentage">
-                    <input id="biddingPercentage" type="number" name="biddingPercentage" value={form.biddingPercentage} onChange={handleChange} style={controlStyle} />
-                </Field>
-            </div>
-
-            <div style={subHeaderStyle}>Performance guarantee</div>
-            <div style={gridTwo}>
-                <Field label="PG amount" htmlFor="pgAmount">
-                    <input id="pgAmount" type="number" name="pgAmount" value={form.pgAmount} onChange={handleChange} style={controlStyle} />
-                </Field>
-                <Field label="Actual PG amount" htmlFor="actualPgAmount">
-                    <input id="actualPgAmount" type="number" name="actualPgAmount" value={form.actualPgAmount} onChange={handleChange} style={controlStyle} />
-                </Field>
-                <Field label="PG maturity date" htmlFor="pgMaturityDate">
-                    <input id="pgMaturityDate" type="date" name="pgMaturityDate" value={form.pgMaturityDate} onChange={handleChange} style={{ ...controlStyle, cursor: 'pointer' }} />
-                </Field>
-                <Field label="PG maturity interest" htmlFor="pgMaturityInterest">
-                    <input id="pgMaturityInterest" type="number" name="pgMaturityInterest" value={form.pgMaturityInterest} onChange={handleChange} style={controlStyle} />
-                </Field>
-                <Field label="Rate of interest (%)" htmlFor="rateOfInterest">
-                    <input id="rateOfInterest" type="number" name="rateOfInterest" value={form.rateOfInterest} onChange={handleChange} style={controlStyle} />
-                </Field>
-                <Field label="Duration (days)" htmlFor="durationInDays">
-                    <input id="durationInDays" type="number" name="durationInDays" value={form.durationInDays} onChange={handleChange} style={controlStyle} />
-                </Field>
-            </div>
-
-            <div style={subHeaderStyle}>Deposit</div>
-            <div style={gridTwo}>
-                <Field label="Deposit account no." htmlFor="depositAccountNo">
-                    <input id="depositAccountNo" type="text" name="depositAccountNo" value={form.depositAccountNo} onChange={handleChange} style={controlStyle} />
-                </Field>
-                <Field label="Deposit start date" htmlFor="depositStartDate">
-                    <input id="depositStartDate" type="date" name="depositStartDate" value={form.depositStartDate} onChange={handleChange} style={{ ...controlStyle, cursor: 'pointer' }} />
-                </Field>
-            </div>
-
-            <div style={subHeaderStyle}>Penalty</div>
-            <div style={gridTwo}>
-                <Field label="Penalty" htmlFor="penalty">
-                    <input id="penalty" type="number" name="penalty" value={form.penalty} onChange={handleChange} style={controlStyle} />
-                </Field>
-                <Field label="Penalty ticket no." htmlFor="penaltyTicketNo">
-                    <input id="penaltyTicketNo" type="text" name="penaltyTicketNo" value={form.penaltyTicketNo} onChange={handleChange} style={controlStyle} />
-                </Field>
-            </div>
-
-            <div style={subHeaderStyle}>Recovery at contract end</div>
-            <div style={gridTwo}>
-                <Field label="Bill amount" htmlFor="recoveryBillAmount">
-                    <input id="recoveryBillAmount" type="number" name="recoveryBillAmount" value={form.recoveryBillAmount} onChange={handleChange} style={controlStyle} />
-                </Field>
-                <Field label="Recovery amount" htmlFor="recoveryAmount">
-                    <input id="recoveryAmount" type="number" name="recoveryAmount" value={form.recoveryAmount} onChange={handleChange} style={controlStyle} />
-                </Field>
-                <Field label="Bill number" htmlFor="recoveryBillNumber">
-                    <input id="recoveryBillNumber" type="text" name="recoveryBillNumber" value={form.recoveryBillNumber} onChange={handleChange} style={controlStyle} />
-                </Field>
-                <Field label="Recovery description" htmlFor="recoveryDesc">
-                    <input id="recoveryDesc" type="text" name="recoveryDesc" value={form.recoveryDesc} onChange={handleChange} style={controlStyle} />
-                </Field>
-            </div>
-
-            <button onClick={handleSave} disabled={saving} style={saveButtonStyle(saving)}>
-                <FaSave size={12} /> {saving ? 'Saving…' : 'Save financial details'}
-            </button>
-            {saved && <span style={savedTag}>Saved</span>}
-            {error && <span style={errorTag}>{error}</span>}
-        </Module>
-    );
-}
-
-/* ══════════════════════════════════════════════════════════════════════════
    MODULE 4B — Bidding Financials
    PATCH /v1/financials/bidding/:projectId  (updateBiddingDetails)
    POST  /v1/financials/bidding/:projectId/cost-estimation (addCostEstimation, one at a time)
@@ -873,7 +734,7 @@ function FinancialDetailsModule({ project, onUpdated }) {
 const BIDDING_STATUSES = ['unpaid', 'paid', 'exempted'];
 const EXEMPTED_TYPES = ['startup_india', 'msme'];
 
-function BiddingFinancialsModule({ project, onRefresh }) {
+function BiddingFinancialsModule({ project, onRefresh, locked }) {
     const bidding = project.financials?.bidding || {};
 
     const [form, setForm] = useState({
@@ -957,7 +818,7 @@ function BiddingFinancialsModule({ project, onRefresh }) {
     const costTotal = costEstimationList.reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
 
     return (
-        <Module id="bidding" icon={<FaGavel size={13} color={C.accent} />} title="Bidding Financials">
+        <Module id="bidding" icon={<FaGavel size={13} color={C.accent} />} title="Bidding Financials" locked={locked}>
             <div style={gridTwo}>
                 <Field label="EMD amount" htmlFor="emdAmount">
                     <input
@@ -1014,6 +875,37 @@ function BiddingFinancialsModule({ project, onRefresh }) {
                     />
                 </Field>
             </div>
+
+            {/* NEW: computed amount — EMD amount adjusted by the selected
+                bidding position/percentage. Read-only, derived on every
+                render from the three fields above; nothing here is stored
+                separately. */}
+            {form.biddingPosition && form.emdAmount !== '' && (() => {
+                const emd = Number(form.emdAmount) || 0;
+                const pct = Number(form.biddingPercentage) || 0;
+                const delta = (emd * pct) / 100;
+                const computed = form.biddingPosition === 'below' ? emd - delta
+                    : form.biddingPosition === 'above' ? emd + delta
+                    : emd;
+                const positionLabel = form.biddingPosition === 'below' ? 'below'
+                    : form.biddingPosition === 'above' ? 'above'
+                    : 'at par with';
+                return (
+                    <div style={{
+                        ...subCardStyle, display: 'flex', alignItems: 'center',
+                        justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginTop: 4,
+                    }}>
+                        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                            {form.biddingPosition === 'at_par'
+                                ? 'At par with EMD amount'
+                                : `${pct || 0}% ${positionLabel} EMD amount`}
+                        </span>
+                        <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-strong)' }}>
+                            ₹{computed.toLocaleString('en-IN')}
+                        </span>
+                    </div>
+                );
+            })()}
 
             <button onClick={handleSave} disabled={saving} style={saveButtonStyle(saving)}>
                 <FaSave size={12} /> {saving ? 'Saving…' : 'Save bidding details'}
@@ -1081,7 +973,7 @@ function BiddingFinancialsModule({ project, onRefresh }) {
 /* ══════════════════════════════════════════════════════════════════════════
    MODULE 4C — Advanced Financial Details (PG) → PATCH /v1/financials/pg/:projectId
    ══════════════════════════════════════════════════════════════════════════ */
-function PgDetailsModule({ project, onRefresh }) {
+function PgDetailsModule({ project, onRefresh, locked }) {
     const pg = project.financials?.pg || {};
 
     const [form, setForm] = useState({
@@ -1131,7 +1023,7 @@ function PgDetailsModule({ project, onRefresh }) {
     };
 
     return (
-        <Module id="pg" icon={<FaLandmark size={13} color={C.accent} />} title="Advanced Financial Details">
+        <Module id="pg" icon={<FaLandmark size={13} color={C.accent} />} title="Advanced Financial Details" locked={locked}>
             <div style={gridTwo}>
                 <Field label="PG amount (railway)" htmlFor="amountRailway">
                     <input
@@ -1201,7 +1093,7 @@ function PgDetailsModule({ project, onRefresh }) {
 /* ══════════════════════════════════════════════════════════════════════════
    MODULE 4D — Penalty Details → PATCH /v1/financials/penalty/:projectId
    ══════════════════════════════════════════════════════════════════════════ */
-function PenaltyDetailsModule({ project, onRefresh }) {
+function PenaltyDetailsModule({ project, onRefresh, locked }) {
     const penaltyDetails = project.financials?.penaltyDetails || {};
 
     const [form, setForm] = useState({
@@ -1241,7 +1133,7 @@ function PenaltyDetailsModule({ project, onRefresh }) {
     };
 
     return (
-        <Module id="penalty" icon={<FaExclamationTriangle size={13} color={C.accent} />} title="Penalty Details">
+        <Module id="penalty" icon={<FaExclamationTriangle size={13} color={C.accent} />} title="Penalty Details" locked={locked}>
             <div style={gridTwo}>
                 <Field label="Amount" htmlFor="penaltyDetailsAmount">
                     <input
@@ -1283,7 +1175,7 @@ function PenaltyDetailsModule({ project, onRefresh }) {
    PATCH /v1/financials/security-deposit/:projectId (updateSecurityDepositDetails)
    POST  /v1/financials/security-deposit/:projectId/cust (addSecurityDepositCust, one at a time)
    ══════════════════════════════════════════════════════════════════════════ */
-function SecurityDepositModule({ project, onRefresh }) {
+function SecurityDepositModule({ project, onRefresh, locked }) {
     const sd = project.financials?.security_deposit || {};
 
     const [form, setForm] = useState({
@@ -1363,7 +1255,7 @@ function SecurityDepositModule({ project, onRefresh }) {
     const custList = sd.cust || [];
 
     return (
-        <Module id="security-deposit" icon={<FaPiggyBank size={13} color={C.accent} />} title="Security Deposit">
+        <Module id="security-deposit" icon={<FaPiggyBank size={13} color={C.accent} />} title="Security Deposit" locked={locked}>
             <div style={gridTwo}>
                 <Field label="SD amount" htmlFor="sdAmount">
                     <input
@@ -1448,7 +1340,7 @@ function SecurityDepositModule({ project, onRefresh }) {
 /* ══════════════════════════════════════════════════════════════════════════
    MODULE 5 — Project Status → PATCH /v1/status/:projectId
    ══════════════════════════════════════════════════════════════════════════ */
-function StatusModule({ project, onUpdated }) {
+function StatusModule({ project, onUpdated, locked }) {
     const [status, setStatus] = useState(project.status || 'draft');
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -1470,7 +1362,7 @@ function StatusModule({ project, onUpdated }) {
     };
 
     return (
-        <Module id="status" icon={<FaClipboardCheck size={13} color={C.accent} />} title="Project Status">
+        <Module id="status" icon={<FaClipboardCheck size={13} color={C.accent} />} title="Project Status" locked={locked}>
             <div style={{ maxWidth: 280 }}>
                 <Field label="Status" htmlFor="status">
                     <select
@@ -1494,7 +1386,7 @@ function StatusModule({ project, onUpdated }) {
 /* ══════════════════════════════════════════════════════════════════════════
    MODULE 6 — Documents → POST /v1/:projectId/document (list + attach new)
    ══════════════════════════════════════════════════════════════════════════ */
-function DocumentsModule({ project, onUpdated }) {
+function DocumentsModule({ project, onUpdated, locked }) {
     const [name, setName] = useState('');
     const [documentType, setDocumentType] = useState('');
     const [file, setFile] = useState(null);
@@ -1573,6 +1465,7 @@ function DocumentsModule({ project, onUpdated }) {
             icon={<FaFileAlt size={13} color={C.accent} />}
             title="Documents"
             extra={<span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{project.documents?.length || 0} attached</span>}
+            locked={locked}
         >
             {/* ── Already uploaded documents ── */}
             {deleteError && (
@@ -1662,7 +1555,7 @@ const emptyRow = () => ({
     railwayRate: '', ourRate: '', marketRate: '', quantity: '', installation: '',
 });
 
-function MaterialsModule({ project }) {
+function MaterialsModule({ project, locked }) {
     const [savedItems, setSavedItems] = useState([]);
     const [loadingItems, setLoadingItems] = useState(true);
     const [loadError, setLoadError] = useState('');
@@ -1766,6 +1659,7 @@ function MaterialsModule({ project }) {
             icon={<FaBoxes size={13} color={C.accent} />}
             title="Materials"
             extra={<span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{savedItems.length} saved</span>}
+            locked={locked}
         >
             {/* ── Already saved items ── */}
             {loadingItems && <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 14 }}>Loading items…</div>}
@@ -1781,10 +1675,10 @@ function MaterialsModule({ project }) {
                                     <th style={thStyle}>Name</th>
                                     <th style={thStyle}>Description</th>
                                     <th style={thStyle}>Unit</th>
+                                    <th style={thRightStyle}>Qty</th>
                                     <th style={thRightStyle}>Railway Rate</th>
                                     <th style={thRightStyle}>Our Rate</th>
                                     <th style={thRightStyle}>Market Rate</th>
-                                    <th style={thRightStyle}>Qty</th>
                                     <th style={thRightStyle}>Installation</th>
                                     <th style={thRightStyle}>Total</th>
                                 </tr>
@@ -1796,10 +1690,10 @@ function MaterialsModule({ project }) {
                                         <td style={tdStyle}>{it.name || '—'}</td>
                                         <td style={tdStyle}>{it.description || '—'}</td>
                                         <td style={tdStyle}>{it.unit || '—'}</td>
+                                        <td style={{ ...tdStyle, textAlign: 'right' }}>{it.quantity ?? '—'}</td>
                                         <td style={{ ...tdStyle, textAlign: 'right' }}>{it.railwayRate ?? '—'}</td>
                                         <td style={{ ...tdStyle, textAlign: 'right' }}>{it.ourRate ?? '—'}</td>
                                         <td style={{ ...tdStyle, textAlign: 'right' }}>{it.marketRate ?? '—'}</td>
-                                        <td style={{ ...tdStyle, textAlign: 'right' }}>{it.quantity ?? '—'}</td>
                                         <td style={{ ...tdStyle, textAlign: 'right' }}>{it.installation ?? '—'}</td>
                                         <td style={{ ...tdStyle, textAlign: 'right' }}>{rowTotal(it)}</td>
                                     </tr>
@@ -1830,10 +1724,10 @@ function MaterialsModule({ project }) {
                             <th style={thStyle}>Name</th>
                             <th style={thStyle}>Description</th>
                             <th style={thStyle}>Unit</th>
+                            <th style={thRightStyle}>Qty</th>
                             <th style={thRightStyle}>Railway Rate</th>
                             <th style={thRightStyle}>Our Rate</th>
                             <th style={thRightStyle}>Market Rate</th>
-                            <th style={thRightStyle}>Qty</th>
                             <th style={thRightStyle}>Installation</th>
                             <th style={thRightStyle}>Total</th>
                             <th style={thStyle}></th>
@@ -1875,6 +1769,13 @@ function MaterialsModule({ project }) {
                                 </td>
                                 <td style={tdStyle}>
                                     <input
+                                        type="number" value={row.quantity}
+                                        onChange={(e) => handleRowChange(i, 'quantity', e.target.value)}
+                                        style={cellInputStyle}
+                                    />
+                                </td>
+                                <td style={tdStyle}>
+                                    <input
                                         type="number" value={row.railwayRate}
                                         onChange={(e) => handleRowChange(i, 'railwayRate', e.target.value)}
                                         style={cellInputStyle}
@@ -1891,13 +1792,6 @@ function MaterialsModule({ project }) {
                                     <input
                                         type="number" value={row.marketRate}
                                         onChange={(e) => handleRowChange(i, 'marketRate', e.target.value)}
-                                        style={cellInputStyle}
-                                    />
-                                </td>
-                                <td style={tdStyle}>
-                                    <input
-                                        type="number" value={row.quantity}
-                                        onChange={(e) => handleRowChange(i, 'quantity', e.target.value)}
                                         style={cellInputStyle}
                                     />
                                 </td>
@@ -1959,7 +1853,7 @@ function MaterialsModule({ project }) {
    following the same findById + conditional-field pattern as
    basic-details / location before wiring this in production.
    ══════════════════════════════════════════════════════════════════════════ */
-function TimelineModule({ project, onUpdated }) {
+function TimelineModule({ project, onUpdated, locked }) {
     const [form, setForm] = useState({
         startDate: project.startDate ? project.startDate.slice(0, 10) : '',
         estimatedCompletionDate: project.estimatedCompletionDate ? project.estimatedCompletionDate.slice(0, 10) : '',
@@ -1996,7 +1890,7 @@ function TimelineModule({ project, onUpdated }) {
     };
 
     return (
-        <Module id="timeline" icon={<FaCalendarAlt size={13} color={C.accent} />} title="Timeline">
+        <Module id="timeline" icon={<FaCalendarAlt size={13} color={C.accent} />} title="Timeline" locked={locked}>
             <div style={gridTwo}>
                 <Field label="Start date" htmlFor="startDate">
                     <input
@@ -2030,7 +1924,7 @@ function TimelineModule({ project, onUpdated }) {
 /* ══════════════════════════════════════════════════════════════════════════
    MODULE 8 — Forward Project → PATCH /v1/forward/:projectId
    ══════════════════════════════════════════════════════════════════════════ */
-function ForwardModule({ project, onUpdated }) {
+function ForwardModule({ project, onUpdated, locked }) {
     const [users, setUsers] = useState([]);
     const [loadingUsers, setLoadingUsers] = useState(true);
     const [usersError, setUsersError] = useState('');
@@ -2093,7 +1987,7 @@ function ForwardModule({ project, onUpdated }) {
     };
 
     return (
-        <Module id="forward" icon={<FaUserShield size={13} color={C.accent} />} title="Forward Project">
+        <Module id="forward" icon={<FaUserShield size={13} color={C.accent} />} title="Forward Project" locked={locked}>
             <div style={gridTwo}>
                 <Field label="Action" htmlFor="fwdAction">
                     <select
@@ -2189,7 +2083,7 @@ const emptyTaskForm = () => ({
     relatedDocuments: [], // array of selected project document _ids
 });
 
-function TasksModule({ project, onBrowseTask }) {
+function TasksModule({ project, onBrowseTask, locked }) {
     const [tasks, setTasks] = useState([]);
     const [loadingTasks, setLoadingTasks] = useState(true);
     const [loadError, setLoadError] = useState('');
@@ -2309,6 +2203,7 @@ function TasksModule({ project, onBrowseTask }) {
             icon={<FaTasks size={13} color={C.accent} />}
             title="Tasks"
             extra={<span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{tasks.length} task{tasks.length === 1 ? '' : 's'}</span>}
+            locked={locked}
         >
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
                 <button type="button" onClick={openForm} style={secondaryButtonStyle}>
@@ -2522,20 +2417,19 @@ function TasksModule({ project, onBrowseTask }) {
 /* ── section registry (quick-jump nav) ───────────────────────────────────── */
 
 const SECTIONS = [
-    { id: 'basic', label: 'Basic', icon: <FaProjectDiagram size={12} /> },
-    { id: 'location', label: 'Location', icon: <FaMapMarkedAlt size={12} /> },
-    { id: 'advance', label: 'Advance', icon: <FaSitemap size={12} /> },
-    { id: 'financial', label: 'Financial', icon: <FaRupeeSign size={12} /> },
-    { id: 'bidding', label: 'Bidding', icon: <FaGavel size={12} /> },
-    { id: 'pg', label: 'Advanced Financial', icon: <FaLandmark size={12} /> },
-    { id: 'penalty', label: 'Penalty', icon: <FaExclamationTriangle size={12} /> },
-    { id: 'security-deposit', label: 'Security Deposit', icon: <FaPiggyBank size={12} /> },
-    { id: 'materials', label: 'Materials', icon: <FaBoxes size={12} /> },
-    { id: 'status', label: 'Status', icon: <FaClipboardCheck size={12} /> },
-    { id: 'documents', label: 'Documents', icon: <FaFileAlt size={12} /> },
-    { id: 'tasks', label: 'Tasks', icon: <FaTasks size={12} /> },
-    { id: 'timeline', label: 'Timeline', icon: <FaCalendarAlt size={12} /> },
-    { id: 'forward', label: 'Forward', icon: <FaUserShield size={12} /> },
+    { id: 'basic', label: 'Basic', icon: <FaProjectDiagram size={12} />, permSection: 'basic' },
+    { id: 'location', label: 'Location', icon: <FaMapMarkedAlt size={12} />, permSection: 'location' },
+    { id: 'advance', label: 'Advance', icon: <FaSitemap size={12} />, permSection: 'advance' },
+    { id: 'bidding', label: 'Bidding', icon: <FaGavel size={12} />, permSection: 'bidding' },
+    { id: 'pg', label: 'Advanced Financial', icon: <FaLandmark size={12} />, permSection: 'advance_financial' },
+    { id: 'penalty', label: 'Penalty', icon: <FaExclamationTriangle size={12} />, permSection: 'penalty' },
+    { id: 'security-deposit', label: 'Security Deposit', icon: <FaPiggyBank size={12} />, permSection: 'security_deposit' },
+    { id: 'materials', label: 'Materials', icon: <FaBoxes size={12} />, permSection: 'material' },
+    { id: 'status', label: 'Status', icon: <FaClipboardCheck size={12} />, permSection: 'approvals' },
+    { id: 'documents', label: 'Documents', icon: <FaFileAlt size={12} />, permSection: 'document' },
+    { id: 'tasks', label: 'Tasks', icon: <FaTasks size={12} />, permSection: 'task' },
+    { id: 'timeline', label: 'Timeline', icon: <FaCalendarAlt size={12} />, permSection: 'basic' },
+    { id: 'forward', label: 'Forward', icon: <FaUserShield size={12} />, permSection: 'approvals' },
 ];
 
 const navPillStyle = {
@@ -2551,6 +2445,10 @@ export default function EditProjectDetail() {
     const [p, setP] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    // Section-level access for the current user on this project — one
+    // fetch, reused by every module below via canView()/canEdit().
+    const { canView, canEdit } = usePermissions(id);
 
     const fetchProject = async () => {
         setLoading(true);
@@ -2634,7 +2532,7 @@ export default function EditProjectDetail() {
                             </div>
                         </div>
                         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '0 18px 16px' }}>
-                            {SECTIONS.map((s) => (
+                            {SECTIONS.filter((s) => canView(s.permSection)).map((s) => (
                                 <span key={s.id} style={navPillStyle} onClick={() => scrollToSection(s.id)}>
                                     {s.icon} {s.label}
                                 </span>
@@ -2642,20 +2540,19 @@ export default function EditProjectDetail() {
                         </div>
                     </div>
 
-                    <BasicDetailsModule project={p} onUpdated={handleProjectUpdated} />
-                    <LocationModule project={p} onUpdated={handleProjectUpdated} />
-                    <AdvanceDetailsModule project={p} onUpdated={handleProjectUpdated} />
-                    <FinancialDetailsModule project={p} onUpdated={handleProjectUpdated} />
-                    <BiddingFinancialsModule project={p} onRefresh={fetchProject} />
-                    <PgDetailsModule project={p} onRefresh={fetchProject} />
-                    <PenaltyDetailsModule project={p} onRefresh={fetchProject} />
-                    <SecurityDepositModule project={p} onRefresh={fetchProject} />
-                    <MaterialsModule project={p} />
-                    <StatusModule project={p} onUpdated={handleProjectUpdated} />
-                    <DocumentsModule project={p} onUpdated={handleProjectUpdated} />
-                    <TasksModule project={p} onBrowseTask={handleBrowseTask} />
-                    <TimelineModule project={p} onUpdated={handleProjectUpdated} />
-                    <ForwardModule project={p} onUpdated={handleProjectUpdated} />
+                    {canView('basic') && <BasicDetailsModule project={p} onUpdated={handleProjectUpdated} locked={!canEdit('basic')} />}
+                    {canView('location') && <LocationModule project={p} onUpdated={handleProjectUpdated} locked={!canEdit('location')} />}
+                    {canView('advance') && <AdvanceDetailsModule project={p} onUpdated={handleProjectUpdated} locked={!canEdit('advance')} />}
+                    {canView('bidding') && <BiddingFinancialsModule project={p} onRefresh={fetchProject} locked={!canEdit('bidding')} />}
+                    {canView('advance_financial') && <PgDetailsModule project={p} onRefresh={fetchProject} locked={!canEdit('advance_financial')} />}
+                    {canView('penalty') && <PenaltyDetailsModule project={p} onRefresh={fetchProject} locked={!canEdit('penalty')} />}
+                    {canView('security_deposit') && <SecurityDepositModule project={p} onRefresh={fetchProject} locked={!canEdit('security_deposit')} />}
+                    {canView('material') && <MaterialsModule project={p} locked={!canEdit('material')} />}
+                    {canView('approvals') && <StatusModule project={p} onUpdated={handleProjectUpdated} locked={!canEdit('approvals')} />}
+                    {canView('document') && <DocumentsModule project={p} onUpdated={handleProjectUpdated} locked={!canEdit('document')} />}
+                    {canView('task') && <TasksModule project={p} onBrowseTask={handleBrowseTask} locked={!canEdit('task')} />}
+                    {canView('basic') && <TimelineModule project={p} onUpdated={handleProjectUpdated} locked={!canEdit('basic')} />}
+                    {canView('approvals') && <ForwardModule project={p} onUpdated={handleProjectUpdated} locked={!canEdit('approvals')} />}
                 </>
             )}
 
