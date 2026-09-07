@@ -22,6 +22,12 @@ import AgreementView from "../pages/client/AgreementView.jsx";
 import SorDetails from "../pages/client/SorDetails.jsx";
 import UnderDevPage from "../pages/UnderDevPage.jsx";
 import DfsRequest from "../pages/admin/DfsRequest.jsx";
+import MyTaskList from "../pages/admin/MyTaskList.jsx";
+import SngleTaskDetail from "../pages/admin/SingleTaskDetail.jsx";
+import ProjectAssignedToMe from "../pages/admin/ProjectAssignedToMe.jsx";
+import SingleProjectDetail from "../pages/admin/SIngleProjectDetail.jsx";
+import EditProjectDetail from "../pages/admin/EditProjectDetail.jsx";
+import AdminNotificationsPage from "../pages/admin/AdminNotificationsPage.jsx";
 
 // Child routes rendered inside ClientLayout — same paths/elements/order
 // as before. This is exactly what used to sit inside the <Route path="/client">
@@ -46,10 +52,23 @@ export const clientRoutes = (
         <Route path="track-dfs/all" element={<TrackMyAllDocument />} />
         <Route path="dfsrequest/:id" element={<DocumentForReview />} />
         <Route path="under-dev" element={<UnderDevPage />} />
+        <Route path="notifications" element={<AdminNotificationsPage />} />
+        
+
         <Route path="agreement" element={<AgreementPage />} />
         <Route path="agreement/action" element={<AgreementForAction />} />
         <Route path="agreement/closed" element={<ClosedAgreement />} />
         <Route path="agreement/view/:id" element={<AgreementView />} />
+
         <Route path="sor" element={<SorDetails />} />
+        <Route path="project/task/list" element={<MyTaskList />} />
+        <Route path="task/:id" element={<SngleTaskDetail />} />
+        <Route path="project/assigned-to-me" element={<ProjectAssignedToMe />} />
+        <Route path="project/:id" element={<SingleProjectDetail />} />
+        <Route path="project/edit/:id" element={<EditProjectDetail />} />
+
+
+
+
     </>
 );

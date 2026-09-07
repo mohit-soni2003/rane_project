@@ -1,12 +1,25 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    FaProjectDiagram, FaFileInvoiceDollar, FaRupeeSign, FaPiggyBank,
-    FaCheckCircle, FaChartPie, FaChartBar, FaEye, FaTimesCircle,
+    FaProjectDiagram, FaExclamationTriangle, FaClock, FaFileInvoiceDollar,
+    FaMoneyCheckAlt, FaChartPie, FaChartBar, FaChartLine, FaTimesCircle,
+    FaFileSignature, FaShareSquare, FaUndo, FaFileAlt, FaHistory,
+    FaUsers, FaTasks, FaListAlt,
 } from 'react-icons/fa';
 import { FiRefreshCw } from 'react-icons/fi';
-import { getProjects } from '../../services/project.service.js';
-import { getProjectBills } from '../../services/projectBillService.js';
+import {
+    getAdminSystemCounts,
+    getAdminBillOverview,
+    getAdminPaymentOverview,
+    getAdminCashFlow,
+    getAdminProjectStatus,
+    getAdminTaskStatus,
+    getAdminDfsStatus,
+    getAdminDocumentStatus,
+    getAdminApprovalsQueue,
+    getAdminRecentActivity,
+} from '../../services/dashboardService';
+import AdminHeader from '../../component/header/AdminHeader';
 
 const C = {
     primary: '#6b3e2b',
@@ -16,19 +29,71 @@ const C = {
     muted: '#8b7b74',
 };
 
-// Fixed palette for chart segments — independent of the app's CSS-variable
-// theme so the donut/bars stay legible regardless of dark/light mode.
-const STATUS_COLORS = {
+const BAR_PALETTE = ['#6b3e2b', '#b95a52', '#3b7dd8', '#225b31', '#d8a13a', '#8b7b74'];
+
+const PROJECT_STATUS_COLORS = {
     draft: '#8b7b74',
     pending: '#d8a13a',
+    not_allotted: '#c94a3a',
+    alloted: '#3b9c6b',
     in_progress: '#3b7dd8',
+    L1: '#e0b34c',
     L2: '#c98a2b',
     L3: '#a85c1f',
-    not_allotted: '#c94a3a',
     completed: '#225b31',
 };
 
-const BAR_PALETTE = ['#6b3e2b', '#b95a52', '#3b7dd8', '#225b31', '#d8a13a', '#8b7b74'];
+const TASK_STATUS_COLORS = {
+    pending: '#d8a13a',
+    in_progress: '#3b7dd8',
+    submitted: '#6b3e2b',
+    completed: '#225b31',
+    overdue: '#c94a3a',
+    rejected: '#7a2020',
+};
+
+const DFS_STATUS_COLORS = {
+    pending: '#d8a13a',
+    'in-review': '#3b7dd8',
+    approved: '#225b31',
+    rejected: '#c94a3a',
+};
+
+const DOCUMENT_STATUS_COLORS = {
+    pending: '#d8a13a',
+    accepted: '#225b31',
+    rejected: '#c94a3a',
+};
+
+const BILL_STATUS_COLORS = {
+    Unpaid: '#8b7b74',
+    Pending: '#d8a13a',
+    Overdue: '#c94a3a',
+    Paid: '#225b31',
+    Sanctioned: '#3b7dd8',
+    Reject: '#7a2020',
+    Withdrawed: '#6b3e2b',
+};
+
+// Payment.status has no fixed enum in the schema — map the common values
+// seen in practice, and fall back to the bar palette for anything else.
+const PAYMENT_STATUS_COLORS = {
+    Pending: '#d8a13a',
+    Approved: '#3b7dd8',
+    Processing: '#3b7dd8',
+    Paid: '#225b31',
+    Completed: '#225b31',
+    Rejected: '#c94a3a',
+    Failed: '#7a2020',
+};
+
+const APPROVAL_META = {
+    agreement_signature: { icon: FaFileSignature, bg: '#3b7dd8' },
+    agreement_extension: { icon: FaFileSignature, bg: '#d8a13a' },
+    file_forward: { icon: FaShareSquare, bg: '#6b3e2b' },
+    bill_withdrawal: { icon: FaUndo, bg: '#c94a3a' },
+    document: { icon: FaFileAlt, bg: '#225b31' },
+};
 
 const prettify = (v) =>
     typeof v === 'string' ? v.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : '—';
@@ -38,6 +103,19 @@ const formatCurrency = (n) =>
 
 const formatDate = (d) =>
     d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+
+const timeAgo = (d) => {
+    if (!d) return '—';
+    const diffMs = Date.now() - new Date(d).getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return `${days}d ago`;
+    return formatDate(d);
+};
 
 /* ── shared styles — same theme as the rest of the admin pages ── */
 
@@ -55,7 +133,7 @@ const sectionHeaderStyle = {
 };
 
 const statGridStyle = {
-    display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 14, marginBottom: 14,
+    display: 'grid', gridTemplateColumns: 'repeat(3, minmax(190px, 1fr))', gap: 14, marginBottom: 14,
 };
 
 const statCardStyle = {
@@ -80,29 +158,16 @@ const twoColGrid = {
     display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 14,
 };
 
-const tableWrapStyle = { overflowX: 'auto' };
-const tableStyle = { width: '100%', borderCollapse: 'collapse', fontSize: 12.5, minWidth: 640 };
-const thStyle = {
-    textAlign: 'left', padding: '8px 10px', fontSize: 10.5, fontWeight: 700,
-    color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em',
-    borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap',
-};
-const thRightStyle = { ...thStyle, textAlign: 'right' };
-const tdStyle = {
-    padding: '8px 10px', borderBottom: '1px solid var(--border)',
-    color: 'var(--foreground)', whiteSpace: 'nowrap',
-};
-const tdRightStyle = { ...tdStyle, textAlign: 'right' };
-
-const viewButtonStyle = {
-    display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 8,
-    border: '1px solid var(--border)', background: 'var(--secondary)', color: 'var(--secondary-foreground)',
-    fontSize: 11, fontWeight: 600, cursor: 'pointer',
-};
-
 const legendDotStyle = (color) => ({
     width: 9, height: 9, borderRadius: '50%', background: color, flexShrink: 0,
 });
+
+const listRowStyle = (isLast) => ({
+    display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0',
+    borderBottom: isLast ? 'none' : '1px solid var(--border)',
+});
+
+/* ── generic building blocks ── */
 
 function StatCard({ icon, iconBg, label, value }) {
     return (
@@ -133,9 +198,12 @@ function Module({ icon, title, extra, children }) {
     );
 }
 
+function Empty({ text }) {
+    return <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{text}</div>;
+}
+
 /* ── CSS-only donut chart (no charting library needed) ──────────────────── */
-function DonutChart({ segments }) {
-    // segments: [{ label, value, color }]
+function DonutChart({ segments, centerLabel = 'Total' }) {
     const total = segments.reduce((s, seg) => s + seg.value, 0);
 
     let cumulative = 0;
@@ -161,7 +229,7 @@ function DonutChart({ segments }) {
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 }}>
                     <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-strong)' }}>{total}</div>
-                    <div style={{ fontSize: 9.5, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Projects</div>
+                    <div style={{ fontSize: 9.5, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{centerLabel}</div>
                 </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1, minWidth: 160 }}>
@@ -169,7 +237,12 @@ function DonutChart({ segments }) {
                     <div key={seg.label} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5 }}>
                         <span style={legendDotStyle(seg.color)} />
                         <span style={{ color: 'var(--foreground)', flex: 1 }}>{prettify(seg.label)}</span>
-                        <span style={{ fontWeight: 700, color: 'var(--text-strong)' }}>{seg.value}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1.25 }}>
+                            <span style={{ fontWeight: 700, color: 'var(--text-strong)' }}>{seg.value}</span>
+                            {seg.amount !== undefined && (
+                                <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 600 }}>{formatCurrency(seg.amount)}</span>
+                            )}
+                        </div>
                     </div>
                 ))}
             </div>
@@ -177,27 +250,117 @@ function DonutChart({ segments }) {
     );
 }
 
-/* ── CSS-only horizontal bar chart (no charting library needed) ─────────── */
-function BarRows({ rows }) {
-    // rows: [{ label, value, color }]
+/* ── CSS/SVG-only vertical bar chart (no charting library needed) ───────── */
+function BarChart({ rows, height = 240 }) {
+    const width = 640;
+    const padLeft = 40;
+    const padRight = 16;
+    const padTop = 22;
+    const padBottom = 8;
+    const gap = 16;
+    const maxBarWidth = 70;
+
     const max = Math.max(1, ...rows.map((r) => r.value));
+    const n = rows.length || 1;
+    const plotWidth = width - padLeft - padRight;
+    const rawBarWidth = (plotWidth - gap * (n - 1)) / n;
+    const barWidth = Math.max(6, Math.min(maxBarWidth, rawBarWidth));
+    const groupWidth = barWidth * n + gap * (n - 1);
+    const startX = padLeft + Math.max(0, (plotWidth - groupWidth) / 2);
+
+    const plotHeight = height - padTop - padBottom;
+    const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(max * f));
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {rows.map((r) => (
-                <div key={r.label}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
-                        <span style={{ color: 'var(--foreground)', fontWeight: 600 }}>{r.label}</span>
-                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>{formatCurrency(r.value)}</span>
+        <div>
+            <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height, display: 'block' }} preserveAspectRatio="xMidYMid meet">
+                {ticks.map((t, i) => {
+                    const y = padTop + plotHeight - (t / max) * plotHeight;
+                    return (
+                        <g key={i}>
+                            <line x1={padLeft} x2={width - padRight} y1={y} y2={y} stroke="var(--border)" strokeWidth="1" />
+                            <text x={padLeft - 8} y={y + 3.5} textAnchor="end" fontSize="10.5" fill="var(--text-muted)">{t}</text>
+                        </g>
+                    );
+                })}
+                {rows.map((r, i) => {
+                    const barHeight = (r.value / max) * plotHeight;
+                    const x = startX + i * (barWidth + gap);
+                    const y = padTop + plotHeight - barHeight;
+                    return (
+                        <g key={r.label}>
+                            <rect x={x} y={y} width={barWidth} height={barHeight} fill={r.color} rx={4} />
+                            <text x={x + barWidth / 2} y={y - 7} textAnchor="middle" fontSize="11.5" fontWeight="700" fill="var(--text-strong)">
+                                {r.value}
+                            </text>
+                        </g>
+                    );
+                })}
+                <line x1={padLeft} x2={width - padRight} y1={padTop + plotHeight} y2={padTop + plotHeight} stroke="var(--border)" strokeWidth="1.5" />
+            </svg>
+            <div style={{ display: 'flex', justifyContent: n * (barWidth + gap) - gap < plotWidth ? 'center' : 'flex-start', gap: `${(gap / width) * 100}%`, paddingLeft: `${(padLeft / width) * 100}%`, paddingRight: `${(padRight / width) * 100}%` }}>
+                {rows.map((r) => (
+                    <div
+                        key={r.label}
+                        style={{
+                            width: `${(barWidth / width) * 100}%`, flexShrink: 0, textAlign: 'center', fontSize: 10.5,
+                            color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}
+                    >
+                        {prettify(r.label)}
                     </div>
-                    <div style={{ background: 'var(--input)', borderRadius: 6, height: 10, overflow: 'hidden' }}>
-                        <div style={{
-                            width: `${(r.value / max) * 100}%`, height: '100%',
-                            background: r.color, borderRadius: 6, transition: 'width .3s ease',
-                        }} />
+                ))}
+            </div>
+        </div>
+    );
+}
+
+/* ── CSS/SVG-only multi-line trend chart (no charting library needed) ───── */
+function LineTrend({ data, series, height = 190 }) {
+    const width = 640;
+    const padX = 12;
+    const padY = 16;
+
+    const maxVal = Math.max(1, ...data.flatMap((d) => series.map((s) => Number(d[s.key]) || 0)));
+    const stepX = data.length > 1 ? (width - padX * 2) / (data.length - 1) : 0;
+    const yFor = (v) => height - padY - (Math.max(0, Number(v) || 0) / maxVal) * (height - padY * 2);
+    const xFor = (i) => padX + i * stepX;
+
+    return (
+        <div>
+            <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height, display: 'block' }} preserveAspectRatio="none">
+                {[0, 0.25, 0.5, 0.75, 1].map((f) => (
+                    <line
+                        key={f}
+                        x1={padX} x2={width - padX}
+                        y1={height - padY - f * (height - padY * 2)}
+                        y2={height - padY - f * (height - padY * 2)}
+                        stroke="var(--border)" strokeWidth="1"
+                    />
+                ))}
+                {series.map((s) => (
+                    <polyline
+                        key={s.key}
+                        points={data.map((d, i) => `${xFor(i)},${yFor(d[s.key])}`).join(' ')}
+                        fill="none" stroke={s.color} strokeWidth="2.4"
+                        strokeLinejoin="round" strokeLinecap="round"
+                    />
+                ))}
+                {series.map((s) => data.map((d, i) => (
+                    <circle key={`${s.key}-${i}`} cx={xFor(i)} cy={yFor(d[s.key])} r="3" fill={s.color} />
+                )))}
+            </svg>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: 'var(--text-muted)', padding: '0 2px' }}>
+                {data.map((d, i) => <span key={i}>{d.month}</span>)}
+            </div>
+            <div style={{ display: 'flex', gap: 16, marginTop: 12, flexWrap: 'wrap' }}>
+                {series.map((s) => (
+                    <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                        <span style={legendDotStyle(s.color)} />
+                        <span style={{ color: 'var(--foreground)' }}>{s.label}</span>
                     </div>
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
     );
 }
@@ -207,8 +370,17 @@ function BarRows({ rows }) {
 export default function AdminDashboard() {
     const navigate = useNavigate();
 
-    const [projects, setProjects] = useState([]);
-    const [bills, setBills] = useState([]); // flattened, each tagged with its project
+    const [systemCounts, setSystemCounts] = useState(null);
+    const [billOverview, setBillOverview] = useState(null);
+    const [paymentOverview, setPaymentOverview] = useState(null);
+    const [cashFlow, setCashFlow] = useState([]);
+    const [projectStatus, setProjectStatus] = useState(null);
+    const [taskStatus, setTaskStatus] = useState([]);
+    const [dfsStatus, setDfsStatus] = useState([]);
+    const [documentStatus, setDocumentStatus] = useState([]);
+    const [approvals, setApprovals] = useState([]);
+    const [activity, setActivity] = useState([]);
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -216,23 +388,36 @@ export default function AdminDashboard() {
         setLoading(true);
         setError('');
         try {
-            const projectList = await getProjects({ scope: 'all' });
-            const list = Array.isArray(projectList) ? projectList : [];
-            setProjects(list);
+            const [
+                countsRes, billRes, paymentRes, cashFlowRes, projectStatusRes,
+                taskStatusRes, dfsStatusRes, documentStatusRes, approvalsRes, activityRes,
+            ] = await Promise.all([
+                getAdminSystemCounts(),
+                getAdminBillOverview(),
+                getAdminPaymentOverview(),
+                getAdminCashFlow(6),
+                getAdminProjectStatus(),
+                getAdminTaskStatus(),
+                getAdminDfsStatus(),
+                getAdminDocumentStatus(),
+                getAdminApprovalsQueue(6),
+                getAdminRecentActivity(8),
+            ]);
 
-            // NOTE: there's no cross-project "list all bills" endpoint yet,
-            // so this fetches each project's bills in parallel and flattens
-            // them here. Fine for moderate project counts — if this ever
-            // gets slow, the real fix is a backend endpoint that returns
-            // bill totals per project (or all bills) in one call.
-            const perProjectBills = await Promise.all(
-                list.map((p) =>
-                    getProjectBills(p._id)
-                        .then((b) => (Array.isArray(b) ? b.map((bill) => ({ ...bill, projectRef: p })) : []))
-                        .catch(() => [])
-                )
-            );
-            setBills(perProjectBills.flat());
+            setSystemCounts(countsRes?.success ? countsRes.data : null);
+            setBillOverview(billRes?.success ? billRes.data : null);
+            setPaymentOverview(paymentRes?.success ? paymentRes.data : null);
+            setCashFlow(cashFlowRes?.success ? cashFlowRes.data || [] : []);
+            setProjectStatus(projectStatusRes?.success ? projectStatusRes.data : null);
+            setTaskStatus(taskStatusRes?.success ? taskStatusRes.data || [] : []);
+            setDfsStatus(dfsStatusRes?.success ? dfsStatusRes.data || [] : []);
+            setDocumentStatus(documentStatusRes?.success ? documentStatusRes.data || [] : []);
+            setApprovals(approvalsRes?.success ? approvalsRes.data || [] : []);
+            setActivity(activityRes?.success ? activityRes.data || [] : []);
+
+            const allFailed = [countsRes, billRes, paymentRes, cashFlowRes, projectStatusRes, taskStatusRes, dfsStatusRes, documentStatusRes, approvalsRes, activityRes]
+                .every((r) => !r?.success);
+            if (allFailed) setError('Failed to load dashboard data.');
         } catch (err) {
             setError(err.message || 'Failed to load dashboard');
         } finally {
@@ -244,208 +429,292 @@ export default function AdminDashboard() {
         loadDashboard();
     }, []);
 
-    const stats = useMemo(() => {
-        const totalProjects = projects.length;
-        const activeProjects = projects.filter((p) => p.status === 'in_progress').length;
-
-        const totalGrossBilled = bills.reduce((sum, b) => sum + (Number(b.grossAmount) || 0), 0);
-        const totalRecoveries = bills.reduce(
-            (sum, b) => sum + (b.recovery || []).reduce((s, r) => s + (Number(r.recoveryAmt) || 0), 0),
-            0
-        );
-        const netPayable = totalGrossBilled - totalRecoveries;
-
-        const statusCounts = {};
-        projects.forEach((p) => {
-            const key = p.status || 'draft';
-            statusCounts[key] = (statusCounts[key] || 0) + 1;
-        });
-
-        const statusSegments = Object.entries(statusCounts).map(([status, value]) => ({
-            label: status,
-            value,
-            color: STATUS_COLORS[status] || C.muted,
+    const billStatusSegments = useMemo(() => {
+        if (!billOverview?.breakdown) return [];
+        return billOverview.breakdown.map((row) => ({
+            label: row.status, value: row.count, amount: row.amount,
+            color: BILL_STATUS_COLORS[row.status] || C.muted,
         }));
+    }, [billOverview]);
 
-        // Top 5 projects by total gross billed amount.
-        const byProject = {};
-        bills.forEach((b) => {
-            const pid = b.projectRef?._id;
-            if (!pid) return;
-            if (!byProject[pid]) byProject[pid] = { name: b.projectRef.projectName, total: 0 };
-            byProject[pid].total += Number(b.grossAmount) || 0;
-        });
-        const topProjects = Object.values(byProject)
-            .sort((a, b) => b.total - a.total)
-            .slice(0, 5)
-            .map((p, i) => ({ label: p.name, value: p.total, color: BAR_PALETTE[i % BAR_PALETTE.length] }));
+    const paymentStatusSegments = useMemo(() => {
+        if (!paymentOverview?.breakdown) return [];
+        return paymentOverview.breakdown.map((row, i) => ({
+            label: row.status, value: row.count, amount: row.amount,
+            color: PAYMENT_STATUS_COLORS[row.status] || BAR_PALETTE[i % BAR_PALETTE.length],
+        }));
+    }, [paymentOverview]);
 
-        // Recent bills, newest first.
-        const recentBills = [...bills]
-            .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-            .slice(0, 8);
+    const projectStatusRows = useMemo(() => {
+        if (!projectStatus?.statusBreakdown) return [];
+        return projectStatus.statusBreakdown
+            .map((s) => ({ label: s.status, value: s.count, color: PROJECT_STATUS_COLORS[s.status] || C.muted }));
+    }, [projectStatus]);
 
-        return {
-            totalProjects, activeProjects, totalBills: bills.length,
-            totalGrossBilled, totalRecoveries, netPayable,
-            statusSegments, topProjects, recentBills,
-        };
-    }, [projects, bills]);
+    const taskStatusRows = useMemo(
+        () => taskStatus
+            .map((s) => ({ label: s.status, value: s.count, color: TASK_STATUS_COLORS[s.status] || C.muted })),
+        [taskStatus]
+    );
+
+    const dfsStatusSegments = useMemo(
+        () => dfsStatus
+            .filter((s) => s.count > 0)
+            .map((s) => ({ label: s.status, value: s.count, color: DFS_STATUS_COLORS[s.status] || C.muted })),
+        [dfsStatus]
+    );
+
+    const documentStatusSegments = useMemo(
+        () => documentStatus
+            .filter((s) => s.count > 0)
+            .map((s) => ({ label: s.status, value: s.count, color: DOCUMENT_STATUS_COLORS[s.status] || C.muted })),
+        [documentStatus]
+    );
+
+    const cashFlowSeries = [
+        { key: 'bill', label: 'Bills', color: '#3b7dd8' },
+        { key: 'payment_request', label: 'Payment requests', color: '#d8a13a' },
+        { key: 'salary', label: 'Salary', color: '#225b31' },
+    ];
 
     return (
-        <div style={{
-            padding: '0 2px',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            color: 'var(--foreground)',
-            background: 'var(--background)',
-            minHeight: '100vh',
-        }}>
-            {/* Header */}
-            <div style={moduleCardStyle}>
-                <div style={{ ...moduleBodyStyle, display: 'flex', alignItems: 'center', gap: 12 }}>
+        <>
+            <AdminHeader />
+
+            <div style={{
+                padding: '0 2px',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                color: 'var(--foreground)',
+                background: 'var(--background)',
+                minHeight: '100vh',
+            }}>
+                {error && (
                     <div style={{
-                        width: 38, height: 38, borderRadius: 8, background: 'var(--warning)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                        display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
+                        borderRadius: 8, marginBottom: 14, background: 'var(--destructive-bg)',
+                        border: '1px solid var(--destructive-border)', fontSize: 13, color: C.destructive,
                     }}>
-                        <FaChartPie size={17} color={C.primary} />
+                        <FaTimesCircle size={14} color={C.destructive} /> {error}
                     </div>
-                    <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-strong)' }}>
-                        Dashboard
+                )}
+
+                {loading && (
+                    <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                        padding: '40px 0', color: 'var(--text-muted)', fontSize: 14,
+                    }}>
+                        <FiRefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> Loading dashboard…
                     </div>
-                </div>
-            </div>
+                )}
 
-            {error && (
-                <div style={{
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
-                    borderRadius: 8, marginBottom: 14, background: 'var(--destructive-bg)',
-                    border: '1px solid var(--destructive-border)', fontSize: 13, color: C.destructive,
-                }}>
-                    <FaTimesCircle size={14} color={C.destructive} /> {error}
-                </div>
-            )}
+                {!loading && !error && (
+                    <>
+                        {/* ── System counts — 9 tiles, 3×3 ── */}
+                        <div style={statGridStyle}>
+                            <StatCard
+                                icon={<FaUsers size={18} color="#fff" />}
+                                iconBg={C.primary}
+                                label="Clients / staff"
+                                value={systemCounts?.clientStaffCount ?? '—'}
+                            />
+                            <StatCard
+                                icon={<FaFileInvoiceDollar size={18} color="#fff" />}
+                                iconBg="#3b7dd8"
+                                label="Total bills"
+                                value={systemCounts?.totalBills ?? '—'}
+                            />
+                            <StatCard
+                                icon={<FaMoneyCheckAlt size={18} color="#fff" />}
+                                iconBg={C.accent}
+                                label="Payment requests"
+                                value={systemCounts?.totalPayments ?? '—'}
+                            />
+                            <StatCard
+                                icon={<FaProjectDiagram size={18} color="#fff" />}
+                                iconBg={C.primary}
+                                label="Projects"
+                                value={systemCounts?.totalProjects ?? '—'}
+                            />
+                            <StatCard
+                                icon={<FaTasks size={18} color="#fff" />}
+                                iconBg="#3b7dd8"
+                                label="Tasks"
+                                value={systemCounts?.totalTasks ?? '—'}
+                            />
+                            <StatCard
+                                icon={<FaShareSquare size={18} color="#fff" />}
+                                iconBg="#6b3e2b"
+                                label="DFS requests"
+                                value={systemCounts?.totalDfs ?? '—'}
+                            />
+                            <StatCard
+                                icon={<FaFileSignature size={18} color="#fff" />}
+                                iconBg={C.destructive}
+                                label="Agreements"
+                                value={systemCounts?.totalAgreements ?? '—'}
+                            />
+                            <StatCard
+                                icon={<FaListAlt size={18} color="#fff" />}
+                                iconBg="#d8a13a"
+                                label="SOR items"
+                                value={systemCounts?.totalSorItems ?? '—'}
+                            />
+                            <StatCard
+                                icon={<FaFileAlt size={18} color="#fff" />}
+                                iconBg={C.success}
+                                label="Documents"
+                                value={systemCounts?.totalDocuments ?? '—'}
+                            />
+                        </div>
 
-            {loading && (
-                <div style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                    padding: '40px 0', color: 'var(--text-muted)', fontSize: 14,
-                }}>
-                    <FiRefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> Loading dashboard…
-                </div>
-            )}
+                        {/* ── Bill vs Payment Request status ── */}
+                        <div style={twoColGrid}>
+                            <Module
+                                icon={<FaChartPie size={13} color={C.accent} />}
+                                title="Bill Status"
+                                extra={billOverview ? (
+                                    <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 600 }}>{formatCurrency(billOverview.totalAmount)} total</span>
+                                ) : null}
+                            >
+                                {billStatusSegments.length > 0 ? (
+                                    <DonutChart segments={billStatusSegments} centerLabel="Bills" />
+                                ) : (
+                                    <Empty text="No bills created yet." />
+                                )}
+                            </Module>
 
-            {!loading && !error && (
-                <>
-                    {/* ── Stat cards ── */}
-                    <div style={statGridStyle}>
-                        <StatCard
-                            icon={<FaProjectDiagram size={18} color="#fff" />}
-                            iconBg={C.primary}
-                            label="Total projects"
-                            value={stats.totalProjects}
-                        />
-                        <StatCard
-                            icon={<FaCheckCircle size={18} color="#fff" />}
-                            iconBg="#3b7dd8"
-                            label="Active projects"
-                            value={stats.activeProjects}
-                        />
-                        <StatCard
-                            icon={<FaFileInvoiceDollar size={18} color="#fff" />}
-                            iconBg={C.accent}
-                            label="Total bills"
-                            value={stats.totalBills}
-                        />
-                        <StatCard
-                            icon={<FaRupeeSign size={18} color="#fff" />}
-                            iconBg={C.success}
-                            label="Gross billed"
-                            value={formatCurrency(stats.totalGrossBilled)}
-                        />
-                        <StatCard
-                            icon={<FaPiggyBank size={18} color="#fff" />}
-                            iconBg="#d8a13a"
-                            label="Total recoveries"
-                            value={formatCurrency(stats.totalRecoveries)}
-                        />
-                        <StatCard
-                            icon={<FaRupeeSign size={18} color="#fff" />}
-                            iconBg={C.destructive}
-                            label="Net payable"
-                            value={formatCurrency(stats.netPayable)}
-                        />
-                    </div>
+                            <Module
+                                icon={<FaChartPie size={13} color={C.accent} />}
+                                title="Payment Request Status"
+                                extra={paymentOverview ? (
+                                    <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 600 }}>{formatCurrency(paymentOverview.totalAmount)} total</span>
+                                ) : null}
+                            >
+                                {paymentStatusSegments.length > 0 ? (
+                                    <DonutChart segments={paymentStatusSegments} centerLabel="Requests" />
+                                ) : (
+                                    <Empty text="No payment requests raised yet." />
+                                )}
+                            </Module>
+                        </div>
 
-                    {/* ── Charts ── */}
-                    <div style={twoColGrid}>
-                        <Module icon={<FaChartPie size={13} color={C.accent} />} title="Projects by Status">
-                            {stats.totalProjects > 0 ? (
-                                <DonutChart segments={stats.statusSegments} />
+                        {/* ── Task status + Project status (bar charts) ── */}
+                        <div style={twoColGrid}>
+                            <Module icon={<FaChartBar size={13} color={C.accent} />} title="Task Status">
+                                {taskStatus.length > 0 ? (
+                                    <BarChart rows={taskStatusRows} />
+                                ) : (
+                                    <Empty text="No tasks created yet." />
+                                )}
+                            </Module>
+
+                            <Module icon={<FaChartBar size={13} color={C.accent} />} title="Project Status">
+                                {projectStatus?.statusBreakdown?.length > 0 ? (
+                                    <BarChart rows={projectStatusRows} />
+                                ) : (
+                                    <Empty text="No projects yet." />
+                                )}
+                            </Module>
+                        </div>
+
+                        {/* ── DFS status + Document status ── */}
+                        <div style={twoColGrid}>
+                            <Module icon={<FaChartPie size={13} color={C.accent} />} title="DFS Status">
+                                {dfsStatusSegments.length > 0 ? (
+                                    <DonutChart segments={dfsStatusSegments} centerLabel="DFS" />
+                                ) : (
+                                    <Empty text="No DFS requests raised yet." />
+                                )}
+                            </Module>
+
+                            <Module icon={<FaChartPie size={13} color={C.accent} />} title="Document Status">
+                                {documentStatusSegments.length > 0 ? (
+                                    <DonutChart segments={documentStatusSegments} centerLabel="Docs" />
+                                ) : (
+                                    <Empty text="No documents uploaded yet." />
+                                )}
+                            </Module>
+                        </div>
+
+                        {/* ── Cash flow ── */}
+                        <Module
+                            icon={<FaChartLine size={13} color={C.accent} />}
+                            title="Cash Flow — Last 6 Months"
+                            extra={<span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Bills · Payment requests · Salary</span>}
+                        >
+                            {cashFlow.length > 0 ? (
+                                <LineTrend data={cashFlow} series={cashFlowSeries} />
                             ) : (
-                                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No projects yet.</div>
+                                <Empty text="No transactions recorded yet." />
                             )}
                         </Module>
 
-                        <Module icon={<FaChartBar size={13} color={C.accent} />} title="Top Projects by Billed Amount">
-                            {stats.topProjects.length > 0 ? (
-                                <BarRows rows={stats.topProjects} />
-                            ) : (
-                                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No bills created yet.</div>
-                            )}
-                        </Module>
-                    </div>
+                        {/* ── Approvals queue + recent activity ── */}
+                        <div style={twoColGrid}>
+                            <Module
+                                icon={<FaExclamationTriangle size={13} color={C.accent} />}
+                                title="Approvals Queue"
+                                extra={<span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{approvals.length} shown</span>}
+                            >
+                                {approvals.length > 0 ? (
+                                    approvals.map((a, i) => {
+                                        const meta = APPROVAL_META[a.type] || { icon: FaFileAlt, bg: C.muted };
+                                        const Icon = meta.icon;
+                                        return (
+                                            <div key={`${a.refId}-${i}`} style={listRowStyle(i === approvals.length - 1)}>
+                                                <div style={statIconWrapStyle(meta.bg)}>
+                                                    <Icon size={14} color="#fff" />
+                                                </div>
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <div style={{
+                                                        fontSize: 13, color: 'var(--text-strong)',
+                                                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                                    }}>
+                                                        {a.label}
+                                                    </div>
+                                                    <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{a.who}</div>
+                                                </div>
+                                                <div style={{ fontSize: 11, color: 'var(--text-muted)', flexShrink: 0 }}>{timeAgo(a.date)}</div>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <Empty text="Nothing pending — you're all caught up." />
+                                )}
+                            </Module>
 
-                    {/* ── Recent bills ── */}
-                    <Module
-                        icon={<FaFileInvoiceDollar size={13} color={C.accent} />}
-                        title="Recent Bills"
-                        extra={<span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{stats.recentBills.length} shown</span>}
-                    >
-                        {stats.recentBills.length > 0 ? (
-                            <div style={tableWrapStyle}>
-                                <table style={tableStyle}>
-                                    <thead>
-                                        <tr>
-                                            <th style={thStyle}>Bill No.</th>
-                                            <th style={thStyle}>Project</th>
-                                            <th style={thStyle}>LOA No.</th>
-                                            <th style={thRightStyle}>Gross Amount</th>
-                                            <th style={thStyle}>Created</th>
-                                            <th style={thStyle}></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {stats.recentBills.map((b, i) => (
-                                            <tr key={b._id || i}>
-                                                <td style={tdStyle}>{b.billNo || '—'}</td>
-                                                <td style={tdStyle}>{b.projectRef?.projectName || '—'}</td>
-                                                <td style={tdStyle}>{b.loaNo || '—'}</td>
-                                                <td style={tdRightStyle}>{formatCurrency(b.grossAmount)}</td>
-                                                <td style={tdStyle}>{formatDate(b.createdAt)}</td>
-                                                <td style={tdStyle}>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => navigate(`/admin/project-bill/${b._id}`)}
-                                                        style={viewButtonStyle}
-                                                    >
-                                                        <FaEye size={10} /> View
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        ) : (
-                            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No bills created yet.</div>
-                        )}
-                    </Module>
-                </>
-            )}
+                            <Module icon={<FaHistory size={13} color={C.accent} />} title="Recent Activity">
+                                {activity.length > 0 ? (
+                                    activity.map((a, i) => (
+                                        <div
+                                            key={i}
+                                            style={{ ...listRowStyle(i === activity.length - 1), cursor: a.actionUrl ? 'pointer' : 'default' }}
+                                            onClick={() => a.actionUrl && navigate(a.actionUrl)}
+                                        >
+                                            <span style={{ width: 7, height: 7, borderRadius: 4, background: C.accent, flexShrink: 0 }} />
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{
+                                                    fontSize: 12.5, color: 'var(--text-strong)',
+                                                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                                }}>
+                                                    {a.description}
+                                                </div>
+                                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{a.who} · {timeAgo(a.createdAt)}</div>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <Empty text="No recent activity." />
+                                )}
+                            </Module>
+                        </div>
+                    </>
+                )}
 
-            <style>{`
+                <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
-        </div>
+            </div>
+        </>
     );
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  FaSignOutAlt, FaChevronDown, FaBars, FaTimes,
+  FaSignOutAlt, FaChevronDown, FaBars, FaTimes,FaClipboardList
 } from 'react-icons/fa';
 import {
   FiHome, FiFileText, FiUsers, FiBell, FiSettings, FiHelpCircle,
@@ -28,6 +28,15 @@ const NAV = [
     ],
   },
   {
+      type: 'group', key: 'project_management', label: 'Project Management', icon: FiDollarSign, items: [
+        // { label: 'Create Project', to: '/admin/project/create' },
+        { label: 'List Projects', to: '/staff/project/list' },
+        { label: 'Assigned To Me', to: '/staff/project/assigned-to-me' },
+        { label: 'Task ', to: '/staff/project/task/list' },
+        { label: 'Create Bill', to: '/staff/project/bill/create' },
+      ],
+    },
+  {
     type: 'group', key: 'dfs', label: 'DFS Section', icon: FiFolder, items: [
       { label: 'Assigned Document', to: '/staff/dfsrequest' },
       { label: 'Upload Document', to: '/staff/upload-document' },
@@ -39,10 +48,15 @@ const NAV = [
       { label: 'All Documents', to: '/staff/all-documents' },
     ],
   },
-  { type: 'link', label: 'Notification', icon: FiBell, to: '/staff/under-dev' },
+  {
+    type: 'group', key: 'SOR', label: 'SOR', icon: FaClipboardList, items: [
+      { label: 'View SOR Items', to: '/staff/View-sor-items' },
+      { label: 'Update SOR Item', to: '/staff/Update-sor-item' },
+    ],
+  },
+  { type: 'link', label: 'Notification', icon: FiBell, to: '/staff/notifications' },
   { type: 'link', label: 'Salary', icon: FiDollarSign, to: '/staff/salary' },
   { type: 'link', label: 'Setting', icon: FiSettings, to: '/staff/setting' },
-  { type: 'link', label: 'Help', icon: FiHelpCircle, to: '/staff/under-dev' },
 ];
 
 const StaffSidebar = ({ isOpen = true, toggleSidebar, onCollapse }) => {

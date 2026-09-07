@@ -20,6 +20,16 @@ import Setting from "../pages/client/Setting";
 import UnderDevPage from "../pages/UnderDevPage.jsx";
 import PendingProject from "../pages/admin/PendingProject.jsx"; // to be removed later
 import SingleProjectDetail from "../pages/admin/SIngleProjectDetail.jsx";
+import MyTaskList from "../pages/admin/MyTaskList.jsx";
+import SngleTaskDetail from "../pages/admin/SingleTaskDetail.jsx";
+import ProjectAssignedToMe from "../pages/admin/ProjectAssignedToMe.jsx";
+import EditProjectDetail from "../pages/admin/EditProjectDetail.jsx";
+import ProjectBillCreate from "../pages/admin/CreateProjectBill.jsx";
+import ListallProject from "../pages/admin/ListallProject.jsx";
+import AdminNotificationsPage from "../pages/admin/AdminNotificationsPage.jsx";
+
+import SorDetails from "../pages/client/SorDetails.jsx";
+import SorDetailsAdmin from "../pages/admin/SorPage.jsx";
 
 // Child routes rendered inside StaffLayout — same paths/elements/order
 // as before. This is exactly what used to sit inside the <Route path="/staff">
@@ -48,8 +58,22 @@ export const staffRoutes = (
         <Route path="push-document" element={<PushDocumentAdminPage />} />
         <Route path="salary" element={<SalaryPage />} />
         <Route path="setting" element={<Setting />} />
+        <Route path="notifications" element={<AdminNotificationsPage />} />
+
+
+        <Route path="View-sor-items" element={<SorDetails />} />
+        <Route path="Update-sor-item" element={<SorDetailsAdmin />} />
+
+
         <Route path="under-dev" element={<UnderDevPage />} />
         <Route path="project/pending" element={<PendingProject />} />
         <Route path="project/pending/:id" element={<SingleProjectDetail />} />
+        <Route path="project/task/list" element={<MyTaskList />} />
+        <Route path="task/:id" element={<SngleTaskDetail />} />
+        <Route path="project/assigned-to-me" element={<ProjectAssignedToMe />} />
+        <Route path="project/:id" element={<SingleProjectDetail />} />
+        <Route path="project/edit/:id" element={<EditProjectDetail />} />
+        <Route path="project/list" element={<ListallProject />} />
+        <Route path="project/bill/create" element={<ProjectBillCreate />} />
     </>
 );

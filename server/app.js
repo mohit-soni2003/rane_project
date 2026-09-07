@@ -93,6 +93,7 @@ app.use("/project", require("./src/routes/project.route")) // give all detais re
 app.use("/task", require("./src/routes/task.route")) // give all detais relaed to dashboard
 app.use("/projects/bill", require("./src/routes/project.billroutes")) // give all detais relaed to dashboard
 app.use("/project", require("./src/routes/permission.route")) // give all detais relaed to dashboard;
+app.use("/dashboard", require("./src/routes/dashboardroutes")) // give all detais relaed to dashboard;
 // Start the server
 if (require.main === module && !process.env.VERCEL) {
   app.listen(PORT, () => {

@@ -5,6 +5,7 @@ import {
   FaFileSignature, FaClipboardList,
 } from 'react-icons/fa';
 import { BsCardChecklist } from 'react-icons/bs';
+import { FiBell } from 'react-icons/fi';
 import { MdPayment } from 'react-icons/md';
 import dummyUser from "../../assets/images/dummyUser.jpeg";
 import { useAuthStore } from '../../store/authStore';
@@ -38,6 +39,12 @@ const NAV = [
     ],
   },
   {
+    type: 'group', key: 'project', label: 'Project', icon: BsCardChecklist, items: [
+      { label: 'Task', to: '/client/project/task/list' },
+      { label: 'Assigned Projects', to: '/client/project/assigned-to-me' },
+    ],
+  },
+  {
     type: 'group', key: 'dfs', label: 'Forward Files — DFS', icon: BsCardChecklist, items: [
       { label: 'Upload Document', to: '/client/upload-document' },
       { label: 'Track Document', to: '/client/track-dfs/all' },
@@ -49,6 +56,8 @@ const NAV = [
       { label: 'All Documents', to: '/client/document/category' },
     ],
   },
+  { type: 'link', label: 'Notifications', icon: FiBell, to: '/client/notifications' },
+
   { type: 'link', label: 'Salary', icon: FaMoneyBillWave, to: '/client/salary' },
   { type: 'link', label: 'Setting', icon: FaUserCog, to: '/client/setting' },
   { type: 'link', label: 'SOR', icon: FaClipboardList, to: '/client/sor' },

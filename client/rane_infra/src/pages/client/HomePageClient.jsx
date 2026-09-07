@@ -8,7 +8,132 @@ import { useAuthStore } from "../../store/authStore";
 import { useNavigate } from "react-router-dom";
 import RecentActivityModal from "../../component/models/RecentActivityModel";
 
+/* ── Shared token set — same accent family used across the app's other
+   dashboards, so this page reads as part of the same product rather
+   than its own one-off style. ── */
+const PALETTE = ['#225b31', '#3b7dd8', '#b95a52', '#6b3e2b', '#d8a13a', '#8b7b74'];
+const ACCENT = '#225b31'; // matches the Client portal's header accent
 
+/* ── Small presentational helpers (no state, no side effects) ───────── */
+
+function SectionIntro({ title, subtitle }) {
+    return (
+        <>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-strong)" }}>{title}</div>
+            <div style={{ color: "var(--text-muted)", marginTop: 4, marginBottom: 16, fontSize: 14 }}>
+                {subtitle}
+            </div>
+        </>
+    );
+}
+
+function Panel({ children, style }) {
+    return (
+        <div
+            className="p-4 h-100"
+            style={{
+                backgroundColor: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: 14,
+                boxShadow: "0 2px 10px var(--shadow-color)",
+                ...style,
+            }}
+        >
+            {children}
+        </div>
+    );
+}
+
+function MetricCard({ title, count, desc, icon, accent }) {
+    return (
+        <div
+            style={{
+                background: "var(--card)",
+                borderRadius: 12,
+                border: "1px solid var(--border)",
+                borderTop: `3px solid ${accent}`,
+                boxShadow: "0 2px 6px var(--shadow-color)",
+                padding: 16,
+                height: 122,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                transition: "transform 0.15s ease, box-shadow 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 6px 16px var(--shadow-color)";
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 2px 6px var(--shadow-color)";
+            }}
+        >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ fontWeight: 600, color: "var(--text-strong)", fontSize: 13 }}>{title}</div>
+                <div
+                    style={{
+                        width: 30, height: 30, borderRadius: 8, background: accent,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        color: "#fff", flexShrink: 0,
+                    }}
+                >
+                    {icon}
+                </div>
+            </div>
+            <div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: "var(--text-strong)", lineHeight: 1.1 }}>
+                    {count}
+                </div>
+                <div style={{ fontSize: 11.5, color: "var(--text-muted)", marginTop: 2 }}>{desc}</div>
+            </div>
+        </div>
+    );
+}
+
+function QuickAccessCard({ title, desc, icon, accent, onClick }) {
+    return (
+        <div
+            onClick={onClick}
+            style={{
+                background: "var(--card)",
+                borderRadius: 12,
+                border: "1px solid var(--border)",
+                borderLeft: `3px solid ${accent}`,
+                boxShadow: "0 2px 6px var(--shadow-color)",
+                padding: 18,
+                height: 112,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                cursor: "pointer",
+                transition: "transform 0.15s ease, box-shadow 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 6px 16px var(--shadow-color)";
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 2px 6px var(--shadow-color)";
+            }}
+        >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ fontWeight: 600, fontSize: 14, color: "var(--text-strong)" }}>{title}</div>
+                <div
+                    style={{
+                        width: 32, height: 32, borderRadius: 8, background: `${accent}1a`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        color: accent, flexShrink: 0,
+                    }}
+                >
+                    {icon}
+                </div>
+            </div>
+            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{desc}</div>
+        </div>
+    );
+}
 
 export default function HomePageClient() {
     const [recentActivity, setRecentActivity] = useState([]);
@@ -70,43 +195,43 @@ export default function HomePageClient() {
             title: "Submitted Bills",
             count: overviewData.billcnt,
             desc: "This fiscal year",
-            icon: <FiUpload size={20} />,
-            bg: "linear-gradient(135deg, #e6f4ff 0%, #f3faff 100%)",
+            icon: <FiUpload size={16} />,
+            bg: PALETTE[1],
         },
         {
             title: "Payment Requests",
             count: overviewData.prcnt,
             desc: "In various stages",
-            icon: <FiCreditCard size={20} />,
-            bg: "linear-gradient(135deg, #e4faf8 0%, #f3fdfc 100%)",
+            icon: <FiCreditCard size={16} />,
+            bg: PALETTE[0],
         },
         {
             title: "Signed Agreements",
             count: overviewData.signedAgreement,
             desc: "Fully executed",
-            icon: <FiCheckCircle size={20} />,
-            bg: "linear-gradient(135deg, #d9f2e4 0%, #eefaf2 100%)",
+            icon: <FiCheckCircle size={16} />,
+            bg: PALETTE[0],
         },
         {
             title: "Paid Bills",
             count: overviewData.paidBillCnt,
             desc: "Full payment done",
-            icon: <FiDollarSign size={20} />,
-            bg: "linear-gradient(135deg, #f2edf7 0%, #faf7ff 100%)",
+            icon: <FiDollarSign size={16} />,
+            bg: PALETTE[2],
         },
         {
             title: "Completed PR",
             count: overviewData.paidPrCnt,
             desc: "All active and historical",
-            icon: <FiFileText size={20} />,
-            bg: "linear-gradient(135deg, #e8e7ff 0%, #f7f6ff 100%)",
+            icon: <FiFileText size={16} />,
+            bg: PALETTE[1],
         },
         {
             title: "Total Agreements",
             count: overviewData.agreementcnt,
             desc: "Awaiting your action",
-            icon: <FiFile size={20} />,
-            bg: "linear-gradient(135deg, #ffe9d6 0%, #fff4ea 100%)",
+            icon: <FiFile size={16} />,
+            bg: PALETTE[4],
         },
     ] : [];
 
@@ -121,127 +246,42 @@ export default function HomePageClient() {
                 {/* ===================== LEFT SIDE : OVERVIEW ===================== */}
 
                 <div className="col-lg-8 col-md-7 col-12">
-                    <div
-                        className="p-4"
-                        style={{
-                            backgroundColor: "var(--background)",
-                            boxShadow: "0px 2px 10px var(--shadow-color)",
-                            borderRadius: "14px",
-                            height: "100%",
-                        }}
-                    >
-                        {/* Title */}
-                        <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-strong)" }}>
-                            Overview
-                        </div>
-                        <div
-                            style={{
-                                color: "var(--text-muted)",
-                                marginBottom: "14px",
-                                marginTop: "4px",
-                                fontSize: "14px",
-                            }}
-                        >
-                            High-level metrics across agreements, bills, and documents.
-                        </div>
+                    <Panel>
+                        <SectionIntro
+                            title="Overview"
+                            subtitle="High-level metrics across agreements, bills, and documents."
+                        />
 
                         {/* Cards Grid – 2 rows */}
                         <div className="row g-3">
                             {overview.length === 0 ? (
-                                <div className="text-center py-4">Loading metrics...</div>
+                                <div style={{ textAlign: "center", padding: "32px 0", color: "var(--text-muted)", fontSize: 14 }}>
+                                    Loading metrics...
+                                </div>
                             ) : (
                                 overview.map((item, index) => (
                                     <div key={index} className="col-6 col-sm-4 col-md-4 col-lg-4">
-                                        <div
-                                            style={{
-                                                background: item.bg,
-                                                borderRadius: "14px",
-                                                padding: "14px",
-                                                boxShadow: "0 2px 5px var(--shadow-color)",
-                                                border: "1px solid var(--border)",
-                                                height: "120px",
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                justifyContent: "space-between",
-                                            }}
-                                        >
-                                            <div
-                                                style={{
-                                                    display: "flex",
-                                                    justifyContent: "space-between",
-                                                    fontWeight: 600,
-                                                    color: "var(--text-strong)",
-                                                    fontSize: "13px",
-                                                }}
-                                            >
-                                                <div>{item.title}</div>
-                                                <div
-                                                    style={{
-                                                        background: "var(--card)",
-                                                        padding: "5px",
-                                                        borderRadius: "8px",
-                                                        border: "1px solid var(--border)",
-                                                        color: "var(--text-muted)",
-                                                    }}
-                                                >
-                                                    {item.icon}
-                                                </div>
-                                            </div>
-
-                                            <div
-                                                style={{
-                                                    fontSize: "24px",
-                                                    fontWeight: 700,
-                                                    color: "var(--text-strong)",
-                                                    marginTop: "6px",
-                                                }}
-                                            >
-                                                {item.count}
-                                            </div>
-
-                                            <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>
-                                                {item.desc}
-                                            </div>
-                                        </div>
+                                        <MetricCard
+                                            title={item.title}
+                                            count={item.count}
+                                            desc={item.desc}
+                                            icon={item.icon}
+                                            accent={item.bg}
+                                        />
                                     </div>
                                 ))
                             )}
                         </div>
-
-                    </div>
+                    </Panel>
                 </div>
 
                 {/* ===================== RIGHT SIDE : RECENT ACTIVITY ===================== */}
                 <div className="col-lg-4 col-md-5 col-12 mt-3 mt-md-0">
-                    <div
-                        className="p-4"
-                        style={{
-                            backgroundColor: "var(--background)",
-                            boxShadow: "0px 2px 10px var(--shadow-color)",
-                            borderRadius: "14px",
-                            height: "100%",
-                        }}
-                    >
-                        <div
-                            style={{
-                                fontSize: "16px",
-                                fontWeight: 700,
-                                color: "var(--text-strong)",
-                            }}
-                        >
-                            Recent Activity
-                        </div>
-
-                        <div
-                            style={{
-                                color: "var(--text-muted)",
-                                marginBottom: "16px",
-                                marginTop: "4px",
-                                fontSize: "14px",
-                            }}
-                        >
-                            Latest events across agreements, bills, and documents.
-                        </div>
+                    <Panel>
+                        <SectionIntro
+                            title="Recent Activity"
+                            subtitle="Latest events across agreements, bills, and documents."
+                        />
 
                         {/* Activity List */}
                         {recentActivity.map((activity, idx) => (
@@ -262,7 +302,7 @@ export default function HomePageClient() {
                                         top: "0",
                                         bottom: idx === recentActivity.length - 1 ? "50%" : "0",
                                         width: "2px",
-                                        background: "#D1C7B7",
+                                        background: "var(--border)",
                                     }}
                                 ></div>
 
@@ -271,11 +311,13 @@ export default function HomePageClient() {
                                     style={{
                                         width: "10px",
                                         height: "10px",
-                                        background: "#7B3F00",
+                                        background: ACCENT,
                                         borderRadius: "50%",
                                         marginRight: "12px",
+                                        marginTop: "3px",
                                         position: "relative",
                                         zIndex: 2,
+                                        flexShrink: 0,
                                     }}
                                 ></div>
 
@@ -316,18 +358,25 @@ export default function HomePageClient() {
                                     <button
                                         onClick={() => navigate(activity.actionUrl)}
                                         style={{
-                                            marginTop: "8px",
-                                            background: "#7B3F00",
-                                            color: "#fff",
-                                            border: "none",
-                                            padding: "6px 14px",
+                                            marginTop: "10px",
+                                            background: "transparent",
+                                            color: ACCENT,
+                                            border: `1px solid ${ACCENT}`,
+                                            padding: "5px 14px",
                                             fontSize: "12px",
+                                            fontWeight: 600,
                                             borderRadius: "6px",
                                             cursor: "pointer",
-                                            transition: "0.2s",
+                                            transition: "background 0.15s ease, color 0.15s ease",
                                         }}
-                                        onMouseOver={(e) => (e.target.style.opacity = "0.8")}
-                                        onMouseOut={(e) => (e.target.style.opacity = "1")}
+                                        onMouseOver={(e) => {
+                                            e.target.style.background = ACCENT;
+                                            e.target.style.color = "#fff";
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.target.style.background = "transparent";
+                                            e.target.style.color = ACCENT;
+                                        }}
                                     >
                                         More
                                     </button>
@@ -355,7 +404,7 @@ export default function HomePageClient() {
 
 
 
-                    </div>
+                    </Panel>
                 </div>
 
 
@@ -364,38 +413,16 @@ export default function HomePageClient() {
 
 
             {/* BILLS + Payment Request CHART WRAPPER */}
-            <div
-                className="mt-4"
-                style={{
-                }}
-            >
+            <div className="mt-4">
                 <div className="row align-items-stretch">
 
                     {/* ================= LEFT CARD – DONUT CHART ================= */}
                     <div className="col-12 col-lg-6 mb-4 h-100 d-flex">
-                        <div
-                            className="p-4 h-100 w-100"
-                            style={{
-                                backgroundColor: "var(--background)",
-                                borderRadius: "14px",
-                                border: "1px solid var(--border)",
-                                boxShadow: "0px 1px 5px var(--shadow-color)",
-                            }}
-                        >
-                            <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-strong)" }}>
-                                Bills Status Breakdown
-                            </div>
-
-                            <div
-                                style={{
-                                    color: "var(--text-muted)",
-                                    marginBottom: "20px",
-                                    marginTop: "4px",
-                                    fontSize: "14px",
-                                }}
-                            >
-                                Overview of your bill statuses.
-                            </div>
+                        <Panel style={{ width: "100%" }}>
+                            <SectionIntro
+                                title="Bills Status Breakdown"
+                                subtitle="Overview of your bill statuses."
+                            />
 
                             <div className="row">
 
@@ -407,12 +434,12 @@ export default function HomePageClient() {
                                             height: "180px",
                                             borderRadius: "50%",
                                             background: `conic-gradient(
-                #1bb55c 0 ${(billOverview?.paid / billOverview?.totalBills) * 100 || 0}%,
-                #ff9f01 ${(billOverview?.paid / billOverview?.totalBills) * 100 || 0}% 
+                #225b31 0 ${(billOverview?.paid / billOverview?.totalBills) * 100 || 0}%,
+                #d8a13a ${(billOverview?.paid / billOverview?.totalBills) * 100 || 0}% 
                          ${((billOverview?.paid + billOverview?.pending) / billOverview?.totalBills) * 100 || 0}%,
-                #2d7cfa ${((billOverview?.paid + billOverview?.pending) / billOverview?.totalBills) * 100 || 0}% 
+                #3b7dd8 ${((billOverview?.paid + billOverview?.pending) / billOverview?.totalBills) * 100 || 0}% 
                          ${((billOverview?.paid + billOverview?.pending + billOverview?.unpaid) / billOverview?.totalBills) * 100 || 0}%,
-                #a1a4aa ${((billOverview?.paid + billOverview?.pending + billOverview?.unpaid) / billOverview?.totalBills) * 100 || 0}% 
+                #8b7b74 ${((billOverview?.paid + billOverview?.pending + billOverview?.unpaid) / billOverview?.totalBills) * 100 || 0}% 
                         100%
             )`,
                                             display: "flex",
@@ -426,7 +453,7 @@ export default function HomePageClient() {
                                                 width: "95px",
                                                 height: "95px",
                                                 borderRadius: "50%",
-                                                background: "var(--background)",
+                                                background: "var(--card)",
                                                 display: "flex",
                                                 flexDirection: "column",
                                                 alignItems: "center",
@@ -444,11 +471,11 @@ export default function HomePageClient() {
                                 {/* ================= LEGENDS ================= */}
                                 <div className="col-12 col-md-7 d-flex flex-column justify-content-center mt-4 mt-md-0">
                                     {[
-                                        { color: "#1bb55c", label: "Paid", value: billOverview?.paid || 0 },
-                                        { color: "#ff9f01", label: "Pending", value: billOverview?.pending || 0 },
-                                        { color: "#2d7cfa", label: "Unpaid", value: billOverview?.unpaid || 0 },
+                                        { color: "#225b31", label: "Paid", value: billOverview?.paid || 0 },
+                                        { color: "#d8a13a", label: "Pending", value: billOverview?.pending || 0 },
+                                        { color: "#3b7dd8", label: "Unpaid", value: billOverview?.unpaid || 0 },
                                         {
-                                            color: "#a1a4aa", label: "Others (Sanctioned / Rejected / Overdue)",
+                                            color: "#8b7b74", label: "Others (Sanctioned / Rejected / Overdue)",
                                             value: (billOverview?.sanctioned || 0) + (billOverview?.rejected || 0) + (billOverview?.overdue || 0)
                                         }
                                     ].map((item, i) => (
@@ -460,42 +487,31 @@ export default function HomePageClient() {
                                                     borderRadius: "3px",
                                                     background: item.color,
                                                     marginRight: "10px",
+                                                    flexShrink: 0,
                                                 }}
                                             ></div>
-                                            <span style={{ width: "200px", fontSize: "14px", color: "var(--text-strong)" }}>
+                                            <span style={{ flex: 1, fontSize: "14px", color: "var(--text-strong)" }}>
                                                 {item.label}
                                             </span>
-                                            <span style={{ fontSize: "14px", color: "var(--text-muted)" }}>{item.value}</span>
+                                            <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-muted)" }}>{item.value}</span>
                                         </div>
                                     ))}
                                 </div>
 
                             </div>
-                        </div>
+                        </Panel>
                     </div>
 
                     {/* ================= RIGHT CARD – BILLS SUMMARY ================= */}
-                    {/* ================= RIGHT CARD – BILLS SUMMARY ================= */}
                     <div className="col-12 col-lg-6 h-100 d-flex">
-                        <div
-                            className="p-4 h-100 w-100"
-                            style={{
-                                backgroundColor: "var(--background)",
-                                borderRadius: "14px",
-                                border: "1px solid var(--border)",
-                                boxShadow: "0px 1px 5px var(--shadow-color)",
-                            }}
-                        >
-                            <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-strong)" }}>
-                                Bills Summary
-                            </div>
-
-                            <div style={{ color: "var(--text-muted)", marginBottom: 10, marginTop: 4 }}>
-                                Overview of your billing performance.
-                            </div>
+                        <Panel style={{ width: "100%" }}>
+                            <SectionIntro
+                                title="Bills Summary"
+                                subtitle="Overview of your billing performance."
+                            />
 
                             {/* ===== TOTAL SUBMITTED ===== */}
-                            <div style={{ fontSize: 24, fontWeight: 700 }}>
+                            <div style={{ fontSize: 26, fontWeight: 700, color: "var(--text-strong)" }}>
                                 ₹ {(totalAmount ?? 0).toLocaleString("en-IN")}
                             </div>
                             <div style={{ fontSize: 13, color: "var(--text-muted)" }}>
@@ -507,9 +523,9 @@ export default function HomePageClient() {
                                 style={{
                                     width: "100%",
                                     height: 10,
-                                    background: "#e6e6e6",
+                                    background: "var(--border)",
                                     borderRadius: 8,
-                                    marginTop: 12,
+                                    marginTop: 14,
                                     overflow: "hidden",
                                 }}
                             >
@@ -519,47 +535,47 @@ export default function HomePageClient() {
                                             (paidAmount / Math.max(totalAmount, 1)) * 100
                                         )}%`,
                                         height: "100%",
-                                        background: "linear-gradient(90deg, #2d7cfa, #1bb55c)",
+                                        background: "linear-gradient(90deg, #3b7dd8, #225b31)",
+                                        transition: "width 0.4s ease",
                                     }}
                                 />
                             </div>
 
-                            {/* ===== PAID / PENDING / OVERDUE ===== */}
                             {/* ===== PAID / PENDING / OVERDUE / OTHERS ===== */}
                             <div className="row mt-4">
                                 <div className="col-3">
-                                    <div className="text-muted" style={{ fontSize: 13 }}>Paid</div>
-                                    <div style={{ fontWeight: 700 }}>
+                                    <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Paid</div>
+                                    <div style={{ fontWeight: 700, color: "#225b31" }}>
                                         ₹ {(paidAmount ?? 0).toLocaleString("en-IN")}
                                     </div>
                                 </div>
 
                                 <div className="col-3">
-                                    <div className="text-muted" style={{ fontSize: 13 }}>Pending</div>
-                                    <div style={{ fontWeight: 700 }}>
+                                    <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Pending</div>
+                                    <div style={{ fontWeight: 700, color: "#d8a13a" }}>
                                         ₹ {(pendingAmount ?? 0).toLocaleString("en-IN")}
                                     </div>
                                 </div>
 
                                 <div className="col-3">
-                                    <div className="text-muted" style={{ fontSize: 13 }}>Overdue</div>
-                                    <div style={{ fontWeight: 700 }}>
+                                    <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Overdue</div>
+                                    <div style={{ fontWeight: 700, color: "#c94a3a" }}>
                                         ₹ {(overdueAmount ?? 0).toLocaleString("en-IN")}
                                     </div>
                                 </div>
 
                                 <div className="col-3">
-                                    <div className="text-muted" style={{ fontSize: 13 }}>Others</div>
-                                    <div style={{ fontWeight: 700, color: "#a1a4aa" }}>
+                                    <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Others</div>
+                                    <div style={{ fontWeight: 700, color: "#8b7b74" }}>
                                         ₹ {(otherAmount ?? 0).toLocaleString("en-IN")}
                                     </div>
                                 </div>
                             </div>
 
-                            <div style={{ marginTop: 20, fontSize: 14, color: "var(--text-muted)" }}>
+                            <div style={{ marginTop: 20, fontSize: 13, color: "var(--text-muted)", borderTop: "1px solid var(--border)", paddingTop: 14 }}>
                                 Last bill submitted on —
                             </div>
-                        </div>
+                        </Panel>
                     </div>
 
 
@@ -571,166 +587,55 @@ export default function HomePageClient() {
 
 
             {/* QUICK ACCESS SECTION */}
-            <div
-                className="mt-4 p-4"
-                style={{
-                    backgroundColor: "var(--background)",
-                    boxShadow: "0px 2px 10px var(--shadow-color)",
-                    borderRadius: "14px",
-                }}
-            >
-                {/* Title */}
-                <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-strong)" }}>
-                    Quick Access
-                </div>
-                <div
-                    style={{
-                        color: "var(--text-muted)",
-                        marginBottom: "16px",
-                        marginTop: "4px",
-                        fontSize: "14px",
-                    }}
-                >
-                    Jump directly into frequently used modules.
-                </div>
+            <div className="mt-4">
+                <Panel>
+                    <SectionIntro
+                        title="Quick Access"
+                        subtitle="Jump directly into frequently used modules."
+                    />
 
-                <div className="row g-3">
-                    {/* My Agreements */}
-                    <div className="col-12 col-sm-6 col-md-3" onClick={() => navigate("/client/agreement")}>
-                        <div
-                            style={{
-                                background: "linear-gradient(135deg, #e8e7ff 0%, #f7f6ff 100%)",
-                                borderRadius: "14px",
-                                padding: "18px",
-                                height: "110px",
-                                border: "1px solid var(--border)",
-                                boxShadow: "0 2px 5px var(--shadow-color)",
-                                display: "flex",
-                                flexDirection: "column",
-                                justifyContent: "space-between",
-                            }}
-                        >
-                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                <div style={{ fontWeight: 600, fontSize: "14px" }}>My Agreements</div>
-                                <div
-                                    style={{
-                                        background: "var(--card)",
-                                        padding: "6px",
-                                        borderRadius: "8px",
-                                        border: "1px solid var(--border)",
-                                    }}
-                                >
-                                    <FiFileText size={18} />
-                                </div>
-                            </div>
-                            <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                                View, track and manage all your agreements.
-                            </div>
+                    <div className="row g-3">
+                        <div className="col-12 col-sm-6 col-md-3">
+                            <QuickAccessCard
+                                title="My Agreements"
+                                desc="View, track and manage all your agreements."
+                                icon={<FiFileText size={16} />}
+                                accent={PALETTE[1]}
+                                onClick={() => navigate("/client/agreement")}
+                            />
+                        </div>
+
+                        <div className="col-12 col-sm-6 col-md-3">
+                            <QuickAccessCard
+                                title="My Bills"
+                                desc="Submit and monitor billing activity."
+                                icon={<FiCreditCard size={16} />}
+                                accent={PALETTE[2]}
+                                onClick={() => navigate("/client/my-bill")}
+                            />
+                        </div>
+
+                        <div className="col-12 col-sm-6 col-md-3">
+                            <QuickAccessCard
+                                title="My Documents"
+                                desc="Upload and track compliance documents."
+                                icon={<FiFolder size={16} />}
+                                accent={PALETTE[0]}
+                                onClick={() => navigate("/client/document/category")}
+                            />
+                        </div>
+
+                        <div className="col-12 col-sm-6 col-md-3">
+                            <QuickAccessCard
+                                title="File Forwarding"
+                                desc="Track routed files and approvals."
+                                icon={<FiUpload size={16} />}
+                                accent={PALETTE[3]}
+                                onClick={() => navigate("/client/track-dfs/all")}
+                            />
                         </div>
                     </div>
-
-                    {/* My Bills */}
-                    <div className="col-12 col-sm-6 col-md-3" onClick={() => navigate("/client/my-bill")}>
-                        <div
-                            style={{
-                                background: "linear-gradient(135deg, #e6f4ff 0%, #f3faff 100%)",
-                                borderRadius: "14px",
-                                padding: "18px",
-                                height: "110px",
-                                border: "1px solid var(--border)",
-                                boxShadow: "0 2px 5px var(--shadow-color)",
-                                display: "flex",
-                                flexDirection: "column",
-                                justifyContent: "space-between",
-                            }}
-                        >
-                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                <div style={{ fontWeight: 600, fontSize: "14px" }}>My Bills</div>
-                                <div
-                                    style={{
-                                        background: "var(--card)",
-                                        padding: "6px",
-                                        borderRadius: "8px",
-                                        border: "1px solid var(--border)",
-                                    }}
-                                >
-                                    <FiCreditCard size={18} />
-                                </div>
-                            </div>
-                            <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                                Submit and monitor billing activity.
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* My Documents */}
-                    <div className="col-12 col-sm-6 col-md-3" onClick={() => navigate("/client/document/category")}>
-                        <div
-                            style={{
-                                background: "linear-gradient(135deg, #d9f2e4 0%, #eefaf2 100%)",
-                                borderRadius: "14px",
-                                padding: "18px",
-                                height: "110px",
-                                border: "1px solid var(--border)",
-                                boxShadow: "0 2px 5px var(--shadow-color)",
-                                display: "flex",
-                                flexDirection: "column",
-                                justifyContent: "space-between",
-                            }}
-                        >
-                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                <div style={{ fontWeight: 600, fontSize: "14px" }}>My Documents</div>
-                                <div
-                                    style={{
-                                        background: "var(--card)",
-                                        padding: "6px",
-                                        borderRadius: "8px",
-                                        border: "1px solid var(--border)",
-                                    }}
-                                >
-                                    <FiFolder size={18} />
-                                </div>
-                            </div>
-                            <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                                Upload and track compliance documents.
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* File Forwarding */}
-                    <div className="col-12 col-sm-6 col-md-3" onClick={() => navigate("/client/track-dfs/all")}>
-                        <div
-                            style={{
-                                background: "linear-gradient(135deg, #e8e7ff 0%, #f7f6ff 100%)",
-                                borderRadius: "14px",
-                                padding: "18px",
-                                height: "110px",
-                                border: "1px solid var(--border)",
-                                boxShadow: "0 2px 5px var(--shadow-color)",
-                                display: "flex",
-                                flexDirection: "column",
-                                justifyContent: "space-between",
-                            }}
-                        >
-                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                <div style={{ fontWeight: 600, fontSize: "14px" }}>File Forwarding</div>
-                                <div
-                                    style={{
-                                        background: "var(--card)",
-                                        padding: "6px",
-                                        borderRadius: "8px",
-                                        border: "1px solid var(--border)",
-                                    }}
-                                >
-                                    <FiUpload size={18} />
-                                </div>
-                            </div>
-                            <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                                Track routed files and approvals.
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                </Panel>
             </div>
 
 

@@ -73,7 +73,7 @@ export const adminRoutes = (
         <Route path="project/:id" element={<SingleProjectDetail />} />
         <Route path="project/edit/:id" element={<EditProjectDetail />} />
         <Route path="project/task/list" element={<MyTaskList />} />
-        <Route path="project/task/:id" element={<SingleTaskDetail />} />
+        <Route path="task/:id" element={<SingleTaskDetail />} />
         <Route path="project/bill/create" element={<ProjectBillCreate />} />
         <Route path="project/bill/:id" element={<SingleProjectBillDetail />} />
         <Route path="dashboard" element={<AdminDashboard />} />

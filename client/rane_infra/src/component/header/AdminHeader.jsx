@@ -1,9 +1,19 @@
-import React, { useEffect, useState } from 'react';
+// Path in project: src/component/header/AdminHeader.jsx
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { FaCalendarAlt, FaBell, FaRegClock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { getUserNotifications } from '../../services/generalService';
 import NotificationModal from '../models/NotificationModel';
+
+const ROLE_ACCENT = '#6b3e2b';
+const NOTIFICATIONS_POLL_MS = 120000; // refresh unread count every 2 minutes
+
+const getInitials = (name) => {
+  if (!name || !name.trim()) return '?';
+  const parts = name.trim().split(/\s+/);
+  return parts.slice(0, 2).map((p) => p[0]?.toUpperCase()).join('');
+};
 
 const AdminHeader = () => {
   const { user } = useAuthStore();
@@ -11,7 +21,16 @@ const AdminHeader = () => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
   const navigate = useNavigate();
+
+  const loadNotifications = useCallback(async () => {
+    const response = await getUserNotifications({ page: 1, limit: 20, unreadOnly: false });
+    if (response) {
+      setNotifications(response.notifications || []);
+      setUnreadCount(response.unreadCount || 0);
+    }
+  }, []);
 
   // Live clock
   useEffect(() => {
@@ -19,26 +38,24 @@ const AdminHeader = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch notifications on mount
+  // Notifications: fetch on mount, then keep the unread badge fresh
   useEffect(() => {
     loadNotifications();
-  }, []);
+    const poll = setInterval(loadNotifications, NOTIFICATIONS_POLL_MS);
+    return () => clearInterval(poll);
+  }, [loadNotifications]);
 
-  const loadNotifications = async () => {
-    const response = await getUserNotifications({ page: 1, limit: 20, unreadOnly: false });
-    if (response) {
-      setNotifications(response.notifications || []);
-      setUnreadCount(response.unreadCount || 0);
-    }
-  };
-
-  const dateStr = dateTime.toLocaleDateString('en-IN', {
+  const dateStr = useMemo(() => dateTime.toLocaleDateString('en-IN', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-  });
-  const timeStr = dateTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  }), [dateTime]);
+  const timeStr = useMemo(() => dateTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }), [dateTime]);
+
+  const displayName = user?.name || 'Admin';
+  const showFallbackAvatar = !user?.profile || imgFailed;
 
   return (
     <>
+      {/* ── Desktop / tablet header ───────────────────────────────────── */}
       <div className="w-100 mb-3 d-none d-md-block">
         <div
           style={{
@@ -49,11 +66,13 @@ const AdminHeader = () => {
             overflow: 'hidden',
           }}
         >
+          {/* Role-colored accent line */}
+          <div style={{ height: '3px', background: ROLE_ACCENT }} />
+
           <div
             className="d-flex align-items-center justify-content-between"
             style={{ padding: '14px 22px' }}
           >
-
             {/* LEFT — E-OFFICE label + live date/time */}
             <div className="d-flex flex-column" style={{ minWidth: 230 }}>
               <span
@@ -101,14 +120,15 @@ const AdminHeader = () => {
 
             {/* RIGHT — Bell + Profile + Name */}
             <div className="d-flex align-items-center gap-3" style={{ minWidth: 230, justifyContent: 'flex-end' }}>
-
-              {/* Bell */}
-              <div
+              {/* Bell — a real button, for keyboard/focus/aria support */}
+              <button
+                type="button"
+                aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
                 className="position-relative d-flex align-items-center justify-content-center"
                 style={{
                   width: 38, height: 38, borderRadius: '50%',
                   background: 'var(--secondary)', cursor: 'pointer',
-                  transition: 'background 0.2s ease',
+                  transition: 'background 0.2s ease', border: 'none', padding: 0,
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--secondary-hover)')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--secondary)')}
@@ -129,7 +149,7 @@ const AdminHeader = () => {
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
-              </div>
+              </button>
 
               {/* Divider */}
               <div style={{ width: 1, height: 30, background: 'var(--border)' }} />
@@ -137,37 +157,123 @@ const AdminHeader = () => {
               {/* Profile + identity */}
               <div
                 className="d-flex align-items-center gap-2"
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: 'pointer', borderRadius: 10, padding: '4px 6px', transition: 'background 0.15s ease' }}
                 onClick={() => navigate('/admin')}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--secondary)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >
-                <img
-                  src={user?.profile || '/assets/images/dummyUser.jpeg'}
-                  alt="Profile"
-                  className="rounded-circle"
-                  style={{
-                    width: 38, height: 38, objectFit: 'cover',
-                    border: '2px solid var(--primary)', transition: 'all 0.2s ease',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--primary)'; }}
-                />
-                <div className="d-flex flex-column" style={{ lineHeight: 1.2 }}>
+                {showFallbackAvatar ? (
+                  <div
+                    style={{
+                      width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: ROLE_ACCENT, color: '#fff', fontSize: '0.8rem', fontWeight: 700,
+                      border: '2px solid var(--primary)',
+                    }}
+                  >
+                    {getInitials(displayName)}
+                  </div>
+                ) : (
+                  <img
+                    src={user.profile}
+                    alt="Profile"
+                    className="rounded-circle"
+                    style={{
+                      width: 38, height: 38, objectFit: 'cover',
+                      border: '2px solid var(--primary)', transition: 'all 0.2s ease',
+                    }}
+                    onError={() => setImgFailed(true)}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--primary)'; }}
+                  />
+                )}
+                <div className="d-flex flex-column" style={{ lineHeight: 1.25 }}>
                   <span
-                    title={user?.name || 'User'}
+                    title={displayName}
                     style={{
                       fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-strong)',
                       maxWidth: 130, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                     }}
                   >
-                    {user?.name || 'Admin'}
+                    {displayName}
                   </span>
-                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-                    {user?.cid ? `ID • ${user.cid}` : 'Admin'}
+                  <span className="d-flex align-items-center gap-1">
+                    <span style={{
+                      fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
+                      color: ROLE_ACCENT, background: `${ROLE_ACCENT}1a`, padding: '1px 6px', borderRadius: 999,
+                    }}>
+                      Admin
+                    </span>
+                    {user?.cid && (
+                      <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                        {user.cid}
+                      </span>
+                    )}
                   </span>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
 
+      {/* ── Compact mobile header (previously: nothing shown below md) ── */}
+      <div
+        className="w-100 mb-2 d-flex d-md-none align-items-center justify-content-between"
+        style={{
+          background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12,
+          padding: '10px 14px', boxShadow: '0 2px 8px var(--shadow-color)',
+        }}
+      >
+        <div>
+          <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase', lineHeight: 1 }}>
+            Rane &amp; Sons
+          </div>
+          <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            Admin
+          </div>
+        </div>
+        <div className="d-flex align-items-center gap-2">
+          <button
+            type="button"
+            aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
+            className="position-relative d-flex align-items-center justify-content-center"
+            style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--secondary)', border: 'none' }}
+            onClick={() => setShowNotificationModal(true)}
+          >
+            <FaBell style={{ fontSize: '1rem', color: 'var(--primary)' }} />
+            {unreadCount > 0 && (
+              <span
+                className="position-absolute"
+                style={{
+                  top: -2, right: -2, minWidth: 16, height: 16, padding: '0 4px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'var(--destructive)', color: 'var(--destructive-foreground)',
+                  fontSize: '0.58rem', fontWeight: 700, borderRadius: '999px',
+                  border: '2px solid var(--card)',
+                }}
+              >
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
+          </button>
+          <div onClick={() => navigate('/admin')}>
+            {showFallbackAvatar ? (
+              <div style={{
+                width: 34, height: 34, borderRadius: '50%', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', background: ROLE_ACCENT, color: '#fff', fontSize: '0.72rem', fontWeight: 700,
+              }}>
+                {getInitials(displayName)}
+              </div>
+            ) : (
+              <img
+                src={user.profile}
+                alt="Profile"
+                className="rounded-circle"
+                style={{ width: 34, height: 34, objectFit: 'cover', border: `2px solid ${ROLE_ACCENT}` }}
+                onError={() => setImgFailed(true)}
+              />
+            )}
           </div>
         </div>
       </div>
