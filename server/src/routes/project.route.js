@@ -19,6 +19,7 @@ const {
 // ─── role shorthands for this module ─────────────────────────────────────────
 const allUsers = verifyRole("admin", "staff", "client");
 const adminOnly = verifyRole("admin");
+const admin_or_staff = verifyRole("admin", "staff");
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -81,7 +82,7 @@ router.post("/v1/create", verifyToken, adminOnly, async (req, res) => {
 });
 
 
-router.patch("/v1/basic-details/:projectId", verifyToken, adminOnly, async (req, res) => {
+router.patch("/v1/basic-details/:projectId", verifyToken, admin_or_staff, async (req, res) => {
     try {
 
         const { projectId } = req.params;
@@ -146,7 +147,7 @@ router.patch("/v1/basic-details/:projectId", verifyToken, adminOnly, async (req,
 // works the first time (create) and on every subsequent call (update).
 // ─────────────────────────────────────────────────────────────────────────────
 
-router.patch("/v1/advance-details/:projectId", verifyToken, adminOnly, async (req, res) => {
+router.patch("/v1/advance-details/:projectId", verifyToken, admin_or_staff, async (req, res) => {
     try {
 
         const { projectId } = req.params;
@@ -674,7 +675,7 @@ router.get("/v1/:projectId", verifyToken, allUsers, async (req, res) => {
 // optional too; send either, both, or neither.
 // ─────────────────────────────────────────────────────────────────────────────
 
-router.patch("/v1/location/:projectId", verifyToken, adminOnly, async (req, res) => {
+router.patch("/v1/location/:projectId", verifyToken, admin_or_staff, async (req, res) => {
     try {
 
         const { projectId } = req.params;
@@ -741,7 +742,7 @@ router.patch("/v1/location/:projectId", verifyToken, adminOnly, async (req, res)
 // whenever tenderAmount/biddingPosition/biddingPercentage change.
 // ─────────────────────────────────────────────────────────────────────────────
 
-router.patch("/v1/financials/:projectId", verifyToken, adminOnly, async (req, res) => {
+router.patch("/v1/financials/:projectId", verifyToken, admin_or_staff, async (req, res) => {
     try {
 
         const { projectId } = req.params;
@@ -972,7 +973,7 @@ router.get("/:projectId/items", verifyToken, allUsers, async (req, res) => {
 // financials.costEstimation — use the dedicated add-one-at-a-time route below.
 // ─────────────────────────────────────────────────────────────────────────────
 
-router.patch("/v1/financials/bidding/:projectId", verifyToken, adminOnly, async (req, res) => {
+router.patch("/v1/financials/bidding/:projectId", verifyToken, admin_or_staff, async (req, res) => {
     try {
 
         const { projectId } = req.params;
@@ -1050,7 +1051,7 @@ router.patch("/v1/financials/bidding/:projectId", verifyToken, adminOnly, async 
 // pushed onto financials.bidding.costEstimation[].
 // ─────────────────────────────────────────────────────────────────────────────
 
-router.post("/v1/financials/bidding/:projectId/cost-estimation", verifyToken, adminOnly, async (req, res) => {
+router.post("/v1/financials/bidding/:projectId/cost-estimation", verifyToken, admin_or_staff, async (req, res) => {
     try {
 
         const { projectId } = req.params;
@@ -1119,7 +1120,7 @@ router.post("/v1/financials/bidding/:projectId/cost-estimation", verifyToken, ad
 // All fields optional — only provided keys are updated.
 // ─────────────────────────────────────────────────────────────────────────────
 
-router.patch("/v1/financials/pg/:projectId", verifyToken, adminOnly, async (req, res) => {
+router.patch("/v1/financials/pg/:projectId", verifyToken, admin_or_staff, async (req, res) => {
     try {
 
         const { projectId } = req.params;
@@ -1188,7 +1189,7 @@ router.patch("/v1/financials/pg/:projectId", verifyToken, adminOnly, async (req,
 // existing flat financials.penalty / financials.penaltyTicketNo fields.
 // ─────────────────────────────────────────────────────────────────────────────
 
-router.patch("/v1/financials/penalty/:projectId", verifyToken, adminOnly, async (req, res) => {
+router.patch("/v1/financials/penalty/:projectId", verifyToken, admin_or_staff, async (req, res) => {
     try {
 
         const { projectId } = req.params;
@@ -1242,7 +1243,7 @@ router.patch("/v1/financials/penalty/:projectId", verifyToken, adminOnly, async 
 // security_deposit.cust — use the dedicated add-one-at-a-time route below.
 // ─────────────────────────────────────────────────────────────────────────────
 
-router.patch("/v1/financials/security-deposit/:projectId", verifyToken, adminOnly, async (req, res) => {
+router.patch("/v1/financials/security-deposit/:projectId", verifyToken, admin_or_staff, async (req, res) => {
     try {
 
         const { projectId } = req.params;
@@ -1293,7 +1294,7 @@ router.patch("/v1/financials/security-deposit/:projectId", verifyToken, adminOnl
 // entry per call, pushed onto financials.security_deposit.cust[].
 // ─────────────────────────────────────────────────────────────────────────────
 
-router.post("/v1/financials/security-deposit/:projectId/cust", verifyToken, adminOnly, async (req, res) => {
+router.post("/v1/financials/security-deposit/:projectId/cust", verifyToken, admin_or_staff, async (req, res) => {
     try {
 
         const { projectId } = req.params;
@@ -1379,7 +1380,7 @@ router.post("/v1/financials/security-deposit/:projectId/cust", verifyToken, admi
 // All fields optional — only provided keys are updated.
 // ─────────────────────────────────────────────────────────────────────────────
 
-router.patch("/v1/timeline/:projectId", verifyToken, adminOnly, async (req, res) => {
+router.patch("/v1/timeline/:projectId", verifyToken, admin_or_staff, async (req, res) => {
     try {
 
         const { projectId } = req.params;
@@ -1422,7 +1423,7 @@ router.patch("/v1/timeline/:projectId", verifyToken, adminOnly, async (req, res)
 // project.documents[].
 // ─────────────────────────────────────────────────────────────────────────────
 
-router.delete("/v1/:projectId/document/:documentId", verifyToken, adminOnly, async (req, res) => {
+router.delete("/v1/:projectId/document/:documentId", verifyToken, admin_or_staff, async (req, res) => {
     try {
         const { projectId, documentId } = req.params;
 

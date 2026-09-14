@@ -34,7 +34,8 @@ import UnderDevPage from "../pages/UnderDevPage.jsx";
 import ProjectBillCreate from "../pages/admin/CreateProjectBill.jsx";
 import SingleProjectBillDetail from "../pages/admin/SingleProjectBillDetail.jsx";
 import AdminDashboard from "../pages/admin/AdminDashboard.jsx";
-import ProjectPermission from "../pages/admin/ProjectPermission.jsx";  
+import ProjectPermission from "../pages/admin/ProjectPermission.jsx"; 
+import ChatBot from "../pages/admin/ChatBot.jsx"; 
 
 // Child routes rendered inside AdminLayout — same paths/elements/order
 // as before. This is exactly what used to sit inside the <Route path="/admin">
@@ -78,6 +79,7 @@ export const adminRoutes = (
         <Route path="project/bill/:id" element={<SingleProjectBillDetail />} />
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="project/permission" element={<ProjectPermission />} />
+        <Route path="chatBot" element={<ChatBot />} />
 
     </>
 );

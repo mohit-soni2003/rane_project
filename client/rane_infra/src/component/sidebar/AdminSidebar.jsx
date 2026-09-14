@@ -4,7 +4,7 @@ import {
 } from 'react-icons/fa';
 import {
   FiHome, FiFileText, FiUsers, FiBell, FiSettings, FiHelpCircle,
-  FiSend, FiDollarSign, FiFolder, FiClipboard,
+  FiSend, FiDollarSign, FiFolder, FiClipboard,FiCpu
 } from 'react-icons/fi';
 import dummyUser from "../../assets/images/dummyUser.jpeg";
 import { useAuthStore } from '../../store/authStore';
@@ -64,7 +64,8 @@ const NAV = [
   { type: 'link', label: 'Notifications', icon: FiBell, to: '/admin/notifications' },
   { type: 'link', label: 'SOR', icon: FiBell, to: '/admin/sor-details' },
   { type: 'link', label: 'Setting', icon: FiSettings, to: '/admin/setting' },
-  { type: 'link', label: 'Help', icon: FiHelpCircle, to: '/admin/under-dev' },
+  { type: 'link', label: 'AI Assistant', icon: FiCpu, to: '/admin/chatBot' },
+   { type: 'link', label: 'Help', icon: FiHelpCircle, to: '/admin/under-dev' },
 ];
 
 const AdminSidebar = ({ isOpen = true, toggleSidebar, onCollapse }) => {

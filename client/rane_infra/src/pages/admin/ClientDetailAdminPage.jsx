@@ -91,6 +91,15 @@ const TABS = [
   { key: 'future2', label: 'Future Option 2', icon: FaClipboardList },
 ];
 
+// Keep this in sync with the User schema's `tag` enum.
+const TAG_OPTIONS = [
+  'admin', 'ceo', 'cto', 'cfo', 'coo', 'director', 'site_incharge',
+  'chief_finance_head', 'finance_head', 'accountant', 'supervisor',
+  'client', 'staff',
+];
+const prettifyTag = (t) =>
+  typeof t === 'string' ? t.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : '-';
+
 export default function ClientDetailAdminPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -98,6 +107,8 @@ export default function ClientDetailAdminPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [cid, setCid] = useState('');
+  const [tag, setTag] = useState('');
+  const [updatingTag, setUpdatingTag] = useState(false);
   const [activeTab, setActiveTab] = useState('bills');
 
   const handleCidUpdate = async (userId) => {
@@ -121,6 +132,32 @@ export default function ClientDetailAdminPage() {
     }
   };
 
+  const handleTagUpdate = async (userId) => {
+    if (!tag) {
+      alert('Select a tag first.');
+      return;
+    }
+    try {
+      setUpdatingTag(true);
+      const response = await fetch(`${backend_url}/admin-update-user-tag`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ id: userId, tag }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update tag');
+      }
+      alert('Tag updated successfully');
+    } catch (error) {
+      console.error("Tag update failed:", error);
+      alert(error.message);
+    } finally {
+      setUpdatingTag(false);
+    }
+  };
+
   useEffect(() => {
     const fetchClient = async () => {
       try {
@@ -138,6 +175,9 @@ export default function ClientDetailAdminPage() {
   useEffect(() => {
     if (userData?.user?.cid) {
       setCid(userData.user.cid);
+    }
+    if (userData?.user?.tag) {
+      setTag(userData.user.tag);
     }
   }, [userData]);
 
@@ -265,6 +305,34 @@ export default function ClientDetailAdminPage() {
                   fontSize: 13, fontWeight: 600, cursor: updating ? 'not-allowed' : 'pointer', opacity: updating ? 0.7 : 1,
                 }}>
                 {updating ? 'Updating…' : 'Update'}
+              </button>
+            </div>
+          </div>
+
+          {/* Tag Update */}
+          <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+            <label style={{ ...labelStyle, display: 'block', marginBottom: 6 }}>User Tag</label>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <select
+                value={tag}
+                onChange={(e) => setTag(e.target.value)}
+                style={{
+                  flex: '0 1 220px', minWidth: 160, background: 'var(--input)', color: 'var(--foreground)',
+                  border: '1px solid var(--border)', borderRadius: 8, padding: '9px 12px', fontSize: 14, outline: 'none', cursor: 'pointer',
+                }}
+              >
+                <option value="">Select tag</option>
+                {TAG_OPTIONS.map((t) => (
+                  <option key={t} value={t}>{prettifyTag(t)}</option>
+                ))}
+              </select>
+              <button onClick={() => handleTagUpdate(user._id)} disabled={updatingTag}
+                style={{
+                  padding: '9px 18px', borderRadius: 8, border: 'none',
+                  background: 'var(--primary)', color: 'var(--primary-foreground)',
+                  fontSize: 13, fontWeight: 600, cursor: updatingTag ? 'not-allowed' : 'pointer', opacity: updatingTag ? 0.7 : 1,
+                }}>
+                {updatingTag ? 'Updating…' : 'Update'}
               </button>
             </div>
           </div>

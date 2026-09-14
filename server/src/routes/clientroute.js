@@ -320,4 +320,56 @@ router.get("/client-get-all-documents", async (req, res) => {
     }
 });
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UPDATE USER TAG
+// PUT /admin-update-user-tag
+// Body: { id, tag } — matches the same "id in the body" convention your
+// updateUser and updateIdProof routes already use.
+// Admin only. Add your existing admin-check middleware here the same
+// way it's applied to your other /admin-... routes.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Keep this in sync with the `tag` enum on the User schema.
+const VALID_TAGS = [
+    "admin", "ceo", "cto", "cfo", "coo", "director", "site_incharge",
+    "chief_finance_head", "finance_head", "accountant", "supervisor",
+    "client", "staff"
+];
+
+router.put("/admin-update-user-tag", async (req, res) => {
+    try {
+        const { id, tag } = req.body;
+
+        if (!id) {
+            return res.status(400).json({ error: "User id is required." });
+        }
+
+        if (!tag || !VALID_TAGS.includes(tag)) {
+            return res.status(400).json({
+                error: `tag is required and must be one of: ${VALID_TAGS.join(", ")}`
+            });
+        }
+
+        const user = await User.findByIdAndUpdate(
+            id,
+            { tag },
+            { new: true, runValidators: true }
+        ).select("-password");
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found." });
+        }
+
+        return res.status(200).json({
+            message: "User tag updated successfully.",
+            user
+        });
+
+    } catch (error) {
+        console.error("Update user tag error:", error.message);
+        return res.status(500).json({ error: error.message });
+    }
+});
 module.exports = router;
+ 
