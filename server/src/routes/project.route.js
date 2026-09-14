@@ -509,8 +509,9 @@ router.patch("/v1/status/:projectId", verifyToken, async (req, res) => {
 // FORWARD PROJECT (approve / return / reject / pending)
 // Body expected: action, remark, nextAuthority
 // Actor is the logged-in user (req.userId).
-// Stage is derived from the actor's own "tag" field (cto, cfo, director,
-// coo, ceo, admin) instead of being passed in by the client.
+// Stage is derived from the actor's own "tag" field. Tags that map to a known
+// authority (admin, ceo, cto, cfo, coo, director) are stored as-is; any other
+// tag (site_incharge, accountant, supervisor, ...) collapses to "OTHER".
 // nextAuthority becomes the project's new currentAuthority, forwarding it.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -521,7 +522,7 @@ router.patch("/v1/forward/:projectId", verifyToken, async (req, res) => {
         const { action, remark, nextAuthority } = req.body;
 
         const validActions = ["approved", "returned", "rejected", "pending"];
-        const validStages = ["ADMIN", "CEO", "CTO", "CFO", "COO", "DIRECTOR"];
+        const validStages = ["ADMIN", "CEO", "CTO", "CFO", "COO", "DIRECTOR", "OTHER"];
 
         const actorId = req.userId; // The actor is the logged-in user
 
@@ -582,18 +583,21 @@ router.patch("/v1/forward/:projectId", verifyToken, async (req, res) => {
             });
         }
 
-        const stage = actor.tag ? actor.tag.toUpperCase() : undefined;
-
-        if (!stage || !validStages.includes(stage)) {
+        if (!actor.tag) {
             return res.status(400).json({
                 success: false,
-                message: "Actor does not have a valid stage tag."
+                message: "Actor does not have a tag assigned."
             });
         }
+
+        // Map the actor's tag onto a stage; unknown / non-executive tags => OTHER
+        const rawTag = actor.tag.toUpperCase();
+        const stage = validStages.includes(rawTag) ? rawTag : "OTHER";
 
         // Save approval trail entry
         project.approvals.push({
             stage,
+            actorTag: actor.tag, // keeps the real role when stage is OTHER
             actor: actorId,
             action,
             remark,
@@ -620,7 +624,6 @@ router.patch("/v1/forward/:projectId", verifyToken, async (req, res) => {
 
     }
 });
-
 // ─────────────────────────────────────────────────────────────────────────────
 // GET SINGLE PROJECT BY ID
 // ─────────────────────────────────────────────────────────────────────────────
