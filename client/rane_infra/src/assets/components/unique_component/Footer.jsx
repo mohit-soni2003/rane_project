@@ -1,156 +1,152 @@
-import React from "react";
 import Lottie from "lottie-react";
-import { FaFacebookF, FaInstagram, FaTwitter, FaLinkedin, FaHardHat, FaPhoneAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { HashLink } from "react-router-hash-link";
+import {
+  FaFacebookF, FaInstagram, FaTwitter, FaLinkedin, FaHardHat, FaPhoneAlt,
+} from "react-icons/fa";
 import trainAnimation from "../../animation/train.navpannel.json";
 
-const Footer = () => {
-  return (
-    <footer style={{ color: "#fff", position: "relative", overflow: "hidden" }}>
+const FOOTER_STYLES = `
+  .ft {
+    --ft-accent: var(--primary-orange, #f59e0b);
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    background: #0a0a1c;
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    /* keeps the 1900x400 animation fully in frame on wide screens */
+    min-height: clamp(0px, 21vw, 440px);
+  }
+  .ft *, .ft *::before, .ft *::after { box-sizing: border-box; }
+  .ft h2, .ft p { margin: 0; }
+  .ft a { text-decoration: none; }
 
-      {/* Force the Lottie SVG to stretch fully — injected once */}
-      <style>{`
-        .footer-lottie-bg,
-        .footer-lottie-bg > div,
-        .footer-lottie-bg svg {
-          width: 100% !important;
-          height: 100% !important;
-          display: block !important;
-        }
-        .footer-lottie-bg svg {
-          preserveAspectRatio: xMidYMid slice;
-        }
-      `}</style>
+  /* Train animation is the full-bleed background */
+  .footer-lottie-bg,
+  .footer-lottie-bg > div,
+  .footer-lottie-bg svg {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+  }
+  .ft-lottie { position: absolute; inset: 0; pointer-events: none; user-select: none; z-index: 0; }
+  .ft-overlay { position: absolute; inset: 0; z-index: 1; background: rgba(10, 10, 28, 0.68); }
+  .ft-body { position: relative; z-index: 2; padding: 40px 20px 0; text-align: center; }
+
+  .ft-brand { display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .ft-brand h2 { font-size: 1.2rem; font-weight: 800; letter-spacing: -.01em; }
+  .ft-tag { margin-top: 8px; color: rgba(255,255,255,.72); font-size: .9rem; }
+
+  .ft-nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 22px; margin-top: 18px; }
+  .ft-nav a { color: rgba(255,255,255,.78); font-size: .86rem; font-weight: 500; transition: color .2s ease; }
+  .ft-nav a:hover { color: var(--ft-accent); }
+
+  .ft-social { display: flex; justify-content: center; gap: 12px; margin-top: 18px; }
+  .ft-social a {
+    width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+    color: rgba(255,255,255,.7); background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
+    font-size: .9rem; transition: all .25s ease;
+  }
+  .ft-social a:hover { color: #fff; background: var(--ft-accent); border-color: var(--ft-accent); transform: translateY(-3px); }
+
+  .ft-info { margin-top: 18px; color: rgba(255,255,255,.58); font-size: .82rem; line-height: 1.7; }
+  .ft-info a { color: inherit; }
+  .ft-info a:hover { color: #fff; }
+  .ft-info .dot { margin: 0 10px; color: rgba(255,255,255,.28); }
+
+  .ft-bottom { margin-top: 20px; border-top: 1px solid rgba(255,255,255,.10); padding: 14px 0; display: flex; justify-content: center; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .ft-copy { color: rgba(255,255,255,.42); font-size: .78rem; }
+  .ft-admin { color: var(--ft-accent); font-size: .78rem; font-weight: 600; }
+  .ft-admin:hover { text-decoration: underline; }
+
+  .ft-credit { position: relative; z-index: 2; background: rgba(0,0,0,.50); padding: 10px 20px; text-align: center; font-size: .75rem; color: rgba(255,255,255,.45); line-height: 1.7; }
+  .ft-credit a { color: var(--ft-accent); font-weight: 600; }
+  .ft-credit a:hover { text-decoration: underline; }
+  .ft-credit .sep { margin: 0 10px; color: rgba(255,255,255,.25); }
+  .ft-credit svg { font-size: .7rem; margin-right: 4px; vertical-align: -1px; }
+
+  @media (max-width: 600px) {
+    .ft-body { padding-top: 32px; }
+    .ft-info .dot { display: none; }
+    .ft-info span { display: block; }
+  }
+`;
+
+const socials = [
+  { href: "https://www.facebook.com/tejprakash.rane/", icon: <FaFacebookF />, label: "Facebook" },
+  { href: "https://x.com/tejprakashrane?s=11", icon: <FaTwitter />, label: "X (Twitter)" },
+  { href: "https://www.linkedin.com/", icon: <FaLinkedin />, label: "LinkedIn" },
+  { href: "https://www.instagram.com/raneandranessons/?igsh=YXg2aGh2dXBpaGRi#", icon: <FaInstagram />, label: "Instagram" },
+];
+
+const Footer = () => {
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+  return (
+    <footer className="ft">
+      <style>{FOOTER_STYLES}</style>
 
       {/* ── Lottie full-bleed background ── */}
-      <div
-        className="footer-lottie-bg"
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          pointerEvents: "none",
-          userSelect: "none",
-          zIndex: 0,
-        }}
-      >
+      <div className="ft-lottie footer-lottie-bg" aria-hidden="true">
         <Lottie
           animationData={trainAnimation}
           loop
           style={{ width: "100%", height: "100%" }}
           rendererSettings={{
-            preserveAspectRatio: "xMidYMid slice",
+            preserveAspectRatio: "xMidYMax slice",
             progressiveLoad: true,
           }}
         />
       </div>
 
       {/* Dark overlay for text readability */}
-      <div
-        style={{
-          position: "absolute",
-          top: 0, left: 0,
-          width: "100%", height: "100%",
-          background: "rgba(10, 10, 28, 0.68)",
-          zIndex: 1,
-        }}
-      />
+      <div className="ft-overlay" />
 
-      {/* ── Footer content ── */}
-      <div style={{ position: "relative", zIndex: 2, padding: "44px 20px 0" }}>
-        <div className="container">
+      <div className="ft-body">
+        <div className="ft-brand">
+          <FaHardHat color="var(--primary-orange)" size={20} />
+          <h2>RANE &amp; RANE&apos;S SONS</h2>
+        </div>
+        <p className="ft-tag">Building India&apos;s railway infrastructure with trust and excellence</p>
 
-          {/* Brand */}
-          <div className="d-flex justify-content-center align-items-center gap-2 mb-2">
-            <FaHardHat color="var(--primary-orange)" size={20} />
-            <h5 className="fw-bold mb-0">RANE &amp; RANE'S SONS</h5>
-          </div>
+        <nav className="ft-nav">
+          <Link to="/" onClick={scrollToTop}>Home</Link>
+          <HashLink smooth to="/#pride-moment">Gallery</HashLink>
+          <HashLink smooth to="/#documents">Documents</HashLink>
+          <HashLink smooth to="/#contactus">Contact Us</HashLink>
+        </nav>
 
-          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.875rem", textAlign: "center" }} className="mb-3">
-            Building India's railway infrastructure with trust and excellence
-          </p>
+        <div className="ft-social">
+          {socials.map(({ href, icon, label }) => (
+            <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}>
+              {icon}
+            </a>
+          ))}
+        </div>
 
-          {/* Social icons */}
-          <div className="d-flex justify-content-center gap-4 mb-3">
-            {[
-              { href: "https://www.facebook.com/tejprakash.rane/",                               icon: <FaFacebookF /> },
-              { href: "https://x.com/tejprakashrane?s=11",                                       icon: <FaTwitter /> },
-              { href: "https://www.linkedin.com/",                                               icon: <FaLinkedin /> },
-              { href: "https://www.instagram.com/raneandranessons/?igsh=YXg2aGh2dXBpaGRi#",     icon: <FaInstagram /> },
-            ].map(({ href, icon }, i) => (
-              <a
-                key={i}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  color: "rgba(255,255,255,0.55)",
-                  fontSize: "1.1rem",
-                  transition: "color 0.2s, transform 0.2s",
-                  display: "inline-block",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.color = "var(--primary-orange)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
-                onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.55)"; e.currentTarget.style.transform = "translateY(0)"; }}
-              >
-                {icon}
-              </a>
-            ))}
-          </div>
+        <p className="ft-info">
+          <span>101, Ranipura Main Road, Opp. Bhaiyya Ji Pyao, Jagjivan Ram Mohalla, Indore, MP, India</span>
+          <br />
+          <span>Phone: <a href="tel:9425029680">9425029680</a></span>
+          <span className="dot">·</span>
+          <span><a href="mailto:ranendranesons@gmail.com">ranendranesons@gmail.com</a></span>
+        </p>
 
-          {/* Contact */}
-          <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.82rem", textAlign: "center" }} className="mb-1">
-            101, Ranipura Main Road, Opp. Bhaiyya Ji Pyao, Jagjivan Ram Mohalla, Indore, MP, India
-          </p>
-          <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.82rem", textAlign: "center" }} className="mb-4">
-            Phone: 9425029680
-          </p>
-
-          {/* Divider */}
-          <div style={{ height: "1px", background: "rgba(255,255,255,0.10)", margin: "0 0 14px" }} />
-
-          {/* Copyright + Admin */}
-          <div className="d-flex justify-content-center align-items-center gap-3 flex-wrap pb-3">
-            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.78rem" }}>
-              &copy; 2024 Rane &amp; Rane's Sons. All rights reserved.
-            </span>
-            <Link
-              to="/admin-login"
-              style={{ color: "var(--primary-orange)", fontSize: "0.78rem", fontWeight: 600, textDecoration: "none" }}
-              onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"}
-              onMouseLeave={e => e.currentTarget.style.textDecoration = "none"}
-            >
-              Admin Login
-            </Link>
-          </div>
-
+        <div className="ft-bottom">
+          <span className="ft-copy">&copy; {new Date().getFullYear()} Rane &amp; Rane&apos;s Sons. All rights reserved.</span>
+          <Link to="/admin-login" className="ft-admin">Admin Login</Link>
         </div>
       </div>
 
       {/* ── Developer credit bar ── */}
-      <div style={{ position: "relative", zIndex: 2, background: "rgba(0,0,0,0.50)", padding: "10px 20px", textAlign: "center" }}>
-        <small style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.75rem" }}>
-          Designed &amp; Maintained by Mohit Soni
-        </small>
+      <div className="ft-credit">
+        Designed &amp; Maintained by Mohit Soni
         <br />
-        <small style={{ fontSize: "0.75rem" }}>
-          <a
-            href="https://mohitsoni.vercel.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: "var(--primary-orange)", fontWeight: 600, textDecoration: "none" }}
-            onMouseEnter={e => e.currentTarget.style.textDecoration = "underline"}
-            onMouseLeave={e => e.currentTarget.style.textDecoration = "none"}
-          >
-            Contact Developer
-          </a>
-          <span style={{ color: "rgba(255,255,255,0.25)", margin: "0 10px" }}>|</span>
-          <FaPhoneAlt style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.7rem", marginRight: "4px" }} />
-          <span style={{ color: "rgba(255,255,255,0.45)" }}>+91 9589571577</span>
-        </small>
+        <a href="https://mohitsoni.vercel.app/" target="_blank" rel="noopener noreferrer">Contact Developer</a>
+        <span className="sep">|</span>
+        <FaPhoneAlt />+91 9589571577
       </div>
-
     </footer>
   );
 };
