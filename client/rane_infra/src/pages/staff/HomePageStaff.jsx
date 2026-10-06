@@ -14,7 +14,7 @@ import {
     getAdminApprovalsQueue,
     getAdminRecentActivity,
 } from '../../services/dashboardService';
-import StaffHeader from '../../component/header/StaffHeader';
+import StaffHeader from '../../components/layout/header/StaffHeader';
 
 const C = {
     primary: '#6b3e2b',

@@ -1,6 +1,6 @@
 import React from 'react'
-import MaintainencePage from './MaintainencePage'
-import AdminHeader from '../component/header/AdminHeader'
+import MaintainencePage from './MaintenancePage'
+import AdminHeader from '../components/layout/header/AdminHeader'
 export default function UnderDevPage() {
   return (
     <>

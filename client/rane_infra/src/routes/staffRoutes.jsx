@@ -1,35 +1,35 @@
 import { Route } from "react-router-dom";
 
 import HomePageStaff from "../pages/staff/HomePageStaff.jsx";
-import AllBillPage from "../pages/admin/AllBillPage.jsx";
-import SingleBillDetailAdminPage from "../pages/admin/SingleBillDetailAdminPage.jsx";
-import ClientsListAdminPage from "../pages/admin/ClientsListAdminPage.jsx";
-import ClientDetailAdminPage from "../pages/admin/ClientDetailAdminPage.jsx";
-import PaymentRequestListAdmin from "../pages/admin/PaymentRequestListAdmin.jsx";
-import SinglePRdetailAdminPAge from "../pages/admin/SinglePRdetailAdminPAge.jsx";
-import PaymentRequestPage from "../pages/client/PaymentRequestPage";
-import MyPaymentRequestPage from "../pages/client/MyPaymentRequestPage.jsx";
-import DfsRequest from "../pages/admin/DfsRequest.jsx";
-import SingleDfsRequestDetail from "../pages/admin/SingleDfsRequestDetail.jsx";
-import UploadDocumentPage from "../pages/client/UploadDocumentPage";
-import TrackMyAllDocument from "../pages/client/TrackMyAllDocument.jsx";
-import AllDocuments from "../pages/admin/AllDocuments.jsx";
-import PushDocumentAdminPage from "../pages/admin/PushDocumentAdminPage.jsx";
-import SalaryPage from "../pages/admin/SalaryPage.jsx";
-import Setting from "../pages/client/Setting";
+import AllBillPage from "../pages/admin/bills/AllBillPage.jsx";
+import SingleBillDetailAdminPage from "../pages/admin/bills/SingleBillDetailAdminPage.jsx";
+import ClientsListAdminPage from "../pages/admin/users/ClientsListAdminPage.jsx";
+import ClientDetailAdminPage from "../pages/admin/users/ClientDetailAdminPage.jsx";
+import PaymentRequestListAdmin from "../pages/admin/payments/PaymentRequestListAdmin.jsx";
+import SinglePRdetailAdminPAge from "../pages/admin/payments/SinglePRDetailAdminPage.jsx";
+import PaymentRequestPage from "../pages/client/payments/PaymentRequestPage";
+import MyPaymentRequestPage from "../pages/client/payments/MyPaymentRequestPage.jsx";
+import DfsRequest from "../pages/admin/dfs/DfsRequest.jsx";
+import SingleDfsRequestDetail from "../pages/admin/dfs/SingleDfsRequestDetail.jsx";
+import UploadDocumentPage from "../pages/client/documents/UploadDocumentPage";
+import TrackMyAllDocument from "../pages/client/documents/TrackMyAllDocument.jsx";
+import AllDocuments from "../pages/admin/documents/AllDocuments.jsx";
+import PushDocumentAdminPage from "../pages/admin/documents/PushDocumentAdminPage.jsx";
+import SalaryPage from "../pages/admin/salary/SalaryPage.jsx";
+import Setting from "../pages/client/general/Setting";
 import UnderDevPage from "../pages/UnderDevPage.jsx";
-import PendingProject from "../pages/admin/PendingProject.jsx"; // to be removed later
-import SingleProjectDetail from "../pages/admin/SIngleProjectDetail.jsx";
-import MyTaskList from "../pages/admin/MyTaskList.jsx";
-import SngleTaskDetail from "../pages/admin/SingleTaskDetail.jsx";
-import ProjectAssignedToMe from "../pages/admin/ProjectAssignedToMe.jsx";
-import EditProjectDetail from "../pages/admin/EditProjectDetail.jsx";
-import ProjectBillCreate from "../pages/admin/CreateProjectBill.jsx";
-import ListallProject from "../pages/admin/ListallProject.jsx";
-import AdminNotificationsPage from "../pages/admin/AdminNotificationsPage.jsx";
+import PendingProject from "../pages/admin/projects/PendingProject.jsx"; // to be removed later
+import SingleProjectDetail from "../pages/admin/projects/SingleProjectDetail.jsx";
+import MyTaskList from "../pages/admin/tasks/MyTaskList.jsx";
+import SngleTaskDetail from "../pages/admin/tasks/SingleTaskDetail.jsx";
+import ProjectAssignedToMe from "../pages/admin/projects/ProjectAssignedToMe.jsx";
+import EditProjectDetail from "../pages/admin/projects/EditProjectDetail.jsx";
+import ProjectBillCreate from "../pages/admin/bills/CreateProjectBill.jsx";
+import ListallProject from "../pages/admin/projects/ListallProject.jsx";
+import AdminNotificationsPage from "../pages/admin/general/AdminNotificationsPage.jsx";
 
-import SorDetails from "../pages/client/SorDetails.jsx";
-import SorDetailsAdmin from "../pages/admin/SorPage.jsx";
+import SorDetails from "../pages/client/sor/SorDetails.jsx";
+import SorDetailsAdmin from "../pages/admin/sor/SorPage.jsx";
 
 // Child routes rendered inside StaffLayout — same paths/elements/order
 // as before. This is exactly what used to sit inside the <Route path="/staff">

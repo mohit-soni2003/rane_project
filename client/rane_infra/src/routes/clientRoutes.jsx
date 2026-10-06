@@ -1,33 +1,33 @@
 import { Route } from "react-router-dom";
 
-import HomePageClient from "../pages/client/HomePageClient";
-import UploadBillPage from "../pages/client/UploadBillPage";
-import MyBillPage from "../pages/client/MyBillPage";
-import PaymentRequestPage from "../pages/client/PaymentRequestPage";
-import SupportPage from "../pages/client/SupportPage";
-import DocumentCategory from "../pages/client/DocumentCategory";
-import Setting from "../pages/client/Setting";
-import UploadDocumentPage from "../pages/client/UploadDocumentPage";
-import SingleBillDetailsClient from "../pages/client/SingleBillDetailsClient.jsx";
-import MyPaymentRequestPage from "../pages/client/MyPaymentRequestPage.jsx";
-import ViewDocumentPage from "../pages/client/ViewDocumentPage.jsx";
-import TrackMyAllDocument from "../pages/client/TrackMyAllDocument.jsx";
-import DocumentForReview from "../pages/client/DocumentForReview.jsx"; //used to review when document assign to client by admin and staff
-import TransactionPage from "../pages/client/TransactionPage.jsx";
-import SalaryPage from "../pages/admin/SalaryPage.jsx";
-import AgreementPage from "../pages/client/AgreementPage.jsx";
-import AgreementForAction from "../pages/client/AgreementForAction.jsx";
-import ClosedAgreement from "../pages/client/ClosedAgreement.jsx";
-import AgreementView from "../pages/client/AgreementView.jsx";
-import SorDetails from "../pages/client/SorDetails.jsx";
+import HomePageClient from "../pages/client/home/HomePageClient";
+import UploadBillPage from "../pages/client/bills/UploadBillPage";
+import MyBillPage from "../pages/client/bills/MyBillPage";
+import PaymentRequestPage from "../pages/client/payments/PaymentRequestPage";
+import SupportPage from "../pages/client/general/SupportPage";
+import DocumentCategory from "../pages/client/documents/DocumentCategory";
+import Setting from "../pages/client/general/Setting";
+import UploadDocumentPage from "../pages/client/documents/UploadDocumentPage";
+import SingleBillDetailsClient from "../pages/client/bills/SingleBillDetailsClient.jsx";
+import MyPaymentRequestPage from "../pages/client/payments/MyPaymentRequestPage.jsx";
+import ViewDocumentPage from "../pages/client/documents/ViewDocumentPage.jsx";
+import TrackMyAllDocument from "../pages/client/documents/TrackMyAllDocument.jsx";
+import DocumentForReview from "../pages/client/documents/DocumentForReview.jsx"; //used to review when document assign to client by admin and staff
+import TransactionPage from "../pages/client/payments/TransactionPage.jsx";
+import SalaryPage from "../pages/admin/salary/SalaryPage.jsx";
+import AgreementPage from "../pages/client/agreements/AgreementPage.jsx";
+import AgreementForAction from "../pages/client/agreements/AgreementForAction.jsx";
+import ClosedAgreement from "../pages/client/agreements/ClosedAgreement.jsx";
+import AgreementView from "../pages/client/agreements/AgreementView.jsx";
+import SorDetails from "../pages/client/sor/SorDetails.jsx";
 import UnderDevPage from "../pages/UnderDevPage.jsx";
-import DfsRequest from "../pages/admin/DfsRequest.jsx";
-import MyTaskList from "../pages/admin/MyTaskList.jsx";
-import SngleTaskDetail from "../pages/admin/SingleTaskDetail.jsx";
-import ProjectAssignedToMe from "../pages/admin/ProjectAssignedToMe.jsx";
-import SingleProjectDetail from "../pages/admin/SIngleProjectDetail.jsx";
-import EditProjectDetail from "../pages/admin/EditProjectDetail.jsx";
-import AdminNotificationsPage from "../pages/admin/AdminNotificationsPage.jsx";
+import DfsRequest from "../pages/admin/dfs/DfsRequest.jsx";
+import MyTaskList from "../pages/admin/tasks/MyTaskList.jsx";
+import SngleTaskDetail from "../pages/admin/tasks/SingleTaskDetail.jsx";
+import ProjectAssignedToMe from "../pages/admin/projects/ProjectAssignedToMe.jsx";
+import SingleProjectDetail from "../pages/admin/projects/SingleProjectDetail.jsx";
+import EditProjectDetail from "../pages/admin/projects/EditProjectDetail.jsx";
+import AdminNotificationsPage from "../pages/admin/general/AdminNotificationsPage.jsx";
 
 // Child routes rendered inside ClientLayout — same paths/elements/order
 // as before. This is exactly what used to sit inside the <Route path="/client">

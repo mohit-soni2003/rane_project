@@ -6,7 +6,7 @@ import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { useAuthStore } from "./store/authStore";
-import Loader from "./component/animation/Loader.jsx";
+import Loader from "./components/common/Loader.jsx";
 
 import { ProtectedRoute, AdminRoute, ClientRoute, StaffRoute } from "./routes/guards.jsx";
 import { publicRoutes } from "./routes/publicRoutes.jsx";
@@ -14,9 +14,9 @@ import { clientRoutes } from "./routes/clientRoutes.jsx";
 import { adminRoutes } from "./routes/adminRoutes.jsx";
 import { staffRoutes } from "./routes/staffRoutes.jsx";
 
-import ClientLayout from "./Layout/ClientLayout";
-import AdminLayout from "./Layout/AdminLayout";
-import StaffLayout from "./Layout/StaffLayout.jsx";
+import ClientLayout from "./layouts/ClientLayout";
+import AdminLayout from "./layouts/AdminLayout";
+import StaffLayout from "./layouts/StaffLayout.jsx";
 
 function App() {
   const { checkAuth } = useAuthStore();

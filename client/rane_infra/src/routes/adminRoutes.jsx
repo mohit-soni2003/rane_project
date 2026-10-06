@@ -1,49 +1,49 @@
 import { Route } from "react-router-dom";
 
-import HomePageAdmin from "../pages/admin/HomePageAdmin.jsx";
-import AllBillPage from "../pages/admin/AllBillPage.jsx";
-import PaymentRequestListAdmin from "../pages/admin/PaymentRequestListAdmin.jsx";
-import PushDocumentAdminPage from "../pages/admin/PushDocumentAdminPage.jsx";
-import MyPushedDocument from "../pages/admin/MyPushedDocument.jsx";
-import ClientsListAdminPage from "../pages/admin/ClientsListAdminPage.jsx";
-import ClientDetailAdminPage from "../pages/admin/ClientDetailAdminPage.jsx";
-import PushAgreement from "../pages/admin/PushAgreement.jsx";
-import SingleBillDetailAdminPage from "../pages/admin/SingleBillDetailAdminPage.jsx";
-import AddPaynotePage from "../pages/admin/AddPaynotePage.jsx";
-import SinglePRdetailAdminPAge from "../pages/admin/SinglePRdetailAdminPAge.jsx";
-import DfsRequest from "../pages/admin/DfsRequest.jsx";
-import SingleDfsRequestDetail from "../pages/admin/SingleDfsRequestDetail.jsx";
-import ClientSalaryAll from "../pages/admin/ClientSalaryAll.jsx";
-import SingleUSerSalaryDetailAdmin from "../pages/admin/SingleUSerSalaryDetailAdmin.jsx";
-import AllUser from "../pages/admin/AllUser.jsx";
-import AllDFSRequests from "../pages/admin/AllDFSRequests.jsx";
-import AllDocuments from "../pages/admin/AllDocuments.jsx";
-import AdminNotificationsPage from "../pages/admin/AdminNotificationsPage.jsx";
-import AgreementTableListAll from "../pages/admin/AgreementTableListAll.jsx";
-import SingleAgreementDetails from "../pages/admin/SingleAgreementDetails.jsx";
-import SorDetailsAdmin from "../pages/admin/SorPage.jsx";
-import CreateProject from "../pages/admin/CreateProject.jsx";
-import ListallProject from "../pages/admin/ListallProject.jsx";
-import ProjectAssignedToMe from "../pages/admin/ProjectAssignedToMe.jsx";
-import SingleProjectDetail from "../pages/admin/SIngleProjectDetail.jsx";
-import EditProjectDetail from "../pages/admin/EditProjectDetail.jsx";
-import MyTaskList from "../pages/admin/MyTaskList.jsx";
-import SingleTaskDetail from "../pages/admin/SingleTaskDetail.jsx";
-import Setting from "../pages/client/Setting";
+import HomePageAdmin from "../pages/admin/dashboard/HomePageAdmin.jsx";
+import AllBillPage from "../pages/admin/bills/AllBillPage.jsx";
+import PaymentRequestListAdmin from "../pages/admin/payments/PaymentRequestListAdmin.jsx";
+import PushDocumentAdminPage from "../pages/admin/documents/PushDocumentAdminPage.jsx";
+import MyPushedDocument from "../pages/admin/documents/MyPushedDocument.jsx";
+import ClientsListAdminPage from "../pages/admin/users/ClientsListAdminPage.jsx";
+import ClientDetailAdminPage from "../pages/admin/users/ClientDetailAdminPage.jsx";
+import PushAgreement from "../pages/admin/agreements/PushAgreement.jsx";
+import SingleBillDetailAdminPage from "../pages/admin/bills/SingleBillDetailAdminPage.jsx";
+import AddPaynotePage from "../pages/admin/payments/AddPaynotePage.jsx";
+import SinglePRdetailAdminPAge from "../pages/admin/payments/SinglePRDetailAdminPage.jsx";
+import DfsRequest from "../pages/admin/dfs/DfsRequest.jsx";
+import SingleDfsRequestDetail from "../pages/admin/dfs/SingleDfsRequestDetail.jsx";
+import ClientSalaryAll from "../pages/admin/salary/ClientSalaryAll.jsx";
+import SingleUSerSalaryDetailAdmin from "../pages/admin/salary/SingleUSerSalaryDetailAdmin.jsx";
+import AllUser from "../pages/admin/users/AllUser.jsx";
+import AllDFSRequests from "../pages/admin/dfs/AllDFSRequests.jsx";
+import AllDocuments from "../pages/admin/documents/AllDocuments.jsx";
+import AdminNotificationsPage from "../pages/admin/general/AdminNotificationsPage.jsx";
+import AgreementTableListAll from "../pages/admin/agreements/AgreementTableListAll.jsx";
+import SingleAgreementDetails from "../pages/admin/agreements/SingleAgreementDetails.jsx";
+import SorDetailsAdmin from "../pages/admin/sor/SorPage.jsx";
+import CreateProject from "../pages/admin/projects/CreateProject.jsx";
+import ListallProject from "../pages/admin/projects/ListallProject.jsx";
+import ProjectAssignedToMe from "../pages/admin/projects/ProjectAssignedToMe.jsx";
+import SingleProjectDetail from "../pages/admin/projects/SingleProjectDetail.jsx";
+import EditProjectDetail from "../pages/admin/projects/EditProjectDetail.jsx";
+import MyTaskList from "../pages/admin/tasks/MyTaskList.jsx";
+import SingleTaskDetail from "../pages/admin/tasks/SingleTaskDetail.jsx";
+import Setting from "../pages/client/general/Setting";
 import UnderDevPage from "../pages/UnderDevPage.jsx";
-import ProjectBillCreate from "../pages/admin/CreateProjectBill.jsx";
-import SingleProjectBillDetail from "../pages/admin/SingleProjectBillDetail.jsx";
-import AdminDashboard from "../pages/admin/AdminDashboard.jsx";
-import ProjectPermission from "../pages/admin/ProjectPermission.jsx"; 
-import ChatBot from "../pages/admin/ChatBot.jsx"; 
+import ProjectBillCreate from "../pages/admin/bills/CreateProjectBill.jsx";
+import SingleProjectBillDetail from "../pages/admin/bills/SingleProjectBillDetail.jsx";
+import AdminDashboard from "../pages/admin/dashboard/AdminDashboard.jsx";
+import ProjectPermission from "../pages/admin/projects/ProjectPermission.jsx"; 
+import ChatBot from "../pages/admin/general/ChatBot.jsx"; 
 
 // Child routes rendered inside AdminLayout — same paths/elements/order
 // as before. This is exactly what used to sit inside the <Route path="/admin">
 // block in App.jsx.
 export const adminRoutes = (
     <>
-        <Route index element={<HomePageAdmin />} />
-        <Route path="home" element={<HomePageAdmin />} />
+        <Route index element={<AdminDashboard />} />
+        <Route path="home" element={<AdminDashboard />} />
         <Route path="bill" element={<AllBillPage />} />
         <Route path="bill/:id" element={<SingleBillDetailAdminPage />} />
         <Route path="add-paynote" element={<AddPaynotePage />} />

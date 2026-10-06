@@ -4,8 +4,8 @@ import {
   FaFilePdf, FaWhatsapp, FaEnvelope, FaMapMarkerAlt, FaClock,
   FaArrowRight, FaChevronLeft, FaChevronRight, FaDownload, FaCheck,
 } from 'react-icons/fa';
-import Navpannel from '../assets/components/unique_component/Navpannel';
-import Footer from '../assets/components/unique_component/Footer';
+import Navpannel from '../components/layout/Navpanel';
+import Footer from '../components/layout/Footer';
 
 /* ─────────────────────────────────────────────
    Scoped styles — everything is prefixed `lp-`

@@ -3,10 +3,10 @@ import { Route } from "react-router-dom";
 import Signup from "../pages/common/Signup.jsx";
 import Signin from "../pages/common/Signin.jsx";
 import VerifyEmail from "../pages/common/VerifyEmail.jsx";
-import AdminLogin from "../assets/components/elements/AdminLogin";
-import Maintainence from "../assets/components/unique_component/Maintainence";
+import AdminLogin from "../pages/common/AdminLogin";
+import Maintainence from "../components/common/Maintenance";
 import ForgotPass from "../pages/common/ForgotPass.jsx";
-import ResetPass from "../assets/components/elements/ResetPass";
+import ResetPass from "../pages/common/ResetPass";
 import LandingPage from "../pages/LandingPage.jsx";
 
 // Routes that need no auth at all — same paths/elements as before,
