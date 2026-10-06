@@ -40,7 +40,7 @@ const approvalSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true
-        },
+        }, 
         action: {
             type: String,
             enum: ["approved", "returned", "rejected", "pending"],
