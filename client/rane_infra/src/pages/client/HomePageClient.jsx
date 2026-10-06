@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { FiFileText, FiClock, FiCheckCircle, FiDollarSign, FiFile, FiUpload, FiCreditCard, FiFolder } from "react-icons/fi";
+import { FiFileText, FiCheckCircle, FiDollarSign, FiFile, FiUpload, FiCreditCard, FiFolder } from "react-icons/fi";
 import ClientHeader from "../../component/header/ClientHeader";
-import { backend_url } from "../../store/keyStore";
 import { getRecentActivity } from "../../services/generalService";
 import { getClientOverview, getClientBillOverview } from "../../services/dashboardService";
 import { useAuthStore } from "../../store/authStore";

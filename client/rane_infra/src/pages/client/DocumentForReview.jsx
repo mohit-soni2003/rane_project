@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getFileById, getAllUsers, forwardDocument } from "../../services/dfsService";
+import { getFileById, forwardDocument } from "../../services/dfsService";
 import { CLOUDINARY_URL, UPLOAD_PRESET } from "../../store/keyStore";
 import ClientHeader from "../../component/header/ClientHeader";
 import moment from "moment";

@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  FaSearch, FaFileExport, FaPlus, FaFileInvoice,
-  FaWallet, FaRupeeSign, FaExternalLinkAlt, FaTimes,
-} from 'react-icons/fa';
+import { FaFileExport, FaPlus, FaFileInvoice, FaWallet, FaRupeeSign } from 'react-icons/fa';
 import { FiSearch, FiX } from 'react-icons/fi';
 import ClientHeader from '../../component/header/ClientHeader';
 import StaffHeader from '../../component/header/StaffHeader';

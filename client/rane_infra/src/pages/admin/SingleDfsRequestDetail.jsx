@@ -13,23 +13,7 @@ import moment from "moment";
 import { MdAttachFile } from "react-icons/md";
 import { useAuthStore } from "../../store/authStore";
 import ReactDOM from "react-dom";
-import {
-  FaUserPlus,
-  FaTasks,
-  FaStickyNote,
-  FaPaperPlane,
-  FaFilePdf,
-  FaUserCircle,
-  FaTrash,
-  FaBuilding,
-  FaLayerGroup,
-  FaInfoCircle,
-  FaClock,
-  FaCheckCircle,
-  FaHourglassHalf,
-  FaExternalLinkAlt,
-  FaExclamationTriangle,
-} from "react-icons/fa";
+import { FaUserPlus, FaTasks, FaStickyNote, FaPaperPlane, FaFilePdf, FaTrash, FaBuilding, FaLayerGroup, FaInfoCircle, FaClock, FaCheckCircle, FaHourglassHalf, FaExternalLinkAlt, FaExclamationTriangle } from "react-icons/fa";
 
 /* ─── shared tokens ────────────────────────────────────────────────────────── */
 const cardStyle = {

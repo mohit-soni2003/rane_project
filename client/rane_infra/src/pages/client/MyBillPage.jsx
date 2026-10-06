@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-    FaFileExport, FaPlus, FaFileAlt, FaFileInvoiceDollar,
-    FaRupeeSign, FaExternalLinkAlt,
-} from 'react-icons/fa';
+import { FaFileExport, FaPlus, FaFileAlt, FaFileInvoiceDollar, FaRupeeSign } from 'react-icons/fa';
 import { FiSearch, FiX, FiArrowRight } from 'react-icons/fi';
 import ClientHeader from '../../component/header/ClientHeader';
 import { getBillsByUserId } from '../../services/billServices';

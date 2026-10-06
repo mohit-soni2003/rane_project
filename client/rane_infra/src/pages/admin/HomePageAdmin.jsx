@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Container, Row, Col, Card, Button, Table, Badge, Spinner,
-  ProgressBar, Modal
-} from 'react-bootstrap';
-import {
-  FaUsers, FaFileInvoiceDollar, FaClipboardList, FaChartLine,
-  FaEye, FaCheckCircle, FaClock, FaExclamationTriangle,
-  FaRupeeSign, FaFileAlt, FaBell, FaCog, FaPlus
-} from 'react-icons/fa';
+import { Container, Row, Col, Card, Button, Badge, Spinner, ProgressBar, Modal } from 'react-bootstrap';
+import { FaUsers, FaFileInvoiceDollar, FaClipboardList, FaChartLine, FaEye, FaRupeeSign, FaBell } from 'react-icons/fa';
 import AdminHeader from '../../component/header/AdminHeader';
 import { adminService } from '../../services/adminService';
 import { useNavigate } from 'react-router-dom';

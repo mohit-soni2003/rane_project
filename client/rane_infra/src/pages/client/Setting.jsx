@@ -11,9 +11,7 @@ import ClientHeader from "../../component/header/ClientHeader";
 import StaffHeader from "../../component/header/StaffHeader";
 import dummyUser from "../../assets/images/dummyUser.jpeg";
 import { updateUser, changePassword, updateIdProof } from '../../services/userServices';
-import { CLOUDINARY_URL_IMAGE, CLOUDINARY_URL } from '../../store/keyStore';
-import { CLOUD_NAME } from '../../store/keyStore';
-import MaintainencePage from '../MaintainencePage';
+import { CLOUDINARY_URL_IMAGE } from '../../store/keyStore';
 import { UPLOAD_PRESET } from '../../store/keyStore';
 
 // ── Hardcoded icon colors ─────────────────────────────────────────────────────

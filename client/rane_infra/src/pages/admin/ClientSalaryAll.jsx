@@ -6,10 +6,7 @@ import { getAllClients } from '../../services/userServices';
 import { getBaseSalary, uploadBaseSalary, initMonthlySalary } from '../../services/salaryServices';
 import dummyUser from '../../assets/images/dummyUser.jpeg';
 import { useNavigate } from 'react-router-dom';
-import {
-  FaMoneyBillWave, FaRupeeSign, FaUser,
-  FaUsers, FaCheckCircle,
-} from 'react-icons/fa';
+import { FaMoneyBillWave, FaRupeeSign, FaUsers, FaCheckCircle } from 'react-icons/fa';
 import { FiSearch, FiX, FiArrowRight, FiRefreshCw } from 'react-icons/fi';
 
 // ── Shared style tokens ───────────────────────────────────────────────────────

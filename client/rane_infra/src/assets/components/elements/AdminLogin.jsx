@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAuthStore } from '../../../store/authStore';
-import { Navigate, useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Loader } from 'lucide-react';
 
 
@@ -23,7 +23,6 @@ const  AdminLogin= () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // console.log(formData)
    const istrue= await adminlogin(formData.email, formData.password);
 
     if (istrue) {

@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-    FaFileInvoiceDollar, FaSave, FaPlus, FaTrash, FaBoxes, FaTimesCircle,
-} from 'react-icons/fa';
+import { FaFileInvoiceDollar, FaSave, FaPlus, FaTrash, FaBoxes } from 'react-icons/fa';
 import { FiRefreshCw } from 'react-icons/fi';
 import { getProjects, getProjectItems } from '../../services/project.service.js';
 import { createProjectBill} from "../../services//projectBillService.js";

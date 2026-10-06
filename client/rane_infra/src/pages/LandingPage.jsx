@@ -142,7 +142,6 @@ const recognitionImages = [
   { src: "/hero/kamal_nath.jpeg", title: "With Shri Kamal Nath" },
   { src: "/hero/umang_singhar.jpeg", title: "With Shri Umang Singhar" },
   { src: "/hero/jitu.jpeg", title: "With Shri Jitu Patwari" },
-  // { src: "/hero/harsh_rane.jpeg", title: "Harsh Rane" },
 ];
 
 /* ─── Typewriter hook ─── */

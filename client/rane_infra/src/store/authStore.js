@@ -90,43 +90,6 @@ export const useAuthStore = create((set) => ({
 		}
 
 	},
-	// adminlogin: async (email, password) => {
-	// 	set({ isLoading: true, error: null });
-	// 	try {
-	// 		const response = await fetch(`${API_URL}/admin-login`, {
-	// 			method: "POST",
-	// 			headers: {
-	// 				"Content-Type": "application/json",
-	// 			},
-	// 			body: JSON.stringify({ email, password }),
-	// 			credentials: "include", // Ensures cookies are sent with the request
-	// 		});
-
-	// 		const datal = await response.json();
-
-	// 		if (datal.message) {
-	// 			console.log("admin logged in")
-	// 			set({
-	// 				isAuthenticated: true,
-	// 				user: datal.user,
-	// 				error: null,
-	// 				isLoading: false,
-	// 				isAdmin: true,
-	// 			});
-	// 			return true
-	// 		} else {
-	// 			set({
-	// 				error: datal.error || "Login failed",
-	// 				isLoading: false,
-	// 			});
-	// 			return false
-	// 		}
-	// 	} catch (error) {
-	// 		set({ error: error.message || "Error logging in", isLoading: false });
-	// 		throw error;
-	// 	}
-
-	// },
 
 	logout: async () => {
 		 

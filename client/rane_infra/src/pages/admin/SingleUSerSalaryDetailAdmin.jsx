@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Container, Row, Col, Spinner } from 'react-bootstrap';
+import { Row, Col } from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {
@@ -8,9 +8,7 @@ import {
 } from '../../services/salaryServices';
 import AdminHeader from '../../component/header/AdminHeader';
 import dummyUser from '../../assets/images/dummyUser.jpeg';
-import {
-  FaMoneyBillWave, FaRupeeSign, FaUser, FaPlus, FaLock, FaFilePdf, FaCheckCircle,
-} from 'react-icons/fa';
+import { FaMoneyBillWave, FaRupeeSign, FaPlus, FaLock, FaFilePdf, FaCheckCircle } from 'react-icons/fa';
 
 // ── Shared tokens ─────────────────────────────────────────────────────────────
 const labelStyle = {

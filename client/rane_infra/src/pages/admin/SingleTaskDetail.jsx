@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-    FaTasks, FaProjectDiagram, FaUserCircle, FaUsers, FaFileAlt,
-    FaClipboardCheck, FaCheckCircle, FaShieldAlt, FaCalendarAlt,
-    FaPlus, FaTrash, FaSave, FaTimesCircle, FaExternalLinkAlt,
-    FaSearch, FaClock, FaImages, FaInfoCircle,
-} from 'react-icons/fa';
+import { FaTasks, FaProjectDiagram, FaUserCircle, FaUsers, FaFileAlt, FaClipboardCheck, FaPlus, FaTrash, FaSave, FaTimesCircle, FaExternalLinkAlt, FaSearch, FaClock, FaImages, FaInfoCircle } from 'react-icons/fa';
 import { FiRefreshCw } from 'react-icons/fi';
 import AdminHeader from '../../component/header/AdminHeader';
 import {

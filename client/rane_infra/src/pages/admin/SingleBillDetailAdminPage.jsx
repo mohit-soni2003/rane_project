@@ -7,11 +7,7 @@ import { getPayNotesByBill } from '../../services/paynoteServices';
 import { Modal, Form, Button, Alert, Spinner, Image, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import {
-  FaFileInvoiceDollar, FaFilePdf, FaPlus, FaListUl, FaUndo, FaCreditCard,
-  FaChartBar, FaLink, FaCommentDots, FaIdBadge, FaTrash, FaFileAlt,
-  FaCheckCircle, FaTimesCircle, FaExclamationTriangle, FaRupeeSign,
-} from 'react-icons/fa';
+import { FaFileInvoiceDollar, FaFilePdf, FaPlus, FaListUl, FaUndo, FaCreditCard, FaChartBar, FaLink, FaCommentDots, FaIdBadge, FaTrash, FaFileAlt, FaCheckCircle, FaTimesCircle, FaExclamationTriangle } from 'react-icons/fa';
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
 const cardStyle = {

@@ -1,7 +1,6 @@
 import React from "react";
 import Lottie from "lottie-react";
 import { FaFacebookF, FaInstagram, FaTwitter, FaLinkedin, FaHardHat, FaPhoneAlt } from "react-icons/fa";
-import { backend_url } from "../../../store/keyStore";
 import { Link } from "react-router-dom";
 import trainAnimation from "../../animation/train.navpannel.json";
 

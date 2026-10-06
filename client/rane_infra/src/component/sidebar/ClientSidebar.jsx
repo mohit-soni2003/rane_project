@@ -146,7 +146,6 @@ const ClientSidebar = ({ isOpen, toggleSidebar, onCollapse }) => {
           width: collapsed ? '72px' : '260px',
           zIndex: 1050,
           backgroundColor: 'var(--card)',
-          // backgroundColor: 'black',
           borderRight: '1px solid var(--border)',
           boxShadow: '2px 0 12px var(--shadow-color)',
           display: isOpen ? 'flex' : 'none',

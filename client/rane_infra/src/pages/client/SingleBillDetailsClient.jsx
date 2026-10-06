@@ -7,12 +7,7 @@ import { getPayNotesByBill } from '../../services/paynoteServices';
 import ClientHeader from '../../component/header/ClientHeader';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import {
-    FaFileInvoice, FaFileSignature, FaUserTie, FaFilePdf,
-    FaCalendarAlt, FaArrowLeft, FaCreditCard, FaMoneyBillWave,
-    FaWallet, FaRupeeSign, FaCalculator, FaUserCircle,
-    FaCommentDots, FaUndoAlt, FaTimes, FaExternalLinkAlt,
-} from 'react-icons/fa';
+import { FaFileInvoice, FaFileSignature, FaUserTie, FaFilePdf, FaCalendarAlt, FaArrowLeft, FaCreditCard, FaMoneyBillWave, FaWallet, FaRupeeSign, FaCalculator, FaUserCircle, FaCommentDots, FaUndoAlt, FaTimes } from 'react-icons/fa';
 
 // ── Hardcoded icon colors ─────────────────────────────────────────────────────
 const C = {

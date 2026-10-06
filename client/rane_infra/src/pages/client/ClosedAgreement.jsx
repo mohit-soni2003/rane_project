@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FiSearch, FiFilter, FiClock, FiChevronDown } from "react-icons/fi";
+import { FiSearch, FiFilter, FiChevronDown } from "react-icons/fi";
 import ClientHeader from "../../component/header/ClientHeader";
 import { getClientAgreements } from "../../services/agreement";
 import { useNavigate } from "react-router-dom";

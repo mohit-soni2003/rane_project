@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  FaFileExport, FaFileInvoice, FaFileInvoiceDollar, FaRupeeSign,
-  FaUser, FaClipboardList, FaClock, FaCheckCircle, FaExclamationTriangle,
-} from 'react-icons/fa';
+import { FaFileExport, FaFileInvoice, FaFileInvoiceDollar, FaRupeeSign, FaUser, FaClipboardList } from 'react-icons/fa';
 import { FiSearch, FiX, FiArrowRight } from 'react-icons/fi';
 import AdminHeader from '../../component/header/AdminHeader';
 import StaffHeader from '../../component/header/StaffHeader';
