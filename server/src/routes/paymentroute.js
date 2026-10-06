@@ -240,30 +240,6 @@ router.put("/payment/update/:id", async (req, res) => {
 //   }
 // });
 
-router.delete("/payment/:id", async (req, res) => {
-
-  // console.log("DELETE PAYMENT ROUTE HITTED...")
-  // console.log(req.params)
-
-  try {
-    const { id } = req.params;
-
-    // Check if payment exists
-    const payment = await Payment.findById(id);
-    if (!payment) {
-      return res.status(404).json({ message: "Payment not found" });
-    }
-
-    // Delete the payment
-    await Payment.findByIdAndDelete(id);
-    res.json({ message: "Payment deleted successfully" });
-
-  } catch (error) {
-    console.error("Error deleting payment:", error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-
 
 
 module.exports = router

@@ -57,31 +57,6 @@ export const getClientBillOverview = async () => {
    ADMIN DASHBOARD SERVICES
    ===================================================================== */
 
-// KPI strip — projects, pending approvals, outstanding bills, payouts, overdue tasks
-export const getAdminOverview = async () => {
-  try {
-    const response = await fetch(`${backend_url}/dashboard/admin/overview`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include", // because using verifyToken
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch admin overview");
-    }
-
-    const data = await response.json();
-    return data; // { success, data: { totalProjects, activeProjects, pendingApprovalsTotal, pendingApprovals, outstandingBillAmount, outstandingBillCount, payoutsThisMonth, overdueTasks, totalTasks } }
-
-  } catch (error) {
-    console.error("Error fetching admin overview:", error);
-    return null;
-  }
-};
-
-
 // Bill status breakdown (all bills, admin-wide)
 export const getAdminBillOverview = async () => {
   try {
@@ -232,29 +207,6 @@ export const getAdminDocumentStatus = async () => {
 };
 
 
-// Notifications for the logged-in admin
-export const getAdminNotifications = async (limit = 10) => {
-  try {
-    const response = await fetch(`${backend_url}/dashboard/admin/notifications?limit=${limit}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch admin notifications");
-    }
-
-    const data = await response.json();
-    return data; // { success, data: { unreadCount, notifications: [{ id, title, message, type, priority, isRead, actionUrl, createdAt }, ...] } }
-
-  } catch (error) {
-    console.error("Error fetching admin notifications:", error);
-    return null;
-  }
-};
 // Cash flow trend — Transaction totals grouped by month + type
 export const getAdminCashFlow = async (months = 6) => {
   try {
@@ -300,56 +252,6 @@ export const getAdminProjectStatus = async () => {
 
   } catch (error) {
     console.error("Error fetching admin project status:", error);
-    return null;
-  }
-};
-
-
-// Task load per staff member (open/active tasks only)
-export const getAdminTaskLoad = async (limit = 8) => {
-  try {
-    const response = await fetch(`${backend_url}/dashboard/admin/task-load?limit=${limit}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch admin task load");
-    }
-
-    const data = await response.json();
-    return data; // { success, data: [{ userId, name, tag, count }, ...] }
-
-  } catch (error) {
-    console.error("Error fetching admin task load:", error);
-    return null;
-  }
-};
-
-
-// PayNote pipeline — counts per stage
-export const getAdminPaynotePipeline = async () => {
-  try {
-    const response = await fetch(`${backend_url}/dashboard/admin/paynote-pipeline`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch admin paynote pipeline");
-    }
-
-    const data = await response.json();
-    return data; // { success, data: [{ stage, count }, ...] }
-
-  } catch (error) {
-    console.error("Error fetching admin paynote pipeline:", error);
     return null;
   }
 };
@@ -404,27 +306,3 @@ export const getAdminRecentActivity = async (limit = 15) => {
   }
 };
 
-
-// Staff & payroll snapshot
-export const getAdminPayrollSnapshot = async () => {
-  try {
-    const response = await fetch(`${backend_url}/dashboard/admin/payroll-snapshot`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch admin payroll snapshot");
-    }
-
-    const data = await response.json();
-    return data; // { success, data: { totalStaff, tagBreakdown, currentMonth, monthlySalaryPendingFinalization, staffWithBaseSalarySet } }
-
-  } catch (error) {
-    console.error("Error fetching admin payroll snapshot:", error);
-    return null;
-  }
-};

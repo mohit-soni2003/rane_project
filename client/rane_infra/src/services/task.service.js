@@ -125,48 +125,6 @@ export async function removeDocumentFromTask(taskMongoId, documentId) {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// UPDATE ALLOTTED USER'S OWN STATUS & REMARK — matches
-// PATCH /task/update-status/:id/:userId
-// Body: { status, remark } — send only what you want to change,
-// both are optional on the backend.
-// status must be one of: pending, in_progress, submitted,
-// completed, rejected
-// ─────────────────────────────────────────────────────────────────
-export async function updateTaskStatus(taskMongoId, userId, { status, remark } = {}) {
-  const res = await fetch(`${backend_url}/task/update-status/${taskMongoId}/${userId}`, {
-    method: 'PATCH',
-    headers: authHeaders(),
-    credentials: 'include',
-    body: JSON.stringify({ status, remark }),
-  });
-  const data = await res.json();
-  if (!res.ok || !data.success) {
-    throw new Error(data.message || 'Failed to update task status');
-  }
-  return data.data;
-}
-
-// ─────────────────────────────────────────────────────────────────
-// ADD IMAGE(S) TO ALLOTTED USER'S SUBMISSION — matches
-// PATCH /task/add-image/:id/:userId
-// Body: { images: [{ name, url }, ...] } — required, non-empty.
-// Appends to the user's existing images, doesn't overwrite them.
-// ─────────────────────────────────────────────────────────────────
-export async function addTaskImages(taskMongoId, userId, images) {
-  const res = await fetch(`${backend_url}/task/add-image/${taskMongoId}/${userId}`, {
-    method: 'PATCH',
-    headers: authHeaders(),
-    credentials: 'include',
-    body: JSON.stringify({ images }),
-  });
-  const data = await res.json();
-  if (!res.ok || !data.success) {
-    throw new Error(data.message || 'Failed to add image(s) to task');
-  }
-  return data.data;
-}
-
-// ─────────────────────────────────────────────────────────────────
 // VERIFY / UPDATE OVERALL TASK STATUS — matches PATCH /task/verify/:id
 // Body: { status, remark } — status is required, must be one of:
 // pending, in_progress, submitted, completed, overdue, rejected

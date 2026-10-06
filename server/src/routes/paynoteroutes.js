@@ -52,41 +52,10 @@ router.post("/create-paynote",verifyToken,  async (req, res) => {
     }
 });
 
-router.put("/update-status/:id",verifyToken, async (req, res) => {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    // Validate status
-    const validStatuses = ["Draft", "Pending", "Approved", "Rejected", "Paid"];
-    if (!validStatuses.includes(status)) {
-        return res.status(400).json({ message: "Invalid status" });
-    }
-
-    try {
-        const paynote = await PayNote.findByIdAndUpdate(id, { status }, { new: true });
-        if (!paynote) {
-            return res.status(404).json({ message: "PayNote not found" });
-        }
-        res.json({ message: "Status updated successfully", paynote });
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
-    }
-});
-
 router.get("/by-bill/:billId", verifyToken,async (req, res) => {
     const { billId } = req.params;
     try {
         const paynotes = await PayNote.find({ bill: billId }).populate('user').populate('bill');
-        res.json({ paynotes });
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
-    }
-});
-
-router.get("/by-user/:userId",verifyToken, async (req, res) => {
-    const { userId } = req.params;
-    try {
-        const paynotes = await PayNote.find({ user: userId }).populate('user').populate('bill');
         res.json({ paynotes });
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });

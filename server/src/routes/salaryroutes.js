@@ -55,57 +55,6 @@ router.post("/monthly/init", verifyToken, async (req, res) => {
     }
 });
 
-// 📌 Add OVERTIME
-router.post("/monthly/:month/overtime/:userId", verifyToken, async (req, res) => {
-    try {
-        const { userId, month } = req.params;
-        const { amount, date } = req.body;
-
-        const salary = await MonthlySalary.findOneAndUpdate(
-            { user: userId, month },
-            { $push: { overtimeEntries: { amount, date } } },
-            { new: true, upsert: true }
-        );
-        res.json({ message: "Overtime added", salary });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// 📌 Add ADVANCE
-router.post("/monthly/:month/advance/:userId", verifyToken, async (req, res) => {
-    try {
-        const { userId, month } = req.params;
-        const { amount, date } = req.body;
-
-        const salary = await MonthlySalary.findOneAndUpdate(
-            { user: userId, month },
-            { $push: { advancePayEntries: { amount, date } } },
-            { new: true, upsert: true }
-        );
-        res.json({ message: "Advance added", salary });
-    } catch (err) { 
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// 📌 Add LEAVE deduction
-router.post("/monthly/:month/leave/:userId", verifyToken, async (req, res) => {
-    try {
-        const { userId, month } = req.params;
-        const { amount, date, reason } = req.body;
-
-        const salary = await MonthlySalary.findOneAndUpdate(
-            { user: userId, month },
-            { $push: { leaveDeductions: { amount, date, reason } } },
-            { new: true, upsert: true }
-        );
-        res.json({ message: "Leave deduction added", salary });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
 // 📌 Update Allowances + Bonus
 router.put("/monthly/:month/update/:userId", verifyToken, async (req, res) => {
     try {
@@ -160,17 +109,6 @@ router.get("/monthly/:month/:userId", verifyToken, async (req, res) => {
         if (!salary) return res.status(404).json({ error: "No record found" });
 
         res.json(salary);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// 📌 Summary for All Users (for admin dashboard)
-router.get("/monthly/:month/summary", verifyToken, async (req, res) => {
-    try {
-        const { month } = req.params;
-        const salaries = await MonthlySalary.find({ month }).populate("user");
-        res.json(salaries);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

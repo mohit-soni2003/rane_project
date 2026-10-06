@@ -85,19 +85,6 @@ export const forwardDocument = async (fileId, forwardData) => {
     return result;
 };
 
-export const forwardDocumentToStaff = async (fileId, forwardData) => {
-    console.log(forwardData)
-    const res = await fetch(`${backend_url}/dfs/forward/${fileId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(forwardData),
-    });
-    const result = await res.json();
-    if (!res.ok) throw new Error(result.error || "Failed to forward document.");
-    return result;
-};
-
 export const getFileById = async (id) => {
   try {
     const res = await fetch(`${backend_url}/dfs/file/${id}`, {
@@ -124,21 +111,6 @@ export const getMyUploadedFiles = async () => {
     return data.files;
   } catch (err) {
     console.error("Error in getMyUploadedFiles:", err);
-    throw err;
-  }
-};
-
-export const getAllDfsRequests = async () => {
-  try {
-    const res = await fetch(`${backend_url}/dfs/files`, {
-      method: 'GET',
-      credentials: 'include',
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to fetch all DFS requests.");
-    return data;
-  } catch (err) {
-    console.error("Error in getAllDfsRequests:", err);
     throw err;
   }
 };

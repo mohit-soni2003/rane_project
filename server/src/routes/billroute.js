@@ -161,25 +161,6 @@ router.get('/allbill', async (req, res) => {
   }
 });
 
-// Get bills for a specific user
-router.get('/mybill/:userId', async (req, res) => {
-  // console.log("Get bills for user route hit")
-  const { userId } = req.params;
-
-  try {
-    // Find bills that match the user's ID
-    const bills = await Bill.find({ user: userId }).populate("user");
-    // console.log(bills)
-    if (bills.length > 0) {
-      res.status(200).json(bills);
-    } else {
-      res.status(200).json([]); // Return empty array instead of error for no bills
-    }
-  } catch (error) {
-    console.error("Error fetching user bills:", error);
-    res.status(500).json({ error: 'Server error', details: error.message });
-  }
-});
 //particular signle bill details
 router.get('/bill/:id', async (req, res) => {
   // console.log("show particular id bill route hitted")
@@ -198,26 +179,6 @@ router.get('/bill/:id', async (req, res) => {
     res.json({ error: 'Server error', details: error.message });
   }
 });
-//this is of no use same as above
-router.get('/bill/update-payment/:id', async (req, res) => {
-  // console.log("Update bill Zpayment stasus route hitted")
-  const { status } = req.body
-  const { id } = req.params
-
-  try {
-    // Find bills that match the user's ID
-    const bill = await Bill.findById(id).populate("user");
-    // console.log(bill)
-    if (bill) {
-      res.status(200).json(bill);
-    } else {
-      res.json({ error: 'No bills found for this user' });
-    }
-  } catch (error) {
-    res.json({ error: 'Server error', details: error.message });
-  }
-});
-
 
 // this route is used by admin to change status 
 router.put('/bill/update-payment/:id', async (req, res) => {
@@ -318,20 +279,6 @@ router.delete("/bill/:id", async (req, res) => {
   } catch (error) {
     console.error("Error deleting bill:", error);
     res.status(500).json({ message: "Internal Server Error" });
-  }
-});
-
-router.get("/recent-bills", async (req, res) => {
-  try {
-    const recentBills = await Bill.find()
-      .sort({ submittedAt: -1 }) // Sort by most recent
-      .limit(3) // Get only 3 documents
-      .populate("user"); // Populate user details (fetching only name & email)
-
-    res.json(recentBills);
-  } catch (error) {
-    console.error("Error fetching recent bills:", error);
-    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 

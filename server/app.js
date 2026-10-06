@@ -55,30 +55,11 @@ app.get('/', (req, res) => {
   res.send('Hello, World! Express server is running. on version 3.0');
 });
 
-app.get("/test-cookie", (req, res) => {
-  res.cookie("testToken", "12345", {
-    httpOnly: true,
-    secure: true,
-    sameSite: "None",
-    // domain: "rane-project.vercel.app",  // Important
-    path: "/",  // Important
-    maxAge:300 * 1000, // 7 days
-});
-
-  res.set('Cache-Control', 'no-store');  
-
-  res.json({ message: "Cookie set!" }); 
-});
-
-
 app.use(require("./src/routes/auth"))
 app.use(require("./src/routes/billroute"))
 app.use(require("./src/routes/clientroute"))
 app.use(require("./src/routes/paymentroute"))
-app.use(require("./src/routes/commonroute"))
 app.use(require("./src/routes/adminroutes"))
-app.use(require("./src/routes/staffroutes"))
-app.use(require("./src/routes/clientroutes"))
 app.use(require("./src/routes/transactionroutes"))
 app.use(require("./src/routes/documentroutes"))
 app.use("/dfs",require("./src/routes/fsforwardingroutes"))

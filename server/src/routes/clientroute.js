@@ -59,67 +59,6 @@ router.put('/update-cid/:id', async (req, res) => {
 });
 
 
-router.put("/update-profile-pic", async (req, res) => {
-    try {
-        const { profile, id } = req.body;
-
-        // Validate if the user exists
-        const user = await User.findById(id);
-        if (!user) {
-            return res.status(404).json({ error: "User not found" });
-        }
-
-        if (profile) user.profile = profile;
-        // Save the updated user
-        await user.save();
-
-        res.json({ message: "Profile Pic successfully", user });
-    } catch (error) {
-        console.error("Error updating profile:", error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-});
-router.put("/update-profile", async (req, res) => {
-    console.log("Update profile details route hitted .......")
-    try {
-        const { name, email, phoneNo, id, address, clientType, idproof, gstno, idProofType, upi, bankName, ifscCode, accountNo } = req.body;
-        console.log("userType: " + clientType)
-        console.log("IDPROOF: " + idproof)
-        console.log("idProofType: " + idProofType)
-        console.log("Bank Name:" + bankName);
-        console.log("IFSC Code:" + ifscCode);
-        console.log("Account No:" + accountNo);
-
-        // Validate if the user exists
-        const user = await User.findById(id);
-        if (!user) {
-            return res.status(404).json({ error: "User not found" });
-        }
-
-        // Update only the provided fields
-        if (name) user.name = name;
-        if (email) user.email = email;
-        if (phoneNo) user.phoneNo = phoneNo;
-        if (address) user.address = address;
-        if (clientType) user.clientType = clientType;
-        if (idproof) user.idproof = idproof;
-        if (gstno) user.gstno = gstno;
-        if (idProofType) user.idProofType = idProofType;
-        if (upi) user.upi = upi;
-        if (accountNo) user.accountNo = accountNo;
-        if (ifscCode) user.ifscCode = ifscCode;
-        if (bankName) user.bankName = bankName;
-        // Save the updated user
-        await user.save();
-
-        res.json({ message: "Profile Data updated successfully", user });
-    } catch (error) {
-        console.error("Error updating profile:", error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-});
-
-
 // UNIVERSAL PROFILE/BANK/DETAILS UPDATE --------Added in Version 3.O
 router.put("/update-user", async (req, res) => {
     console.log("Universal user update route hit");

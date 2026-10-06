@@ -393,44 +393,6 @@ router.patch("/:id/reject", verifyToken, async (req, res) => {
 
 
 /**
- * @route   PATCH /agreement/:id/view
- * @desc    Mark an agreement as viewed by the client
- * @access  Private (only client linked to the agreement)
- */
-router.patch("/:id/view", verifyToken, async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        // Find the agreement
-        const agreement = await Agreement.findById(id);
-        if (!agreement) {
-            return res.status(404).json({ success: false, message: "Agreement not found" });
-        }
-
-        // Only the client assigned to this agreement can mark it as viewed
-        if (agreement.client.toString() !== req.userId.toString()) {
-            return res.status(403).json({ success: false, message: "Access denied" });
-        }
-
-        // Update status if not already viewed
-        if (agreement.status === "pending") {
-            agreement.status = "viewed";
-            agreement.viewedAt = new Date();
-            await agreement.save();
-        }
-
-        res.status(200).json({
-            success: true,
-            message: "Agreement marked as viewed.",
-            agreement,
-        });
-    } catch (error) {
-        console.error("Error marking agreement as viewed:", error);
-        res.status(500).json({ success: false, message: "Internal server error." });
-    }
-});
-
-/**
  * @route   PATCH /agreement/:id/sign
  * @desc    Client signs the agreement, adds signature info and updates status to 'signed'
  * @access  Private (only client who owns this agreement)
@@ -719,9 +681,5 @@ router.patch("/:id/review-extension", verifyToken, async (req, res) => {
 
 
 
-
-router.get("/temp", (req, res) => {
-    res.send("Hi i am  happy ..")
-})
 
 module.exports = router;

@@ -4,7 +4,6 @@ const verifyToken = require("../middleware/verifyToken");
 const mongoose = require("mongoose");
 
 const RecentActivityModel = require("../models/RecentActivityModel");
-const NotificationModel = require("../models/notificationModel");
 const User = require("../models/usermodel");
 const Payment = require("../models/paymentmodel");
 const Bill = require("../models/billmodel");
@@ -15,9 +14,6 @@ const Agreement = require("../models/agreementModel");
 const Project = require("../models/projects.model");
 const ProjectBill = require("../models/projectBill.model");
 const Task = require("../models/task.model");
-const PayNote = require("../models/paynoteModel");
-const MonthlySalary = require("../models/MonthlySalaryModel");
-const BaseSalary = require("../models/BaseSalaryModel");
 const SorItem = require("../models/sorItem.model");
 
 /* =====================================================================
@@ -199,72 +195,6 @@ router.get("/client/bill-overview", verifyToken, async (req, res) => {
    to match this file's existing convention.
    ===================================================================== */
 
-// ── KPI strip: projects, pending approvals, outstanding bills, payouts, overdue tasks ──
-router.get("/admin/overview", verifyToken, async (req, res) => {
-    console.log("Admin Dashboard Overview Route hit");
-    try {
-        const now = new Date();
-        const monthStart = startOfMonth(now);
-        const nextMonthStart = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1);
-
-        const [
-            totalProjects,
-            activeProjects,
-            pendingAgreementSignatures,
-            pendingAgreementExtensions,
-            pendingFileForwards,
-            pendingWithdrawals,
-            pendingDocuments,
-            outstandingBills,
-            monthTransactions,
-            overdueTasks,
-            totalTasks,
-        ] = await Promise.all([
-            Project.countDocuments({}),
-            Project.countDocuments({ status: "in_progress" }),
-            Agreement.countDocuments({ status: "pending" }),
-            Agreement.countDocuments({ "extensionRequest.requested": true, "extensionRequest.status": "pending" }),
-            FileForward.countDocuments({ status: "in-review" }),
-            Bill.countDocuments({ withdrawStatus: "Requested" }),
-            Document.countDocuments({ status: "pending" }),
-            Bill.find({ paymentStatus: { $in: ["Unpaid", "Pending", "Overdue"] } }).select("amount"),
-            Transaction.find({ transactionDate: { $gte: monthStart, $lt: nextMonthStart } }).select("amount"),
-            Task.countDocuments({ deadline: { $lt: now }, status: { $nin: ["completed", "rejected"] } }),
-            Task.countDocuments({}),
-        ]);
-
-        const outstandingBillAmount = outstandingBills.reduce((sum, b) => sum + parseAmount(b.amount), 0);
-        const payoutsThisMonth = monthTransactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-
-        const pendingApprovals = {
-            agreementSignatures: pendingAgreementSignatures,
-            agreementExtensions: pendingAgreementExtensions,
-            fileForwards: pendingFileForwards,
-            billWithdrawals: pendingWithdrawals,
-            documents: pendingDocuments,
-        };
-        const pendingApprovalsTotal = Object.values(pendingApprovals).reduce((a, b) => a + b, 0);
-
-        return res.status(200).json({
-            success: true,
-            data: {
-                totalProjects,
-                activeProjects,
-                pendingApprovalsTotal,
-                pendingApprovals,
-                outstandingBillAmount: Math.round(outstandingBillAmount * 100) / 100,
-                outstandingBillCount: outstandingBills.length,
-                payoutsThisMonth: Math.round(payoutsThisMonth * 100) / 100,
-                overdueTasks,
-                totalTasks,
-            },
-        });
-    } catch (error) {
-        console.error("Error in /admin/overview:", error);
-        return res.status(500).json({ success: false, error: "Server error. Please try again later.", details: error.message });
-    }
-});
-
 // ── Bill status breakdown (all bills, not scoped to a single user) ──
 router.get("/admin/bill-overview", verifyToken, async (req, res) => {
     console.log("Admin Bill Overview Route Hit");
@@ -434,52 +364,6 @@ router.get("/admin/project-status", verifyToken, async (req, res) => {
     }
 });
 
-// ── Task load per staff member (open/active tasks only) ──
-router.get("/admin/task-load", verifyToken, async (req, res) => {
-    console.log("Admin Task Load Route Hit");
-    try {
-        const limit = Math.min(parseInt(req.query.limit) || 8, 25);
-
-        const loadAgg = await Task.aggregate([
-            { $unwind: "$allottedTo" },
-            { $match: { "allottedTo.status": { $nin: ["completed", "rejected"] } } },
-            { $group: { _id: "$allottedTo.user", count: { $sum: 1 } } },
-            { $sort: { count: -1 } },
-            { $limit: limit },
-            { $lookup: { from: "users", localField: "_id", foreignField: "_id", as: "user" } },
-            { $unwind: "$user" },
-            { $project: { _id: 0, userId: "$user._id", name: "$user.name", tag: "$user.tag", count: 1 } },
-        ]);
-
-        return res.status(200).json({ success: true, data: loadAgg });
-    } catch (error) {
-        console.error("Error in /admin/task-load:", error);
-        return res.status(500).json({ success: false, error: "Server error. Please try again later.", details: error.message });
-    }
-});
-
-// ── PayNote pipeline: counts per stage ──
-router.get("/admin/paynote-pipeline", verifyToken, async (req, res) => {
-    console.log("Admin PayNote Pipeline Route Hit");
-    try {
-        const STAGES = ["Draft", "Pending", "Approved", "Rejected", "Paid"];
-        const agg = await PayNote.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]);
-
-        const counts = STAGES.reduce((acc, stage) => ({ ...acc, [stage]: 0 }), {});
-        agg.forEach((row) => {
-            if (Object.prototype.hasOwnProperty.call(counts, row._id)) counts[row._id] = row.count;
-        });
-
-        return res.status(200).json({
-            success: true,
-            data: STAGES.map((stage) => ({ stage, count: counts[stage] })),
-        });
-    } catch (error) {
-        console.error("Error in /admin/paynote-pipeline:", error);
-        return res.status(500).json({ success: false, error: "Server error. Please try again later.", details: error.message });
-    }
-});
-
 // ── Approvals queue: everything currently waiting on an admin decision ──
 router.get("/admin/approvals-queue", verifyToken, async (req, res) => {
     console.log("Admin Approvals Queue Route Hit");
@@ -597,38 +481,6 @@ router.get("/admin/recent-activity", verifyToken, async (req, res) => {
     }
 });
 
-// ── Staff & payroll snapshot ──
-router.get("/admin/payroll-snapshot", verifyToken, async (req, res) => {
-    console.log("Admin Payroll Snapshot Route Hit");
-    try {
-        const currentMonth = monthKey(new Date());
-
-        const [totalStaff, tagBreakdownAgg, notFinalizedCount, baseSalaryCount] = await Promise.all([
-            User.countDocuments({ role: { $ne: "client" } }),
-            User.aggregate([
-                { $match: { role: { $ne: "client" } } },
-                { $group: { _id: "$tag", count: { $sum: 1 } } },
-            ]),
-            MonthlySalary.countDocuments({ month: currentMonth, finalized: false }),
-            BaseSalary.countDocuments({}),
-        ]);
-
-        return res.status(200).json({
-            success: true,
-            data: {
-                totalStaff,
-                tagBreakdown: tagBreakdownAgg.map((t) => ({ tag: t._id || "unassigned", count: t.count })),
-                currentMonth,
-                monthlySalaryPendingFinalization: notFinalizedCount,
-                staffWithBaseSalarySet: baseSalaryCount,
-            },
-        });
-    } catch (error) {
-        console.error("Error in /admin/payroll-snapshot:", error);
-        return res.status(500).json({ success: false, error: "Server error. Please try again later.", details: error.message });
-    }
-});
-
 // ── Top-tile system counts: one lightweight count per collection ──
 router.get("/admin/system-counts", verifyToken, async (req, res) => {
     console.log("Admin System Counts Route Hit");
@@ -708,44 +560,6 @@ router.get("/admin/dfs-status", verifyToken, async (req, res) => {
         });
     } catch (error) {
         console.error("Error in /admin/dfs-status:", error);
-        return res.status(500).json({ success: false, error: "Server error. Please try again later.", details: error.message });
-    }
-});
-
-// ── Notifications for the logged-in admin (bell + panel) ──
-router.get("/admin/notifications", verifyToken, async (req, res) => {
-    console.log("Admin Notifications Route Hit");
-    try {
-        const userId = req.userId;
-        if (!userId) {
-            return res.status(400).json({ error: "Invalid user token" });
-        }
-
-        const limit = Math.min(parseInt(req.query.limit) || 10, 50);
-
-        const [notifications, unreadCount] = await Promise.all([
-            NotificationModel.find({ recipient: userId }).sort({ createdAt: -1 }).limit(limit).lean(),
-            NotificationModel.countDocuments({ recipient: userId, isRead: false }),
-        ]);
-
-        return res.status(200).json({
-            success: true,
-            data: {
-                unreadCount,
-                notifications: notifications.map((n) => ({
-                    id: n._id,
-                    title: n.title,
-                    message: n.message,
-                    type: n.type,
-                    priority: n.priority,
-                    isRead: n.isRead,
-                    actionUrl: n.actionUrl,
-                    createdAt: n.createdAt,
-                })),
-            },
-        });
-    } catch (error) {
-        console.error("Error in /admin/notifications:", error);
         return res.status(500).json({ success: false, error: "Server error. Please try again later.", details: error.message });
     }
 });

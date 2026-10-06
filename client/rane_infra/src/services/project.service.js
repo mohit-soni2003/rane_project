@@ -240,27 +240,6 @@ export async function updateLocation(projectMongoId, location = {}, headquarterL
   return data.data;
 }
 // ─────────────────────────────────────────────────────────────────
-// UPDATE FINANCIAL DETAILS — matches PATCH /v1/financials/:projectId
-// Body: { financials: { ...top-level fields, recoveryAtContractEnd: {...} } }
-// NOTE: this route doesn't exist in your route file yet — add it
-// following the same findById + conditional-field pattern as
-// basic-details / advance-details before wiring this in production.
-// ─────────────────────────────────────────────────────────────────
-export async function updateFinancials(projectMongoId, financials = {}) {
-  const res = await fetch(`${backend_url}/project/v1/financials/${projectMongoId}`, {
-    method: 'PATCH',
-    headers: authHeaders(),
-    credentials: 'include',
-    body: JSON.stringify({ financials }),
-  });
-  const data = await res.json();
-  if (!res.ok || !data.success) {
-    throw new Error(data.message || 'Failed to update financial details');
-  }
-  return data.data;
-}
-
-// ─────────────────────────────────────────────────────────────────
 // UPDATE BIDDING DETAILS — matches PATCH /v1/financials/bidding/:projectId
 // Body: { bidding: { emdAmount, advertisedValue, status, referenceId,
 //         exemptedType, biddingPosition, biddingPercentage } }
