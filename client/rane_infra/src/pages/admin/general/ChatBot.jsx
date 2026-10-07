@@ -69,6 +69,33 @@ const toolLogBoxStyle = {
     borderRadius: 8, fontSize: 11, fontFamily: 'monospace', color: 'var(--text-muted)',
 };
 
+// Safety net: if the model still sends markdown, turn it into clean plain text
+// (this chat bubble shows text as-is, so symbols like ** or | would look broken).
+function cleanAnswer(text) {
+    if (!text) return '';
+    return text
+        .split('\n')
+        .map((line) => {
+            // table separator rows like |---|---|
+            if (/^\s*\|?[\s:|-]{3,}\|?\s*$/.test(line) && line.includes('-')) return null;
+            // table rows → "a – b – c"
+            if (/^\s*\|.*\|\s*$/.test(line)) {
+                return line.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim()).filter(Boolean).join(' – ');
+            }
+            return line
+                .replace(/^\s{0,3}#{1,6}\s*/, '')       // headings
+                .replace(/^\s*[-*+]\s+/, '• ')          // bullets
+                .replace(/\*\*(.+?)\*\*/g, '$1')        // bold
+                .replace(/__(.+?)__/g, '$1')
+                .replace(/(^|[\s(])\*(\S[^*]*?)\*(?=[\s).,!?]|$)/g, '$1$2') // italics
+                .replace(/`([^`]+)`/g, '$1');           // inline code
+        })
+        .filter((line) => line !== null)
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+}
+
 function ToolLog({ log }) {
     const [open, setOpen] = useState(false);
     if (!log || log.length === 0) return null;
@@ -227,7 +254,7 @@ export default function AdminChatBot() {
                                 {m.role === 'user' ? <FaUser size={11} color="var(--secondary-foreground)" /> : <FaRobot size={12} color={C.primary} />}
                             </div>
                             <div style={m.role === 'user' ? userBubbleStyle : botBubbleStyle}>
-                                {m.text}
+                                {m.role === 'bot' ? cleanAnswer(m.text) : m.text}
                             </div>
                         </div>
                         {m.role === 'bot' && <div style={{ marginLeft: 34 }}><ToolLog log={m.toolCallLog} /></div>}

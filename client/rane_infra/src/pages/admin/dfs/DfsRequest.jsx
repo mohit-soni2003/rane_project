@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   FiClipboard, FiSearch, FiX, FiRefreshCw, FiClock,
-  FiInbox, FiCheckCircle, FiUser,
+  FiInbox, FiCheckCircle, FiUser, FiFilter, FiChevronDown, FiArrowUp, FiArrowDown, FiRotateCcw,
 } from "react-icons/fi";
 import { FaEye, FaEllipsisV, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -124,15 +124,6 @@ export default function DfsRequest() {
 
   const isAdmin = user?.role === 'admin';
 
-  const btnStyle = {
-    display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 7,
-    border: "1px solid var(--border)", background: "var(--card)", color: "var(--foreground)",
-    fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
-  };
-  const ctrlStyle = {
-    width: "100%", border: "1px solid var(--border)", borderRadius: 7, padding: "8px 12px",
-    fontSize: 13, color: "var(--foreground)", background: "var(--input)", outline: "none", boxSizing: "border-box",
-  };
   const thStyle = (align = 'left') => ({
     padding: "10px 12px", fontSize: 11, fontWeight: 600, color: "var(--text-muted)",
     textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: "1px solid var(--border)",
@@ -169,7 +160,7 @@ export default function DfsRequest() {
                 <div style={{ fontSize: 14, color: "var(--text-muted)" }}>Loading assigned documents…</div>
               </div>
             ) : documents.length === 0 ? (
-              <NoFilesAssigned />
+              <NoFilesAssigned role={user?.role} onRefresh={() => { setLoading(true); loadRequests(); }} />
             ) : (
               <>
                 {/* Stat cards */}
@@ -191,43 +182,56 @@ export default function DfsRequest() {
                   ))}
                 </div>
 
-                {/* Search & filter */}
-                <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 10, padding: "14px 16px", marginBottom: 14 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text-strong)", marginBottom: 2 }}>Find a request</div>
-                  <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>Search by document title or sender, then filter and sort.</div>
+                {/* Search / filter bar */}
+                <div className="dr-toolbar">
+                  <div className="dr-search">
+                    <FiSearch size={15} color="#8b7b74" className="dr-icon-left" />
+                    <input
+                      type="text"
+                      placeholder="Search by document title or sender…"
+                      value={searchText}
+                      onChange={e => setSearchText(e.target.value)}
+                      className="dr-ctl"
+                      style={{ paddingLeft: 36, paddingRight: searchText ? 34 : 12 }}
+                    />
+                    {searchText && (
+                      <button type="button" aria-label="Clear search" className="dr-clear" onClick={() => setSearchText("")}>
+                        <FiX size={14} color="#8b7b74" />
+                      </button>
+                    )}
+                  </div>
 
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
-                    <div style={{ flex: 1, minWidth: 200 }}>
-                      <label style={{ fontSize: 10, fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>Search</label>
-                      <div style={{ position: "relative" }}>
-                        <FiSearch size={13} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-                        <input type="text" placeholder="Search title or sender…" value={searchText} onChange={e => setSearchText(e.target.value)} style={{ ...ctrlStyle, padding: "8px 30px 8px 32px" }} />
-                        {searchText && <FiX size={14} onClick={() => setSearchText("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", cursor: "pointer" }} />}
-                      </div>
-                    </div>
+                  <div className="dr-select">
+                    <FiFilter size={14} color="#8b7b74" className="dr-icon-left" />
+                    <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="dr-ctl" aria-label="Filter by status">
+                      <option value="all">All statuses</option>
+                      <option value="pending">Pending</option>
+                      <option value="in-review">In Review</option>
+                      <option value="approved">Approved</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
+                    <FiChevronDown size={14} color="#8b7b74" className="dr-icon-right" />
+                  </div>
 
-                    <div style={{ minWidth: 140 }}>
-                      <label style={{ fontSize: 10, fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>Status</label>
-                      <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ ...ctrlStyle, cursor: "pointer" }}>
-                        <option value="all">All statuses</option>
-                        <option value="pending">Pending</option>
-                        <option value="in-review">In Review</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                      </select>
-                    </div>
+                  <div className="dr-select">
+                    {sortOrder === 'desc'
+                      ? <FiArrowDown size={14} color="#8b7b74" className="dr-icon-left" />
+                      : <FiArrowUp size={14} color="#8b7b74" className="dr-icon-left" />}
+                    <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} className="dr-ctl" aria-label="Sort by date">
+                      <option value="desc">Date: Newest first</option>
+                      <option value="asc">Date: Oldest first</option>
+                    </select>
+                    <FiChevronDown size={14} color="#8b7b74" className="dr-icon-right" />
+                  </div>
 
-                    <div style={{ minWidth: 140 }}>
-                      <label style={{ fontSize: 10, fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>Sort</label>
-                      <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} style={{ ...ctrlStyle, cursor: "pointer" }}>
-                        <option value="desc">Newest first</option>
-                        <option value="asc">Oldest first</option>
-                      </select>
-                    </div>
-
-                    <button style={{ ...btnStyle, padding: "8px 12px" }} onClick={resetFilters}>
-                      <FiRefreshCw size={13} color="#6b3e2b" /> Reset
+                  {(searchText !== '' || statusFilter !== 'all' || sortOrder !== 'desc') && (
+                    <button type="button" className="dr-reset" onClick={resetFilters}>
+                      <FiRotateCcw size={13} /> Reset
                     </button>
+                  )}
+
+                  <div className="dr-count">
+                    Showing <strong>{filtered.length}</strong> of <strong>{documents.length}</strong> requests
                   </div>
                 </div>
 
@@ -359,7 +363,48 @@ export default function DfsRequest() {
         itemType="DFS Document"
       />
 
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        select option { background: var(--input); color: var(--foreground); }
+        .dr-toolbar {
+          display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+          padding: 10px 0 14px; margin-bottom: 6px; border-bottom: 1px solid var(--border);
+        }
+        .dr-search { position: relative; flex: 1 1 260px; min-width: 200px; }
+        .dr-select { position: relative; flex: 0 1 190px; min-width: 165px; }
+        .dr-ctl {
+          width: 100%; height: 38px; box-sizing: border-box;
+          border: 1px solid var(--border); border-radius: 10px;
+          background: var(--input); color: var(--foreground);
+          font-size: 13px; outline: none; transition: border-color .15s, box-shadow .15s;
+        }
+        .dr-select .dr-ctl { appearance: none; -webkit-appearance: none; cursor: pointer; padding: 0 32px 0 34px; }
+        .dr-ctl:hover { border-color: var(--muted-foreground, #8b7b74); }
+        .dr-ctl:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(107, 62, 43, 0.14); }
+        .dr-icon-left, .dr-icon-right { position: absolute; top: 50%; transform: translateY(-50%); pointer-events: none; }
+        .dr-icon-left { left: 12px; }
+        .dr-icon-right { right: 11px; }
+        .dr-clear {
+          position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+          width: 24px; height: 24px; border: none; border-radius: 50%; background: transparent;
+          display: flex; align-items: center; justify-content: center; cursor: pointer;
+        }
+        .dr-clear:hover { background: var(--muted); }
+        .dr-reset {
+          display: inline-flex; align-items: center; gap: 6px;
+          height: 38px; padding: 0 12px; border-radius: 10px;
+          border: 1px dashed var(--border); background: transparent;
+          color: var(--text-muted); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+          transition: background .15s, color .15s;
+        }
+        .dr-reset:hover { background: var(--secondary); color: var(--secondary-foreground); }
+        .dr-count { margin-left: auto; font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+        .dr-count strong { color: var(--text-strong); }
+        @media (max-width: 640px) {
+          .dr-search, .dr-select { flex: 1 1 100%; }
+          .dr-count { margin-left: 0; width: 100%; }
+        }
+      `}</style>
     </>
   );
 }

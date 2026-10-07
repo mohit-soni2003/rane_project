@@ -2,9 +2,12 @@ const express = require("express");
 const User = require("../models/usermodel");
 const Payment = require("../models/paymentmodel")
 const Bill = require("../models/billmodel")
-const Transaction = require("../models/transaction");
 const FileForward = require("../models/fileForwardingModel");
 const Document = require("../models/documentmodel");
+
+const verifyToken = require("../middleware/verifyToken");
+const verifyRole = require("../middleware/verifyRole");
+const { deleteUserCascade } = require("../services/userDeletion.service");
 
 const router = express.Router();
 
@@ -43,82 +46,38 @@ router.get("/admin-get-users-details/:id", async (req, res) => {
     }
 });
 
-// Route to delete a user by ID
-router.delete("/admin-delete-user/:id", async (req, res) => {
+// Delete a user AND everything that belongs to them (bills, payments, transactions,
+// agreements, documents, DFS files, salary records, notifications, activity…).
+// Admin only. See services/userDeletion.service.js for exactly what is removed.
+router.delete("/admin-delete-user/:id", verifyToken, verifyRole("admin"), async (req, res) => {
     try {
         const userId = req.params.id;
 
-        // Check if user exists
+        if (String(userId) === String(req.userId)) {
+            return res.status(400).json({ message: "You cannot delete your own account." });
+        }
+
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // Delete the user
-        await User.findByIdAndDelete(userId);
+        const summary = await deleteUserCascade(userId);
 
-        res.status(200).json({ message: "User deleted successfully" });
-    } catch (error) {
-        console.error("Error deleting user:", error);
-        res.status(500).json({ message: "Internal server error", error: error.message });
-    }
-});
-
-router.delete("/admin-delete-user/:id", async (req, res) => {
-    try {
-        const userId = req.params.id;
-
-        // Check if user exists
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        // Delete related Bills
-        await Bill.deleteMany({ user: userId });
-
-        // Delete related Payments
-        await Payment.deleteMany({ user: userId });
-
-        // Delete related Transactions
-        await Transaction.deleteMany({ userId });
-
-        // Delete FileForwards where user is uploader or current owner or in forwarding trail
-        await FileForward.deleteMany({
-            $or: [
-                { uploadedBy: userId },
-                { currentOwner: userId },
-                { "forwardingTrail.forwardedBy": userId },
-                { "forwardingTrail.forwardedTo": userId },
-                { "comments.user": userId }
-            ]
-        });
-
-        // Finally, delete the user
-        await User.findByIdAndDelete(userId);
-
-        res.status(200).json({ message: "User and all related data deleted successfully" });
+        res.status(200).json({ message: "User and all related data deleted successfully", summary });
     } catch (error) {
         console.error("Error deleting user and data:", error);
         res.status(500).json({ message: "Internal server error", error: error.message });
     }
 });
 
-// Route to get all documents from both Document and FileForward models
+// All documents from the Document model (not DFS files)
 router.get("/admin-get-all-documents", async (req, res) => {
     try {
         // Get all regular documents
         const regularDocuments = await Document.find()
             .populate("userId", "name email cid profile role")
             .populate("uploadedBy", "name email cid profile role")
-            .sort({ createdAt: -1 });
-
-        // Get all DFS documents
-        const dfsDocuments = await FileForward.find()
-            .populate("uploadedBy", "name email cid profile role")
-            .populate("currentOwner", "name email cid profile role")
-            .populate("forwardingTrail.forwardedBy", "name email cid profile role")
-            .populate("forwardingTrail.forwardedTo", "name email cid profile role")
             .sort({ createdAt: -1 });
 
         // Combine and format the documents
@@ -136,24 +95,10 @@ router.get("/admin-get-all-documents", async (req, res) => {
                 dateOfIssue: doc.dateOfIssue,
                 uploadDate: doc.uploadDate,
                 documentLink: doc.documentLink,
+                remark: doc.remark,
+                statusUpdatedAt: doc.statusUpdatedAt,
                 createdAt: doc.createdAt,
                 updatedAt: doc.updatedAt
-            })),
-            ...dfsDocuments.map(doc => ({
-                _id: doc._id,
-                type: 'dfs',
-                title: doc.fileTitle,
-                documentType: doc.docType,
-                documentCode: null,
-                description: doc.description,
-                status: doc.status,
-                uploadedBy: doc.uploadedBy,
-                userId: doc.currentOwner,
-                dateOfIssue: null,
-                uploadDate: doc.createdAt,
-                documentLink: doc.fileUrl,
-                createdAt: doc.createdAt,
-                updatedAt: doc.createdAt
             }))
         ];
 
@@ -164,8 +109,7 @@ router.get("/admin-get-all-documents", async (req, res) => {
             success: true,
             documents: allDocuments,
             total: allDocuments.length,
-            regularCount: regularDocuments.length,
-            dfsCount: dfsDocuments.length
+            regularCount: regularDocuments.length
         });
     } catch (error) {
         console.error("Error fetching all documents:", error);
@@ -177,21 +121,13 @@ router.get("/admin-get-all-documents", async (req, res) => {
     }
 });
 
-// Route to get all documents from both Document and FileForward models for Staff users
+// All documents from the Document model (not DFS files) for Staff users
 router.get("/staff-get-all-documents", async (req, res) => {
     try {
         // Get all regular documents
         const regularDocuments = await Document.find()
             .populate("userId", "name email cid profile role")
             .populate("uploadedBy", "name email cid profile role")
-            .sort({ createdAt: -1 });
-
-        // Get all DFS documents
-        const dfsDocuments = await FileForward.find()
-            .populate("uploadedBy", "name email cid profile role")
-            .populate("currentOwner", "name email cid profile role")
-            .populate("forwardingTrail.forwardedBy", "name email cid profile role")
-            .populate("forwardingTrail.forwardedTo", "name email cid profile role")
             .sort({ createdAt: -1 });
 
         // Combine and format the documents
@@ -209,24 +145,10 @@ router.get("/staff-get-all-documents", async (req, res) => {
                 dateOfIssue: doc.dateOfIssue,
                 uploadDate: doc.uploadDate,
                 documentLink: doc.documentLink,
+                remark: doc.remark,
+                statusUpdatedAt: doc.statusUpdatedAt,
                 createdAt: doc.createdAt,
                 updatedAt: doc.updatedAt
-            })),
-            ...dfsDocuments.map(doc => ({
-                _id: doc._id,
-                type: 'dfs',
-                title: doc.fileTitle,
-                documentType: doc.docType,
-                documentCode: null,
-                description: doc.description,
-                status: doc.status,
-                uploadedBy: doc.uploadedBy,
-                userId: doc.currentOwner,
-                dateOfIssue: null,
-                uploadDate: doc.createdAt,
-                documentLink: doc.fileUrl,
-                createdAt: doc.createdAt,
-                updatedAt: doc.createdAt
             }))
         ];
 
@@ -237,8 +159,7 @@ router.get("/staff-get-all-documents", async (req, res) => {
             success: true,
             documents: allDocuments,
             total: allDocuments.length,
-            regularCount: regularDocuments.length,
-            dfsCount: dfsDocuments.length
+            regularCount: regularDocuments.length
         });
     } catch (error) {
         console.error("Error fetching all documents:", error);

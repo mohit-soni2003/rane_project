@@ -10,6 +10,7 @@ import Setting from "../pages/client/general/Setting";
 import UploadDocumentPage from "../pages/client/documents/UploadDocumentPage";
 import SingleBillDetailsClient from "../pages/client/bills/SingleBillDetailsClient.jsx";
 import MyPaymentRequestPage from "../pages/client/payments/MyPaymentRequestPage.jsx";
+import SinglePaymentRequestDetailsClient from "../pages/client/payments/SinglePaymentRequestDetailsClient.jsx";
 import ViewDocumentPage from "../pages/client/documents/ViewDocumentPage.jsx";
 import TrackMyAllDocument from "../pages/client/documents/TrackMyAllDocument.jsx";
 import DocumentForReview from "../pages/client/documents/DocumentForReview.jsx"; //used to review when document assign to client by admin and staff
@@ -41,6 +42,7 @@ export const clientRoutes = (
         <Route path="bill/:id" element={<SingleBillDetailsClient />} />
         <Route path="payment-request" element={<PaymentRequestPage />} />
         <Route path="my-payment-request" element={<MyPaymentRequestPage />} />
+        <Route path="my-payment-request/:id" element={<SinglePaymentRequestDetailsClient />} />
         <Route path="support" element={<SupportPage />} />
         <Route path="document/category" element={<DocumentCategory />} />
         <Route path="document/category/:docType" element={<ViewDocumentPage />} />

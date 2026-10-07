@@ -65,6 +65,71 @@ const outlineBtn = {
   fontSize: 13, fontWeight: 600, cursor: 'pointer',
 };
 
+// ── Address helpers ───────────────────────────────────────────────────────────
+// The backend stores a single `address` string. The form edits it as separate
+// fields and joins them before saving.
+const INDIAN_STATES = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat',
+  'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh',
+  'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
+  'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand',
+  'West Bengal', 'Andaman and Nicobar Islands', 'Chandigarh',
+  'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu and Kashmir', 'Ladakh',
+  'Lakshadweep', 'Puducherry',
+];
+const EMPTY_ADDRESS = { house: '', street: '', state: '', city: '', pincode: '', landmark: '' };
+
+// commas separate the parts of the saved string, so they are not allowed inside a part
+const clean = (v) => (v || '').replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+
+// { house, street, city, state, pincode, landmark } -> "House No, Street / Colony, City, State - Pincode, Landmark"
+// To change the saved order, edit the array below (and parseAddress to match).
+const composeAddress = ({ house, street, city, state, pincode, landmark }) =>
+  [
+    clean(house),
+    clean(street),
+    clean(city),
+    [clean(state), clean(pincode)].filter(Boolean).join(' - '),
+    clean(landmark),
+  ].filter(Boolean).join(', ');
+
+// "House No, Street / Colony, City, State - Pincode[, Landmark]" -> fields.
+// The earlier 3-4 part format ("House, [Landmark,] City, State") is still read so nothing is lost.
+// Anything else (older free text) is reported as `legacy` and left untouched.
+const parseAddress = (str) => {
+  const value = (str || '').trim();
+  if (!value) return { fields: { ...EMPTY_ADDRESS }, legacy: false };
+  const parts = value.split(',').map(p => p.trim());
+
+  if (parts.length === 4 || parts.length === 5) {
+    const m = parts[3].match(/^(.+) - (\d{6})$/);
+    if (m && INDIAN_STATES.includes(m[1])) {
+      return {
+        fields: {
+          house: parts[0], street: parts[1], city: parts[2],
+          state: m[1], pincode: m[2], landmark: parts[4] || '',
+        },
+        legacy: false,
+      };
+    }
+  }
+
+  const lastPart = parts[parts.length - 1];
+  if ((parts.length === 3 || parts.length === 4) && INDIAN_STATES.includes(lastPart)) {
+    return {
+      fields: {
+        ...EMPTY_ADDRESS,
+        house: parts[0],
+        landmark: parts.length === 4 ? parts[1] : '',
+        city: parts[parts.length - 2],
+        state: lastPart,
+      },
+      legacy: false,
+    };
+  }
+  return { fields: { ...EMPTY_ADDRESS }, legacy: true };
+};
+
 const TABS = [
   { key: 'profile', label: 'Profile', icon: FaUserCircle },
   { key: 'personal', label: 'Personal Details', icon: FaUser },
@@ -75,13 +140,13 @@ const TABS = [
 
 // ── Module-level components (defined once → inputs keep focus while typing) ───
 
-const Field = ({ label, Icon, value, onChange, type = 'text' }) => (
+const Field = ({ label, Icon, value, onChange, type = 'text', placeholder, required, inputMode }) => (
   <div>
     <label style={labelStyle}>
       <Icon size={10} color={C.accent} style={{ marginRight: 5, verticalAlign: -1 }} />
-      {label}
+      {label}{required && <span style={{ color: C.destructive }}> *</span>}
     </label>
-    <input type={type} style={controlStyle} value={value} onChange={onChange} />
+    <input type={type} style={controlStyle} value={value} onChange={onChange} placeholder={placeholder} inputMode={inputMode} />
   </div>
 );
 
@@ -193,7 +258,7 @@ export default function SettingPage() {
     phoneNo: user.phoneNo || '',
     firmName: user.firmName || '',
     gstno: user.gstno || '',
-    address: user.address || '',
+    address: user.address || '', // kept as the saved string; the form edits it via `addr`
     bankName: user.bankName || '',
     ifscCode: user.ifscCode || '',
     accountNo: user.accountNo || '',
@@ -217,17 +282,52 @@ export default function SettingPage() {
     pan: { number: user?.idproof?.pan?.number || "", link: user?.idproof?.pan?.link || "" },
   });
 
+  // Address is edited as separate fields and sent to the backend as one string
+  const parsedAddress = parseAddress(user.address);
+  const [addr, setAddr] = useState(parsedAddress.fields);
+  const legacyAddress = parsedAddress.legacy ? user.address : '';
+
   const handleChange = (field) => (e) => {
     setFormData({ ...formData, [field]: e.target.value });
   };
 
+  const handleAddrChange = (field) => (e) => setAddr({ ...addr, [field]: e.target.value });
+  // pincode: digits only, max 6
+  const handlePincodeChange = (e) => setAddr({ ...addr, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) });
+
+  const addressAnyFilled = Object.values(addr).some(v => v.trim());
+  const addressPreview = composeAddress(addr);
+
+  // Validation for the personal-details save (landmark is optional)
+  const addressError = () => {
+    if (!addressAnyFilled) return '';
+    if (!addr.house.trim()) return 'Please enter your house / flat number.';
+    if (!addr.street.trim()) return 'Please enter your street / colony / area.';
+    if (!addr.state) return 'Please select your state.';
+    if (!addr.city.trim()) return 'Please enter your city.';
+    if (!/^\d{6}$/.test(addr.pincode)) return 'Please enter a valid 6-digit pincode.';
+    return '';
+  };
+
+  // The string sent as `address`. An untouched, older free-text address is left as it was.
+  const addressForSave = () => {
+    if (addressAnyFilled) return addressError() ? formData.address : addressPreview;
+    return legacyAddress ? user.address : '';
+  };
+
   const handleSave = async () => {
     try {
-      const result = await updateUser(formData);
+      await updateUser({ ...formData, address: addressForSave() });
       notify('success', 'Details updated successfully!');
     } catch (err) {
       notify('error', 'Failed to update details.');
     }
+  };
+
+  const handleSavePersonal = async () => {
+    const problem = addressError();
+    if (problem) return notify('error', problem);
+    await handleSave();
   };
 
   const handleProfileUpload = async () => {
@@ -406,20 +506,77 @@ export default function SettingPage() {
                   <Field label="GST Number" Icon={FaIdCard} value={formData.gstno} onChange={handleChange('gstno')} />
                 </div>
 
-                <div style={{ marginTop: 14 }}>
-                  <label style={labelStyle}>
-                    <FaMapMarkerAlt size={10} color={C.accent} style={{ marginRight: 5, verticalAlign: -1 }} />
-                    Address
-                  </label>
-                  <textarea
-                    rows={2}
-                    style={{ ...controlStyle, resize: 'vertical', minHeight: 70, lineHeight: 1.5 }}
-                    value={formData.address}
-                    onChange={handleChange('address')}
-                  />
+                {/* Address — entered in parts, saved as one string */}
+                <div style={{ marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <FaMapMarkerAlt size={14} color={C.accent} />
+                    <span style={sectionTitleStyle}>Address</span>
+                  </div>
+                  <div style={sectionSubStyle}>Fill in each part — we combine them into your full address.</div>
+
+                  {legacyAddress && !addressAnyFilled && (
+                    <div style={{
+                      background: 'var(--warning)', color: 'var(--warning-foreground)',
+                      border: '1px solid var(--border)', borderLeft: `4px solid ${C.warning}`,
+                      borderRadius: 10, padding: '10px 14px', marginBottom: 14, fontSize: 12.5, lineHeight: 1.5,
+                    }}>
+                      <strong>Saved address (old format):</strong> {legacyAddress}
+                      <div style={{ marginTop: 2 }}>Fill in the fields below to replace it. Until then it stays as it is.</div>
+                    </div>
+                  )}
+
+                  <div style={gridTwo}>
+                    <Field
+                      label="House No. / Flat / Building" Icon={FaMapMarkerAlt} required
+                      value={addr.house} onChange={handleAddrChange('house')}
+                      placeholder="e.g. 101, Sunrise Apartments"
+                    />
+                    <Field
+                      label="Street / Colony / Area" Icon={FaMapMarkerAlt} required
+                      value={addr.street} onChange={handleAddrChange('street')}
+                      placeholder="e.g. Ranipura Main Road, Nayi Bagad"
+                    />
+                    <div>
+                      <label style={labelStyle}>
+                        <FaMapMarkerAlt size={10} color={C.accent} style={{ marginRight: 5, verticalAlign: -1 }} />
+                        State<span style={{ color: C.destructive }}> *</span>
+                      </label>
+                      <select style={{ ...controlStyle, cursor: 'pointer' }} value={addr.state} onChange={handleAddrChange('state')}>
+                        <option value="">Select state</option>
+                        {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                    <Field
+                      label="City" Icon={FaBuilding} required
+                      value={addr.city} onChange={handleAddrChange('city')}
+                      placeholder="e.g. Indore"
+                    />
+                    <Field
+                      label="Pincode" Icon={FaMapMarkerAlt} required
+                      value={addr.pincode} onChange={handlePincodeChange}
+                      placeholder="6-digit pincode" inputMode="numeric"
+                    />
+                    <Field
+                      label="Landmark" Icon={FaMapMarkerAlt}
+                      value={addr.landmark} onChange={handleAddrChange('landmark')}
+                      placeholder="e.g. Near City Mall (optional)"
+                    />
+                  </div>
+
+                  {/* Live preview of the string that will be saved */}
+                  <div style={{ marginTop: 14 }}>
+                    <div style={labelStyle}>Will be saved as</div>
+                    <div style={{
+                      fontSize: 13, color: addressPreview ? 'var(--foreground)' : 'var(--text-muted)', lineHeight: 1.55,
+                      background: 'var(--muted)', border: '1px solid var(--border)', borderRadius: 8,
+                      padding: '10px 12px', wordBreak: 'break-word', fontStyle: addressPreview ? 'normal' : 'italic',
+                    }}>
+                      {addressPreview || 'Your full address will appear here as you fill in the fields.'}
+                    </div>
+                  </div>
                 </div>
 
-                <button style={{ ...primaryBtn, marginTop: 16 }} onClick={handleSave}>Save Changes</button>
+                <button style={{ ...primaryBtn, marginTop: 18 }} onClick={handleSavePersonal}>Save Changes</button>
               </div>
             )}
 

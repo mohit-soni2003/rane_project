@@ -11,7 +11,7 @@ import AdminHeader from '../../../components/layout/header/AdminHeader';
 import {
   FaFileContract, FaFileSignature, FaCalendarAlt, FaInfoCircle, FaExternalLinkAlt,
   FaEye, FaPenFancy, FaCheckCircle, FaTimesCircle, FaTrash, FaHistory, FaClock,
-  FaUserTie, FaUserCircle, FaUser, FaCheck, FaTimes, FaExclamationTriangle,
+  FaUserCircle, FaCheck, FaTimes, FaExclamationTriangle, FaArrowLeft, FaStream, FaFileAlt,
 } from 'react-icons/fa';
 import { FiArrowRight } from 'react-icons/fi';
 
@@ -139,6 +139,48 @@ const Section = ({ icon: Icon, title, right, children }) => (
   </div>
 );
 
+// ── Avatar (falls back to initials / icon when the picture is missing) ───────
+const Avatar = ({ src, name, size = 48 }) => {
+  const [err, setErr] = useState(false);
+  const initials = typeof name === 'string' && name.trim()
+    ? name.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase()
+    : null;
+  if (src && !err && !src.includes('placeholder')) {
+    return <img src={src} onError={() => setErr(true)} alt={name || 'user'}
+      style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--secondary)', flexShrink: 0 }} />;
+  }
+  return (
+    <span style={{
+      width: size, height: size, borderRadius: '50%', border: '2px solid var(--secondary)',
+      background: 'var(--muted)', color: 'var(--secondary-foreground)',
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: size * 0.36, fontWeight: 700, flexShrink: 0,
+    }}>
+      {initials || <FaUserCircle size={size * 0.6} color={C.muted} />}
+    </span>
+  );
+};
+
+// ── Progress tracker: Uploaded → Viewed → Signed / Rejected / Expired ─────────
+const buildSteps = (a) => {
+  const viewed = !!a.viewedAt || ['viewed', 'signed'].includes(a.status);
+  const last =
+    a.status === 'signed' ? { label: 'Signed', state: 'done', date: a.signedAt || a.clientSignature?.date, Icon: FaPenFancy }
+      : a.status === 'rejected' ? { label: 'Rejected', state: 'bad', date: null, Icon: FaTimes }
+        : a.status === 'expired' ? { label: 'Expired', state: 'bad', date: a.expiryDate, Icon: FaTimes }
+          : { label: 'Signed', state: 'todo', date: null, Icon: FaPenFancy };
+  return [
+    { label: 'Uploaded', state: 'done', date: a.createdAt, Icon: FaFileAlt },
+    { label: 'Viewed', state: viewed ? 'done' : 'todo', date: a.viewedAt, Icon: FaEye },
+    last,
+  ];
+};
+const stepColors = {
+  done: { bg: 'var(--success)', fg: C.success, line: C.success },
+  bad: { bg: '#fde8e6', fg: C.destructive, line: C.destructive },
+  todo: { bg: 'var(--muted)', fg: C.muted, line: 'var(--border)' },
+};
+
 // ── Portal modal ──────────────────────────────────────────────────────────────
 const Modal = ({ show, onClose, busy, children }) => {
   if (!show) return null;
@@ -258,6 +300,8 @@ export default function SingleAgreementDetails() {
   }
 
   const hasExtensionRequest = agreement.extensionRequest?.requested;
+  const extensionPending = hasExtensionRequest && (agreement.extensionRequest.status || 'pending') === 'pending';
+  const steps = buildSteps(agreement);
   const extensions = agreement.extensions || [];
 
   return (
@@ -270,246 +314,345 @@ export default function SingleAgreementDetails() {
         color: 'var(--foreground)', background: 'var(--background)', minHeight: '100vh',
       }}>
 
-        {/* ── Page title bar ── */}
-        <div style={cardStyle}>
-          <div style={cardHeadStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{
-                width: 34, height: 34, borderRadius: 8, background: 'var(--warning)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}>
-                <FaFileSignature size={16} color={C.primary} />
+        {/* ── Header card ── */}
+        <div style={{ ...cardStyle, ...cardHeadStyle, padding: '14px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+            <button
+              onClick={() => navigate('/admin/agreement/track')}
+              aria-label="Back to all agreements"
+              style={{
+                width: 36, height: 36, borderRadius: 8, border: '1px solid var(--border)',
+                background: 'var(--secondary)', cursor: 'pointer', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <FaArrowLeft size={13} color={C.primary} />
+            </button>
+            <div style={{
+              width: 38, height: 38, borderRadius: 10, background: 'var(--warning)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <FaFileSignature size={17} color={C.primary} />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-strong)', lineHeight: 1.2, wordBreak: 'break-word' }}>
+                {agreement.title || 'Agreement Details'}
               </div>
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-strong)', lineHeight: 1.2 }}>
-                  Agreement Details
-                </div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
-                  {agreement.agreementId || '—'}
-                </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                ID {agreement.agreementId || agreement._id}
               </div>
             </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <StatusBadge status={agreement.status} />
+            <Btn variant="destructive" onClick={() => setShowDeleteModal(true)}>
+              <FaTrash size={12} /> Delete
+            </Btn>
           </div>
         </div>
 
-        {/* ── Agreement Information ── */}
-        <Section
-          icon={FaFileContract}
-          title="Agreement Information"
-          right={
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              fontSize: 12, fontWeight: 600, color: 'var(--text-strong)',
-              background: 'var(--muted)', padding: '5px 12px', borderRadius: 20,
-            }}>
-              <FaCalendarAlt size={12} color={C.accent} /> Expiry: {formatDate(agreement.expiryDate)}
+        {/* ── Pending extension banner ── */}
+        {extensionPending && (
+          <div style={{
+            ...cardStyle, padding: '12px 18px', display: 'flex', alignItems: 'center',
+            justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
+            background: 'var(--warning)', color: 'var(--warning-foreground)',
+          }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600 }}>
+              <FaClock size={14} color={C.warning} />
+              The client requested an extension
+              {agreement.extensionRequest.requestedExpiryDate
+                ? ` until ${formatDate(agreement.extensionRequest.requestedExpiryDate)}`
+                : ''}.
             </span>
-          }
-        >
-          <Row className="g-3">
-            <Col xs={6} md={6}><Field label="Agreement ID">{agreement.agreementId || '—'}</Field></Col>
-            <Col xs={6} md={6}>
-              <Field label="Status"><StatusBadge status={agreement.status} /></Field>
-            </Col>
-            <Col xs={12}><Field label="Title">{agreement.title || '—'}</Field></Col>
-            <Col xs={12}>
-              <span style={labelStyle}>Description</span>
-              <div style={{ fontSize: 13.5, color: 'var(--text-muted)', lineHeight: 1.55, wordBreak: 'break-word' }}>
-                {agreement.description || '—'}
-              </div>
-            </Col>
-            <Col xs={12}>
-              {agreement.fileUrl ? (
-                <a href={agreement.fileUrl} target="_blank" rel="noreferrer"
-                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary-hover)'; e.currentTarget.style.boxShadow = '0 2px 8px var(--shadow-color)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.boxShadow = 'none'; }}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 7,
-                    padding: '8px 16px', borderRadius: 8,
-                    background: 'var(--primary)', color: 'var(--primary-foreground)',
-                    fontSize: 13, fontWeight: 600, textDecoration: 'none',
-                    transition: 'background .15s, box-shadow .15s',
-                  }}>
-                  <FaExternalLinkAlt size={12} color="var(--primary-foreground)" /> View agreement file
-                </a>
-              ) : <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>No file attached</span>}
-            </Col>
-          </Row>
-        </Section>
-
-        {/* ── Participants ── */}
-        <Section icon={FaUserCircle} title="Participants">
-          <Row className="g-4">
-            {/* Uploaded by */}
-            <Col md={6}>
-              <span style={labelStyle}>Uploaded by</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
-                <img
-                  src={agreement.uploadedBy?.profile || ''} alt={agreement.uploadedBy?.name}
-                  onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'inline-flex'; }}
-                  style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--secondary)', background: 'var(--muted)' }}
-                />
-                <span style={{
-                  display: agreement.uploadedBy?.profile ? 'none' : 'inline-flex',
-                  alignItems: 'center', justifyContent: 'center', width: 52, height: 52,
-                  borderRadius: '50%', border: '2px solid var(--secondary)', background: 'var(--muted)',
-                }}>
-                  <FaUserTie size={20} color={C.muted} />
-                </span>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-strong)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <FaUserTie size={13} color={C.accent} /> {agreement.uploadedBy?.name || '—'}
-                  </div>
-                  <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 2 }}>
-                    {agreement.uploadedBy?.email || '—'}
-                  </div>
-                </div>
-              </div>
-            </Col>
-
-            {/* Client */}
-            <Col md={6}>
-              <span style={labelStyle}>Client</span>
-              <div
-                onClick={() => agreement.client?._id && navigate(`/admin/client-detail/${agreement.client._id}`)}
-                onMouseEnter={e => { if (agreement.client?._id) { e.currentTarget.style.background = 'var(--secondary)'; e.currentTarget.style.borderColor = 'var(--primary)'; } }}
-                onMouseLeave={e => { if (agreement.client?._id) { e.currentTarget.style.background = 'var(--muted)'; e.currentTarget.style.borderColor = 'var(--border)'; } }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 12, marginTop: 4,
-                  cursor: agreement.client?._id ? 'pointer' : 'default',
-                  background: 'var(--muted)', border: '1px solid var(--border)',
-                  borderRadius: 10, padding: '10px 12px',
-                  transition: 'background .15s, border-color .15s',
-                }}
-              >
-                <img
-                  src={agreement.client?.profile || ''} alt={agreement.client?.name}
-                  onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'inline-flex'; }}
-                  style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--secondary)', background: 'var(--card)' }}
-                />
-                <span style={{
-                  display: agreement.client?.profile ? 'none' : 'inline-flex',
-                  alignItems: 'center', justifyContent: 'center', width: 48, height: 48,
-                  borderRadius: '50%', border: '2px solid var(--secondary)', background: 'var(--card)',
-                }}>
-                  <FaUser size={18} color={C.muted} />
-                </span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-strong)' }}>
-                    {agreement.client?.name || '—'}
-                  </div>
-                  <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 2 }}>
-                    {agreement.client?.email || '—'}
-                  </div>
-                </div>
-                {agreement.client?._id && <FiArrowRight size={16} color={C.muted} />}
-              </div>
-            </Col>
-          </Row>
-        </Section>
-
-        {/* ── Timeline ── */}
-        <Section icon={FaCalendarAlt} title="Agreement Timeline">
-          <Row className="g-4">
-            <Col xs={6} md={3}><Field label="Uploaded at" icon={FaClock}>{formatDateTime(agreement.createdAt)}</Field></Col>
-            <Col xs={6} md={3}><Field label="Viewed at" icon={FaEye}>{formatDateTime(agreement.viewedAt)}</Field></Col>
-            <Col xs={6} md={3}><Field label="Signed at" icon={FaPenFancy}>{formatDateTime(agreement.signedAt)}</Field></Col>
-            <Col xs={6} md={3}><Field label="Expiry date" icon={FaCalendarAlt} strong danger>{formatDate(agreement.expiryDate)}</Field></Col>
-          </Row>
-        </Section>
-
-        {/* ── Extension Request ── */}
-        <Section
-          icon={FaClock}
-          title="Extension Request"
-          right={hasExtensionRequest ? <ExtStatusPill status={agreement.extensionRequest.status} /> : null}
-        >
-          {!hasExtensionRequest ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)' }}>
-              <FaInfoCircle size={14} color={C.muted} /> No extension requested.
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Btn variant="success" onClick={() => openReviewModal('approved')}>
+                <FaCheck size={12} /> Accept
+              </Btn>
+              <Btn variant="destructive" onClick={() => openReviewModal('rejected')}>
+                <FaTimes size={12} /> Reject
+              </Btn>
             </div>
-          ) : (
-            <>
-              <Row className="g-4">
-                <Col xs={6} md={4}>
-                  <Field label="Requested expiry" icon={FaCalendarAlt}>
-                    {formatDate(agreement.extensionRequest.requestedExpiryDate)}
-                  </Field>
-                </Col>
-                <Col xs={6} md={4}>
-                  <Field label="Status"><ExtStatusPill status={agreement.extensionRequest.status} /></Field>
-                </Col>
+          </div>
+        )}
+
+        {/* ── Main grid ── */}
+        <div className="sa-grid">
+
+          {/* LEFT COLUMN */}
+          <div style={{ minWidth: 0 }}>
+
+            {/* Agreement information */}
+            <Section
+              icon={FaFileContract}
+              title="Agreement Information"
+              right={
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  fontSize: 12, fontWeight: 600, color: 'var(--text-strong)',
+                  background: 'var(--muted)', padding: '5px 12px', borderRadius: 20,
+                }}>
+                  <FaCalendarAlt size={12} color={C.accent} /> Expiry: {formatDate(agreement.expiryDate)}
+                </span>
+              }
+            >
+              <Row className="g-3">
+                <Col xs={12} sm={6}><Field label="Title">{agreement.title || '—'}</Field></Col>
+                <Col xs={12} sm={6}><Field label="Agreement ID">{agreement.agreementId || '—'}</Field></Col>
                 <Col xs={12}>
-                  <span style={labelStyle}>Reason</span>
-                  <div style={{ fontSize: 13.5, color: 'var(--text-muted)', lineHeight: 1.55, wordBreak: 'break-word' }}>
-                    {agreement.extensionRequest.reason || '—'}
+                  <span style={labelStyle}>Description</span>
+                  <div style={{
+                    fontSize: 13.5, color: 'var(--foreground)', lineHeight: 1.55, wordBreak: 'break-word',
+                    background: 'var(--muted)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px',
+                  }}>
+                    {agreement.description || 'No description provided.'}
                   </div>
+                </Col>
+                {agreement.message && (
+                  <Col xs={12}>
+                    <span style={labelStyle}>Message</span>
+                    <div style={{
+                      fontSize: 13.5, color: 'var(--foreground)', lineHeight: 1.55, wordBreak: 'break-word',
+                      background: 'var(--muted)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px',
+                    }}>
+                      {agreement.message}
+                    </div>
+                  </Col>
+                )}
+                <Col xs={12}>
+                  {agreement.fileUrl ? (
+                    <a href={agreement.fileUrl} target="_blank" rel="noreferrer"
+                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary-hover)'; e.currentTarget.style.boxShadow = '0 2px 8px var(--shadow-color)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.boxShadow = 'none'; }}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 7,
+                        padding: '8px 16px', borderRadius: 8,
+                        background: 'var(--primary)', color: 'var(--primary-foreground)',
+                        fontSize: 13, fontWeight: 600, textDecoration: 'none',
+                        transition: 'background .15s, box-shadow .15s',
+                      }}>
+                      <FaExternalLinkAlt size={12} color="var(--primary-foreground)" /> View agreement file
+                    </a>
+                  ) : <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>No file attached</span>}
                 </Col>
               </Row>
+            </Section>
 
-              {/* Actions — only meaningful while still pending */}
-              <div style={{ display: 'flex', gap: 10, marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)', flexWrap: 'wrap' }}>
-                <Btn variant="success" onClick={() => openReviewModal('approved')}>
-                  <FaCheck size={12} /> Accept
-                </Btn>
-                <Btn variant="destructive" onClick={() => openReviewModal('rejected')}>
-                  <FaTimes size={12} /> Reject
-                </Btn>
+            {/* Progress */}
+            <Section icon={FaStream} title="Agreement Progress">
+              <div style={{ display: 'flex', alignItems: 'flex-start', paddingTop: 4 }}>
+                {steps.map((step, i) => {
+                  const col = stepColors[step.state];
+                  const next = steps[i + 1];
+                  return (
+                    <React.Fragment key={step.label + i}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 96, flexShrink: 0 }}>
+                        <span style={{
+                          width: 36, height: 36, borderRadius: '50%',
+                          background: col.bg, border: `2px solid ${col.line}`,
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          <step.Icon size={14} color={col.fg} />
+                        </span>
+                        <div style={{
+                          fontSize: 12, fontWeight: 700, marginTop: 8, textAlign: 'center',
+                          color: step.state === 'todo' ? 'var(--text-muted)' : 'var(--text-strong)',
+                        }}>
+                          {step.label}
+                        </div>
+                        <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 2, textAlign: 'center' }}>
+                          {step.date ? formatDateTime(step.date) : '—'}
+                        </div>
+                      </div>
+                      {next && (
+                        <div style={{
+                          flex: 1, height: 2, marginTop: 17, minWidth: 16,
+                          background: next.state === 'todo' ? 'var(--border)' : stepColors[next.state].line,
+                        }} />
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </div>
-            </>
-          )}
-        </Section>
+            </Section>
 
-        {/* ── Extension History ── */}
-        <Section
-          icon={FaHistory}
-          title="Extension History"
-          right={extensions.length > 0 ? (
-            <span style={{
-              fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
-              background: 'var(--muted)', padding: '4px 12px', borderRadius: 20,
-            }}>
-              {extensions.length} {extensions.length === 1 ? 'extension' : 'extensions'}
-            </span>
-          ) : null}
-        >
-          {extensions.length === 0 ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)' }}>
-              <FaInfoCircle size={14} color={C.muted} /> No extensions applied.
-            </div>
-          ) : (
-            extensions.map((ext, i) => (
-              <div key={i} style={{
-                background: 'var(--muted)', border: '1px solid var(--border)', borderRadius: 10,
-                padding: '12px 14px', marginBottom: i === extensions.length - 1 ? 0 : 10,
-              }}>
-                <Row className="g-3">
-                  <Col xs={6} md={3}><Field label="Old expiry">{formatDate(ext.oldExpiryDate)}</Field></Col>
-                  <Col xs={6} md={3}>
-                    <span style={labelStyle}>New expiry</span>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--success-foreground)' }}>
-                      {formatDate(ext.newExpiryDate)}
+            {/* Extension request */}
+            <Section
+              icon={FaClock}
+              title="Extension Request"
+              right={hasExtensionRequest ? <ExtStatusPill status={agreement.extensionRequest.status} /> : null}
+            >
+              {!hasExtensionRequest ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)' }}>
+                  <FaInfoCircle size={14} color={C.muted} /> No extension requested.
+                </div>
+              ) : (
+                <>
+                  <Row className="g-3">
+                    <Col xs={6} md={4}>
+                      <Field label="Requested expiry" icon={FaCalendarAlt}>
+                        {formatDate(agreement.extensionRequest.requestedExpiryDate)}
+                      </Field>
+                    </Col>
+                    <Col xs={6} md={4}>
+                      <Field label="Requested on" icon={FaClock}>
+                        {formatDateTime(agreement.extensionRequest.requestedAt)}
+                      </Field>
+                    </Col>
+                    {agreement.extensionRequest.reviewedAt && (
+                      <Col xs={6} md={4}>
+                        <Field label="Reviewed on" icon={FaCheckCircle}>
+                          {formatDateTime(agreement.extensionRequest.reviewedAt)}
+                        </Field>
+                      </Col>
+                    )}
+                    <Col xs={12}>
+                      <span style={labelStyle}>Reason</span>
+                      <div style={{
+                        fontSize: 13.5, color: 'var(--foreground)', lineHeight: 1.55, wordBreak: 'break-word',
+                        background: 'var(--muted)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px',
+                      }}>
+                        {agreement.extensionRequest.reason || '—'}
+                      </div>
+                    </Col>
+                  </Row>
+
+                  {/* Actions — only while the request is still pending */}
+                  {extensionPending && (
+                    <div style={{ display: 'flex', gap: 10, marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)', flexWrap: 'wrap' }}>
+                      <Btn variant="success" onClick={() => openReviewModal('approved')}>
+                        <FaCheck size={12} /> Accept
+                      </Btn>
+                      <Btn variant="destructive" onClick={() => openReviewModal('rejected')}>
+                        <FaTimes size={12} /> Reject
+                      </Btn>
                     </div>
-                  </Col>
-                  <Col xs={6} md={3}><Field label="Extended at">{formatDateTime(ext.extendedAt)}</Field></Col>
-                  <Col xs={6} md={3}>
-                    <span style={labelStyle}>Reason</span>
-                    <div style={{ fontSize: 13.5, color: 'var(--text-muted)', wordBreak: 'break-word' }}>
-                      {ext.reason || '—'}
+                  )}
+                </>
+              )}
+            </Section>
+
+            {/* Extension history */}
+            <Section
+              icon={FaHistory}
+              title="Extension History"
+              right={extensions.length > 0 ? (
+                <span style={{
+                  fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
+                  background: 'var(--muted)', padding: '4px 12px', borderRadius: 20,
+                }}>
+                  {extensions.length} {extensions.length === 1 ? 'extension' : 'extensions'}
+                </span>
+              ) : null}
+            >
+              {extensions.length === 0 ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)' }}>
+                  <FaInfoCircle size={14} color={C.muted} /> No extensions applied.
+                </div>
+              ) : (
+                extensions.map((ext, i) => (
+                  <div key={ext._id || i} style={{
+                    background: 'var(--muted)', border: '1px solid var(--border)', borderRadius: 10,
+                    padding: '12px 14px', marginBottom: i === extensions.length - 1 ? 0 : 10,
+                  }}>
+                    <Row className="g-3">
+                      <Col xs={6} md={3}><Field label="Old expiry">{formatDate(ext.oldExpiryDate)}</Field></Col>
+                      <Col xs={6} md={3}>
+                        <span style={labelStyle}>New expiry</span>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: C.success }}>
+                          {formatDate(ext.newExpiryDate)}
+                        </div>
+                      </Col>
+                      <Col xs={6} md={3}><Field label="Extended at">{formatDateTime(ext.extendedAt)}</Field></Col>
+                      <Col xs={6} md={3}>
+                        <span style={labelStyle}>Reason</span>
+                        <div style={{ fontSize: 13.5, color: 'var(--text-muted)', wordBreak: 'break-word' }}>
+                          {ext.reason || '—'}
+                        </div>
+                      </Col>
+                    </Row>
+                  </div>
+                ))
+              )}
+            </Section>
+          </div>
+
+          {/* RIGHT COLUMN */}
+          <div style={{ minWidth: 0 }}>
+
+            {/* Participants */}
+            <Section icon={FaUserCircle} title="Participants">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {/* Uploaded by */}
+                <div>
+                  <span style={labelStyle}>Uploaded by</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
+                    <Avatar src={agreement.uploadedBy?.profile} name={agreement.uploadedBy?.name} />
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-strong)', wordBreak: 'break-word' }}>
+                        {agreement.uploadedBy?.name || '—'}
+                      </div>
+                      <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 2, wordBreak: 'break-all' }}>
+                        {agreement.uploadedBy?.email || '—'}
+                      </div>
                     </div>
-                  </Col>
-                </Row>
+                  </div>
+                </div>
+
+                <div style={{ height: 1, background: 'var(--border)' }} />
+
+                {/* Client */}
+                <div>
+                  <span style={labelStyle}>Client</span>
+                  <div
+                    onClick={() => agreement.client?._id && navigate(`/admin/client-detail/${agreement.client._id}`)}
+                    onMouseEnter={e => { if (agreement.client?._id) { e.currentTarget.style.background = 'var(--secondary)'; e.currentTarget.style.borderColor = 'var(--primary)'; } }}
+                    onMouseLeave={e => { if (agreement.client?._id) { e.currentTarget.style.background = 'var(--muted)'; e.currentTarget.style.borderColor = 'var(--border)'; } }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 12, marginTop: 4,
+                      cursor: agreement.client?._id ? 'pointer' : 'default',
+                      background: 'var(--muted)', border: '1px solid var(--border)',
+                      borderRadius: 10, padding: '10px 12px',
+                      transition: 'background .15s, border-color .15s',
+                    }}
+                  >
+                    <Avatar src={agreement.client?.profile} name={agreement.client?.name} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-strong)', wordBreak: 'break-word' }}>
+                        {agreement.client?.name || '—'}
+                      </div>
+                      <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 2, wordBreak: 'break-all' }}>
+                        {agreement.client?.email || '—'}
+                      </div>
+                    </div>
+                    {agreement.client?._id && <FiArrowRight size={16} color={C.muted} />}
+                  </div>
+                </div>
               </div>
-            ))
-          )}
-        </Section>
+            </Section>
 
-        {/* ── Danger zone ── */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 24 }}>
-          <Btn variant="destructive" onClick={() => setShowDeleteModal(true)}>
-            <FaTrash size={12} /> Delete agreement
-          </Btn>
+            {/* Key dates */}
+            <Section icon={FaCalendarAlt} title="Key Dates">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <Field label="Uploaded at" icon={FaClock}>{formatDateTime(agreement.createdAt)}</Field>
+                <Field label="Viewed at" icon={FaEye}>{formatDateTime(agreement.viewedAt)}</Field>
+                <Field label="Signed at" icon={FaPenFancy}>{formatDateTime(agreement.signedAt)}</Field>
+                <div style={{ height: 1, background: 'var(--border)' }} />
+                <Field label="Expiry date" icon={FaCalendarAlt} strong danger>{formatDate(agreement.expiryDate)}</Field>
+              </div>
+            </Section>
+
+            {/* Client signature */}
+            <Section icon={FaPenFancy} title="Client Signature">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <Field label="Signature name">{agreement.clientSignature?.name || '—'}</Field>
+                <Field label="Signature date">{formatDateTime(agreement.clientSignature?.date)}</Field>
+                <Field label="IP address">
+                  <span style={{ fontFamily: 'monospace', fontSize: 13 }}>{agreement.clientSignature?.ip || '—'}</span>
+                </Field>
+              </div>
+            </Section>
+          </div>
         </div>
       </div>
 
@@ -566,6 +709,8 @@ export default function SingleAgreementDetails() {
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .sa-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+        @media (max-width: 991px) { .sa-grid { grid-template-columns: minmax(0, 1fr); } }
         @keyframes modalFade { from { opacity: 0; } to { opacity: 1; } }
         @keyframes modalPop { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
       `}</style>

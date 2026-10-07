@@ -4,6 +4,7 @@ const PayNote = require("../models/paynoteModel");
 const Bill = require("../models/billmodel");
 const User = require("../models/usermodel");
 const verifyToken = require("../middleware/verifyToken");
+const verifyRole = require("../middleware/verifyRole");
 
 router.post("/create-paynote",verifyToken,  async (req, res) => {
     try {
@@ -47,6 +48,27 @@ router.post("/create-paynote",verifyToken,  async (req, res) => {
         const savedPayNote = await newPayNote.save();
 
         res.status(201).json({ message: "PayNote created successfully", payNote: savedPayNote });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+});
+
+router.put("/update-status/:id", verifyToken, verifyRole("admin"), async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // Validate status
+    const validStatuses = ["Draft", "Pending", "Approved", "Rejected", "Paid"];
+    if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+    }
+
+    try {
+        const paynote = await PayNote.findByIdAndUpdate(id, { status }, { new: true });
+        if (!paynote) {
+            return res.status(404).json({ message: "PayNote not found" });
+        }
+        res.json({ message: "Status updated successfully", paynote });
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }

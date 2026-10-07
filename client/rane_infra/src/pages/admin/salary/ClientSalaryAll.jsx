@@ -6,19 +6,28 @@ import { getAllClients } from '../../../services/userServices';
 import { getBaseSalary, uploadBaseSalary, initMonthlySalary } from '../../../services/salaryServices';
 import dummyUser from '../../../assets/images/dummyUser.jpeg';
 import { useNavigate } from 'react-router-dom';
-import { FaMoneyBillWave, FaRupeeSign, FaUsers, FaCheckCircle } from 'react-icons/fa';
-import { FiSearch, FiX, FiArrowRight, FiRefreshCw } from 'react-icons/fi';
+import { FaMoneyBillWave, FaRupeeSign, FaUsers, FaCheckCircle, FaExclamationCircle, FaCalendarAlt } from 'react-icons/fa';
+import {
+  FiSearch, FiX, FiArrowRight, FiRefreshCw, FiFilter, FiChevronDown, FiRotateCcw, FiMail, FiPhone,
+} from 'react-icons/fi';
 
 // ── Shared style tokens ───────────────────────────────────────────────────────
 const labelStyle = {
   fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
   textTransform: 'uppercase', letterSpacing: '0.05em',
 };
-const controlStyle = {
-  border: '1px solid var(--border)', borderRadius: 8,
-  padding: '9px 12px', fontSize: 13, color: 'var(--foreground)',
-  background: 'var(--input)', outline: 'none', boxSizing: 'border-box',
+const thStyle = {
+  padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700,
+  color: 'var(--text-muted)', textTransform: 'uppercase',
+  letterSpacing: '0.05em', whiteSpace: 'nowrap',
 };
+
+const spinnerStyle = (light) => ({
+  width: 12, height: 12, borderRadius: '50%', display: 'inline-block',
+  border: `2px solid ${light ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.15)'}`,
+  borderTopColor: light ? '#fff' : 'var(--success-foreground)',
+  animation: 'spin 1s linear infinite',
+});
 
 export default function ClientSalaryAll() {
   const [clients,    setClients]    = useState([]);
@@ -28,8 +37,11 @@ export default function ClientSalaryAll() {
   const [updating,   setUpdating]   = useState(null);
   const [initializing, setInitializing] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [salaryFilter, setSalaryFilter] = useState('all'); // all | set | unset
+  const [sortKey, setSortKey] = useState('name');          // name | salary-desc | salary-asc
 
   const currentMonth = new Date().toISOString().slice(0, 7);
+  const monthLabel = new Date(`${currentMonth}-01`).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -95,14 +107,26 @@ export default function ClientSalaryAll() {
     }
   };
 
-  const filteredClients = clients.filter(c => {
-    const t = searchTerm.toLowerCase();
-    return (
-      (c.name  || '').toLowerCase().includes(t) ||
-      (c.email || '').toLowerCase().includes(t) ||
-      (c.cid   || '').toLowerCase().includes(t)
-    );
-  });
+  const filteredClients = clients
+    .filter(c => {
+      const t = searchTerm.toLowerCase();
+      const matchesSearch =
+        (c.name  || '').toLowerCase().includes(t) ||
+        (c.email || '').toLowerCase().includes(t) ||
+        (c.cid   || '').toLowerCase().includes(t);
+      const hasSalary = (salaries[c._id] || 0) > 0;
+      const matchesSalary =
+        salaryFilter === 'all' || (salaryFilter === 'set' ? hasSalary : !hasSalary);
+      return matchesSearch && matchesSalary;
+    })
+    .sort((a, b) => {
+      if (sortKey === 'salary-desc') return (salaries[b._id] || 0) - (salaries[a._id] || 0);
+      if (sortKey === 'salary-asc')  return (salaries[a._id] || 0) - (salaries[b._id] || 0);
+      return (a.name || '').localeCompare(b.name || '');
+    });
+
+  const hasActiveFilters = searchTerm !== '' || salaryFilter !== 'all' || sortKey !== 'name';
+  const resetFilters = () => { setSearchTerm(''); setSalaryFilter('all'); setSortKey('name'); };
 
   // ── Stat derivations ─────────────────────────────────────────────────────
   const totalSalary    = Object.values(salaries).reduce((s, v) => s + (v || 0), 0);
@@ -110,6 +134,65 @@ export default function ClientSalaryAll() {
   const withoutSalary  = clients.length - withSalary;
 
   const fmtINR = (n) => Number(n).toLocaleString('en-IN');
+
+  // ── Reusable pieces ──────────────────────────────────────────────────────
+  const renderSalaryChip = (amount) => (amount > 0 ? (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontWeight: 700, fontSize: 13.5, color: 'var(--text-strong)' }}>
+      <FaRupeeSign size={11} color="var(--accent)" />{fmtINR(amount)}
+    </span>
+  ) : (
+    <span style={{
+      display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+      background: 'var(--warning)', color: 'var(--warning-foreground)',
+    }}>Not set</span>
+  ));
+
+  const renderSalaryEditor = (client) => (
+    <div className="cs-editor">
+      <span className="cs-editor-prefix">₹</span>
+      <input
+        type="number"
+        min="0"
+        placeholder="New amount"
+        value={newSalaries[client._id] || ''}
+        onChange={e => handleSalaryChange(client._id, e.target.value)}
+        onKeyDown={e => { if (e.key === 'Enter' && updating !== client._id) handleUpdate(client._id); }}
+        aria-label={`New base salary for ${client.name || 'client'}`}
+      />
+      <button
+        type="button"
+        disabled={updating === client._id}
+        onClick={() => handleUpdate(client._id)}
+        className="cs-editor-save"
+      >
+        {updating === client._id ? <span style={spinnerStyle(true)} /> : 'Save'}
+      </button>
+    </div>
+  );
+
+  const renderInitButton = (client, short) => (
+    <button
+      type="button"
+      disabled={initializing === client._id}
+      onClick={() => handleInitialize(client._id)}
+      className="cs-btn cs-btn-success"
+      title={`Create ${monthLabel} salary record`}
+    >
+      {initializing === client._id
+        ? <><span style={spinnerStyle(false)} /> Working…</>
+        : <><FiRefreshCw size={11} /> {short ? 'Init month' : 'Initialize month'}</>}
+    </button>
+  );
+
+  const renderDetailsButton = (client) => (
+    <button
+      type="button"
+      onClick={() => navigate(`/admin/salary-detail/${client._id}/${currentMonth}`)}
+      className="cs-btn cs-btn-secondary"
+    >
+      Details <FiArrowRight size={11} />
+    </button>
+  );
 
   return (
     <>
@@ -145,15 +228,16 @@ export default function ClientSalaryAll() {
                   Client Base Salaries
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
-                  Manage and update client salary records
+                  Set each client&apos;s base salary and start their monthly salary record
                 </div>
               </div>
             </div>
             <span style={{
-              fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
-              background: 'var(--muted)', padding: '4px 12px', borderRadius: 20,
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              fontSize: 12, fontWeight: 600, color: 'var(--text-strong)',
+              background: 'var(--muted)', padding: '5px 12px', borderRadius: 20,
             }}>
-              {clients.length} total
+              <FaCalendarAlt size={11} color="var(--accent)" /> {monthLabel}
             </span>
           </div>
 
@@ -163,7 +247,7 @@ export default function ClientSalaryAll() {
             {!loading && (
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
                 gap: 12, marginBottom: 16,
               }}>
                 {[
@@ -184,9 +268,16 @@ export default function ClientSalaryAll() {
                   {
                     label: 'Salary assigned',
                     value: withSalary,
-                    sub: `${withoutSalary} still unset`,
-                    icon: <FaCheckCircle size={14} color="var(--success-foreground)" />,
+                    sub: 'clients with a base salary',
+                    icon: <FaCheckCircle size={14} color="#1e40af" />,
                     bg: '#dbeafe', color: '#1e40af',
+                  },
+                  {
+                    label: 'Salary not set',
+                    value: withoutSalary,
+                    sub: withoutSalary === 0 ? 'all clients covered' : 'need a base salary',
+                    icon: <FaExclamationCircle size={14} color="var(--warning-foreground)" />,
+                    bg: 'var(--warning)', color: 'var(--warning-foreground)',
                   },
                 ].map(({ label, value, sub, icon, bg, color }) => (
                   <div key={label} style={{
@@ -209,52 +300,52 @@ export default function ClientSalaryAll() {
             )}
 
             {/* ── Search / filter bar ── */}
-            <div style={{
-              background: 'var(--card)', border: '1px solid var(--border)',
-              borderRadius: 12, padding: '14px 16px', marginBottom: 14,
-              boxShadow: '0 2px 8px var(--shadow-color)',
-            }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'flex-end' }}>
-
-                {/* Search */}
-                <div style={{ flex: '1 1 280px', minWidth: 220 }}>
-                  <label style={{ ...labelStyle, display: 'block', marginBottom: 5 }}>Search</label>
-                  <div style={{ position: 'relative' }}>
-                    <FiSearch size={14} color="var(--muted-foreground)"
-                      style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)' }} />
-                    <input
-                      type="text" placeholder="Search by name, email or CID…"
-                      value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                      style={{ ...controlStyle, width: '100%', height: 38, paddingLeft: 33, paddingRight: searchTerm ? 32 : 12 }}
-                    />
-                    {searchTerm && (
-                      <FiX size={14} color="var(--muted-foreground)"
-                        onClick={() => setSearchTerm('')}
-                        style={{ position: 'absolute', right: 11, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }} />
-                    )}
-                  </div>
-                </div>
-
-                {/* Reset */}
-                <button
-                  onClick={() => setSearchTerm('')}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                    height: 38, padding: '0 16px', borderRadius: 8,
-                    border: '1px solid var(--border)',
-                    background: 'var(--secondary)', color: 'var(--secondary-foreground)',
-                    fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--secondary-hover)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'var(--secondary)'}
-                >
-                  <FiX size={14} /> Reset
-                </button>
+            <div className="cs-toolbar">
+              <div className="cs-search">
+                <FiSearch size={15} color="var(--muted-foreground)" className="cs-icon-left" />
+                <input
+                  type="text"
+                  placeholder="Search by name, email or CID…"
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="cs-ctl"
+                  style={{ paddingLeft: 36, paddingRight: searchTerm ? 34 : 12 }}
+                />
+                {searchTerm && (
+                  <button type="button" aria-label="Clear search" className="cs-clear" onClick={() => setSearchTerm('')}>
+                    <FiX size={14} color="var(--muted-foreground)" />
+                  </button>
+                )}
               </div>
 
-              <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)', fontSize: 12, color: 'var(--text-muted)' }}>
-                Showing <strong style={{ color: 'var(--text-strong)' }}>{filteredClients.length}</strong> of{' '}
-                <strong style={{ color: 'var(--text-strong)' }}>{clients.length}</strong> clients
+              <div className="cs-select">
+                <FiFilter size={14} color="var(--muted-foreground)" className="cs-icon-left" />
+                <select value={salaryFilter} onChange={e => setSalaryFilter(e.target.value)} className="cs-ctl" aria-label="Filter by salary status">
+                  <option value="all">All clients</option>
+                  <option value="set">Salary set</option>
+                  <option value="unset">Salary not set</option>
+                </select>
+                <FiChevronDown size={14} color="var(--muted-foreground)" className="cs-icon-right" />
+              </div>
+
+              <div className="cs-select">
+                <FaMoneyBillWave size={13} color="var(--muted-foreground)" className="cs-icon-left" />
+                <select value={sortKey} onChange={e => setSortKey(e.target.value)} className="cs-ctl" aria-label="Sort clients">
+                  <option value="name">Name (A–Z)</option>
+                  <option value="salary-desc">Salary: High to low</option>
+                  <option value="salary-asc">Salary: Low to high</option>
+                </select>
+                <FiChevronDown size={14} color="var(--muted-foreground)" className="cs-icon-right" />
+              </div>
+
+              {hasActiveFilters && (
+                <button type="button" className="cs-reset" onClick={resetFilters}>
+                  <FiRotateCcw size={13} /> Reset
+                </button>
+              )}
+
+              <div className="cs-count">
+                Showing <strong>{filteredClients.length}</strong> of <strong>{clients.length}</strong> clients
               </div>
             </div>
 
@@ -279,7 +370,7 @@ export default function ClientSalaryAll() {
                 <FaUsers size={32} color="var(--muted-foreground)" style={{ marginBottom: 12 }} />
                 <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-strong)', marginBottom: 4 }}>No clients found</div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  {searchTerm ? 'Try adjusting your search.' : 'No clients have been added yet.'}
+                  {searchTerm || salaryFilter !== 'all' ? 'Try adjusting your search or filters.' : 'No clients have been added yet.'}
                 </div>
               </div>
             )}
@@ -287,15 +378,11 @@ export default function ClientSalaryAll() {
             {/* ── Desktop table ── */}
             {!loading && filteredClients.length > 0 && (
               <div className="d-none d-md-block" style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', minWidth: 1100, borderCollapse: 'collapse', fontSize: 13 }}>
+                <table style={{ width: '100%', minWidth: 940, borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
                     <tr style={{ background: 'var(--muted)', borderBottom: '2px solid var(--border)' }}>
-                      {['S.No', 'Client', 'Email', 'Phone', 'CID', 'Base Salary', 'New Salary', 'Update', 'Initialize', 'Details'].map(h => (
-                        <th key={h} style={{
-                          padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700,
-                          color: 'var(--text-muted)', textTransform: 'uppercase',
-                          letterSpacing: '0.04em', whiteSpace: 'nowrap',
-                        }}>{h}</th>
+                      {['#', 'Client', 'Contact', 'Base Salary', 'Set New Salary', 'Actions'].map((h, i) => (
+                        <th key={h} style={{ ...thStyle, textAlign: i === 5 ? 'right' : 'left' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -306,11 +393,11 @@ export default function ClientSalaryAll() {
                         onMouseEnter={e => e.currentTarget.style.background = 'var(--muted)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                       >
-                        {/* S.No */}
+                        {/* # */}
                         <td style={{ padding: '11px 14px' }}>
                           <span style={{
                             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                            width: 28, height: 28, borderRadius: '50%',
+                            width: 26, height: 26, borderRadius: '50%',
                             background: 'var(--secondary)', color: 'var(--secondary-foreground)',
                             fontWeight: 700, fontSize: 11,
                           }}>{index + 1}</span>
@@ -318,145 +405,53 @@ export default function ClientSalaryAll() {
 
                         {/* Client */}
                         <td style={{ padding: '11px 14px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             <img
                               src={client.profile || dummyUser}
                               alt={client.name}
                               style={{
-                                width: 32, height: 32, borderRadius: '50%',
+                                width: 36, height: 36, borderRadius: '50%',
                                 objectFit: 'cover', border: '1px solid var(--border)', flexShrink: 0,
                               }}
                               onError={e => { e.currentTarget.src = dummyUser; }}
                             />
-                            <div>
+                            <div style={{ minWidth: 0 }}>
                               <div style={{ fontWeight: 600, color: 'var(--text-strong)', lineHeight: 1.2, whiteSpace: 'nowrap' }}>
                                 {client.name || '—'}
                               </div>
-                              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
-                                {client.cid || '—'}
+                              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                                {client.cid && client.cid !== 'N/A' ? client.cid : `CID-${index + 1}`}
                               </div>
                             </div>
                           </div>
                         </td>
 
-                        {/* Email */}
-                        <td style={{ padding: '11px 14px', color: 'var(--text-muted)', fontSize: 12, maxWidth: 180 }}>
-                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={client.email}>
-                            {client.email || '—'}
+                        {/* Contact */}
+                        <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-muted)', maxWidth: 220 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={client.email}>
+                            <FiMail size={11} color="var(--accent)" style={{ flexShrink: 0 }} /> {client.email || '—'}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                            <FiPhone size={11} color="var(--accent)" style={{ flexShrink: 0 }} /> {client.phoneNo || '—'}
                           </div>
                         </td>
 
-                        {/* Phone */}
-                        <td style={{ padding: '11px 14px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                          {client.phoneNo || '—'}
-                        </td>
-
-                        {/* CID */}
-                        <td style={{ padding: '11px 14px', fontWeight: 600, color: 'var(--text-strong)' }}>
-                          {client.cid || `CID-${index + 1}`}
-                        </td>
-
-                        {/* Base Salary */}
+                        {/* Base salary */}
                         <td style={{ padding: '11px 14px' }}>
-                          <span style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 3,
-                            fontWeight: 700, color: 'var(--text-strong)', fontSize: 13,
-                          }}>
-                            <FaRupeeSign size={11} color="var(--accent)" />
-                            {fmtINR(salaries[client._id] || 0)}
-                          </span>
+                          {renderSalaryChip(salaries[client._id] || 0)}
                         </td>
 
-                        {/* New Salary Input */}
-                        <td style={{ padding: '11px 14px', minWidth: 148 }}>
-                          <div style={{ position: 'relative' }}>
-                            <span style={{
-                              position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
-                              fontSize: 12, color: 'var(--text-muted)', pointerEvents: 'none',
-                            }}>₹</span>
-                            <input
-                              type="number"
-                              min="0"
-                              placeholder="0"
-                              value={newSalaries[client._id] || ''}
-                              onChange={e => handleSalaryChange(client._id, e.target.value)}
-                              style={{
-                                ...controlStyle,
-                                width: '100%', height: 34,
-                                paddingLeft: 22, paddingRight: 8,
-                                fontSize: 13,
-                              }}
-                            />
+                        {/* Set new salary */}
+                        <td style={{ padding: '11px 14px', minWidth: 230 }}>
+                          {renderSalaryEditor(client)}
+                        </td>
+
+                        {/* Actions */}
+                        <td style={{ padding: '11px 14px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                            {renderInitButton(client, false)}
+                            {renderDetailsButton(client)}
                           </div>
-                        </td>
-
-                        {/* Update */}
-                        <td style={{ padding: '11px 14px' }}>
-                          <button
-                            disabled={updating === client._id}
-                            onClick={() => handleUpdate(client._id)}
-                            style={{
-                              display: 'inline-flex', alignItems: 'center', gap: 5,
-                              padding: '6px 13px', borderRadius: 7, border: 'none',
-                              background: updating === client._id ? 'var(--muted)' : 'var(--primary)',
-                              color: updating === client._id ? 'var(--muted-foreground)' : 'var(--primary-foreground)',
-                              fontSize: 12, fontWeight: 600, cursor: updating === client._id ? 'not-allowed' : 'pointer',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {updating === client._id ? (
-                              <><span style={{
-                                width: 12, height: 12, border: '2px solid rgba(255,255,255,0.4)',
-                                borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block',
-                                animation: 'spin 1s linear infinite',
-                              }} /> Saving…</>
-                            ) : 'Save'}
-                          </button>
-                        </td>
-
-                        {/* Initialize */}
-                        <td style={{ padding: '11px 14px' }}>
-                          <button
-                            disabled={initializing === client._id}
-                            onClick={() => handleInitialize(client._id)}
-                            style={{
-                              display: 'inline-flex', alignItems: 'center', gap: 5,
-                              padding: '6px 13px', borderRadius: 7, border: 'none',
-                              background: initializing === client._id ? 'var(--muted)' : 'var(--success)',
-                              color: initializing === client._id ? 'var(--muted-foreground)' : 'var(--success-foreground)',
-                              fontSize: 12, fontWeight: 600,
-                              cursor: initializing === client._id ? 'not-allowed' : 'pointer',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {initializing === client._id ? (
-                              <><span style={{
-                                width: 12, height: 12, border: '2px solid rgba(0,0,0,0.15)',
-                                borderTopColor: 'var(--success-foreground)', borderRadius: '50%',
-                                display: 'inline-block', animation: 'spin 1s linear infinite',
-                              }} /> Working…</>
-                            ) : (
-                              <><FiRefreshCw size={11} /> Initialize</>
-                            )}
-                          </button>
-                        </td>
-
-                        {/* Details */}
-                        <td style={{ padding: '11px 14px' }}>
-                          <button
-                            onClick={() => navigate(`/admin/salary-detail/${client._id}/${currentMonth}`)}
-                            style={{
-                              display: 'inline-flex', alignItems: 'center', gap: 5,
-                              padding: '6px 13px', borderRadius: 7,
-                              border: '1px solid var(--border)',
-                              background: 'var(--secondary)', color: 'var(--secondary-foreground)',
-                              fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
-                            }}
-                            onMouseEnter={e => e.currentTarget.style.background = 'var(--secondary-hover)'}
-                            onMouseLeave={e => e.currentTarget.style.background = 'var(--secondary)'}
-                          >
-                            Details <FiArrowRight size={11} />
-                          </button>
                         </td>
                       </tr>
                     ))}
@@ -475,133 +470,56 @@ export default function ClientSalaryAll() {
                     boxShadow: '0 2px 8px var(--shadow-color)',
                   }}>
                     {/* Header row */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                         <img
                           src={client.profile || dummyUser}
                           alt={client.name}
                           style={{
-                            width: 36, height: 36, borderRadius: '50%',
+                            width: 38, height: 38, borderRadius: '50%',
                             objectFit: 'cover', border: '1px solid var(--border)', flexShrink: 0,
                           }}
                           onError={e => { e.currentTarget.src = dummyUser; }}
                         />
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-strong)', lineHeight: 1.2 }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-strong)', lineHeight: 1.2, wordBreak: 'break-word' }}>
                             {client.name || '—'}
                           </div>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
-                            {client.cid || '—'} · {client.phoneNo || '—'}
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                            {client.cid && client.cid !== 'N/A' ? client.cid : `CID-${index + 1}`}
                           </div>
                         </div>
                       </div>
-                      {/* Current salary chip */}
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 2,
-                        padding: '4px 10px', borderRadius: 20,
-                        background: 'var(--success)', color: 'var(--success-foreground)',
-                        fontSize: 12, fontWeight: 700,
-                      }}>
-                        <FaRupeeSign size={10} />{fmtINR(salaries[client._id] || 0)}
-                      </span>
+                      {renderSalaryChip(salaries[client._id] || 0)}
                     </div>
 
-                    {/* Info grid */}
+                    {/* Contact */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px', marginBottom: 12 }}>
-                      {[
-                        { label: 'Email', value: client.email || '—' },
-                        { label: 'CID',   value: client.cid   || '—' },
-                      ].map(({ label, value }) => (
-                        <div key={label}>
-                          <div style={{ ...labelStyle, marginBottom: 2 }}>{label}</div>
-                          <div style={{
-                            fontSize: 13, fontWeight: 600, color: 'var(--text-strong)',
-                            wordBreak: 'break-word', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                          }}>{value}</div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ ...labelStyle, marginBottom: 2 }}>Email</div>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-strong)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {client.email || '—'}
                         </div>
-                      ))}
-                    </div>
-
-                    {/* New salary input */}
-                    <div style={{ marginBottom: 10 }}>
-                      <div style={{ ...labelStyle, marginBottom: 5 }}>New base salary</div>
-                      <div style={{ position: 'relative' }}>
-                        <span style={{
-                          position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)',
-                          fontSize: 13, color: 'var(--text-muted)', pointerEvents: 'none',
-                        }}>₹</span>
-                        <input
-                          type="number"
-                          min="0"
-                          placeholder="Enter amount"
-                          value={newSalaries[client._id] || ''}
-                          onChange={e => handleSalaryChange(client._id, e.target.value)}
-                          style={{ ...controlStyle, width: '100%', paddingLeft: 24 }}
-                        />
+                      </div>
+                      <div>
+                        <div style={{ ...labelStyle, marginBottom: 2 }}>Phone</div>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-strong)' }}>{client.phoneNo || '—'}</div>
                       </div>
                     </div>
 
-                    {/* Action buttons */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                      {/* Save */}
-                      <button
-                        disabled={updating === client._id}
-                        onClick={() => handleUpdate(client._id)}
-                        style={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                          padding: '9px 6px', borderRadius: 8, border: 'none',
-                          background: updating === client._id ? 'var(--muted)' : 'var(--primary)',
-                          color: updating === client._id ? 'var(--muted-foreground)' : 'var(--primary-foreground)',
-                          fontSize: 12, fontWeight: 600,
-                          cursor: updating === client._id ? 'not-allowed' : 'pointer',
-                        }}
-                      >
-                        {updating === client._id
-                          ? <span style={{ width: 12, height: 12, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }} />
-                          : 'Save'}
-                      </button>
+                    {/* New salary */}
+                    <div style={{ marginBottom: 10 }}>
+                      <div style={{ ...labelStyle, marginBottom: 5 }}>Set new base salary</div>
+                      {renderSalaryEditor(client)}
+                    </div>
 
-                      {/* Initialize */}
-                      <button
-                        disabled={initializing === client._id}
-                        onClick={() => handleInitialize(client._id)}
-                        style={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                          padding: '9px 6px', borderRadius: 8, border: 'none',
-                          background: initializing === client._id ? 'var(--muted)' : 'var(--success)',
-                          color: initializing === client._id ? 'var(--muted-foreground)' : 'var(--success-foreground)',
-                          fontSize: 12, fontWeight: 600,
-                          cursor: initializing === client._id ? 'not-allowed' : 'pointer',
-                        }}
-                      >
-                        {initializing === client._id
-                          ? <span style={{ width: 12, height: 12, border: '2px solid rgba(0,0,0,0.15)', borderTopColor: 'var(--success-foreground)', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }} />
-                          : <><FiRefreshCw size={11} /> Init</>}
-                      </button>
-
-                      {/* Details */}
-                      <button
-                        onClick={() => navigate(`/admin/salary-detail/${client._id}/${currentMonth}`)}
-                        style={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                          padding: '9px 6px', borderRadius: 8,
-                          border: '1px solid var(--border)',
-                          background: 'var(--secondary)', color: 'var(--secondary-foreground)',
-                          fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                        }}
-                      >
-                        Details <FiArrowRight size={11} />
-                      </button>
+                    {/* Actions */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      {renderInitButton(client, true)}
+                      {renderDetailsButton(client)}
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
-
-            {/* ── Footer count ── */}
-            {!loading && filteredClients.length > 0 && (
-              <div style={{ marginTop: 10, fontSize: 12, color: 'var(--text-muted)' }}>
-                Showing 1 to {filteredClients.length} of {clients.length} entries
               </div>
             )}
 
@@ -614,6 +532,81 @@ export default function ClientSalaryAll() {
         input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
+        select option { background: var(--input); color: var(--foreground); }
+
+        .cs-toolbar {
+          display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+          padding: 10px 0 14px; margin-bottom: 6px;
+          border-bottom: 1px solid var(--border);
+        }
+        .cs-search { position: relative; flex: 1 1 260px; min-width: 200px; }
+        .cs-select { position: relative; flex: 0 1 200px; min-width: 170px; }
+        .cs-ctl {
+          width: 100%; height: 38px; box-sizing: border-box;
+          border: 1px solid var(--border); border-radius: 10px;
+          background: var(--input); color: var(--foreground);
+          font-size: 13px; outline: none;
+          transition: border-color .15s, box-shadow .15s;
+        }
+        .cs-select .cs-ctl { appearance: none; -webkit-appearance: none; cursor: pointer; padding: 0 32px 0 34px; }
+        .cs-ctl:hover { border-color: var(--muted-foreground, #8b7b74); }
+        .cs-ctl:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(107, 62, 43, 0.14); }
+        .cs-icon-left, .cs-icon-right { position: absolute; top: 50%; transform: translateY(-50%); pointer-events: none; }
+        .cs-icon-left { left: 12px; }
+        .cs-icon-right { right: 11px; }
+        .cs-clear {
+          position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+          width: 24px; height: 24px; border: none; border-radius: 50%; background: transparent;
+          display: flex; align-items: center; justify-content: center; cursor: pointer;
+        }
+        .cs-clear:hover { background: var(--muted); }
+        .cs-reset {
+          display: inline-flex; align-items: center; gap: 6px;
+          height: 38px; padding: 0 12px; border-radius: 10px;
+          border: 1px dashed var(--border); background: transparent;
+          color: var(--text-muted); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+          transition: background .15s, color .15s;
+        }
+        .cs-reset:hover { background: var(--secondary); color: var(--secondary-foreground); }
+        .cs-count { margin-left: auto; font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+        .cs-count strong { color: var(--text-strong); }
+
+        /* inline salary editor: [₹ input][Save] */
+        .cs-editor { display: flex; align-items: stretch; width: 100%; }
+        .cs-editor-prefix {
+          display: inline-flex; align-items: center; padding: 0 10px;
+          border: 1px solid var(--border); border-right: none; border-radius: 8px 0 0 8px;
+          background: var(--muted); color: var(--text-muted); font-size: 12.5px;
+        }
+        .cs-editor input {
+          flex: 1; min-width: 0; height: 34px; box-sizing: border-box;
+          border: 1px solid var(--border); background: var(--input); color: var(--foreground);
+          font-size: 13px; padding: 0 10px; outline: none;
+        }
+        .cs-editor input:focus { border-color: var(--primary); }
+        .cs-editor-save {
+          padding: 0 14px; border: none; border-radius: 0 8px 8px 0;
+          background: var(--primary); color: var(--primary-foreground, #fff);
+          font-size: 12px; font-weight: 600; cursor: pointer; min-width: 58px;
+          display: inline-flex; align-items: center; justify-content: center;
+        }
+        .cs-editor-save:disabled { background: var(--muted); color: var(--muted-foreground); cursor: not-allowed; }
+
+        .cs-btn {
+          display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+          padding: 6px 13px; border-radius: 7px; font-size: 12px; font-weight: 600;
+          cursor: pointer; white-space: nowrap; transition: background .15s;
+        }
+        .cs-btn-secondary { border: 1px solid var(--border); background: var(--secondary); color: var(--secondary-foreground); }
+        .cs-btn-secondary:hover { background: var(--secondary-hover); }
+        .cs-btn-success { border: 1px solid var(--border); background: var(--success); color: var(--success-foreground); }
+        .cs-btn-success:hover:not(:disabled) { filter: brightness(0.96); }
+        .cs-btn:disabled { background: var(--muted); color: var(--muted-foreground); cursor: not-allowed; }
+
+        @media (max-width: 640px) {
+          .cs-search, .cs-select { flex: 1 1 100%; }
+          .cs-count { margin-left: 0; width: 100%; }
+        }
       `}</style>
     </>
   );

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   getFileById,
   getAllUsers,
@@ -7,13 +7,12 @@ import {
   deleteDfsFile,
 } from "../../../services/dfsService";
 import { CLOUDINARY_URL, UPLOAD_PRESET } from "../../../store/keyStore";
-import { Container, Row, Col } from "react-bootstrap";
 import AdminHeader from "../../../components/layout/header/AdminHeader";
 import moment from "moment";
 import { MdAttachFile } from "react-icons/md";
 import { useAuthStore } from "../../../store/authStore";
 import ReactDOM from "react-dom";
-import { FaUserPlus, FaTasks, FaStickyNote, FaPaperPlane, FaFilePdf, FaTrash, FaBuilding, FaLayerGroup, FaInfoCircle, FaClock, FaCheckCircle, FaHourglassHalf, FaExternalLinkAlt, FaExclamationTriangle } from "react-icons/fa";
+import { FaUserPlus, FaTasks, FaStickyNote, FaPaperPlane, FaFilePdf, FaTrash, FaBuilding, FaLayerGroup, FaInfoCircle, FaClock, FaCheckCircle, FaHourglassHalf, FaExternalLinkAlt, FaExclamationTriangle, FaArrowLeft, FaArrowRight } from "react-icons/fa";
 
 /* ─── shared tokens ────────────────────────────────────────────────────────── */
 const cardStyle = {
@@ -591,6 +590,7 @@ const AttachmentUploader = ({ files, setFiles }) => {
 /* ─── Main component ───────────────────────────────────────────────────────── */
 export default function SingleDfsRequestDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
@@ -678,6 +678,8 @@ export default function SingleDfsRequestDetail() {
     }
   };
 
+  const trail = file?.forwardingTrail || [];
+
   /* ── Loading state ── */
   if (loading) {
     return (
@@ -763,548 +765,316 @@ export default function SingleDfsRequestDetail() {
     <>
       <AdminHeader />
 
-      <Container
-        fluid
-        className="py-4 my-3"
-        style={{ background: "var(--background)" }}
+      <div
+        style={{
+          padding: "0 2px",
+          fontFamily: "system-ui, -apple-system, sans-serif",
+          color: "var(--foreground)",
+          background: "var(--background)",
+          minHeight: "100vh",
+        }}
       >
-        {/* ── Page title bar ── */}
-        <div style={{ ...cardStyle, marginBottom: 20 }}>
-          <div style={cardHeadStyle}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 8,
-                  background: "var(--warning)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                <FaFilePdf size={16} color={C.primary} />
+        {/* ── Header card ── */}
+        <div style={{ ...cardStyle, ...cardHeadStyle, padding: "14px 20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+            <button
+              onClick={() => navigate(-1)}
+              aria-label="Go back"
+              style={{
+                width: 36, height: 36, borderRadius: 8, border: "1px solid var(--border)",
+                background: "var(--secondary)", cursor: "pointer", flexShrink: 0,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}
+            >
+              <FaArrowLeft size={13} color={C.primary} />
+            </button>
+            <div
+              style={{
+                width: 38, height: 38, borderRadius: 10, background: "var(--warning)",
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              }}
+            >
+              <FaFilePdf size={16} color={C.primary} />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-strong)", lineHeight: 1.2, wordBreak: "break-word" }}>
+                {file.fileTitle || "DFS Request"}
               </div>
-              <div>
-                <div
-                  style={{
-                    fontSize: 15,
-                    fontWeight: 700,
-                    color: "var(--text-strong)",
-                    lineHeight: 1.2,
-                  }}
-                >
-                  DFS Request Details
-                </div>
-                <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>
-                  Document File System · Review &amp; Forward
-                </div>
+              <div style={{ fontSize: 11.5, color: "var(--text-muted)", marginTop: 2, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                <span>DFS request</span>
+                <span>·</span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <FaClock size={10} color={C.accent} /> {moment(file.createdAt).format("DD MMM YYYY, hh:mm A")}
+                </span>
               </div>
             </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <StatusBadge status={file.status} />
+            {file.fileUrl && (
+              <a
+                href={file.fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 16px",
+                  borderRadius: 8, background: "var(--primary)", color: "var(--primary-foreground)",
+                  fontSize: 13, fontWeight: 600, textDecoration: "none",
+                }}
+              >
+                <FaExternalLinkAlt size={11} /> View document
+              </a>
+            )}
+            {/* Delete — only admin or owner */}
+            {(user?.role === "admin" || user?._id === file.uploadedBy?._id) && (
+              <Btn variant="destructive" onClick={() => setShowDeleteModal(true)}>
+                <FaTrash size={11} /> Delete
+              </Btn>
+            )}
           </div>
         </div>
 
-        {/* ── Document overview ── */}
-        <Section
-          icon={FaFilePdf}
-          title="Document Information"
-          right={
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                fontSize: 12,
-                fontWeight: 600,
-                color: "var(--text-strong)",
-                background: "var(--muted)",
-                padding: "5px 12px",
-                borderRadius: 20,
-              }}
-            >
-              <FaClock size={11} color={C.accent} />
-              {moment(file.createdAt).format("DD MMM YYYY, hh:mm A")}
-            </span>
-          }
-        >
-          <Row className="g-3">
-            <Col xs={12} md={8}>
-              <span style={labelStyle}>Title</span>
-              <div
-                style={{
-                  fontSize: 16,
-                  fontWeight: 700,
-                  color: "var(--text-strong)",
-                  marginBottom: 8,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 7,
-                }}
-              >
-                <FaFilePdf size={14} color={C.accent} />
-                {file.fileTitle}
-              </div>
-            </Col>
-            <Col xs={6} md={2}>
-              <Field label="Type" icon={FaLayerGroup}>
-                {file.docType || "—"}
-              </Field>
-            </Col>
-            <Col xs={6} md={2}>
-              <Field label="Department" icon={FaBuilding}>
-                {file.Department || "—"}
-              </Field>
-            </Col>
-            <Col xs={12}>
-              <span style={labelStyle}>Description</span>
-              <div
-                style={{
-                  fontSize: 13.5,
-                  color: "var(--text-muted)",
-                  lineHeight: 1.55,
-                  wordBreak: "break-word",
-                }}
-              >
-                {file.description || "No description provided."}
-              </div>
-            </Col>
-            <Col xs={12}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                <a
-                  href={file.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 7,
-                    padding: "8px 16px",
-                    borderRadius: 8,
-                    background: "var(--primary)",
-                    color: "var(--primary-foreground)",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    textDecoration: "none",
-                    transition: "background .15s",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = "var(--primary-hover)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.background = "var(--primary)")
-                  }
-                >
-                  <FaExternalLinkAlt size={11} /> View PDF
-                </a>
+        {/* ── Main grid ── */}
+        <div className="dd-grid">
 
-                {/* Uploader pill */}
+          {/* LEFT COLUMN */}
+          <div style={{ minWidth: 0 }}>
+
+            {/* Document information */}
+            <Section icon={FaInfoCircle} title="Document Information">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16 }}>
+                <Field label="Type" icon={FaLayerGroup}>{file.docType || "—"}</Field>
+                <Field label="Department" icon={FaBuilding}>{file.Department || "—"}</Field>
+                <div>
+                  <span style={labelStyle}>Uploaded by</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
+                    <Avatar src={file.uploadedBy?.profile} name={file.uploadedBy?.name} size={28} />
+                    <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-strong)" }}>
+                      {file.uploadedBy?.name || "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 16 }}>
+                <span style={labelStyle}>Description</span>
                 <div
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    background: "var(--muted)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 20,
-                    padding: "5px 12px 5px 6px",
+                    fontSize: 13.5, color: "var(--foreground)", lineHeight: 1.55, wordBreak: "break-word",
+                    background: "var(--muted)", border: "1px solid var(--border)", borderRadius: 8, padding: "10px 12px",
                   }}
                 >
-                  <Avatar
-                    src={file.uploadedBy?.profile}
-                    name={file.uploadedBy?.name}
-                    size={24}
-                  />
+                  {file.description || "No description provided."}
+                </div>
+              </div>
+            </Section>
+
+            {/* Forward document form */}
+            <Section icon={FaPaperPlane} title="Forward This Document">
+              <form onSubmit={handleForward}>
+                <div className="dd-form-grid">
+                  {/* Forward To */}
                   <div>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: "var(--text-strong)",
-                        lineHeight: 1.1,
-                      }}
+                    <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 5 }}>
+                      <FaUserPlus size={11} color={C.muted} /> Forward to
+                    </label>
+                    <select
+                      value={forwardedTo}
+                      onChange={(e) => setForwardedTo(e.target.value)}
+                      required
+                      style={inputStyle}
                     >
-                      {file.uploadedBy?.name}
-                    </div>
-                    <div style={{ fontSize: 10, color: "var(--text-muted)" }}>
-                      Uploader
-                    </div>
+                      <option value="">— Select user —</option>
+                      {users.map((u) => (
+                        <option key={u._id} value={u._id}>
+                          {u.name} ({u.role})
+                        </option>
+                      ))}
+                      <option value={file.uploadedBy?._id}>
+                        {file.uploadedBy?.name} (File Owner)
+                      </option>
+                    </select>
+                  </div>
+
+                  {/* Action */}
+                  <div>
+                    <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 5 }}>
+                      <FaTasks size={11} color={C.muted} /> Your action
+                    </label>
+                    <select
+                      value={action}
+                      onChange={(e) => setAction(e.target.value)}
+                      required
+                      style={inputStyle}
+                    >
+                      <option value="">— What you did —</option>
+                      <option value="forwarded">Forwarded</option>
+                      <option value="viewed">Viewed</option>
+                      <option value="commented">Commented</option>
+                      <option value="approved">Approved</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 5 }}>
+                      <FaInfoCircle size={11} color={C.muted} /> File status
+                    </label>
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      required
+                      style={inputStyle}
+                    >
+                      <option value="">— Overall status —</option>
+                      <option value="pending">Pending</option>
+                      <option value="in-review">In Review</option>
+                      <option value="approved">Approved</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
                   </div>
                 </div>
 
-                {/* Delete — only admin or owner */}
-                {(user?.role === "admin" ||
-                  user?._id === file.uploadedBy?._id) && (
-                  <Btn
-                    variant="destructive"
-                    onClick={() => setShowDeleteModal(true)}
-                    style={{ marginLeft: "auto" }}
-                  >
-                    <FaTrash size={11} /> Delete File
+                {/* Note */}
+                <div style={{ marginTop: 14 }}>
+                  <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 5 }}>
+                    <FaStickyNote size={11} color={C.muted} /> Note
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="Write a short note for the receiver…"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    required
+                    style={{ ...inputStyle, resize: "vertical", lineHeight: 1.55, fontFamily: "inherit" }}
+                  />
+                </div>
+
+                {/* Attachment */}
+                <div style={{ marginTop: 14 }}>
+                  <AttachmentUploader files={attachmentFiles} setFiles={setAttachmentFiles} />
+                </div>
+
+                {/* Submit */}
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
+                  <Btn type="submit" variant="primary" loading={submitting}>
+                    {!submitting && <FaPaperPlane size={12} />}
+                    {submitting ? "Forwarding…" : "Forward document"}
                   </Btn>
-                )}
-              </div>
-            </Col>
-          </Row>
-        </Section>
+                </div>
+              </form>
+            </Section>
+          </div>
 
-        {/* ── Forwarding trail ── */}
-        <Section
-          icon={FaPaperPlane}
-          title="Forwarding Trail"
-          right={
-            file.forwardingTrail?.length > 0 ? (
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "var(--text-muted)",
-                  background: "var(--muted)",
-                  padding: "4px 12px",
-                  borderRadius: 20,
-                }}
-              >
-                {file.forwardingTrail.length}{" "}
-                {file.forwardingTrail.length === 1 ? "entry" : "entries"}
-              </span>
-            ) : null
-          }
-        >
-          {!file.forwardingTrail?.length ? (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                fontSize: 13,
-                color: "var(--text-muted)",
-              }}
+          {/* RIGHT COLUMN — forwarding trail as a timeline */}
+          <div style={{ minWidth: 0 }}>
+            <Section
+              icon={FaClock}
+              title="Forwarding Trail"
+              right={
+                trail.length > 0 ? (
+                  <span
+                    style={{
+                      fontSize: 11, fontWeight: 700, color: "var(--text-muted)",
+                      background: "var(--muted)", padding: "4px 12px", borderRadius: 20,
+                    }}
+                  >
+                    {trail.length} {trail.length === 1 ? "entry" : "entries"}
+                  </span>
+                ) : null
+              }
             >
-              <FaInfoCircle size={14} color={C.muted} /> No forwarding history
-              yet.
-            </div>
-          ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "separate",
-                  borderSpacing: 0,
-                  minWidth: 900,
-                  fontSize: 13,
-                }}
-              >
-                <thead>
-                  <tr>
-                    {[
-                      "#",
-                      "Forwarded By",
-                      "Forwarded To",
-                      "Note",
-                      "Action",
-                      "Date & Time",
-                      "Attachment",
-                    ].map((h, i) => (
-                      <th
-                        key={i}
+              {trail.length === 0 ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--text-muted)" }}>
+                  <FaInfoCircle size={14} color={C.muted} /> No forwarding history yet.
+                </div>
+              ) : (
+                <div style={{ position: "relative", paddingLeft: 6 }}>
+                  {/* vertical line */}
+                  <div style={{ position: "absolute", left: 18, top: 8, bottom: 8, width: 2, background: "var(--border)" }} />
+
+                  {trail.map((t, i) => (
+                    <div key={t._id || i} style={{ position: "relative", display: "flex", gap: 12, marginBottom: i === trail.length - 1 ? 0 : 16 }}>
+                      {/* step dot */}
+                      <div
                         style={{
-                          padding: "8px 12px",
-                          textAlign: "left",
-                          fontSize: 10,
-                          fontWeight: 700,
-                          color: "var(--text-muted)",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.06em",
-                          borderBottom: "1px solid var(--border)",
-                          whiteSpace: "nowrap",
+                          width: 26, height: 26, borderRadius: "50%", flexShrink: 0, zIndex: 1,
+                          background: "var(--secondary)", color: "var(--secondary-foreground)",
+                          border: "2px solid var(--card)", boxShadow: "0 0 0 1px var(--border)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 11, fontWeight: 700,
                         }}
                       >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {file.forwardingTrail.map((trail, i) => (
-                    <tr
-                      key={i}
-                      style={{
-                        background:
-                          i % 2 === 0 ? "transparent" : "var(--muted)",
-                      }}
-                    >
-                      {/* # */}
-                      <td style={{ padding: "10px 12px", whiteSpace: "nowrap" }}>
-                        <div
-                          style={{
-                            width: 26,
-                            height: 26,
-                            borderRadius: "50%",
-                            background: "var(--secondary)",
-                            color: "var(--secondary-foreground)",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: 11,
-                            fontWeight: 700,
-                          }}
-                        >
-                          {i + 1}
-                        </div>
-                      </td>
+                        {i + 1}
+                      </div>
 
-                      {/* Forwarded By */}
-                      <td style={{ padding: "10px 12px", whiteSpace: "nowrap" }}>
-                        <div
-                          style={{ display: "flex", alignItems: "center", gap: 8 }}
-                        >
-                          <Avatar
-                            src={trail.forwardedBy?.profile}
-                            name={trail.forwardedBy?.name}
-                            size={28}
-                          />
-                          <span
-                            style={{
-                              fontWeight: 600,
-                              color: "var(--text-strong)",
-                            }}
-                          >
-                            {trail.forwardedBy?.name || "Unknown"}
+                      {/* entry card */}
+                      <div
+                        style={{
+                          flex: 1, minWidth: 0, background: "var(--muted)", border: "1px solid var(--border)",
+                          borderRadius: 10, padding: "10px 12px",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+                          <ActionBadge action={t.action} />
+                          <span style={{ fontSize: 11, color: "var(--text-muted)", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                            <FaClock size={10} /> {moment(t.timestamp).format("DD MMM YYYY, hh:mm A")}
                           </span>
                         </div>
-                      </td>
 
-                      {/* Forwarded To */}
-                      <td style={{ padding: "10px 12px", whiteSpace: "nowrap" }}>
-                        <div
-                          style={{ display: "flex", alignItems: "center", gap: 8 }}
-                        >
-                          <Avatar
-                            src={trail.forwardedTo?.profile}
-                            name={trail.forwardedTo?.name}
-                            size={28}
-                          />
-                          <span
+                        {/* from → to */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+                            <Avatar src={t.forwardedBy?.profile} name={t.forwardedBy?.name} size={24} />
+                            <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text-strong)" }}>
+                              {t.forwardedBy?.name || "Unknown"}
+                            </span>
+                          </div>
+                          <FaArrowRight size={10} color={C.muted} />
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+                            <Avatar src={t.forwardedTo?.profile} name={t.forwardedTo?.name} size={24} />
+                            <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text-strong)" }}>
+                              {t.forwardedTo?.name || "Unknown"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {t.note && (
+                          <div
                             style={{
-                              fontWeight: 600,
-                              color: "var(--text-strong)",
+                              fontSize: 12.5, color: "var(--foreground)", lineHeight: 1.5, wordBreak: "break-word",
+                              background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, padding: "8px 10px",
                             }}
                           >
-                            {trail.forwardedTo?.name || "Unknown"}
-                          </span>
-                        </div>
-                      </td>
+                            {t.note}
+                          </div>
+                        )}
 
-                      {/* Note */}
-                      <td
-                        style={{
-                          padding: "10px 12px",
-                          maxWidth: 240,
-                          whiteSpace: "normal",
-                          color: "var(--foreground)",
-                          lineHeight: 1.45,
-                          fontSize: 12.5,
-                        }}
-                      >
-                        {trail.note}
-                      </td>
-
-                      {/* Action */}
-                      <td style={{ padding: "10px 12px", whiteSpace: "nowrap" }}>
-                        <ActionBadge action={trail.action} />
-                      </td>
-
-                      {/* Date */}
-                      <td
-                        style={{
-                          padding: "10px 12px",
-                          whiteSpace: "nowrap",
-                          color: "var(--text-muted)",
-                          fontSize: 12,
-                        }}
-                      >
-                        <FaClock
-                          size={11}
-                          style={{ marginRight: 5, verticalAlign: -1 }}
-                        />
-                        {moment(trail.timestamp).format("DD MMM YYYY, hh:mm A")}
-                      </td>
-
-                      {/* Attachment */}
-                      <td style={{ padding: "10px 12px", whiteSpace: "nowrap" }}>
-                        {trail.attachment ? (
+                        {t.attachment && (
                           <a
-                            href={trail.attachment}
+                            href={t.attachment}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 5,
-                              padding: "5px 11px",
-                              borderRadius: 7,
-                              border: "1px solid var(--border)",
-                              background: "var(--secondary)",
-                              color: "var(--secondary-foreground)",
-                              fontSize: 12,
-                              fontWeight: 600,
-                              textDecoration: "none",
+                              display: "inline-flex", alignItems: "center", gap: 5, marginTop: 8,
+                              padding: "5px 11px", borderRadius: 7, border: "1px solid var(--border)",
+                              background: "var(--secondary)", color: "var(--secondary-foreground)",
+                              fontSize: 12, fontWeight: 600, textDecoration: "none",
                             }}
                           >
-                            <MdAttachFile size={13} /> View
+                            <MdAttachFile size={13} /> View attachment
                           </a>
-                        ) : (
-                          <span style={{ color: "var(--text-muted)" }}>—</span>
                         )}
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Section>
-
-        {/* ── Forward document form ── */}
-        <Section icon={FaPaperPlane} title="Forward This Document">
-          <form onSubmit={handleForward}>
-            <Row className="g-3 mb-3">
-              {/* Forward To */}
-              <Col xs={12} md={4}>
-                <label
-                  style={{
-                    ...labelStyle,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 5,
-                  }}
-                >
-                  <FaUserPlus size={11} color={C.muted} /> Forward To
-                </label>
-                <div style={{ position: "relative" }}>
-                  <select
-                    value={forwardedTo}
-                    onChange={(e) => setForwardedTo(e.target.value)}
-                    required
-                    style={inputStyle}
-                  >
-                    <option value="">— Select user —</option>
-                    {users.map((u) => (
-                      <option key={u._id} value={u._id}>
-                        {u.name} ({u.role})
-                      </option>
-                    ))}
-                    <option value={file.uploadedBy?._id}>
-                      {file.uploadedBy?.name} (File Owner)
-                    </option>
-                  </select>
                 </div>
-              </Col>
-
-              {/* Action */}
-              <Col xs={12} md={4}>
-                <label
-                  style={{
-                    ...labelStyle,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 5,
-                  }}
-                >
-                  <FaTasks size={11} color={C.muted} /> Your Action
-                </label>
-                <select
-                  value={action}
-                  onChange={(e) => setAction(e.target.value)}
-                  required
-                  style={inputStyle}
-                >
-                  <option value="">— What you did —</option>
-                  <option value="forwarded">Forwarded</option>
-                  <option value="viewed">Viewed</option>
-                  <option value="commented">Commented</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-              </Col>
-
-              {/* Status */}
-              <Col xs={12} md={4}>
-                <label
-                  style={{
-                    ...labelStyle,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 5,
-                  }}
-                >
-                  <FaInfoCircle size={11} color={C.muted} /> File Status
-                </label>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  required
-                  style={inputStyle}
-                >
-                  <option value="">— Overall status —</option>
-                  <option value="pending">Pending</option>
-                  <option value="in-review">In Review</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-              </Col>
-            </Row>
-
-            {/* Note */}
-            <Row className="g-3 mb-3">
-              <Col xs={12}>
-                <label
-                  style={{
-                    ...labelStyle,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 5,
-                  }}
-                >
-                  <FaStickyNote size={11} color={C.muted} /> Note
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Write a short note for the receiver…"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  required
-                  style={{
-                    ...inputStyle,
-                    resize: "vertical",
-                    lineHeight: 1.55,
-                    fontFamily: "inherit",
-                  }}
-                />
-              </Col>
-            </Row>
-
-            {/* Attachment */}
-            <Row className="g-3 mb-4">
-              <Col xs={12}>
-                <AttachmentUploader
-                  files={attachmentFiles}
-                  setFiles={setAttachmentFiles}
-                />
-              </Col>
-            </Row>
-
-            {/* Submit */}
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <Btn type="submit" variant="primary" loading={submitting}>
-                {!submitting && <FaPaperPlane size={12} />}
-                {submitting ? "Forwarding…" : "Forward Document"}
-              </Btn>
-            </div>
-          </form>
-        </Section>
-      </Container>
+              )}
+            </Section>
+          </div>
+        </div>
+      </div>
 
       {/* ── Delete confirm modal ── */}
       <Modal
@@ -1378,6 +1148,11 @@ export default function SingleDfsRequestDetail() {
         @keyframes modalFade { from { opacity: 0; } to { opacity: 1; } }
         @keyframes modalPop { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
         select option { background: var(--card); color: var(--foreground); }
+        .dd-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; align-items: start; }
+        .dd-form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+        @media (max-width: 1199px) { .dd-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 991px) { .dd-grid { grid-template-columns: minmax(0, 1fr); } }
+        @media (max-width: 575px) { .dd-form-grid { grid-template-columns: minmax(0, 1fr); } }
       `}</style>
     </>
   );

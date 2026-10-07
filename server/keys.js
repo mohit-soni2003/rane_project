@@ -19,6 +19,9 @@ module.exports = {
     SENDER_MAIL:"noreply.rsems@gmail.com",
     jwt_secret: "Mohit1234",
 
+    // Google Gemini API key for the admin AI assistant (paste your key between the quotes)
+    GEMINI_API_KEY: "AQ.Ab8RN6KZ6hk2xEfYEC4UQN1WlboiSiLu84JYD5CztDNORRBnoQ",
+
  
     WHATSAPP_SENDER_ID:806889779184384,
     // WHATSAPP_TOKEN:"EAATA4Nh865MBP7gdP86COBNJrEZCPtYSd5dkwlKK7Ld1LfYwjequsZCFMhdWRStV8BNyUbPk87XmYlGo53VfhQh0sig5BqvMJSrVdscySqmjZBmZAvENhLW76Mv7KvBu2KmsBjNZBmj8N6MawzMlQKb8uVMgMA1sIMVNJTQrYKDOX62ZAgkgwOCBFK0zCiwa7d7FwB25245shnFe9ZBY18N27rZBue5hUywEAhfRXnjFFj36hrkFNA5ukOLLSQZDZD"

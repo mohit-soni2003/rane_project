@@ -1,42 +1,90 @@
 // AgreementSignModal.jsx
 import React, { useEffect, useState } from "react";
-import { Modal, Button, Form, Alert } from "react-bootstrap";
+import { Modal } from "react-bootstrap";
 import {
-    HiOutlinePencilAlt,
-    HiOutlineDocumentText,
-    HiOutlineUser,
-    HiOutlineLockClosed,
-    HiOutlineClock,
-    HiOutlineExclamation,
-    HiOutlineCheckCircle,
-    HiOutlineX,
-} from "react-icons/hi";
+    FaFileSignature, FaFileAlt, FaUser, FaLock, FaClock, FaCheck, FaTimes,
+    FaExclamationTriangle, FaEye, FaEyeSlash, FaCalendarAlt,
+} from "react-icons/fa";
 import { signAgreement } from "../../services/agreement";
-import { Row, Col } from "react-bootstrap";
 
+// ── Hardcoded icon colors ─────────────────────────────────────────────────────
+const C = {
+    primary: "#6b3e2b",
+    accent: "#b95a52",
+    success: "#225b31",
+    destructive: "#c94a3a",
+    muted: "#8b7b74",
+    warning: "#4a1f18",
+};
+
+// ── Shared styles ─────────────────────────────────────────────────────────────
+const labelStyle = {
+    fontSize: 11, fontWeight: 600, color: "var(--text-muted)",
+    textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4,
+    display: "flex", alignItems: "center", gap: 6,
+};
+const valueStyle = { fontSize: 13.5, fontWeight: 600, color: "var(--text-strong)", wordBreak: "break-word" };
+
+const cardStyle = {
+    background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12,
+    marginBottom: 14, boxShadow: "0 2px 8px var(--shadow-color)", overflow: "hidden",
+};
+const cardHeaderStyle = {
+    display: "flex", alignItems: "center", gap: 8,
+    padding: "11px 16px", borderBottom: "1px solid var(--border)",
+    fontWeight: 700, fontSize: 13.5, color: "var(--text-strong)",
+};
+const inputStyle = {
+    width: "100%", height: 40, boxSizing: "border-box",
+    border: "1px solid var(--border)", borderRadius: 10,
+    background: "var(--input)", color: "var(--foreground)",
+    fontSize: 13.5, padding: "0 12px", outline: "none",
+};
+const btnBase = {
+    display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
+    padding: "9px 18px", borderRadius: 8, border: "none",
+    fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+};
+
+const Field = ({ label, children }) => (
+    <div style={{ minWidth: 0 }}>
+        <div style={labelStyle}>{label}</div>
+        <div style={valueStyle}>{children}</div>
+    </div>
+);
 
 export default function AgreementSignModal({ show, onHide, agreement, onSignSuccess }) {
     const [name, setName] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [currentDateTime, setCurrentDateTime] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState("");
 
+    // Fresh timestamp and clean form every time the modal opens
     useEffect(() => {
-        const now = new Date().toLocaleString();
-        setCurrentDateTime(now);
-    }, []);
+        if (show) {
+            setCurrentDateTime(new Date().toLocaleString("en-IN"));
+            setName("");
+            setPassword("");
+            setShowPassword(false);
+            setError("");
+        }
+    }, [show]);
 
     const handleSign = async () => {
         if (!name.trim()) {
-            alert("Please enter your full name");
+            setError("Please enter your full name.");
             return;
         }
-
         if (!password.trim()) {
-            alert("Please enter your password to verify identity");
+            setError("Please enter your password to verify your identity.");
             return;
         }
 
         try {
+            setSubmitting(true);
+            setError("");
             const response = await signAgreement(agreement?._id, name, password);
             console.log("SIGNED:", response);
             setName("");
@@ -44,216 +92,232 @@ export default function AgreementSignModal({ show, onHide, agreement, onSignSucc
             onHide();
             if (onSignSuccess) onSignSuccess();
         } catch (err) {
-            alert(err.message);
+            setError(err.message || "Failed to sign the agreement.");
+        } finally {
+            setSubmitting(false);
         }
     };
 
+    const handleKeyDown = (e) => {
+        if (e.key === "Enter" && !submitting) handleSign();
+    };
+
     return (
-        <Modal show={show} onHide={onHide} size="xl" centered>
+        <Modal show={show} onHide={submitting ? undefined : onHide} size="lg" centered scrollable>
             {/* HEADER */}
             <Modal.Header
-                closeButton
-                style={{
-                    background: "var(--card)",
-                    borderBottom: "1px solid var(--divider)",
-                }}
+                closeButton={!submitting}
+                style={{ background: "var(--secondary)", borderBottom: "1px solid var(--border)", padding: "14px 20px" }}
             >
-                <Modal.Title
-                    className="d-flex align-items-center gap-2 fw-semibold"
-                    style={{ color: "var(--primary)" }}
-                >
-                    <HiOutlinePencilAlt size={22} />
-                    Sign Agreement
-                </Modal.Title>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{
+                        width: 38, height: 38, borderRadius: 10, background: "var(--warning)",
+                        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                    }}>
+                        <FaFileSignature size={17} color={C.primary} />
+                    </div>
+                    <div>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: "var(--secondary-foreground)", lineHeight: 1.2 }}>
+                            Sign Agreement
+                        </div>
+                        <div style={{ fontSize: 11.5, color: "var(--text-muted)", marginTop: 2 }}>
+                            Review the details and confirm with your signature
+                        </div>
+                    </div>
+                </div>
             </Modal.Header>
 
-            <Modal.Body style={{ background: "var(--background)" }}>
-                {/* AGREEMENT SUMMARY */}
-                {/* AGREEMENT SUMMARY */}
-                <div
-                    className="p-4 mb-4"
-                    style={{
-                        background: "var(--card)",
-                        borderRadius: "12px",
-                        border: "1px solid var(--border)",
-                        boxShadow: "0 2px 8px var(--shadow-color)",
-                    }}
-                >
-                    <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
-                        <HiOutlineDocumentText size={20} />
-                        Agreement Summary
-                    </h6>
+            <Modal.Body style={{ background: "var(--background)", padding: 18 }}>
+                {error && (
+                    <div style={{
+                        display: "flex", alignItems: "center", gap: 8,
+                        background: "#fde8e6", color: C.destructive, border: "1px solid #f5b8b2",
+                        borderRadius: 10, padding: "10px 14px", fontSize: 13, fontWeight: 600, marginBottom: 14,
+                    }}>
+                        <FaExclamationTriangle size={13} color={C.destructive} /> {error}
+                    </div>
+                )}
 
-                    <Row className="mb-2">
-                        <Col md={6}>
-                            <p className="mb-1"><strong>Title:</strong> {agreement?.title}</p>
-                        </Col>
-                        <Col md={6}>
-                            <p className="mb-1"><strong>Agreement ID:</strong> {agreement?.agreementId}</p>
-                        </Col>
-                    </Row>
+                {/* AGREEMENT SUMMARY */}
+                <div style={cardStyle}>
+                    <div style={cardHeaderStyle}>
+                        <FaFileAlt size={14} color={C.accent} /> Agreement Summary
+                    </div>
+                    <div style={{ padding: 16 }}>
+                        <div style={{
+                            display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14,
+                        }}>
+                            <Field label="Title">{agreement?.title || "—"}</Field>
+                            <Field label="Agreement ID">{agreement?.agreementId || "—"}</Field>
+                            <Field label="Uploaded by">{agreement?.uploadedBy?.name || "—"}</Field>
+                            <Field label="Expiry">
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                                    <FaCalendarAlt size={11} color={C.muted} />
+                                    {agreement?.expiryDate
+                                        ? new Date(agreement.expiryDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+                                        : "—"}
+                                </span>
+                            </Field>
+                        </div>
 
-                    <Row className="mb-2">
-                        <Col md={6}>
-                            <p className="mb-1"><strong>Uploaded By:</strong> {agreement?.uploadedBy?.name}</p>
-                        </Col>
-                        <Col md={6}>
-                            <p className="mb-1">
-                                <strong>File:</strong>{" "}
+                        {agreement?.description && (
+                            <div style={{ marginTop: 14 }}>
+                                <div style={labelStyle}>Description</div>
+                                <div style={{
+                                    fontSize: 13, color: "var(--foreground)", lineHeight: 1.55,
+                                    background: "var(--muted)", borderRadius: 8, padding: "10px 12px",
+                                    border: "1px solid var(--border)", wordBreak: "break-word",
+                                }}>
+                                    {agreement.description}
+                                </div>
+                            </div>
+                        )}
+
+                        {agreement?.fileUrl && (
+                            <div style={{ textAlign: "right", marginTop: 14 }}>
                                 <a
-                                    href={agreement?.fileUrl}
+                                    href={agreement.fileUrl}
                                     target="_blank"
                                     rel="noreferrer"
-                                    style={{ color: "var(--link)", fontWeight: 500 }}
+                                    style={{
+                                        ...btnBase, background: "var(--secondary)", color: "var(--secondary-foreground)",
+                                        border: "1px solid var(--border)", textDecoration: "none", padding: "7px 14px", fontSize: 12.5,
+                                    }}
                                 >
-                                    View PDF
+                                    <FaFileAlt size={12} color={C.accent} /> View PDF
                                 </a>
-                            </p>
-                        </Col>
-                    </Row>
-
-                    <Row>
-                        <Col>
-                            <p className="mb-0">
-                                <strong>Description:</strong> {agreement?.description}
-                            </p>
-                        </Col>
-                    </Row>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
+                {/* SIGNATURE DETAILS */}
+                <div style={cardStyle}>
+                    <div style={cardHeaderStyle}>
+                        <FaCheck size={13} color={C.success} /> Signature Details
+                    </div>
+                    <div style={{ padding: 16 }}>
+                        <div style={{
+                            display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14,
+                        }}>
+                            <div>
+                                <label htmlFor="sign-name" style={labelStyle}>
+                                    <FaUser size={11} color={C.muted} /> Full name
+                                </label>
+                                <input
+                                    id="sign-name"
+                                    type="text"
+                                    placeholder="Enter your full legal name"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    disabled={submitting}
+                                    autoComplete="name"
+                                    style={inputStyle}
+                                />
+                            </div>
 
-                {/* SIGNATURE FORM */}
-                {/* SIGNATURE FORM */}
-                <div
-                    className="p-4"
-                    style={{
-                        background: "var(--card)",
-                        borderRadius: "12px",
-                        border: "1px solid var(--border)",
-                        boxShadow: "0 2px 8px var(--shadow-color)",
-                    }}
-                >
-                    <h6
-                        className="fw-bold mb-3 d-flex align-items-center gap-2"
-                        style={{ color: "var(--primary)" }}
-                    >
-                        <HiOutlineCheckCircle size={20} />
-                        Signature Details
-                    </h6>
-
-                    <Form>
-                        {/* NAME + PASSWORD ROW */}
-                        <Row>
-                            <Col md={6}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label className="fw-semibold d-flex align-items-center gap-2">
-                                        <HiOutlineUser size={18} />
-                                        Full Name
-                                    </Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="Enter full legal name"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                        style={{
-                                            background: "var(--input)",
-                                            border: "1px solid var(--border)",
-                                        }}
-                                    />
-                                </Form.Group>
-                            </Col>
-
-                            <Col md={6}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label className="fw-semibold d-flex align-items-center gap-2">
-                                        <HiOutlineLockClosed size={18} />
-                                        Password
-                                    </Form.Label>
-                                    <Form.Control
-                                        type="password"
-                                        placeholder="Account password"
+                            <div>
+                                <label htmlFor="sign-password" style={labelStyle}>
+                                    <FaLock size={11} color={C.muted} /> Password
+                                </label>
+                                <div style={{ position: "relative" }}>
+                                    <input
+                                        id="sign-password"
+                                        type={showPassword ? "text" : "password"}
+                                        placeholder="Your account password"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        style={{
-                                            background: "var(--input)",
-                                            border: "1px solid var(--border)",
-                                        }}
+                                        onKeyDown={handleKeyDown}
+                                        disabled={submitting}
+                                        autoComplete="current-password"
+                                        style={{ ...inputStyle, paddingRight: 40 }}
                                     />
-                                </Form.Group>
-                            </Col>
-                        </Row>
-
-                        {/* DATE & TIME */}
-                        <Row>
-                            <Col>
-                                <Form.Group className="mb-3">
-                                    <Form.Label className="fw-semibold d-flex align-items-center gap-2">
-                                        <HiOutlineClock size={18} />
-                                        Date & Time of Signature
-                                    </Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        value={currentDateTime}
-                                        readOnly
+                                    <button
+                                        type="button"
+                                        aria-label={showPassword ? "Hide password" : "Show password"}
+                                        onClick={() => setShowPassword(v => !v)}
                                         style={{
-                                            background: "var(--muted)",
-                                            border: "1px solid var(--border)",
+                                            position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)",
+                                            width: 28, height: 28, border: "none", borderRadius: 6,
+                                            background: "transparent", cursor: "pointer",
+                                            display: "flex", alignItems: "center", justifyContent: "center",
                                         }}
-                                    />
-                                </Form.Group>
-                            </Col>
-                        </Row>
-                    </Form>
-
-                    {/* WARNING */}
-                    <Alert
-                        className="mt-4 d-flex gap-2 align-items-start"
-                        style={{
-                            background: "var(--warning)",
-                            color: "var(--warning-foreground)",
-                            border: "1px solid var(--warning-foreground)",
-                            borderRadius: "10px",
-                        }}
-                    >
-                        <HiOutlineExclamation size={22} className="mt-1" />
-                        <div>
-                            <strong>Final Confirmation</strong>
-                            <br />
-                            By signing this agreement, you confirm that all details are accurate
-                            and you legally agree to the stated terms.
-                            <br />
-                            This action is recorded with the above timestamp.
+                                    >
+                                        {showPassword ? <FaEyeSlash size={14} color={C.muted} /> : <FaEye size={14} color={C.muted} />}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    </Alert>
+
+                        <div style={{ marginTop: 14 }}>
+                            <div style={labelStyle}>
+                                <FaClock size={11} color={C.muted} /> Date &amp; time of signature
+                            </div>
+                            <input
+                                type="text"
+                                value={currentDateTime}
+                                readOnly
+                                style={{ ...inputStyle, background: "var(--muted)", cursor: "default" }}
+                            />
+                        </div>
+
+                        {/* WARNING */}
+                        <div style={{
+                            marginTop: 16, display: "flex", gap: 10, alignItems: "flex-start",
+                            background: "var(--warning)", color: "var(--warning-foreground)",
+                            border: "1px solid var(--border)", borderLeft: `4px solid ${C.warning}`,
+                            borderRadius: 10, padding: "12px 14px",
+                        }}>
+                            <FaExclamationTriangle size={15} color={C.warning} style={{ marginTop: 2, flexShrink: 0 }} />
+                            <div style={{ fontSize: 12.5, lineHeight: 1.55 }}>
+                                <strong>Final confirmation.</strong> By signing this agreement you confirm that all
+                                details are accurate and you legally agree to the stated terms. This action is
+                                recorded with the timestamp above.
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </Modal.Body>
 
             {/* FOOTER */}
-            <Modal.Footer style={{ background: "var(--card)" }}>
-                <Button
+            <Modal.Footer style={{ background: "var(--secondary)", borderTop: "1px solid var(--border)", padding: "12px 20px" }}>
+                <button
                     onClick={onHide}
-                    variant="outline-secondary"
-                    className="d-flex align-items-center gap-2"
-                >
-                    <HiOutlineX />
-                    Cancel
-                </Button>
-
-                <Button
-                    onClick={handleSign}
-                    className="d-flex align-items-center gap-2"
+                    disabled={submitting}
                     style={{
-                        background: "var(--primary)",
-                        color: "var(--primary-foreground)",
-                        border: "none",
-                        padding: "10px 26px",
-                        borderRadius: "8px",
+                        ...btnBase, background: "var(--card)", color: "var(--text-strong)",
+                        border: "1px solid var(--border)", opacity: submitting ? 0.6 : 1,
                     }}
                 >
-                    <HiOutlineCheckCircle size={18} />
-                    Sign Agreement
-                </Button>
+                    <FaTimes size={12} color={C.muted} /> Cancel
+                </button>
+
+                <button
+                    onClick={handleSign}
+                    disabled={submitting}
+                    style={{
+                        ...btnBase, background: "var(--primary)", color: "var(--primary-foreground, #fff)",
+                        minWidth: 160, opacity: submitting ? 0.75 : 1, cursor: submitting ? "not-allowed" : "pointer",
+                    }}
+                >
+                    {submitting ? (
+                        <>
+                            <span style={{
+                                width: 13, height: 13, border: "2px solid rgba(255,255,255,.4)", borderTopColor: "#fff",
+                                borderRadius: "50%", display: "inline-block", animation: "agSignSpin 1s linear infinite",
+                            }} />
+                            Signing…
+                        </>
+                    ) : (
+                        <>
+                            <FaCheck size={12} color="#fff" /> Sign Agreement
+                        </>
+                    )}
+                </button>
             </Modal.Footer>
+
+            <style>{`@keyframes agSignSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
         </Modal>
     );
 }

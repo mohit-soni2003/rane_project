@@ -11,7 +11,6 @@ const billSchema = new mongoose.Schema({
     },
     loaNo: {
         type: String,
-        required: true,
     },
     pdfurl: {
         type: String,

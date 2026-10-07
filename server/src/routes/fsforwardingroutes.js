@@ -334,11 +334,23 @@ router.delete('/file/:id', verifyToken, async (req, res) => {
       return res.status(403).json({ error: 'Not authorized to delete this file' });
     }
 
+    // Remove everything linked to this file first. If a cleanup step fails we stop
+    // before deleting the file itself, so no orphaned records are left behind.
+    const [notificationResult, activityResult] = await Promise.all([
+      Notification.deleteMany({ relatedId: id, relatedModel: 'FileForward' }),
+      RecentActivity.deleteMany({ relatedId: id, relatedModel: 'FileForward' }),
+    ]);
+
     await FileForward.findByIdAndDelete(id);
 
     res.status(200).json({
       message: 'File deleted successfully',
-      deletedFileId: id
+      deletedFileId: id,
+      deleted: {
+        file: 1,
+        notifications: notificationResult.deletedCount || 0,
+        recentActivities: activityResult.deletedCount || 0,
+      },
     });
   } catch (error) {
     console.error('Error deleting file:', error);

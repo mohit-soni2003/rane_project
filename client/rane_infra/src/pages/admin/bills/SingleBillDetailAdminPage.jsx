@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import AdminHeader from '../../../components/layout/header/AdminHeader';
 import { createBillRemark, getBillById, getBillRemarks, updateWithdrawStatus, deleteBill } from '../../../services/billServices';
 import { getTransactionsByBillId } from '../../../services/transactionService';
-import { getPayNotesByBill } from '../../../services/paynoteServices';
+import { getPayNotesByBill, updatePayNoteStatus } from '../../../services/paynoteServices';
 import { Modal, Form, Button, Alert, Spinner, Image, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -105,6 +105,8 @@ export default function SingleBillDetailAdminPage() {
   const [rejectReason, setRejectReason] = useState('');
   const [paynotes, setPaynotes] = useState([]);
   const [showPaynoteModal, setShowPaynoteModal] = useState(false);
+  const [paynoteStatusDraft, setPaynoteStatusDraft] = useState({}); // { [paynoteId]: selected status }
+  const [updatingPaynoteId, setUpdatingPaynoteId] = useState(null);
   const [remarks, setRemarks] = useState([]);
   const [remarkText, setRemarkText] = useState('');
   const [remarksLoading, setRemarksLoading] = useState(false);
@@ -158,9 +160,30 @@ export default function SingleBillDetailAdminPage() {
     try {
       const response = await getPayNotesByBill(id);
       setPaynotes(response.paynotes);
+      setPaynoteStatusDraft({});
       setShowPaynoteModal(true);
     } catch (error) {
       toast.error('Failed to fetch paynotes');
+    }
+  };
+
+  const handleUpdatePaynoteStatus = async (paynoteId) => {
+    const status = paynoteStatusDraft[paynoteId];
+    if (!status) return;
+    setUpdatingPaynoteId(paynoteId);
+    try {
+      const result = await updatePayNoteStatus(paynoteId, status);
+      setPaynotes(prev => prev.map(p => (p._id === paynoteId ? { ...p, status: result.paynote.status } : p)));
+      setPaynoteStatusDraft(prev => {
+        const next = { ...prev };
+        delete next[paynoteId];
+        return next;
+      });
+      toast.success('Paynote status updated');
+    } catch (error) {
+      toast.error(error.message || 'Failed to update paynote status');
+    } finally {
+      setUpdatingPaynoteId(null);
     }
   };
 
@@ -649,7 +672,7 @@ export default function SingleBillDetailAdminPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
                   <tr style={{ background: 'var(--muted)', borderBottom: '2px solid var(--border)' }}>
-                    {['Paynote No', 'Department', 'Status', 'Amount', 'Created At'].map(h => (
+                    {['Paynote No', 'Department', 'Status', 'Amount', 'Created At', 'Update Status'].map(h => (
                       <th key={h} style={{ padding: '9px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{h}</th>
                     ))}
                   </tr>
@@ -662,6 +685,34 @@ export default function SingleBillDetailAdminPage() {
                       <td style={{ padding: '9px 12px' }}><StatusBadge status={paynote.status} /></td>
                       <td style={{ padding: '9px 12px' }}>{fmt(paynote.totalSanctionAmount)}</td>
                       <td style={{ padding: '9px 12px' }}>{new Date(paynote.createdAt).toLocaleDateString()}</td>
+                      <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <Form.Select
+                            size="sm"
+                            aria-label="New paynote status"
+                            value={paynoteStatusDraft[paynote._id] ?? paynote.status}
+                            disabled={updatingPaynoteId === paynote._id}
+                            onChange={(e) => setPaynoteStatusDraft(prev => ({ ...prev, [paynote._id]: e.target.value }))}
+                            style={{ width: 120, fontSize: 12 }}
+                          >
+                            {['Draft', 'Pending', 'Approved', 'Rejected', 'Paid'].map(s => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                          </Form.Select>
+                          {paynoteStatusDraft[paynote._id] && paynoteStatusDraft[paynote._id] !== paynote.status && (
+                            <Button
+                              size="sm"
+                              disabled={updatingPaynoteId === paynote._id}
+                              onClick={() => handleUpdatePaynoteStatus(paynote._id)}
+                              style={{ ...modalBtn('var(--primary)', '#fff'), fontSize: 12, padding: '3px 10px' }}
+                            >
+                              {updatingPaynoteId === paynote._id
+                                ? <Spinner as="span" animation="border" size="sm" />
+                                : 'Update'}
+                            </Button>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

@@ -16,7 +16,7 @@ const RecentActivity = require("../models/RecentActivityModel");
 // server instances behind a load balancer, since this won't be shared
 // across them.
 const conversations = new Map(); // adminId -> Gemini `contents` history array
-const MAX_HISTORY_TURNS = 20;
+const MAX_HISTORY_TURNS = 6; // fewer past turns resent each time = fewer tokens, faster replies
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ADMIN DB CHATBOT
@@ -64,7 +64,12 @@ router.post("/", verifyToken, verifyRole("admin"), async (req, res) => {
         });
 
     } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
+        console.error("Admin chat error:", error.cause?.message || error.message);
+        const status = error.status === 503 ? 503 : 500;
+        const message = status === 503
+            ? error.message
+            : "Something went wrong while answering. Please try again.";
+        return res.status(status).json({ success: false, message });
     }
 });
 

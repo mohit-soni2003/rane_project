@@ -9,6 +9,7 @@ import PaymentRequestListAdmin from "../pages/admin/payments/PaymentRequestListA
 import SinglePRdetailAdminPAge from "../pages/admin/payments/SinglePRDetailAdminPage.jsx";
 import PaymentRequestPage from "../pages/client/payments/PaymentRequestPage";
 import MyPaymentRequestPage from "../pages/client/payments/MyPaymentRequestPage.jsx";
+import SinglePaymentRequestDetailsClient from "../pages/client/payments/SinglePaymentRequestDetailsClient.jsx";
 import DfsRequest from "../pages/admin/dfs/DfsRequest.jsx";
 import SingleDfsRequestDetail from "../pages/admin/dfs/SingleDfsRequestDetail.jsx";
 import UploadDocumentPage from "../pages/client/documents/UploadDocumentPage";
@@ -48,6 +49,7 @@ export const staffRoutes = (
 
         <Route path="request-payment" element={<PaymentRequestPage />} />
         <Route path="my-payment-request" element={<MyPaymentRequestPage />} />
+        <Route path="my-payment-request/:id" element={<SinglePaymentRequestDetailsClient />} />
         <Route path="dfsrequest" element={<DfsRequest />} />
         <Route path="dfsrequest/:id" element={<SingleDfsRequestDetail />} />
 

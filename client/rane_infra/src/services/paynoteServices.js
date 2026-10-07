@@ -24,6 +24,30 @@ export const createPayNote = async (payNoteData) => {
   }
 };
 
+export const updatePayNoteStatus = async (id, status) => {
+  try {
+    const response = await fetch(`${backend_url}/paynote/update-status/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: 'include',
+      body: JSON.stringify({ status }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to update status");
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Error updating paynote status:", error.message);
+    throw error;
+  }
+};
+
 export const getPayNotesByBill = async (billId) => {
   try {
     const response = await fetch(`${backend_url}/paynote/by-bill/${billId}`, {

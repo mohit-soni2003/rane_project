@@ -4,6 +4,7 @@ const verifyToken = require("../middleware/verifyToken");
 const User = require("../models/usermodel")
 const RecentActivity = require("../models/RecentActivityModel")
 const Notification = require("../models/notificationModel")
+const Bill = require("../models/billmodel")
 
 
 
@@ -296,25 +297,16 @@ router.delete("/:id", verifyToken, async (req, res) => {
             });
         }
 
-        // ✅ Delete related notifications
-        try {
-            await Notification.deleteMany({
-                relatedId: agreementId,
-                relatedModel: "Agreement",
-            });
-        } catch (notificationErr) {
-            console.error("Error deleting related notifications:", notificationErr);
-        }
-
-        // ✅ Delete related recent activities
-        try {
-            await RecentActivity.deleteMany({
-                relatedId: agreementId,
-                relatedModel: "Agreement",
-            }); 
-        } catch (activityErr) {
-            console.error("Error deleting related recent activities:", activityErr);
-        }
+        // ✅ Clean up everything linked to this agreement. If any step fails we stop
+        // before deleting the agreement itself, so no orphaned records are left behind.
+        const [notificationResult, activityResult, billResult] = await Promise.all([
+            // related notifications
+            Notification.deleteMany({ relatedId: agreementId, relatedModel: "Agreement" }),
+            // related recent activities
+            RecentActivity.deleteMany({ relatedId: agreementId, relatedModel: "Agreement" }),
+            // bills keep existing (financial records) but must not point to a deleted agreement
+            Bill.updateMany({ agreement: agreementId }, { $unset: { agreement: "" } }),
+        ]);
 
         // ✅ Delete the agreement
         await Agreement.findByIdAndDelete(agreementId);
@@ -322,6 +314,12 @@ router.delete("/:id", verifyToken, async (req, res) => {
         res.status(200).json({
             success: true,
             message: "Agreement deleted successfully.",
+            deleted: {
+                agreement: 1,
+                notifications: notificationResult.deletedCount || 0,
+                recentActivities: activityResult.deletedCount || 0,
+                billsUnlinked: billResult.modifiedCount || 0,
+            },
         });
     } catch (error) {
         console.error("Error deleting agreement:", error);

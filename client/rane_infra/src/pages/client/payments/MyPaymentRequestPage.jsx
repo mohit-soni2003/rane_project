@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FaFileExport, FaPlus, FaFileInvoice, FaWallet, FaRupeeSign } from 'react-icons/fa';
-import { FiSearch, FiX } from 'react-icons/fi';
+import { FiSearch, FiX, FiArrowRight, FiFilter, FiChevronDown, FiArrowUp, FiArrowDown, FiRotateCcw } from 'react-icons/fi';
 import ClientHeader from '../../../components/layout/header/ClientHeader';
 import StaffHeader from '../../../components/layout/header/StaffHeader';
 import { getPaymentsByUserId } from '../../../services/paymentService';
@@ -55,12 +55,6 @@ const labelStyle = {
   textTransform: 'uppercase', letterSpacing: '0.05em',
 };
 
-const controlStyle = {
-  border: '1px solid var(--border)', borderRadius: 8,
-  padding: '8px 12px', fontSize: 13, color: 'var(--foreground)',
-  background: 'var(--input)', outline: 'none', boxSizing: 'border-box',
-};
-
 export default function MyPaymentRequestPage() {
   const [payments, setPayments]       = useState([]);
   const [loading, setLoading]         = useState(true);
@@ -105,6 +99,9 @@ export default function MyPaymentRequestPage() {
         ? a.expenseNo?.localeCompare(b.expenseNo)
         : b.expenseNo?.localeCompare(a.expenseNo)
     );
+
+  const hasActiveFilters = searchText !== '' || statusFilter !== 'all' || sortOrder !== 'asc';
+  const resetFilters = () => { setSearchText(''); setStatusFilter('all'); setSortOrder('asc'); };
 
   // ── Stat counts ──────────────────────────────────────────────────────────
   const statCounts = ['Paid', 'Pending', 'Sanctioned', 'Rejected'].reduce((acc, s) => {
@@ -198,74 +195,72 @@ export default function MyPaymentRequestPage() {
             </div>
 
             {/* ── Search / filter bar ── */}
-            <div style={{
-              background: 'var(--card)',
-              border: '1px solid var(--border)',
-              borderRadius: 12, padding: '14px 16px',
-              marginBottom: 14,
-              boxShadow: '0 2px 8px var(--shadow-color)',
-            }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
-
+            <div className="mb-toolbar">
                 {/* Search */}
-                <div style={{ position: 'relative', flex: '1 1 180px', minWidth: 160 }}>
-                  <FiSearch size={13} color={C.muted} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
-                  <input
-                    type="text"
-                    placeholder="Search tender or expense no…"
-                    value={searchText}
-                    onChange={e => setSearchText(e.target.value)}
-                    style={{ ...controlStyle, width: '100%', paddingLeft: 30, paddingRight: searchText ? 30 : 12 }}
-                  />
-                  {searchText && (
-                    <FiX size={13} color={C.muted} onClick={() => setSearchText('')}
-                      style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }} />
-                  )}
+                <div className="mb-search">
+                    <FiSearch size={15} color={C.muted} className="mb-icon-left" />
+                    <input
+                        type="text"
+                        placeholder="Search by tender or expense no…"
+                        value={searchText}
+                        onChange={e => setSearchText(e.target.value)}
+                        className="mb-ctl"
+                        style={{ paddingLeft: 36, paddingRight: searchText ? 34 : 12 }}
+                    />
+                    {searchText && (
+                        <button type="button" aria-label="Clear search" className="mb-clear" onClick={() => setSearchText('')}>
+                            <FiX size={14} color={C.muted} />
+                        </button>
+                    )}
                 </div>
 
                 {/* Status filter */}
-                <select
-                  value={statusFilter}
-                  onChange={e => setStatusFilter(e.target.value)}
-                  style={{ ...controlStyle, flex: '0 1 140px', cursor: 'pointer' }}
-                >
-                  <option value="all">All Status</option>
-                  <option value="Paid">Paid</option>
-                  <option value="Pending">Pending</option>
-                  <option value="Rejected">Rejected</option>
-                  <option value="Sanctioned">Sanctioned</option>
-                  <option value="Overdue">Overdue</option>
-                </select>
+                <div className="mb-select">
+                    <FiFilter size={14} color={C.muted} className="mb-icon-left" />
+                    <select
+                        value={statusFilter}
+                        onChange={e => setStatusFilter(e.target.value)}
+                        className="mb-ctl"
+                        aria-label="Filter by status"
+                    >
+                        <option value="all">All Status</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Rejected">Rejected</option>
+                        <option value="Sanctioned">Sanctioned</option>
+                        <option value="Overdue">Overdue</option>
+                    </select>
+                    <FiChevronDown size={14} color={C.muted} className="mb-icon-right" />
+                </div>
 
                 {/* Sort */}
-                <select
-                  value={sortOrder}
-                  onChange={e => setSortOrder(e.target.value)}
-                  style={{ ...controlStyle, flex: '0 1 140px', cursor: 'pointer' }}
-                >
-                  <option value="asc">▲ Ascending</option>
-                  <option value="desc">▼ Descending</option>
-                </select>
+                <div className="mb-select">
+                    {sortOrder === 'asc'
+                        ? <FiArrowUp size={14} color={C.muted} className="mb-icon-left" />
+                        : <FiArrowDown size={14} color={C.muted} className="mb-icon-left" />}
+                    <select
+                        value={sortOrder}
+                        onChange={e => setSortOrder(e.target.value)}
+                        className="mb-ctl"
+                        aria-label="Sort by expense number"
+                    >
+                        <option value="asc">Expense No: Ascending</option>
+                        <option value="desc">Expense No: Descending</option>
+                    </select>
+                    <FiChevronDown size={14} color={C.muted} className="mb-icon-right" />
+                </div>
 
-                {/* Reset */}
-                <button
-                  onClick={() => { setSearchText(''); setStatusFilter('all'); setSortOrder('asc'); }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 5,
-                    padding: '8px 14px', borderRadius: 8,
-                    border: '1px solid var(--border)',
-                    background: 'var(--secondary)', color: 'var(--secondary-foreground)',
-                    fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
-                  }}
-                >
-                  <FiX size={12} /> Reset
-                </button>
-              </div>
+                {/* Reset (only when something is applied) */}
+                {hasActiveFilters && (
+                    <button type="button" className="mb-reset" onClick={resetFilters}>
+                        <FiRotateCcw size={13} /> Reset
+                    </button>
+                )}
 
-              <div style={{ marginTop: 10, fontSize: 12, color: 'var(--text-muted)' }}>
-                Showing <strong style={{ color: 'var(--text-strong)' }}>{filteredPayments.length}</strong> of{' '}
-                <strong style={{ color: 'var(--text-strong)' }}>{payments.length}</strong> payment requests
-              </div>
+                {/* Result count */}
+                <div className="mb-count">
+                    Showing <strong>{filteredPayments.length}</strong> of <strong>{payments.length}</strong> payment requests
+                </div>
             </div>
 
             {/* ── Loading spinner ── */}
@@ -302,12 +297,12 @@ export default function MyPaymentRequestPage() {
             {!loading && filteredPayments.length > 0 && (
               <div className="d-none d-md-block" style={{ overflowX: 'auto' }}>
                 <table style={{
-                  width: '100%', minWidth: 780, borderCollapse: 'collapse',
+                  width: '100%', minWidth: 880, borderCollapse: 'collapse',
                   fontSize: 13,
                 }}>
                   <thead>
                     <tr style={{ background: 'var(--muted)', borderBottom: '2px solid var(--border)' }}>
-                      {['#', 'Tender', 'Expense No.', 'Amount', 'Mode', 'Status', 'Submitted On', 'Document', 'Remark'].map(h => (
+                      {['#', 'Tender', 'Expense No.', 'Amount', 'Mode', 'Status', 'Submitted On', 'Document', 'Remark', 'Action'].map(h => (
                         <th key={h} style={{
                           padding: '10px 14px', textAlign: 'left',
                           fontSize: 11, fontWeight: 700,
@@ -397,6 +392,21 @@ export default function MyPaymentRequestPage() {
                           }} title={payment.remark}>
                             {payment.remark || <span style={{ fontStyle: 'italic' }}>No remark</span>}
                           </div>
+                        </td>
+                        {/* Action */}
+                        <td style={{ padding: '11px 14px' }}>
+                          <button
+                            onClick={() => navigate(`/${user?.role}/my-payment-request/${payment._id}`)}
+                            style={{
+                              display: 'inline-flex', alignItems: 'center', gap: 5,
+                              padding: '6px 12px', borderRadius: 7,
+                              border: '1px solid var(--border)',
+                              background: 'var(--secondary)', color: 'var(--secondary-foreground)',
+                              fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+                            }}
+                          >
+                            Details <FiArrowRight size={12} />
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -500,6 +510,21 @@ export default function MyPaymentRequestPage() {
                         </div>
                       </div>
                     )}
+
+                    {/* Details button */}
+                    <button
+                      onClick={() => navigate(`/${user?.role}/my-payment-request/${payment._id}`)}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                        width: '100%', padding: '9px', borderRadius: 8,
+                        border: '1px solid var(--primary)',
+                        background: 'transparent', color: C.primary,
+                        fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                        marginTop: 10,
+                      }}
+                    >
+                      View details <FiArrowRight size={13} />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -544,6 +569,52 @@ export default function MyPaymentRequestPage() {
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         select option { background: var(--input); color: var(--foreground); }
+        .mb-toolbar {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+            padding: 10px 0 14px; margin-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+        }
+        .mb-search { position: relative; flex: 1 1 260px; min-width: 200px; }
+        .mb-select { position: relative; flex: 0 1 190px; min-width: 160px; }
+        .mb-ctl {
+            width: 100%; height: 38px; box-sizing: border-box;
+            border: 1px solid var(--border); border-radius: 10px;
+            background: var(--input); color: var(--foreground);
+            font-size: 13px; outline: none;
+            transition: border-color .15s, box-shadow .15s;
+        }
+        .mb-select .mb-ctl {
+            appearance: none; -webkit-appearance: none; cursor: pointer;
+            padding: 0 32px 0 34px;
+        }
+        .mb-ctl:hover { border-color: var(--muted-foreground, #8b7b74); }
+        .mb-ctl:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(107, 62, 43, 0.14); }
+        .mb-icon-left, .mb-icon-right {
+            position: absolute; top: 50%; transform: translateY(-50%); pointer-events: none;
+        }
+        .mb-icon-left { left: 12px; }
+        .mb-icon-right { right: 11px; }
+        .mb-clear {
+            position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+            width: 24px; height: 24px; border: none; border-radius: 50%;
+            background: transparent; display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+        }
+        .mb-clear:hover { background: var(--muted); }
+        .mb-reset {
+            display: inline-flex; align-items: center; gap: 6px;
+            height: 38px; padding: 0 12px; border-radius: 10px;
+            border: 1px dashed var(--border); background: transparent;
+            color: var(--text-muted); font-size: 12px; font-weight: 600; cursor: pointer;
+            white-space: nowrap; transition: background .15s, color .15s;
+        }
+        .mb-reset:hover { background: var(--secondary); color: var(--secondary-foreground); }
+        .mb-count { margin-left: auto; font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+        .mb-count strong { color: var(--text-strong); }
+        @media (max-width: 640px) {
+            .mb-search, .mb-select { flex: 1 1 100%; }
+            .mb-count { margin-left: 0; width: 100%; }
+        }
       `}</style>
     </>
   );

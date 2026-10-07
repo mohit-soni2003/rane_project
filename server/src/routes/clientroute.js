@@ -1,7 +1,6 @@
 const express = require("express")
 const User = require("../models/usermodel")
 const Bill = require("../models/billmodel")
-const FileForward = require("../models/fileForwardingModel");
 const Document = require("../models/documentmodel");
 
 const router = express.Router();
@@ -186,21 +185,13 @@ router.put("/update-idproof", async (req, res) => {
   }
 });
 
-// Route to get all documents from both Document and FileForward models for Client users
+// All documents from the Document model (not DFS files) for Client users
 router.get("/client-get-all-documents", async (req, res) => {
     try {
         // Get all regular documents
         const regularDocuments = await Document.find()
             .populate("userId", "name email cid profile role")
             .populate("uploadedBy", "name email cid profile role")
-            .sort({ createdAt: -1 });
-
-        // Get all DFS documents
-        const dfsDocuments = await FileForward.find()
-            .populate("uploadedBy", "name email cid profile role")
-            .populate("currentOwner", "name email cid profile role")
-            .populate("forwardingTrail.forwardedBy", "name email cid profile role")
-            .populate("forwardingTrail.forwardedTo", "name email cid profile role")
             .sort({ createdAt: -1 });
 
         // Combine and format the documents
@@ -218,24 +209,10 @@ router.get("/client-get-all-documents", async (req, res) => {
                 dateOfIssue: doc.dateOfIssue,
                 uploadDate: doc.uploadDate,
                 documentLink: doc.documentLink,
+                remark: doc.remark,
+                statusUpdatedAt: doc.statusUpdatedAt,
                 createdAt: doc.createdAt,
                 updatedAt: doc.updatedAt
-            })),
-            ...dfsDocuments.map(doc => ({
-                _id: doc._id,
-                type: 'dfs',
-                title: doc.fileTitle,
-                documentType: doc.docType,
-                documentCode: null,
-                description: doc.description,
-                status: doc.status,
-                uploadedBy: doc.uploadedBy,
-                userId: doc.currentOwner,
-                dateOfIssue: null,
-                uploadDate: doc.createdAt,
-                documentLink: doc.fileUrl,
-                createdAt: doc.createdAt,
-                updatedAt: doc.createdAt
             }))
         ];
 
@@ -246,8 +223,7 @@ router.get("/client-get-all-documents", async (req, res) => {
             success: true,
             documents: allDocuments,
             total: allDocuments.length,
-            regularCount: regularDocuments.length,
-            dfsCount: dfsDocuments.length
+            regularCount: regularDocuments.length
         });
     } catch (error) {
         console.error("Error fetching all documents:", error);

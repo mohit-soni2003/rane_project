@@ -66,8 +66,6 @@ const StaffHeader = () => {
             overflow: 'hidden',
           }}
         >
-          {/* Role-colored accent line */}
-          <div style={{ height: '3px', background: ROLE_ACCENT }} />
 
           <div
             className="d-flex align-items-center justify-content-between"

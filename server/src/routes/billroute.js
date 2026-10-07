@@ -6,6 +6,7 @@ const Document = require("../models/documentmodel")
 const RecentActivity = require("../models/RecentActivityModel")
 const Notification = require("../models/notificationModel")
 const Transaction = require("../models/transaction")
+const PayNote = require("../models/paynoteModel")
 const verifyToken = require("../middleware/verifyToken")
 // const { createNotification } = require("./notificationRoutes")
 
@@ -18,7 +19,7 @@ router.post("/post-bill", async (req, res) => {
     const { firmName, workArea, loaNo, agreement, pdfurl, user, invoiceNo, workDescription, amount } = req.body;
 
     // Validate required fields
-    if (!firmName || !workArea || !loaNo || !agreement || !pdfurl || !user || !amount) {
+    if (!firmName || !workArea || !pdfurl || !user || !amount) {
       return res.status(400).json({ message: "All required fields must be provided" });
     }
 
@@ -28,25 +29,28 @@ router.post("/post-bill", async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const existingAgreement = await Agreement.findById(agreement);
-    if (!existingAgreement) {
-      return res.status(404).json({ message: "Agreement not found" });
-    }
+    // LOA and agreement are optional; the client sends "" when they are left blank
+    if (agreement) {
+      const existingAgreement = await Agreement.findById(agreement);
+      if (!existingAgreement) {
+        return res.status(404).json({ message: "Agreement not found" });
+      }
 
-    if (existingAgreement.status !== "signed") {
-      return res.status(400).json({ message: "Only signed agreements can be selected" });
-    }
+      if (existingAgreement.status !== "signed") {
+        return res.status(400).json({ message: "Only signed agreements can be selected" });
+      }
 
-    if (existingAgreement.client.toString() !== existingUser._id.toString()) {
-      return res.status(403).json({ message: "Selected agreement does not belong to this user" });
+      if (existingAgreement.client.toString() !== existingUser._id.toString()) {
+        return res.status(403).json({ message: "Selected agreement does not belong to this user" });
+      }
     }
 
     // Create a new bill
     const newBill = new Bill({
       firmName,
       workArea,
-      loaNo,
-      agreement,
+      loaNo: loaNo || undefined,
+      agreement: agreement || undefined,
       pdfurl,
       invoiceNo,
       workDescription,
@@ -258,10 +262,11 @@ router.delete("/bill/:id", async (req, res) => {
     }
 
     // Delete all records linked to this bill
-    const [transactionDeleteResult, recentActivityDeleteResult, notificationDeleteResult] = await Promise.all([
+    const [transactionDeleteResult, recentActivityDeleteResult, notificationDeleteResult, payNoteDeleteResult] = await Promise.all([
       Transaction.deleteMany({ billId: id }),
       RecentActivity.deleteMany({ relatedId: id, relatedModel: "Bill" }),
-      Notification.deleteMany({ relatedId: id, relatedModel: "Bill" })
+      Notification.deleteMany({ relatedId: id, relatedModel: "Bill" }),
+      PayNote.deleteMany({ bill: id })
     ]);
 
     // Delete the bill document itself
@@ -273,6 +278,7 @@ router.delete("/bill/:id", async (req, res) => {
         transactions: transactionDeleteResult.deletedCount || 0,
         recentActivities: recentActivityDeleteResult.deletedCount || 0,
         notifications: notificationDeleteResult.deletedCount || 0,
+        payNotes: payNoteDeleteResult.deletedCount || 0,
       },
     });
 
