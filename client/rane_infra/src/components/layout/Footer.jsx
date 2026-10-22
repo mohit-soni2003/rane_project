@@ -2,7 +2,7 @@ import Lottie from "lottie-react";
 import { Link } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
 import {
-  FaFacebookF, FaInstagram, FaTwitter, FaLinkedin, FaHardHat, FaPhoneAlt,
+  FaFacebookF, FaInstagram, FaTwitter, FaLinkedin, FaHardHat, FaPhoneAlt, FaWhatsapp, FaExternalLinkAlt,
 } from "react-icons/fa";
 import trainAnimation from "../../assets/animation/train.navpanel.json";
 
@@ -60,11 +60,30 @@ const FOOTER_STYLES = `
   .ft-admin { color: var(--ft-accent); font-size: .78rem; font-weight: 600; }
   .ft-admin:hover { text-decoration: underline; }
 
-  .ft-credit { position: relative; z-index: 2; background: rgba(0,0,0,.50); padding: 10px 20px; text-align: center; font-size: .75rem; color: rgba(255,255,255,.45); line-height: 1.7; }
-  .ft-credit a { color: var(--ft-accent); font-weight: 600; }
-  .ft-credit a:hover { text-decoration: underline; }
-  .ft-credit .sep { margin: 0 10px; color: rgba(255,255,255,.25); }
-  .ft-credit svg { font-size: .7rem; margin-right: 4px; vertical-align: -1px; }
+  /* ── Developer branding ── */
+  .ft-credit { position: relative; z-index: 2; background: linear-gradient(180deg, rgba(0,0,0,.62), rgba(0,0,0,.82)); border-top: 1px solid color-mix(in srgb, var(--ft-accent) 45%, transparent); padding: 22px 96px; }
+  .ft-dev { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 20px 32px; flex-wrap: wrap; }
+  .ft-dev-text small { display: block; font-size: .68rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.5); }
+  .ft-dev-name { margin-top: 4px; font-size: 1.15rem; font-weight: 800; color: #fff; letter-spacing: -.01em; }
+  .ft-dev-name span { color: var(--ft-accent); }
+  .ft-dev-pitch { margin-top: 4px; font-size: .84rem; color: rgba(255,255,255,.66); line-height: 1.55; }
+  .ft-dev-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .ft-dev-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 18px; border-radius: 999px; font-size: .84rem; font-weight: 700; border: 1px solid transparent; transition: transform .2s ease, background .2s ease, box-shadow .2s ease; }
+  .ft-dev-btn:hover { transform: translateY(-2px); text-decoration: none; }
+  .ft-dev-btn.wa { background: #25d366; color: #fff; box-shadow: 0 8px 20px -8px rgba(37,211,102,.7); }
+  .ft-dev-btn.wa:hover { background: #1fb858; color: #fff; }
+  .ft-dev-btn.ghost { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.28); color: #fff; }
+  .ft-dev-btn.ghost:hover { background: rgba(255,255,255,.16); color: #fff; }
+  .ft-dev-phone { display: inline-flex; align-items: center; gap: 8px; font-size: .84rem; font-weight: 600; color: rgba(255,255,255,.8); }
+  .ft-dev-phone:hover { color: var(--ft-accent); }
+
+  @media (max-width: 760px) {
+    .ft-credit { padding: 22px 18px 92px; } /* bottom space keeps the floating WhatsApp button clear of the buttons */
+    .ft-dev { flex-direction: column; align-items: stretch; text-align: center; }
+    .ft-dev-actions { flex-direction: column; align-items: stretch; }
+    .ft-dev-btn { width: 100%; padding: 12px 18px; }
+    .ft-dev-phone { justify-content: center; padding-top: 4px; }
+  }
 
   @media (max-width: 600px) {
     .ft-body { padding-top: 32px; }
@@ -72,6 +91,12 @@ const FOOTER_STYLES = `
     .ft-info span { display: block; }
   }
 `;
+
+const DEV_WHATSAPP_MESSAGE =
+  "Hello Mohit, I came across your work on the Rane & Sons website and was impressed by it. " +
+  "I would like to discuss a website / software project for my business. " +
+  "Kindly let me know a convenient time to connect. Thank you.";
+const DEV_WHATSAPP_URL = `https://wa.me/919589571577?text=${encodeURIComponent(DEV_WHATSAPP_MESSAGE)}`;
 
 const socials = [
   { href: "https://www.facebook.com/tejprakash.rane/", icon: <FaFacebookF />, label: "Facebook" },
@@ -112,8 +137,9 @@ const Footer = () => {
 
         <nav className="ft-nav">
           <Link to="/" onClick={scrollToTop}>Home</Link>
+          <HashLink smooth to="/#services">Services</HashLink>
+          <HashLink smooth to="/#process">Process</HashLink>
           <HashLink smooth to="/#pride-moment">Gallery</HashLink>
-          <HashLink smooth to="/#documents">Documents</HashLink>
           <HashLink smooth to="/#contactus">Contact Us</HashLink>
         </nav>
 
@@ -141,11 +167,22 @@ const Footer = () => {
 
       {/* ── Developer credit bar ── */}
       <div className="ft-credit">
-        Designed &amp; Maintained by Mohit Soni
-        <br />
-        <a href="https://mohitsoni.vercel.app/" target="_blank" rel="noopener noreferrer">Contact Developer</a>
-        <span className="sep">|</span>
-        <FaPhoneAlt />+91 9589571577
+        <div className="ft-dev">
+          <div className="ft-dev-text">
+            <small>Designed &amp; Developed by</small>
+            <div className="ft-dev-name">Mohit <span>Soni</span></div>
+            <p className="ft-dev-pitch">Need a website or software for your business? Let&apos;s build yours.</p>
+          </div>
+          <div className="ft-dev-actions">
+            <a className="ft-dev-btn wa" href={DEV_WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
+              <FaWhatsapp /> WhatsApp Me
+            </a>
+            <a className="ft-dev-btn ghost" href="https://webnex-vert.vercel.app/" target="_blank" rel="noopener noreferrer">
+              <FaExternalLinkAlt /> View Portfolio
+            </a>
+            <a className="ft-dev-phone" href="tel:+919589571577"><FaPhoneAlt /> +91 95895 71577</a>
+          </div>
+        </div>
       </div>
     </footer>
   );

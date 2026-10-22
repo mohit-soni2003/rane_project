@@ -1,19 +1,49 @@
 import React, { useMemo, useState } from "react";
 import {
-  FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaWhatsapp, FaHeadset, FaClock, FaPen, FaCheck,
+  FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaWhatsapp, FaHeadset, FaClock, FaPen, FaCheck, FaGlobe,
 } from "react-icons/fa";
 import ClientHeader from "../../../components/layout/header/ClientHeader";
 import { useAuthStore } from "../../../store/authStore";
 
 const C = { primary: "#6b3e2b", accent: "#b95a52", muted: "#8b7b74", whatsapp: "#25D366" };
 
-const teamMembers = [
-  { name: "TEJPRAKASH RANE", position: "Director", phone: "+919826040680", email: "tejprakashrane26@gmail.com", whatsapp: "+919826040680" },
-  { name: "HARSHVARDHAN RANE", position: "Chief Executive Officer (CEO)", phone: "+916264605007", email: "harshrane@icloud.com", whatsapp: "+916264605007" },
-  { name: "ASHA RANE", position: "Chief Finance Officer (CFO)", phone: "+918839094569", email: "usharane680@gmail.com", whatsapp: "+918839094569" },
-  { name: "RAJESH RANE", position: "Site In-Charge", phone: "+918878521277", email: "rajeshrane751@gmail.com", whatsapp: "+918878521277" },
-  { name: "LALIT DEVHUNS", position: "Supervisor", phone: "+916264295446", email: "lalitdevhans@gmail.com", whatsapp: "+916264295446" },
-  { name: "MOHIT SONI", position: "Chief Technology Officer (CTO)", phone: "+919589571577", email: "mohitsonip1847@gmail.com", whatsapp: "+919589571577" },
+// A member without a phone (e.g. a vacant post) shows the email only — no call / WhatsApp button
+const teamSections = [
+  {
+    id: "executive",
+    title: "Administrative / Executive",
+    members: [
+      { name: "HARSHVARDHAN RANE", position: "Chief Executive Officer (CEO)", phone: "+916264605007", email: "ceo.rsems@gmail.com" },
+      { name: "TEJPRAKASH RANE", position: "Director", phone: "+919425058668", email: "director.rsems@gmail.com" },
+      { name: "KRISHNA SHARMA", position: "Administration", phone: "+918871655055", email: "ofm.rsems@gmail.com" },
+    ],
+  },
+  {
+    id: "finance",
+    title: "Finance / Account",
+    members: [
+      { name: "ASHA RANE", position: "Chief Finance Officer (CFO)", phone: "+918839094569", email: "cfo.rswms@gmail.com" },
+      { name: "VAISHNAVI RANE", position: "Finance", phone: "+919425059002", email: "finco.rsems@gmail.com" },
+      { name: "FINANCE HEAD", position: "Vacant", email: "finhd.rsems@gmail.com", vacant: true },
+      { name: "ACCOUNTANT 1 / 2", position: "Accounts", phone: "+919424935055", email: "acn.rsems@gmail.com" },
+    ],
+  },
+  {
+    id: "operations",
+    title: "Operations",
+    members: [
+      { name: "SUNNY DEVHUNS", position: "Chief Operating Officer (COO)", phone: "+916264299401", email: "coo.rsems@gmail.com" },
+      { name: "RAJESH RANE", position: "Site In-Charge", note: "Common ID for all site in-charges", phone: "+918878521277", email: "sinc.rsems@gmail.com" },
+      { name: "LALIT DEVHUNS", position: "Supervisor", note: "Common ID for all supervisors", phone: "+919171643700", email: "spv.rsems@gmail.com" },
+    ],
+  },
+  {
+    id: "infotech",
+    title: "Info-tech",
+    members: [
+      { name: "MOHIT SONI", position: "Chief Technology Officer (CTO)", phone: "+919589571577", email: "mohitsonip1847@gmail.com", website: "https://webnex-vert.vercel.app/" },
+    ],
+  },
 ];
 
 // What the client is reaching out about — drives the topic line of the message
@@ -82,7 +112,7 @@ export default function SupportPage() {
 
   const whatsappLink = (member) => {
     const message = buildMessage({ recipientName: firstName(member.name), user, topic, note });
-    return `https://wa.me/${member.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;
+    return `https://wa.me/${member.phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`;
   };
 
   // Render *bold* segments of the WhatsApp message like WhatsApp does
@@ -216,49 +246,81 @@ export default function SupportPage() {
             </div>
 
             {/* Team members */}
-            <div style={sectionLabel}>Team members</div>
+            <div style={sectionLabel}>Our team</div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12, marginBottom: 18 }}>
-              {teamMembers.map((member, idx) => (
-                <div
-                  key={idx}
-                  style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: "16px", boxShadow: "0 2px 8px var(--shadow-color)", transition: "transform .25s ease, box-shadow .25s ease, border-color .25s ease" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 10px 24px var(--shadow-color)"; e.currentTarget.style.borderColor = "var(--accent)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 8px var(--shadow-color)"; e.currentTarget.style.borderColor = "var(--border)"; }}
-                >
-                  {/* Header: avatar + name + role */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 14 }}>
-                    <span style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--secondary)", color: C.primary, display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 15, flexShrink: 0, border: "1px solid var(--border)" }}>
-                      {initials(member.name)}
-                    </span>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text-strong)", textTransform: "uppercase", lineHeight: 1.25 }}>{member.name}</div>
-                      <div style={{ fontSize: 11.5, color: "var(--accent)", fontWeight: 600, marginTop: 2 }}>{member.position}</div>
-                    </div>
-                  </div>
-
-                  {/* Contact lines */}
-                  <a href={`tel:${member.phone}`} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, color: "var(--text-muted)", textDecoration: "none", marginBottom: 7 }}>
-                    <FaPhoneAlt size={12} color={C.accent} /> {member.phone}
-                  </a>
-                  <a href={`mailto:${member.email}`} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, color: "var(--text-muted)", textDecoration: "none", marginBottom: 14, wordBreak: "break-all" }}>
-                    <FaEnvelope size={12} color={C.accent} /> {member.email}
-                  </a>
-
-                  {/* WhatsApp — opens with the prepared, personalised message */}
-                  <a
-                    href={whatsappLink(member)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: "9px", borderRadius: 8, background: C.whatsapp, color: "#fff", fontSize: 13, fontWeight: 600, textDecoration: "none", transition: "filter .2s ease" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(1.08)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.filter = "brightness(1)")}
-                  >
-                    <FaWhatsapp size={16} color="#ffffff" /> Message {firstName(member.name)}
-                  </a>
+            {teamSections.map((section) => (
+              <div key={section.id} style={{ marginBottom: 22 }}>
+                {/* Section heading */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, paddingBottom: 8, borderBottom: "2px solid var(--border)" }}>
+                  <span style={{ width: 4, height: 18, borderRadius: 2, background: C.accent, flexShrink: 0 }} />
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-strong)" }}>{section.title}</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", background: "var(--secondary)", border: "1px solid var(--border)", borderRadius: 20, padding: "1px 9px" }}>
+                    {section.members.length}
+                  </span>
                 </div>
-              ))}
-            </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
+                  {section.members.map((member) => (
+                    <div
+                      key={member.email}
+                      style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: "16px", boxShadow: "0 2px 8px var(--shadow-color)", opacity: member.vacant ? 0.85 : 1, transition: "transform .25s ease, box-shadow .25s ease, border-color .25s ease" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 10px 24px var(--shadow-color)"; e.currentTarget.style.borderColor = "var(--accent)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 8px var(--shadow-color)"; e.currentTarget.style.borderColor = "var(--border)"; }}
+                    >
+                      {/* Header: avatar + name + role */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 14 }}>
+                        <span style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--secondary)", color: C.primary, display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 15, flexShrink: 0, border: "1px solid var(--border)" }}>
+                          {initials(member.name)}
+                        </span>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text-strong)", textTransform: "uppercase", lineHeight: 1.25 }}>{member.name}</div>
+                          <div style={{ fontSize: 11.5, color: member.vacant ? "var(--text-muted)" : "var(--accent)", fontWeight: 600, marginTop: 2, fontStyle: member.vacant ? "italic" : "normal" }}>{member.position}</div>
+                        </div>
+                      </div>
+
+                      {/* Contact lines */}
+                      {member.phone && (
+                        <a href={`tel:${member.phone}`} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, color: "var(--text-muted)", textDecoration: "none", marginBottom: 7 }}>
+                          <FaPhoneAlt size={12} color={C.accent} /> {member.phone}
+                        </a>
+                      )}
+                      <a href={`mailto:${member.email}`} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, color: "var(--text-muted)", textDecoration: "none", marginBottom: member.note ? 7 : 14, wordBreak: "break-all" }}>
+                        <FaEnvelope size={12} color={C.accent} /> {member.email}
+                      </a>
+                      {member.website && (
+                        <a href={member.website} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, color: "var(--link)", textDecoration: "none", marginBottom: 14, wordBreak: "break-all" }}>
+                          <FaGlobe size={12} color={C.accent} /> Contact here
+                        </a>
+                      )}
+                      {member.note && (
+                        <div style={{ fontSize: 11, color: "var(--text-muted)", fontStyle: "italic", marginBottom: 14 }}>{member.note}</div>
+                      )}
+
+                      {/* WhatsApp — opens with the prepared, personalised message */}
+                      {member.phone ? (
+                        <a
+                          href={whatsappLink(member)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: "9px", borderRadius: 8, background: C.whatsapp, color: "#fff", fontSize: 13, fontWeight: 600, textDecoration: "none", transition: "filter .2s ease" }}
+                          onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(1.08)")}
+                          onMouseLeave={(e) => (e.currentTarget.style.filter = "brightness(1)")}
+                        >
+                          <FaWhatsapp size={16} color="#ffffff" /> Message {firstName(member.name)}
+                        </a>
+                      ) : (
+                        <a
+                          href={`mailto:${member.email}`}
+                          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: "9px", borderRadius: 8, background: "var(--secondary)", border: "1px solid var(--border)", color: "var(--secondary-foreground)", fontSize: 13, fontWeight: 600, textDecoration: "none" }}
+                        >
+                          <FaEnvelope size={13} color={C.accent} /> Send an email
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
 
             {/* Business hours */}
             <div style={cardStyle}>

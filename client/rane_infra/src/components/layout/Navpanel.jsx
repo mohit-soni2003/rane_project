@@ -435,8 +435,9 @@ function Navpannel() {
           {/* Desktop nav links */}
           <ul className="rnav-links">
             <li><Link to="/" onClick={scrollToTop}>Home</Link></li>
+            <li><HashLink to="/#services" smooth>Services</HashLink></li>
+            <li><HashLink to="/#process" smooth>Process</HashLink></li>
             <li><HashLink to="/#pride-moment" smooth>Gallery</HashLink></li>
-            <li><HashLink to="/#documents" smooth>Documents</HashLink></li>
             <li><HashLink to="/#contactus" smooth>Contact-us</HashLink></li>
           </ul>
 
@@ -478,8 +479,9 @@ function Navpannel() {
 
           <ul className="rnav-drawer-links">
             <li><Link to="/" onClick={() => { closeDrawer(); scrollToTop(); }}>Home</Link></li>
+            <li><HashLink to="/#services" smooth onClick={closeDrawer}>Services</HashLink></li>
+            <li><HashLink to="/#process" smooth onClick={closeDrawer}>Process</HashLink></li>
             <li><HashLink to="/#pride-moment" smooth onClick={closeDrawer}>Gallery</HashLink></li>
-            <li><HashLink to="/#documents" smooth onClick={closeDrawer}>Documents</HashLink></li>
             <li><HashLink to="/#contactus" smooth onClick={closeDrawer}>Contact-us</HashLink></li>
           </ul>
 

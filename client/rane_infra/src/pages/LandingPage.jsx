@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  FaFilePdf, FaWhatsapp, FaEnvelope, FaMapMarkerAlt, FaClock,
-  FaArrowRight, FaChevronLeft, FaChevronRight, FaDownload, FaCheck,
+  FaWhatsapp, FaEnvelope, FaMapMarkerAlt, FaClock,
+  FaArrowRight, FaChevronLeft, FaChevronRight, FaCheck,
+  FaTrain, FaBuilding, FaHardHat, FaTools, FaUsers, FaBoxes,
+  FaShieldAlt, FaAward, FaHandshake,
+  FaPhoneAlt, FaDraftingCompass, FaHammer, FaFlagCheckered,
 } from 'react-icons/fa';
 import Navpannel from '../components/layout/Navpanel';
 import Footer from '../components/layout/Footer';
@@ -43,7 +46,7 @@ const LP_STYLES = `
   .lp-reveal.in { opacity: 1; transform: none; }
   @media (prefers-reduced-motion: reduce) {
     .lp-reveal { opacity: 1; transform: none; transition: none; }
-    .lp-hero-bg, .lp-dot, .lp-cursor { animation: none !important; }
+    .lp-hero-bg, .lp-dot, .lp-cursor, .lp-wa::after { animation: none !important; }
   }
 
   /* ── Section heading ── */
@@ -142,6 +145,7 @@ const LP_STYLES = `
   .lp-chip svg { color: var(--lp-accent); font-size: .7rem; }
 
   /* ═════════ DIRECTORS ═════════ */
+  .lp-grid-2 > .lp-reveal, .lp-person { height: 100%; }
   .lp-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px; max-width: 920px; margin: 0 auto; }
   .lp-person {
     background: #fff; border: 1px solid var(--lp-line); border-radius: 28px; padding: 44px 36px 38px; text-align: center;
@@ -212,29 +216,75 @@ const LP_STYLES = `
   .lp-success-ico { width: 72px; height: 72px; margin: 0 auto 22px; border-radius: 50%; display: grid; place-items: center; background: #dcfce7; color: #16a34a; font-size: 1.6rem; }
   .lp-success p { color: var(--lp-muted); margin: 10px 0 26px; }
 
-  /* ═════════ DOCUMENTS ═════════ */
-  .lp-docs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
-  .lp-docs > .lp-reveal, .lp-grid-2 > .lp-reveal, .lp-person { height: 100%; }
-  .lp-doc {
-    height: 100%;
-    display: flex; flex-direction: column; gap: 22px; justify-content: space-between;
-    background: #fff; border: 1px solid var(--lp-line); border-radius: 22px; padding: 28px;
+  /* ═════════ SERVICES ═════════ */
+  .lp-services { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .lp-services > .lp-reveal, .lp-why > .lp-reveal, .lp-steps > .lp-reveal { height: 100%; }
+  .lp-service {
+    height: 100%; background: #fff; border: 1px solid var(--lp-line); border-radius: 22px; padding: 30px 28px;
     transition: transform .35s cubic-bezier(.16,1,.3,1), box-shadow .35s ease, border-color .35s ease;
   }
-  .lp-doc:hover { transform: translateY(-6px); box-shadow: var(--lp-shadow-lg); border-color: color-mix(in srgb, var(--lp-accent) 45%, white); }
-  .lp-doc-top { display: flex; gap: 16px; align-items: flex-start; }
-  .lp-doc-ico { flex: none; width: 52px; height: 52px; border-radius: 16px; background: #fef2f2; color: #dc2626; display: grid; place-items: center; font-size: 1.3rem; }
-  .lp-doc-name { font-weight: 600; color: var(--lp-ink); line-height: 1.45; font-size: .98rem; padding-top: 2px; }
-  .lp-doc-name small { display: block; margin-top: 4px; font-size: .75rem; font-weight: 500; color: var(--lp-muted); letter-spacing: .06em; text-transform: uppercase; }
-  .lp-doc-link { display: inline-flex; align-items: center; gap: 10px; font-size: .88rem; font-weight: 600; color: var(--lp-accent-hover); }
-  .lp-doc-link svg { transition: transform .25s ease; }
-  .lp-doc:hover .lp-doc-link svg { transform: translateY(2px); }
+  .lp-service:hover { transform: translateY(-6px); box-shadow: var(--lp-shadow-lg); border-color: color-mix(in srgb, var(--lp-accent) 45%, white); }
+  .lp-service-ico { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; margin-bottom: 20px; font-size: 1.4rem; color: var(--lp-accent-hover); background: color-mix(in srgb, var(--lp-accent) 12%, white); transition: background .3s ease, color .3s ease, transform .3s ease; }
+  .lp-service:hover .lp-service-ico { background: var(--lp-accent); color: #fff; transform: rotate(-6deg) scale(1.05); }
+  .lp-service h3 { font-size: 1.12rem; font-weight: 700; color: var(--lp-ink); letter-spacing: -.01em; }
+  .lp-service p { margin-top: 10px; font-size: .92rem; line-height: 1.7; color: var(--lp-text); }
+
+  /* ═════════ WHY CHOOSE US (dark) ═════════ */
+  .lp-section.dark { background: var(--lp-ink); overflow: hidden; }
+  .lp-section.dark::before { content: ''; position: absolute; width: 560px; height: 560px; right: -200px; top: -220px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--lp-accent) 30%, transparent), transparent 68%); pointer-events: none; }
+  .lp-section.dark > .lp-wrap { position: relative; }
+  .lp-section.dark .lp-title { color: #fff; }
+  .lp-section.dark .lp-lead { color: rgba(255,255,255,.7); }
+  .lp-section.dark .lp-eyebrow { color: var(--lp-accent); background: rgba(255,255,255,.08); }
+  .lp-why { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .lp-why-item { height: 100%; padding: 30px 26px; border-radius: 22px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.10); backdrop-filter: blur(6px); transition: transform .35s cubic-bezier(.16,1,.3,1), background .35s ease, border-color .35s ease; }
+  .lp-why-item:hover { transform: translateY(-6px); background: rgba(255,255,255,.09); border-color: color-mix(in srgb, var(--lp-accent) 55%, transparent); }
+  .lp-why-ico { width: 52px; height: 52px; border-radius: 15px; display: grid; place-items: center; margin-bottom: 20px; font-size: 1.25rem; color: #fff; background: var(--lp-accent); }
+  .lp-why-item h3 { font-size: 1.05rem; font-weight: 700; color: #fff; }
+  .lp-why-item p { margin-top: 10px; font-size: .9rem; line-height: 1.7; color: rgba(255,255,255,.66); }
+
+  /* ═════════ HOW WE WORK ═════════ */
+  .lp-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+  .lp-step { position: relative; text-align: center; padding: 0 6px; }
+  .lp-step-num { position: relative; z-index: 1; width: 76px; height: 76px; margin: 0 auto 22px; border-radius: 50%; display: grid; place-items: center; font-size: 1.5rem; color: var(--lp-accent-hover); background: #fff; border: 2px solid var(--lp-accent); box-shadow: var(--lp-shadow); transition: background .3s ease, color .3s ease, transform .3s ease; }
+  .lp-step:hover .lp-step-num { background: var(--lp-accent); color: #fff; transform: scale(1.06); }
+  .lp-steps > .lp-reveal:not(:last-child) .lp-step::after { content: ''; position: absolute; top: 37px; left: calc(50% + 48px); width: calc(100% + 24px - 96px); border-top: 2px dashed color-mix(in srgb, var(--lp-accent) 55%, white); }
+  .lp-step small { display: block; font-size: .72rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--lp-accent-hover); margin-bottom: 6px; }
+  .lp-step h3 { font-size: 1.1rem; font-weight: 700; color: var(--lp-ink); }
+  .lp-step p { margin-top: 8px; font-size: .9rem; line-height: 1.7; color: var(--lp-text); }
+
+  /* ═════════ CALL TO ACTION ═════════ */
+  .lp-cta { padding: clamp(40px, 6vw, 72px) 0; }
+  .lp-cta + .lp-section { padding-top: 0; }
+  .lp-cta-card { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: 32px; padding: clamp(32px, 5vw, 64px); border-radius: 32px; color: #fff; background: linear-gradient(120deg, var(--lp-ink) 30%, #1b2740); box-shadow: var(--lp-shadow-lg); }
+  .lp-cta-card::before { content: ''; position: absolute; width: 420px; height: 420px; right: -120px; top: -180px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--lp-accent) 60%, transparent), transparent 68%); }
+  .lp-cta-card > * { position: relative; }
+  .lp-cta-card h2 { font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.2; }
+  .lp-cta-card p { margin-top: 10px; max-width: 520px; color: rgba(255,255,255,.72); line-height: 1.7; }
+  .lp-cta-actions { display: flex; flex-wrap: wrap; gap: 12px; flex: none; }
+
+  /* ═════════ FLOATING WHATSAPP ═════════ */
+  .lp-wa {
+    position: fixed; z-index: 900; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center;
+    background: #25d366; color: #fff; font-size: 1.9rem; box-shadow: 0 10px 28px -6px rgba(37,211,102,.65);
+    transition: transform .25s ease;
+  }
+  .lp-wa:hover { transform: scale(1.08); color: #fff; }
+  .lp-wa::after { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 2px solid #25d366; animation: lpRing 2.4s ease-out infinite; }
+  @keyframes lpRing { from { transform: scale(1); opacity: .7; } to { transform: scale(1.7); opacity: 0; } }
 
   /* ═════════ RESPONSIVE ═════════ */
+  @media (max-width: 1100px) {
+    .lp-why { grid-template-columns: repeat(2, 1fr); }
+  }
   @media (max-width: 991px) {
+    .lp-services { grid-template-columns: repeat(2, 1fr); }
+    .lp-steps { grid-template-columns: repeat(2, 1fr); row-gap: 40px; }
+    .lp-steps > .lp-reveal:not(:last-child) .lp-step::after { display: none; }
+    .lp-cta-card { flex-direction: column; align-items: flex-start; }
     .lp-split, .lp-contact { grid-template-columns: minmax(0, 1fr); }
     .lp-split.flip .lp-split-media { order: 0; }
-    .lp-docs { grid-template-columns: repeat(2, 1fr); }
     .lp-stats { grid-template-columns: repeat(2, 1fr); }
     .lp-stat:nth-child(3)::before { display: none; }
     .lp-stat:nth-child(n+3) { border-top: 1px solid var(--lp-line); }
@@ -244,8 +294,20 @@ const LP_STYLES = `
   @media (max-width: 640px) {
     .lp-wrap { padding: 0 18px; }
     .lp-hero { padding: 124px 0 170px; min-height: auto; }
-    .lp-grid-2, .lp-docs, .lp-row { grid-template-columns: 1fr; }
+    .lp-grid-2, .lp-row, .lp-services, .lp-why { grid-template-columns: 1fr; }
     .lp-actions .lp-btn { flex: 1 1 100%; }
+    .lp-service { padding: 24px 22px; }
+    .lp-why-item { padding: 24px 22px; }
+    /* process becomes a vertical timeline */
+    .lp-steps { grid-template-columns: 1fr; row-gap: 28px; }
+    .lp-step { display: grid; grid-template-columns: 56px 1fr; column-gap: 16px; text-align: left; padding: 0; }
+    .lp-step-num { width: 56px; height: 56px; margin: 0; font-size: 1.2rem; grid-row: 1 / span 3; }
+    .lp-steps > .lp-reveal:not(:last-child) .lp-step::after { display: block; top: 60px; bottom: -24px; left: 27px; width: 0; border-top: 0; border-left: 2px dashed color-mix(in srgb, var(--lp-accent) 55%, white); }
+    .lp-step p { margin-top: 6px; }
+    .lp-cta-card { border-radius: 24px; }
+    .lp-cta-actions { width: 100%; }
+    .lp-cta-actions .lp-btn { flex: 1 1 100%; }
+    .lp-wa { width: 52px; height: 52px; font-size: 1.7rem; right: 14px; }
     .lp-stat { padding: 26px 12px; }
     .lp-slider { aspect-ratio: 4 / 3; border-radius: 22px; }
     .lp-arrow { width: 40px; height: 40px; }
@@ -274,23 +336,38 @@ const recognitionImages = [
   { src: '/hero/jitu.jpeg', title: 'With Shri Jitu Patwari' },
 ];
 
-const documents = [
-  { name: 'Rane GST Certificate', file: '/documents/Rane GST Certificate.pdf' },
-  { name: 'Drugs Sale Licence', file: '/documents/Drugs Sale Licence_.pdf' },
-  { name: 'Udyam Registration Certificate', file: '/documents/Udyam_Registration_Certificate.pdf' },
-  { name: 'Business Conditions for Labor Contractors', file: '/documents/Business Conditions for Labor Contractors.pdf' },
-  { name: 'GUMASTA', file: '/documents/GUMASTA.pdf' },
-  { name: 'Business Terms and Conditions for Goods Supply', file: '/documents/Business Terms and Conditions for Goods Supply.pdf' },
+const services = [
+  { icon: <FaTrain />, title: 'Track Laying', text: 'Precision track laying and alignment for new lines, sidings and yard works, built to railway standards.' },
+  { icon: <FaBuilding />, title: 'Station Infrastructure', text: 'Platforms, station buildings, foot-over-bridges and passenger amenities delivered end to end.' },
+  { icon: <FaHardHat />, title: 'Railway Construction', text: 'Civil and structural works for railway projects, executed safely and on schedule.' },
+  { icon: <FaTools />, title: 'Maintenance Works', text: 'Planned upkeep and repair of railway assets to keep operations running smoothly.' },
+  { icon: <FaUsers />, title: 'Labour Contracting', text: 'Skilled and trained manpower supplied for railway and infrastructure sites.' },
+  { icon: <FaBoxes />, title: 'Goods Supply', text: 'Reliable supply of construction materials and goods for project requirements.' },
+];
+
+const whyUs = [
+  { icon: <FaShieldAlt />, title: 'Quality & Safety First', text: 'Every project follows strict quality checks and site-safety practices.' },
+  { icon: <FaClock />, title: 'On-Time Delivery', text: 'Clear planning and close monitoring keep work on schedule.' },
+  { icon: <FaAward />, title: 'Government Experience', text: 'Proven record on railway and infrastructure projects for state governments.' },
+  { icon: <FaHandshake />, title: 'Transparent Communication', text: 'We stay in touch with you from the first call until the job is done.' },
+];
+
+const steps = [
+  { icon: <FaPhoneAlt />, title: 'Enquiry & Quote', text: 'Share your requirement and get a free, no-obligation quote.' },
+  { icon: <FaDraftingCompass />, title: 'Planning & Design', text: 'We survey, plan and design the work with timelines and costs.' },
+  { icon: <FaHammer />, title: 'Execution', text: 'Our crews build on site with regular progress updates.' },
+  { icon: <FaFlagCheckered />, title: 'Handover & Support', text: 'Final checks, handover and ongoing maintenance support.' },
 ];
 
 const WHATSAPP_MESSAGE = 'Hello Rane Infra, I visited your website and would like to know more about your services. Please get in touch with me.';
+const WHATSAPP_URL = `https://wa.me/916264605007?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
 
 const contactItems = [
   {
     icon: <FaWhatsapp />,
     label: 'WhatsApp',
     text: '+91 62646 05007',
-    href: `https://wa.me/916264605007?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`,
+    href: WHATSAPP_URL,
   },
   { icon: <FaEnvelope />, label: 'Email', text: 'ranendranesons@gmail.com', href: 'mailto:ranendranesons@gmail.com' },
   {
@@ -583,6 +660,71 @@ export default function LandingPage() {
         badge={{ icon: '120+', title: 'Projects Completed', sub: 'Across 4 states' }}
       />
 
+      {/* ════════ SERVICES ════════ */}
+      <section className="lp-section" id="services">
+        <div className="lp-wrap">
+          <SectionHead
+            eyebrow="What We Offer"
+            title="Our Services"
+            lead="From the first survey to the final handover, we cover every stage of railway and infrastructure work."
+          />
+          <div className="lp-services">
+            {services.map((s, i) => (
+              <Reveal key={s.title} delay={(i % 3) * 90}>
+                <div className="lp-service">
+                  <div className="lp-service-ico">{s.icon}</div>
+                  <h3>{s.title}</h3>
+                  <p>{s.text}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════ WHY CHOOSE US ════════ */}
+      <section className="lp-section dark">
+        <div className="lp-wrap">
+          <SectionHead
+            eyebrow="Why Rane & Sons"
+            title="Why Choose Us"
+            lead="Trust is built on the ground. Here is what you can count on when you work with us."
+          />
+          <div className="lp-why">
+            {whyUs.map((w, i) => (
+              <Reveal key={w.title} delay={i * 80}>
+                <div className="lp-why-item">
+                  <div className="lp-why-ico">{w.icon}</div>
+                  <h3>{w.title}</h3>
+                  <p>{w.text}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════ HOW WE WORK ════════ */}
+      <section className="lp-section alt" id="process">
+        <div className="lp-wrap">
+          <SectionHead eyebrow="Our Process" title="How We Work" lead="A simple, transparent process from enquiry to handover." />
+          <div className="lp-steps">
+            {steps.map((s, i) => (
+              <Reveal key={s.title} delay={i * 100}>
+                <div className="lp-step">
+                  <div className="lp-step-num">{s.icon}</div>
+                  <div>
+                    <small>Step {String(i + 1).padStart(2, '0')}</small>
+                    <h3>{s.title}</h3>
+                    <p>{s.text}</p>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ════════ DIRECTORS ════════ */}
       <section className="lp-section">
         <div className="lp-wrap">
@@ -622,6 +764,22 @@ export default function LandingPage() {
           />
           <Reveal delay={100}>
             <RecognitionSlider images={recognitionImages} />
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ════════ CALL TO ACTION ════════ */}
+      <section className="lp-cta">
+        <div className="lp-wrap">
+          <Reveal className="lp-cta-card">
+            <div>
+              <h2>Have a railway or infrastructure project in mind?</h2>
+              <p>Talk to our team today — we&apos;ll get back to you with a free quote.</p>
+            </div>
+            <div className="lp-cta-actions">
+              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="lp-btn lp-btn-primary"><FaWhatsapp /> WhatsApp Us</a>
+              <a href="#contactus" className="lp-btn lp-btn-ghost">Contact Us</a>
+            </div>
           </Reveal>
         </div>
       </section>
@@ -702,31 +860,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ════════ DOCUMENTS ════════ */}
-      <section className="lp-section alt" id="documents">
-        <div className="lp-wrap">
-          <SectionHead
-            eyebrow="Transparency"
-            title="Important Documents"
-            lead="Our registrations, licences and business terms — available to download at any time."
-          />
-          <div className="lp-docs">
-            {documents.map((doc, i) => (
-              <Reveal key={doc.file} delay={(i % 3) * 90}>
-                <a className="lp-doc" href={doc.file} target="_blank" rel="noopener noreferrer">
-                  <div className="lp-doc-top">
-                    <span className="lp-doc-ico"><FaFilePdf /></span>
-                    <div className="lp-doc-name">{doc.name}<small>PDF Document</small></div>
-                  </div>
-                  <span className="lp-doc-link"><FaDownload /> Download PDF</span>
-                </a>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <Footer />
+
+      <a className="lp-wa" href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" aria-label="Chat with us on WhatsApp"><FaWhatsapp /></a>
     </div>
   );
 }
